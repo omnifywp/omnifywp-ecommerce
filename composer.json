@@ -1,0 +1,16 @@
+{
+  "name": "omnify/ecommerce",
+  "description": "Omnify WordPress plugin foundation.",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=8.2"
+  },
+  "autoload": {
+    "classmap": [
+      "includes/"
+    ],
+    "psr-4": {
+      "Omnify\\eCommerce\\": "includes/"
+    }
+  }
+}

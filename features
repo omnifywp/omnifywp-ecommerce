@@ -1,0 +1,64 @@
+Major Missing / Weak Core Features
+
+┌────────────┬────────────────────────────────────────┬─────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Priority   │ Feature                                │ Status  │ Notes                                                                                                                                                      │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ High       │ Subscriptions / Recurring Billing      │ Missing │ No subscription products, plans, recurring payments, or billing cycles. The "customer subscription status" mentions in docs are just access expiry on      │
+│            │                                        │         │ customer_access grants.                                                                                                                                    │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ High       │ Multi-currency                         │ Missing │ One default currency per store. Products have a currency field but no switcher, conversion, or multi-currency checkout.                                    │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ High       │ Live shipping rates / Carrier          │ Weak    │ Only flat-rate "Delivery Zones". Weight/dimensions exist in schema but aren't used for real carrier rates (UPS, FedEx, Shippo, etc.).                      │
+│            │ integration                            │         │                                                                                                                                                            │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ High       │ Product CSV/XML Import                 │ Weak    │ Export page exists (and is decent). Import UI exists in the export template but is very basic/limited.                                                     │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Advanced discounts                     │ Limited │ Coupons are solid (percentage/fixed, usage limits, product/category rules, first-order only). No BOGO, quantity breaks, cart rules engine, or tiered       │
+│ -High      │                                        │         │ pricing.                                                                                                                                                   │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Gift cards / Store credit              │ Missing │ Nothing.                                                                                                                                                   │
+│ -High      │                                        │         │                                                                                                                                                            │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Full customer "My Account" experience  │ Partial │ Customer portal is good (downloads + order history + wishlist + profile), but no dedicated polished login/register flows, password reset flows, or         │
+│            │                                        │         │ downloadable invoices.                                                                                                                                     │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Order editing after creation           │ Weak    │ You can refund/cancel, but changing line items, prices, or quantities on existing orders is not supported.                                                 │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Automated order status emails +        │ Partial │ Basic emails exist. No rich status transition system or easy "when order becomes X, send Y" automation from admin.                                         │
+│            │ workflow                               │         │                                                                                                                                                            │
+├────────────┼────────────────────────────────────────┼─────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Medium     │ Physical product fulfillment tools     │ Weak    │ Fulfillment status + tracking number fields exist. No packing slips, invoices, pick lists, or label generation.                                            │
+└────────────┴────────────────────────────────────────┴─────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Other Notable Gaps
+
+• Server-side faceted search / advanced catalog filters — Current storefront grid uses client-side JS filtering (search, category, type, attributes). Works for small catalogs but not scalable.
+• Invoices & tax reports — Tax reporting code fields exist, but no PDF invoices, tax summary exports, or VAT OSS/MOSS tooling.
+• Stock reservation / holds — Stock is reduced on order creation (configurable), but there's no explicit cart-level reservation system.
+• Admin bulk actions depth — Modern filters are excellent, but bulk operations (edit, delete, fulfill, email) are limited compared to mature plugins.
+• Loyalty / points / referrals — Not present.
+• Webhook system maturity — There's a webhooks table + delivery logs, but it appears more for developers than a turnkey "send order.created etc." system.
+• Headless / modern API extras — Excellent REST coverage, but no GraphQL and limited official headless guidance.
+
+What's Actually Surprisingly Strong
+
+• Variable products + bundles (with dynamic switching)
+• Multi-item cart + checkout (REST + JS driven)
+• Reviews (submission + moderation + editing)
+• Customer access grants + secure downloads
+• Abandoned cart recovery (cron + manual)
+• Refunds (UI + gateway refund methods for Stripe/PayPal/Razorpay/etc.)
+• Inventory logs + low stock alerts
+• Trash/soft-delete everywhere
+• Admin UX (filters, modern cards, activity log, customer timelines)
+• Upsells / cross-sells (saved + displayed on PDP and checkout)
+
+Summary Recommendation
+
+Biggest gaps for most users right now (in order):
+
+1. Subscriptions (big for digital products — courses, memberships, software updates)
+2. Multi-currency
+3. Proper shipping rate calculation (if you ever want to sell physical or hybrid)
+4. Import (symmetry with the existing export)
+5. More powerful promotions beyond basic coupons
