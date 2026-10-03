@@ -3,9 +3,13 @@
 [![WordPress Version](https://img.shields.io/badge/WordPress-5.8+-21759B.svg?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square)](https://gnu.org/licenses/gpl.html)
+[![Documentation](https://img.shields.io/badge/Docs-omnifywp.com%2Fdoc-blueviolet.svg?style=flat-square)](https://omnifywp.com/doc/)
 [![Developer Friendly](https://img.shields.io/badge/Extensible-Filters%20%26%20Actions-brightgreen.svg?style=flat-square)](#-developer-extensibility)
 
 **Omnify** is a high-performance, developer-first eCommerce engine built for WordPress. Highly optimized, extremely secure, and headless-ready, Omnify gives you the ultimate storefront, checkouts, payment integrations, and secure digital downloads experience without the bloat of traditional eCommerce plugins.
+
+> 📖 **Official Developer Documentation:** [https://omnifywp.com/doc/](https://omnifywp.com/doc/)  
+> 💻 **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)
 
 ---
 
@@ -48,7 +52,18 @@ Omnify comes pre-integrated with the world's most popular payment processors, fe
 * **Customer CRM Timelines**: Individual customer detail timelines auditing actions like `checkout_started`, `wishlist_added`, and support notes.
 * **Inventory Logs & Stock Control**: Stock validation comparison on checkout, maximum purchase limits per checkout session, and automated restocking on returns/cancellation.
 * **Gateway API Refunds & Access Revocations**: Automated API refund calls which trigger automatic revocation of corresponding digital file entitlements.
-* **Interactive Analytics**: View gross/net sales, average order values, refund rates, and bandwidth usage statistics on a graphical admin dashboard.
+---
+
+## 📚 Complete Developer Documentation
+
+Explore interactive guides, repository SDK references, database schemas, and step-by-step developer recipes on our official documentation portal:
+
+👉 **[https://omnifywp.com/doc/](https://omnifywp.com/doc/)**
+
+* **Interactive REST API Sandbox**: Test public and protected endpoints with live mock responses.
+* **18 SQL Tables & Relational Schema**: Normalized schema reference avoiding `wp_postmeta` latency.
+* **Repositories SDK**: Clean object-oriented queries for products, orders, customers, and downloads.
+* **Filter Hooks & Developer Recipes**: Ready-to-use production recipes for custom checkout fields, Discord/Slack webhooks, Next.js 14 headless catalogs, and software licensing.
 
 ---
 

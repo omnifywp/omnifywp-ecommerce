@@ -16,6 +16,8 @@ Lightweight, high-converting eCommerce engine for WordPress. Sell digital downlo
 
 Whether you're selling digital downloads (ebooks, software, audio, photography, courses, design assets), physical merchandise, product bundles, or variable items with multi-format pricing, OmnifyWP delivers a frictionless customer journey with instant storefront loading, frictionless 1-page checkout, and pre-integrated payment gateways for every continent.
 
+**Official Documentation & API Sandbox**: https://omnifywp.com/doc/
+
 > **🚀 Why Choose OmnifyWP eCommerce?**
 > * **Zero Bloat & Blazing Fast**: Engineered with pure, optimized database queries and ultra-lightweight frontend assets (<35KB). Say goodbye to sluggish checkout experiences.
 > * **Global & Regional Payments Included Free**: No expensive add-ons needed. Includes Stripe, PayPal, Paystack (Africa), Tap Payments (Middle East / GCC), Mollie (EU), Khalti & eSewa (Nepal), Razorpay (India), Alipay & WeChat Pay (China), SSLCommerz (Bangladesh), and manual methods out of the box.
@@ -229,7 +231,6 @@ Yes. OmnifyWP provides one-click refund processing directly from the order detai
 * Gateways: Integrated live API automated refund execution for all supported regional gateways (Paystack, Tap Payments, Mollie, Khalti, and eSewa).
 * Storefront Design: Seamlessly unified the Customer Portal design with the Admin UI system (matching KPI metrics, typography, tabs, buttons, forms, and cards).
 * Security & Compliance: Streamlined checkout authentication to meet WordPress.org submission guidelines; replaced raw inline password form with secure WordPress login routing.
-* Update: Bumped plugin release to version 1.2.0.
 
 = 1.1.0 =
 * Feature: Added Paystack gateway integration for African markets supporting cards, mobile money, bank transfer, and USSD.
@@ -240,7 +241,6 @@ Yes. OmnifyWP provides one-click refund processing directly from the order detai
 * Feature: Added full admin settings panels for all 5 regional gateways with live/test mode switches and webhook URL displays.
 * Feature: Added automated refund processing support for Paystack, Tap, Mollie, Khalti, and eSewa via Omnify Payment Gateway Service.
 * Feature: Added storefront checkout payment selection, automatic redirection, and transaction verification handlers for all new regional gateways.
-* Update: Updated plugin version to 1.1.0 and refreshed documentation.
 
 = 1.0.0 =
 * Initial release.

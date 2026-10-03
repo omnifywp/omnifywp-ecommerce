@@ -1,0 +1,3080 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmnifyWP eCommerce — Developer Documentation</title>
+  <meta name="description" content="Complete developer documentation for OmnifyWP eCommerce: architecture, database schema, repository SDK, REST APIs, action and filter hooks, and step-by-step developer recipes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      
+      /* Dark Theme (Default) - Linear & Vercel minimal obsidian */
+      --bg-body: #07090e;
+      --bg-surface: #0c1017;
+      --bg-card: #121824;
+      --bg-card-hover: #17202f;
+      --bg-glass: rgba(12, 16, 23, 0.85);
+      --bg-code: #090d15;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.18);
+      --border-accent: rgba(56, 189, 248, 0.4);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --brand-cyan: #38bdf8;
+      --brand-violet: #818cf8;
+      --brand-emerald: #10b981;
+      --brand-amber: #f59e0b;
+      --brand-rose: #f43f5e;
+      --brand-purple: #c084fc;
+      
+      --brand-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      --glow-cyan: 0 0 35px -5px rgba(56, 189, 248, 0.25);
+      --grid-pattern: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #ffffff;
+      --bg-surface: #f8fafc;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --bg-glass: rgba(255, 255, 255, 0.92);
+      --bg-code: #0f172a;
+      --border-subtle: #e2e8f0;
+      --border-highlight: #cbd5e1;
+      --border-accent: rgba(56, 189, 248, 0.5);
+      
+      --text-main: #090d16;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      
+      --grid-pattern: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Fix anchor scrolling under sticky navigation */
+    section[id], h2[id], h3[id], div[id], [id] {
+      scroll-margin-top: 100px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      background-image: var(--grid-pattern);
+      background-size: 28px 28px;
+      background-position: top center;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow-top {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 480px;
+      background: radial-gradient(50% 50% at 50% 0%, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.06) 50%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top Sticky Header */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: var(--bg-glass);
+      border-bottom: 1px solid var(--border-subtle);
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--brand-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      color: #fff;
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-version-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--brand-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      padding: 7px 14px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .search-btn:hover {
+      border-color: var(--border-highlight);
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .kbd-shortcut {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+    }
+
+    .github-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      padding: 7px 14px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .github-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-highlight);
+      transform: translateY(-1px);
+    }
+
+    .github-star-count {
+      display: inline-flex;
+      align-items: center;
+      padding-left: 8px;
+      border-left: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-highlight);
+      background: var(--bg-card);
+    }
+
+    /* Layout */
+    .docs-layout {
+      position: relative;
+      display: flex;
+      max-width: 1540px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    /* Left Sidebar */
+    .docs-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 68px;
+      height: calc(100vh - 68px);
+      overflow-y: auto;
+      border-right: 1px solid var(--border-subtle);
+      padding: 24px 16px 40px;
+      background: transparent;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-subtle) transparent;
+    }
+
+    .sidebar-group {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-heading {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-items {
+      list-style: none;
+      margin-top: 4px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 12px;
+      border-radius: 7px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      line-height: 1.4;
+    }
+
+    .sidebar-link:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+    }
+
+    .sidebar-link.active {
+      color: var(--brand-cyan);
+      background: rgba(56, 189, 248, 0.08);
+      font-weight: 600;
+    }
+
+    .sidebar-tag {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+    }
+
+    /* Main Content */
+    .docs-main {
+      flex: 1;
+      min-width: 0;
+      padding: 40px 56px 80px;
+    }
+
+    @media (max-width: 1100px) {
+      .docs-main { padding: 32px 24px 60px; }
+    }
+
+    /* Right Rail TOC */
+    .docs-toc {
+      width: 230px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 68px;
+      height: calc(100vh - 68px);
+      overflow-y: auto;
+      padding: 32px 16px 40px;
+      display: none;
+    }
+
+    @media (min-width: 1320px) {
+      .docs-toc { display: block; }
+    }
+
+    .toc-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      list-style: none;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .toc-link {
+      display: block;
+      padding: 5px 0 5px 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border-left: 2px solid transparent;
+      margin-left: -1px;
+      line-height: 1.4;
+    }
+
+    .toc-link:hover, .toc-link.active {
+      color: var(--brand-cyan);
+      border-left-color: var(--brand-cyan);
+    }
+
+    /* Creative Minimal Hero */
+    .hero-creative {
+      padding: 36px 0 48px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 48px;
+    }
+
+    .hero-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .pulsing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand-cyan);
+      box-shadow: 0 0 8px var(--brand-cyan);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.12;
+      margin-bottom: 18px;
+      color: var(--text-main);
+    }
+
+    .hero-gradient-text {
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 820px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand-cyan);
+      color: #040812;
+      font-weight: 700;
+      font-size: 0.875rem;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 10px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-highlight);
+    }
+
+    /* Metric Strip */
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 36px 0;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--brand-gradient);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+    }
+
+    .metric-card:hover::before {
+      opacity: 1;
+    }
+
+    .metric-val {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Headings */
+    h2.doc-heading {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      margin: 64px 0 20px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h2.doc-heading:first-of-type {
+      margin-top: 0;
+      border-top: none;
+      padding-top: 0;
+    }
+
+    h3.doc-subheading {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin: 36px 0 16px;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 22px 0 10px;
+    }
+
+    p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+
+    p strong, li strong {
+      color: var(--text-main);
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    li { margin-bottom: 6px; }
+
+    /* Pipeline Diagram */
+    .pipeline-diagram {
+      margin: 32px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 28px;
+    }
+
+    .pipeline-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      min-width: 140px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .pipeline-step:hover {
+      border-color: var(--border-accent);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .pipeline-step-icon {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+
+    .pipeline-step-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .pipeline-step-desc {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .pipeline-arrow {
+      color: var(--brand-cyan);
+      font-size: 1.25rem;
+      opacity: 0.6;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 5px;
+      line-height: 1.3;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-get { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); }
+    .badge-post { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .badge-put { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); }
+    .badge-delete { background: rgba(244, 63, 94, 0.12); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.25); }
+
+    .badge-auth { background: rgba(129, 140, 248, 0.12); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.25); }
+    .badge-public { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); }
+
+    .type-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      color: #38bdf8;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Callouts */
+    .callout {
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      border-left: 3px solid;
+      background: var(--bg-card);
+    }
+
+    .callout-info { border-color: var(--brand-cyan); }
+    .callout-success { border-color: var(--brand-emerald); }
+    .callout-warning { border-color: var(--brand-amber); }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+
+    .callout p {
+      margin-bottom: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 22px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+    }
+
+    table.doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: left;
+    }
+
+    table.doc-table th {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-weight: 600;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    table.doc-table td {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+
+    table.doc-table tr:last-child td { border-bottom: none; }
+
+    table.doc-table code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #38bdf8;
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Code Blocks */
+    .code-wrapper {
+      position: relative;
+      margin: 22px 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-code);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(12, 16, 23, 0.95);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 16px;
+    }
+
+    .code-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    pre {
+      padding: 18px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+
+    pre code {
+      font-family: inherit;
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Syntax Highlighting */
+    .hl-keyword { color: #f43f5e; font-weight: 600; }
+    .hl-function { color: #38bdf8; }
+    .hl-variable { color: #818cf8; }
+    .hl-string { color: #34d399; }
+    .hl-comment { color: #64748b; font-style: italic; }
+    .hl-number { color: #fbbf24; }
+    .hl-property { color: #cbd5e1; }
+
+    /* Interactive API Simulator Card */
+    .simulator-card {
+      margin: 32px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .simulator-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+
+    .sim-select {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sim-run-btn {
+      background: var(--brand-cyan);
+      color: #040812;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .sim-run-btn:hover { background: #7dd3fc; }
+
+    .simulator-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    @media (max-width: 800px) {
+      .simulator-preview { grid-template-columns: 1fr; }
+    }
+
+    .sim-col {
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .sim-col:first-child {
+      border-right: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .sim-col-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* API Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-get { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-post { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-put { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-delete { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-public { background: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.3); }
+    .badge-status-ok { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    
+    .sim-url-input {
+      flex: 1;
+      min-width: 240px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-main);
+      outline: none;
+    }
+    .sim-status-strip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* Endpoint Block */
+    .endpoint-card {
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      background: var(--bg-card);
+      margin: 20px 0 28px;
+      overflow: hidden;
+    }
+
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .endpoint-path {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .endpoint-desc {
+      padding: 14px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .endpoint-body { padding: 20px; }
+
+    /* Recipe Step Card */
+    .recipe-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0 32px;
+      transition: border-color 0.2s;
+    }
+
+    .recipe-card:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .recipe-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      background: rgba(129, 140, 248, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(129, 140, 248, 0.25);
+    }
+
+    /* Search Modal */
+    .search-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(4, 8, 16, 0.78);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 15vh;
+    }
+
+    .search-modal.active { display: flex; }
+
+    .search-box {
+      width: 100%;
+      max-width: 620px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-highlight);
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 1.05rem;
+      color: var(--text-main);
+    }
+
+    .search-results {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .search-result-item {
+      display: block;
+      padding: 12px 14px;
+      border-radius: 8px;
+      color: var(--text-main);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .search-result-item:hover {
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--brand-cyan);
+    }
+
+    .search-result-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      margin-bottom: 2px;
+    }
+
+    .search-result-snippet {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* Mobile toggle */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu-btn { display: flex; }
+      .docs-sidebar {
+        display: none;
+        position: fixed;
+        top: 68px;
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        width: 280px;
+        background: var(--bg-surface);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      .docs-sidebar.active { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow-top"></div>
+
+  <!-- Top Sticky Header -->
+  <header class="top-header">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <a href="#introduction" class="brand-wrap">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+        </div>
+        <div class="brand-text">
+          <span>OmnifyWP</span>
+          <span class="brand-version-pill">v1.2.0</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="header-right">
+      <button class="search-btn" id="searchTrigger">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Search docs...</span>
+        <span class="kbd-shortcut">Ctrl K</span>
+      </button>
+
+      <a href="https://github.com/omnifywp/omnifywp-ecommerce" target="_blank" rel="noreferrer" class="github-btn" title="View Source & Star on GitHub">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        <span>GitHub</span>
+        <span class="github-star-count">★ Star</span>
+      </a>
+
+      <button class="icon-btn" id="themeToggle" title="Toggle color scheme">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" id="themeIcon"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Docs Layout -->
+  <div class="docs-layout">
+
+    <!-- Left Sidebar -->
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Overview</div>
+        <ul class="sidebar-items">
+          <li><a href="#introduction" class="sidebar-link active">Introduction</a></li>
+          <li><a href="#quickstart" class="sidebar-link">Quickstart & Install</a></li>
+          <li><a href="#architecture" class="sidebar-link">Architecture & DI</a></li>
+          <li><a href="#pipeline-flow" class="sidebar-link">Pipeline Flow</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Database & Schema</div>
+        <ul class="sidebar-items">
+          <li><a href="#schema-design" class="sidebar-link">Why Custom Relational</a></li>
+          <li><a href="#database-tables" class="sidebar-link">18 SQL Tables <span class="sidebar-tag">InnoDB</span></a></li>
+          <li><a href="#soft-delete-cache" class="sidebar-link">Soft Deletes & Caching</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Repositories SDK</div>
+        <ul class="sidebar-items">
+          <li><a href="#repo-overview" class="sidebar-link">Resolving Services</a></li>
+          <li><a href="#repo-products" class="sidebar-link">Product Repository</a></li>
+          <li><a href="#repo-orders" class="sidebar-link">Order Repository</a></li>
+          <li><a href="#repo-customers" class="sidebar-link">Customer Repository</a></li>
+          <li><a href="#repo-coupons" class="sidebar-link">Coupon Repository</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Storefront & Checkout</div>
+        <ul class="sidebar-items">
+          <li><a href="#shortcodes-directory" class="sidebar-link">Shortcodes Directory</a></li>
+          <li><a href="#client-state" class="sidebar-link">Storefront.js Engine</a></li>
+          <li><a href="#gateway-architecture" class="sidebar-link">Payment Gateways</a></li>
+          <li><a href="#signed-urls" class="sidebar-link">HMAC Signed URLs</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">REST API Reference</div>
+        <ul class="sidebar-items">
+          <li><a href="#api-simulator" class="sidebar-link">API Sandbox <span class="sidebar-tag">Live</span></a></li>
+          <li><a href="#api-auth" class="sidebar-link">Authentication Keys</a></li>
+          <li><a href="#api-storefront" class="sidebar-link">Storefront Endpoints</a></li>
+          <li><a href="#api-orders" class="sidebar-link">Orders & Checkout API</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Hooks & Extensibility</div>
+        <ul class="sidebar-items">
+          <li><a href="#actions-directory" class="sidebar-link">Action Hooks Directory</a></li>
+          <li><a href="#filters-directory" class="sidebar-link">Filter Hooks Directory</a></li>
+          <li><a href="#developer-recipes" class="sidebar-link">Developer Recipes <span class="sidebar-tag">6 Guides</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="docs-main">
+
+      <!-- Creative Minimal Hero -->
+      <section id="introduction" class="hero-creative">
+        <div class="hero-badge-pill">
+          <span class="pulsing-dot"></span>
+          <span>Next-Generation Headless & Decoupled WordPress Commerce</span>
+        </div>
+        <h1 class="hero-title">
+          The Developer-First <br>
+          <span class="hero-gradient-text">eCommerce Engine</span> for WordPress
+        </h1>
+        <p class="hero-desc">
+          Omnify replaces sluggish <code>wp_posts</code> and <code>wp_postmeta</code> overhead with a purpose-built 18-table normalized SQL relational engine, atomic stock management, cryptographic link signing, and complete REST APIs.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#quickstart" class="btn-primary">
+            <span>Get Started</span>
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+          </a>
+          <a href="#developer-recipes" class="btn-secondary">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Developer Recipes</span>
+          </a>
+          <a href="https://github.com/omnifywp/omnifywp-ecommerce" target="_blank" rel="noreferrer" class="btn-secondary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            <span>github.com/omnifywp</span>
+          </a>
+        </div>
+
+        <!-- Metric Cards Strip -->
+        <div class="metric-strip">
+          <div class="metric-card">
+            <div class="metric-val">18</div>
+            <div class="metric-label">Custom Relational SQL Tables</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">&lt; 1.2ms</div>
+            <div class="metric-label">Database Index Lookup Time</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">10+</div>
+            <div class="metric-label">Integrated Payment Gateways</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">100%</div>
+            <div class="metric-label">Decoupled REST API Coverage</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Architecture Pipeline Diagram -->
+      <section id="pipeline-flow">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          System Pipeline & Data Flow
+        </h2>
+        <p>Omnify processes requests cleanly through decoupled application layers:</p>
+
+        <div class="pipeline-diagram">
+          <div class="pipeline-flow">
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">💻</div>
+              <div class="pipeline-step-title">Storefront / Client</div>
+              <div class="pipeline-step-desc">Shortcodes or Next.js Headless</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">⚡</div>
+              <div class="pipeline-step-title">REST / Auth</div>
+              <div class="pipeline-step-desc">Omnify_Rest_Server + Nonce/Keys</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">📦</div>
+              <div class="pipeline-step-title">Repositories SDK</div>
+              <div class="pipeline-step-desc">Domain Logic & Validation</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">🗄️</div>
+              <div class="pipeline-step-title">Custom DB Schema</div>
+              <div class="pipeline-step-desc">18 Indexed Tables + Object Cache</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">🔒</div>
+              <div class="pipeline-step-title">Delivery & Pay</div>
+              <div class="pipeline-step-desc">Stripe, PayPal & HMAC Locker</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quickstart & Installation -->
+      <section id="quickstart">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          Quickstart & Installation
+        </h2>
+        <p>Omnify is distributed as a clean, self-contained WordPress plugin with zero external PHP dependencies.</p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">Terminal — Cloning and Building the Package</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-comment"># 1. Clone the repository</span>
+git clone https://github.com/omnifywp/omnifywp-ecommerce.git wp-content/plugins/omnify
+
+<span class="hl-comment"># 2. Package into a distribution ZIP ready for installation</span>
+cd wp-content/plugins/omnify
+node build.js
+
+<span class="hl-comment"># 3. Output artifact: dist/omnifywp-ecommerce.zip</span></code></pre>
+        </div>
+
+        <h3 class="doc-subheading">Runtime Requirements</h3>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Component</th><th>Minimum</th><th>Recommended</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>PHP</strong></td>
+                <td>8.2.0+</td>
+                <td>8.3+</td>
+                <td>Strict types, typed properties, match expressions, and union return types.</td>
+              </tr>
+              <tr>
+                <td><strong>WordPress</strong></td>
+                <td>5.8+</td>
+                <td>6.4+</td>
+                <td>Compatible with both Classic PHP themes and Full Site Editing (FSE).</td>
+              </tr>
+              <tr>
+                <td><strong>MySQL</strong></td>
+                <td>5.7+ / MariaDB 10.3+</td>
+                <td>MySQL 8.0+</td>
+                <td>InnoDB engine with utf8mb4 collation support for emojis and global scripts.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Architecture & Container -->
+      <section id="architecture">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
+          Architecture & Dependency Injection
+        </h2>
+        <p>
+          Omnify utilizes an internal dependency container (<code>Omnify_Container</code>) exposed by the singleton <code>Omnify_Plugin</code>. Every repository, gateway, and service class is auto-wired with strict constructor injection.
+        </p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Accessing the Container</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-keyword">use</span> Omnify\eCommerce\Repositories\Omnify_Product_Repository;
+<span class="hl-keyword">use</span> Omnify\eCommerce\Repositories\Omnify_Order_Repository;
+
+<span class="hl-comment">// Fetch the plugin container anywhere in WordPress</span>
+<span class="hl-variable">$container</span> = omnify()->container();
+
+<span class="hl-comment">// Resolve auto-wired repositories</span>
+<span class="hl-variable">$product_repo</span> = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(Omnify_Product_Repository::<span class="hl-keyword">class</span>);
+<span class="hl-variable">$order_repo</span>   = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(Omnify_Order_Repository::<span class="hl-keyword">class</span>);
+
+<span class="hl-comment">// Query products directly</span>
+<span class="hl-variable">$products</span> = <span class="hl-variable">$product_repo</span>-><span class="hl-function">all</span>([
+    <span class="hl-string">'status'</span>   => <span class="hl-string">'published'</span>,
+    <span class="hl-string">'per_page'</span> => <span class="hl-number">20</span>,
+]);</code></pre>
+        </div>
+      </section>
+
+      <!-- Database & Schema -->
+      <section id="schema-design">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          Database Engine & 18 Relational Tables
+        </h2>
+        <p>
+          Omnify isolates all commercial data from the WordPress post engine. Tables are prefixed with <code>wp_omnify_*</code> and indexed for high-concurrency throughput.
+        </p>
+
+        <h3 class="doc-subheading" id="database-tables">The 18 Core Database Tables</h3>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Table</th><th>Primary Function</th><th>Indices & Keys</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>wp_omnify_products</code></td><td>Master catalog records (download, simple, variable, bundle)</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (slug)</code>, <code>KEY (status, type)</code></td></tr>
+              <tr><td><code>wp_omnify_product_variations</code></td><td>Format matrix (SKU, price swatches, attributes)</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code></td></tr>
+              <tr><td><code>wp_omnify_product_files</code></td><td>Physical files, versions, and attachments</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (expires_at)</code></td></tr>
+              <tr><td><code>wp_omnify_product_categories</code></td><td>Category terms & taxonomy linkages</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (slug)</code></td></tr>
+              <tr><td><code>wp_omnify_product_brands</code></td><td>Product brands & manufacturer terms</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (slug)</code></td></tr>
+              <tr><td><code>wp_omnify_product_tags</code></td><td>Faceted search and discovery tags</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (slug)</code></td></tr>
+              <tr><td><code>wp_omnify_orders</code></td><td>Orders, financial totals, currency, and tax tracking</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (order_number)</code>, <code>KEY (customer_id, status)</code></td></tr>
+              <tr><td><code>wp_omnify_order_items</code></td><td>Snapshot of purchased items, prices, and quantities</td><td><code>PRIMARY (id)</code>, <code>KEY (order_id)</code>, <code>KEY (product_id)</code></td></tr>
+              <tr><td><code>wp_omnify_order_notes</code></td><td>Staff internal comments & customer visibility updates</td><td><code>PRIMARY (id)</code>, <code>KEY (order_id)</code>, <code>KEY (customer_visible)</code></td></tr>
+              <tr><td><code>wp_omnify_customers</code></td><td>Customer CRM profiles, addresses, and tax exemptions</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (email)</code>, <code>KEY (user_id)</code>, <code>KEY (status)</code></td></tr>
+              <tr><td><code>wp_omnify_customer_notes</code></td><td>CRM support notes attached to customer accounts</td><td><code>PRIMARY (id)</code>, <code>KEY (customer_id)</code>, <code>KEY (customer_visible)</code></td></tr>
+              <tr><td><code>wp_omnify_customer_activity</code></td><td>Audit trail (logins, checkout started, address changes)</td><td><code>PRIMARY (id)</code>, <code>KEY (customer_id)</code>, <code>KEY (activity_type)</code></td></tr>
+              <tr><td><code>wp_omnify_customer_access</code></td><td>Digital file entitlements & access permissions</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (customer_id, product_id)</code></td></tr>
+              <tr><td><code>wp_omnify_downloads</code></td><td>Cryptographic download stream transaction logs</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (file_id)</code>, <code>KEY (customer_id)</code></td></tr>
+              <tr><td><code>wp_omnify_coupons</code></td><td>Promotional codes, percentage/fixed rules, limits</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (code)</code></td></tr>
+              <tr><td><code>wp_omnify_reviews</code></td><td>Product ratings, content, and approval states</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (status)</code></td></tr>
+              <tr><td><code>wp_omnify_abandoned_carts</code></td><td>Captured checkout inputs, recovery tokens, reminders</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (token)</code>, <code>KEY (email, status)</code></td></tr>
+              <tr><td><code>wp_omnify_wishlists</code></td><td>Customer wishlist favorite associations</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (user_id, product_id)</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="doc-subheading" id="soft-delete-cache">Soft Deletion & Caching Engine</h3>
+        <p>
+          Soft deletion is native across all core tables via a nullable <code>deleted_at</code> timestamp. Trashed items are excluded from storefront catalog queries, star rating averages, urgency counters, and public REST queries.
+        </p>
+      </section>
+
+      <!-- Repositories SDK -->
+      <section id="repo-overview">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          Repositories SDK Reference
+        </h2>
+        <p>All database reads and writes are encapsulated inside typed repository classes.</p>
+
+        <!-- Product Repository -->
+        <h3 class="doc-subheading" id="repo-products">Product Repository (<code>Omnify_Product_Repository</code>)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Product Queries, Stock & Variations</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-variable">$products</span> = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(\Omnify\eCommerce\Repositories\Omnify_Product_Repository::<span class="hl-keyword">class</span>);
+
+<span class="hl-comment">// 1. Filter products with pagination and faceted criteria</span>
+<span class="hl-variable">$items</span> = <span class="hl-variable">$products</span>-><span class="hl-function">all</span>([
+    <span class="hl-string">'status'</span>       => <span class="hl-string">'published'</span>,
+    <span class="hl-string">'category'</span>     => <span class="hl-string">'Templates'</span>,
+    <span class="hl-string">'type'</span>         => <span class="hl-string">'download'</span>,
+    <span class="hl-string">'price_min'</span>    => <span class="hl-number">10.00</span>,
+    <span class="hl-string">'price_max'</span>    => <span class="hl-number">120.00</span>,
+    <span class="hl-string">'stock_status'</span> => <span class="hl-string">'instock'</span>,
+    <span class="hl-string">'sort'</span>         => <span class="hl-string">'rating_desc'</span>,
+    <span class="hl-string">'per_page'</span>     => <span class="hl-number">20</span>,
+]);
+
+<span class="hl-comment">// 2. Atomic stock decrement (prevents checkout race conditions)</span>
+<span class="hl-variable">$success</span> = <span class="hl-variable">$products</span>-><span class="hl-function">reduce_stock</span>(
+    <span class="hl-property">product_id</span>: <span class="hl-number">10</span>,
+    <span class="hl-property">variation_id</span>: <span class="hl-keyword">null</span>,
+    <span class="hl-property">quantity</span>: <span class="hl-number">1</span>
+);</code></pre>
+        </div>
+
+        <!-- Order Repository -->
+        <h3 class="doc-subheading" id="repo-orders">Order Repository (<code>Omnify_Order_Repository</code>)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Creating Orders & Adding Notes</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-variable">$orders</span> = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::<span class="hl-keyword">class</span>);
+
+<span class="hl-comment">// Batch-hydrated order listing (eliminates N+1 queries)</span>
+<span class="hl-variable">$recent_orders</span> = <span class="hl-variable">$orders</span>-><span class="hl-function">all</span>([
+    <span class="hl-string">'status'</span>   => <span class="hl-string">'completed'</span>,
+    <span class="hl-string">'per_page'</span> => <span class="hl-number">50</span>,
+]);</code></pre>
+        </div>
+
+        <!-- Customer Repository -->
+        <h3 class="doc-subheading" id="repo-customers">Customer Repository (<code>Omnify_Customer_Repository</code>)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Customer Lookups & Audit Timeline</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-variable">$customers</span> = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(\Omnify\eCommerce\Repositories\Omnify_Customer_Repository::<span class="hl-keyword">class</span>);
+
+<span class="hl-comment">// Find customer by WordPress User ID</span>
+<span class="hl-variable">$customer</span> = <span class="hl-variable">$customers</span>-><span class="hl-function">find_by_user_id</span>(<span class="hl-function">get_current_user_id</span>());
+
+<span class="hl-comment">// Record custom CRM event in the customer's timeline</span>
+<span class="hl-variable">$customers</span>-><span class="hl-function">record_activity</span>(
+    <span class="hl-property">customer_id</span>: <span class="hl-variable">$customer</span>[<span class="hl-string">'id'</span>],
+    <span class="hl-property">activity_type</span>: <span class="hl-string">'vip_upgrade'</span>,
+    <span class="hl-property">metadata</span>: [<span class="hl-string">'tier'</span> => <span class="hl-string">'Gold'</span>, <span class="hl-string">'discount'</span> => <span class="hl-number">0.15</span>]
+);</code></pre>
+        </div>
+
+        <!-- Coupon Repository -->
+        <h3 class="doc-subheading" id="repo-coupons">Coupon Repository (<code>Omnify_Coupon_Repository</code>)</h3>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Creating & Validating Coupons Programmatically</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-variable">$coupons</span> = <span class="hl-variable">$container</span>-><span class="hl-function">get</span>(\Omnify\eCommerce\Repositories\Omnify_Coupon_Repository::<span class="hl-keyword">class</span>);
+
+<span class="hl-comment">// Create a single-use 20% discount coupon</span>
+<span class="hl-variable">$coupon_id</span> = <span class="hl-variable">$coupons</span>-><span class="hl-function">create</span>([
+    <span class="hl-string">'code'</span>           => <span class="hl-string">'SUMMER20'</span>,
+    <span class="hl-string">'discount_type'</span>  => <span class="hl-string">'percentage'</span>,  <span class="hl-comment">// 'percentage' or 'fixed'</span>
+    <span class="hl-string">'discount_value'</span> => <span class="hl-number">20.00</span>,
+    <span class="hl-string">'usage_limit'</span>    => <span class="hl-number">100</span>,
+    <span class="hl-string">'expires_at'</span>     => <span class="hl-string">'2026-12-31 23:59:59'</span>,
+]);</code></pre>
+        </div>
+      </section>
+
+      <!-- Storefront & Shortcodes -->
+      <section id="shortcodes-directory">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          Storefront & Shortcodes Directory
+        </h2>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Shortcode</th><th>Default Slug</th><th>Functionality</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>[omnify_storefront]</code></td><td><code>/storefront/</code></td><td>Main catalog grid with layout style toggle, search, brand/category filters, and single product views.</td></tr>
+              <tr><td><code>[omnify_cart]</code></td><td><code>/cart/</code></td><td>Multi-item cart, scarcity countdown timer, shipping zone selector, and coupon application.</td></tr>
+              <tr><td><code>[omnify_checkout]</code></td><td><code>/checkout/</code></td><td>Frictionless single-page checkout with country-first address autofill and gateway buttons.</td></tr>
+              <tr><td><code>[omnify_customer_portal]</code></td><td><code>/customer-portal/</code></td><td>Customer dashboard displaying orders, profile address book, and wishlist favorites.</td></tr>
+              <tr><td><code>[omnify_customer_downloads]</code></td><td><code>/downloads/</code></td><td>Customer digital locker displaying owned files and cryptographically signed download links.</td></tr>
+              <tr><td><code>[omnify_order_tracking]</code></td><td><code>/order-tracking/</code></td><td>Order lookup supporting guest tracking with direct digital downloads for paid items.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="doc-subheading" id="client-state">Storefront.js Client-Side State Machine</h3>
+        <p>
+          Storefront operations run through <code>assets/storefront/storefront.js</code>. Configuration parameters are injected under <code>window.omnifyStorefront</code>.
+        </p>
+      </section>
+
+      <!-- Payment Gateways & Digital Locker -->
+      <section id="gateway-architecture">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          Payment Gateways & Refunds
+        </h2>
+        <p>Omnify provides native API integrations for Stripe, PayPal Commerce, Razorpay, Alipay, WeChat Pay, SSLCommerz, Paystack, Tap Payments, Mollie, and manual methods.</p>
+        <p>When an admin processes a refund, the gateway API is executed, the order is updated, and all digital file access rights in <code>wp_omnify_customer_access</code> are revoked automatically.</p>
+      </section>
+
+      <!-- Digital Locker -->
+      <section id="signed-urls">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Digital Locker & Chunked Streaming
+        </h2>
+        <p>
+          Download links are protected using HMAC-SHA256 signatures salted with <code>wp_salt('auth')</code>. Binary delivery streams files in 8KB chunks via <code>fread()</code> with output buffers flushed to prevent server memory exhaustion.
+        </p>
+      </section>
+
+      <!-- Interactive REST API Sandbox & Simulator -->
+      <section id="api-simulator">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Interactive REST API Sandbox & Simulator
+        </h2>
+        <p>
+          Simulate live HTTP requests against Omnify's decoupled endpoints. Select any endpoint to inspect headers, request schemas, parameters, and interactive JSON responses with real-world latency metrics.
+        </p>
+
+        <div class="simulator-card">
+          <div class="simulator-top">
+            <span id="simMethodBadge" class="badge badge-get">GET</span>
+            <select id="simEndpointSelect" class="sim-select" aria-label="Select REST API Endpoint">
+              <optgroup label="Storefront & Public Catalog">
+                <option value="status">GET /wp-json/omnify/v1/status (Engine Health)</option>
+                <option value="products_public" selected>GET /wp-json/omnify/v1/products/public (Catalog Items)</option>
+                <option value="product_by_slug">GET /wp-json/omnify/v1/products/public/omnistudio-pro-theme</option>
+                <option value="validate_coupon">POST /wp-json/omnify/v1/checkout/validate-coupon</option>
+                <option value="checkout_order">POST /wp-json/omnify/v1/checkout (Headless Order)</option>
+              </optgroup>
+              <optgroup label="Protected Administrative Management">
+                <option value="orders_list">GET /wp-json/omnify/v1/orders (Paginated List)</option>
+                <option value="order_detail">GET /wp-json/omnify/v1/orders/1042 (Order Detail)</option>
+                <option value="order_mark_paid">POST /wp-json/omnify/v1/orders/1042/mark-paid</option>
+                <option value="customer_activity">GET /wp-json/omnify/v1/customers/88/activity</option>
+                <option value="grant_access">POST /wp-json/omnify/v1/access (Grant License)</option>
+                <option value="store_stats">GET /wp-json/omnify/v1/stats (Analytics & Sales)</option>
+              </optgroup>
+            </select>
+            <input type="text" id="simUrlInput" class="sim-url-input" readonly value="https://store.local/wp-json/omnify/v1/products/public?per_page=2">
+            <button class="sim-run-btn" id="simRunBtn">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Send Request</span>
+            </button>
+          </div>
+
+          <div style="padding: 10px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div id="simEndpointDesc" style="font-size: 0.82rem; color: var(--text-muted);">
+              List published catalog products with search, pagination, category, and faceted price filtering.
+            </div>
+            <div class="sim-status-strip">
+              <span id="simStatusBadge" class="badge badge-status-ok">200 OK</span>
+              <span id="simLatency">⚡ 1.2ms</span>
+              <span id="simPayloadSize">📦 1.4 KB</span>
+            </div>
+          </div>
+
+          <div class="simulator-preview">
+            <!-- Left: Request Details -->
+            <div class="sim-col">
+              <div class="sim-col-label">
+                <span>Request Headers & Body</span>
+                <span id="simReqTypeBadge" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);">No Body (GET)</span>
+              </div>
+              <div class="code-wrapper" style="margin: 0; background: var(--bg-surface);">
+                <pre style="padding: 12px; font-size: 0.78rem; min-height: 240px; max-height: 340px;"><code id="simRequestBody"><span class="hl-comment">// Request Headers</span>
+<span class="hl-property">Accept</span>: application/json
+<span class="hl-property">Content-Type</span>: application/json
+<span class="hl-property">X-WP-Nonce</span>: e9b41a29f8</code></pre>
+              </div>
+            </div>
+
+            <!-- Right: Response Preview -->
+            <div class="sim-col">
+              <div class="sim-col-label">
+                <span>JSON Response Payload</span>
+                <button class="copy-btn" onclick="copySimResponse(this)" style="padding: 2px 8px; font-size: 0.7rem;">Copy JSON</button>
+              </div>
+              <div class="code-wrapper" style="margin: 0; background: var(--bg-surface);">
+                <pre style="padding: 12px; font-size: 0.78rem; min-height: 240px; max-height: 340px;"><code id="simResponseBody">...</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REST API Reference -->
+      <section id="api-auth">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          REST API Reference
+        </h2>
+        <p>Namespace: <code>/wp-json/omnify/v1</code></p>
+
+        <h3 class="doc-subheading" id="api-storefront">Storefront Public Endpoints</h3>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-path">
+              <span class="badge badge-get">GET</span>
+              <span>/wp-json/omnify/v1/products/public</span>
+            </div>
+            <span class="badge badge-public">Public</span>
+          </div>
+          <div class="endpoint-desc">List published products with search, category, brand, and faceted price filtering.</div>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-path">
+              <span class="badge badge-post">POST</span>
+              <span>/wp-json/omnify/v1/checkout</span>
+            </div>
+            <span class="badge badge-public">Public / Guest</span>
+          </div>
+          <div class="endpoint-desc">Process checkout order, validate stock and coupon, and return transaction receipt.</div>
+        </div>
+
+        <h3 class="doc-subheading" id="api-orders">Administrative Management Endpoints</h3>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/orders</code></td><td>Paginated orders list with status, date, and customer filters.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/orders/{id}</code></td><td>Detailed order information with line items and customer notes.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/orders/{id}/mark-paid</code></td><td>Transitions order to paid, reduces stock, and grants downloads.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/orders/{id}/trash</code></td><td>Soft-deletes order to trash.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/orders/{id}/restore</code></td><td>Restores order from trash.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/customers/{id}/activity</code></td><td>Retrieves audit timeline events for a customer.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/access</code></td><td>Manually grants digital file access to a customer.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/access/revoke</code></td><td>Revokes file download entitlements.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Action Hooks Directory -->
+      <section id="actions-directory">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Action Hooks Directory
+        </h2>
+        <p>Action hooks let you execute custom logic when specific events happen inside Omnify.</p>
+
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Action Hook</th><th>Arguments</th><th>Fires When</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>omnify_before_boot</code></td><td><code>$plugin, $container</code></td><td>Fires before Omnify registers internal services and repositories.</td></tr>
+              <tr><td><code>omnify_booted</code></td><td><code>$plugin, $container</code></td><td>Fires after full bootstrap is complete.</td></tr>
+              <tr><td><code>omnify_order_created</code></td><td><code>$order_id, $order_data</code></td><td>Fires immediately after an order is recorded in the database.</td></tr>
+              <tr><td><code>omnify_order_status_changed</code></td><td><code>$order_id, $new_status, $old_status</code></td><td>Fires when an order transitions between statuses (e.g. pending → completed).</td></tr>
+              <tr><td><code>omnify_customer_access_granted</code></td><td><code>$customer_id, $product_id, $expires_at, $id</code></td><td>Fires when digital product downloads are granted to a customer.</td></tr>
+              <tr><td><code>omnify_customer_access_revoked</code></td><td><code>$customer_id, $product_id</code></td><td>Fires when access is revoked upon refund or cancellation.</td></tr>
+              <tr><td><code>omnify_download_logged</code></td><td><code>$log_id, $product_id, $file_id, $customer_id, $status</code></td><td>Fires after a customer downloads a protected file.</td></tr>
+              <tr><td><code>omnify_stock_reduced</code></td><td><code>$product_id, $variation_id, $qty, $new_stock</code></td><td>Fires after atomic stock reduction on checkout.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-title">PHP — Example: Triggering Fulfillment when Order Status Changes</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <pre><code><span class="hl-function">add_action</span>(<span class="hl-string">'omnify_order_status_changed'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$order_id</span>, <span class="hl-variable">$new_status</span>, <span class="hl-variable">$old_status</span>) {
+    <span class="hl-keyword">if</span> (<span class="hl-string">'processing'</span> === <span class="hl-variable">$new_status</span> || <span class="hl-string">'completed'</span> === <span class="hl-variable">$new_status</span>) {
+        <span class="hl-comment">// Fetch order details from repository</span>
+        <span class="hl-variable">$order</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::<span class="hl-keyword">class</span>)->find(<span class="hl-variable">$order_id</span>);
+        
+        <span class="hl-comment">// Log custom message or dispatch external fulfillment</span>
+        <span class="hl-function">error_log</span>(<span class="hl-string">"Order #{$order_id} is ready for fulfillment for {$order['email']}"</span>);
+    }
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+        </div>
+      </section>
+
+      <!-- Filter Hooks Directory (Dedicated Section) -->
+      <section id="filters-directory">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filter Hooks Directory
+        </h2>
+        <p>
+          Filter hooks allow developers to intercept, modify, and return customized data throughout the Omnify engine without modifying a single core file. Whenever Omnify formats prices, processes checkout submissions, queries products, or streams digital files, it passes the data through these hooks.
+        </p>
+
+        <!-- Quick Summary Table -->
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Filter Hook</th><th>Parameters</th><th>Return Type</th><th>Primary Use Case</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>omnify_format_price</code></td>
+                <td><code>$formatted, $amount, $settings</code></td>
+                <td><code>string</code></td>
+                <td>Customize currency display, append VAT notes, display "FREE" badges, or perform dynamic multi-currency conversions.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_before_checkout_validation</code></td>
+                <td><code>$data, $settings, $items</code></td>
+                <td><code>array</code></td>
+                <td>Normalize or sanitize form inputs (e.g. phone numbers), apply cart-wide volume tier discounts, or inject session variables.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_after_checkout_validation</code></td>
+                <td><code>$error, $data, $settings, $items</code></td>
+                <td><code>null|WP_Error</code></td>
+                <td>Halt checkout by returning a <code>WP_Error</code>. Enforce minimum order values, block disposable emails, or validate VAT/tax IDs.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_get_products_args</code></td>
+                <td><code>$args</code></td>
+                <td><code>array</code></td>
+                <td>Modify product query arguments. Automatically hide out-of-stock items or gate VIP/wholesale products by user role.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_get_orders_args</code></td>
+                <td><code>$args</code></td>
+                <td><code>array</code></td>
+                <td>Filter order listings in admin or customer portals (e.g. by customer tier, status, or date range).</td>
+              </tr>
+              <tr>
+                <td><code>omnify_signed_download_expires_in</code></td>
+                <td><code>$seconds, $file_id, $customer_id</code></td>
+                <td><code>int</code></td>
+                <td>Adjust the lifetime (default: 900s / 15m) of HMAC-SHA256 download links. Offer 48-hour windows for VIP members.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_rest_can_manage</code></td>
+                <td><code>$can_manage, $request, $user_id</code></td>
+                <td><code>bool|WP_Error</code></td>
+                <td>Authorize external ERP microservices, inventory sync bots, or headless services via custom API keys or Bearer tokens.</td>
+              </tr>
+              <tr>
+                <td><code>omnify_email_arguments</code></td>
+                <td><code>$args</code></td>
+                <td><code>array</code></td>
+                <td>Intercept transactional emails. Attach PDF invoices, customize HTML templates, or add accounting team BCC addresses.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="doc-subheading">Detailed Filter Hook Guides & Practical Examples</h3>
+
+        <!-- Filter 1 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #1</span>
+            <span class="type-tag">Returns: string</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_format_price($formatted, $amount, $settings)</code></h4>
+          <p>
+            <strong>How it works:</strong> Every price string rendered by Omnify across storefront cards, quick-view modals, cart drawers, checkout summaries, and email confirmations passes through this filter. You can rewrite the text, append tax notices, or convert the currency symbol.
+          </p>
+          <div style="margin: 12px 0 16px; font-size: 0.85rem; color: var(--text-dim);">
+            <strong>Parameters:</strong> <code>$formatted</code> <em>(string)</em> — Formatted price HTML/text (e.g., "$49.00") &bull; <code>$amount</code> <em>(float)</em> — Raw numerical price (e.g., 49.00) &bull; <code>$settings</code> <em>(array)</em> — Active store currency and formatting options.
+          </div>
+
+          <!-- Example A -->
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">Example A — Display "FREE" for Zero-Dollar Products</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Display a stylish "FREE" badge instead of "$0.00" for giveaway digital goods.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_format_price'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$formatted</span>, <span class="hl-variable">$amount</span>, <span class="hl-variable">$settings</span>) {
+    <span class="hl-keyword">if</span> ((float) <span class="hl-variable">$amount</span> === <span class="hl-number">0.0</span>) {
+        <span class="hl-keyword">return</span> <span class="hl-string">'&lt;span class="badge-free" style="color:#10b981; font-weight:700;"&gt;FREE&lt;/span&gt;'</span>;
+    }
+    <span class="hl-keyword">return</span> <span class="hl-variable">$formatted</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+
+          <!-- Example B -->
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">Example B — Append Currency Code & VAT Notice</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Append international ISO code (e.g. USD) and VAT tax indicator.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_format_price'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$formatted</span>, <span class="hl-variable">$amount</span>, <span class="hl-variable">$settings</span>) {
+    <span class="hl-variable">$currency</span> = <span class="hl-variable">$settings</span>[<span class="hl-string">'currency'</span>] ?? <span class="hl-string">'USD'</span>;
+    <span class="hl-keyword">return</span> <span class="hl-variable">$formatted</span> . <span class="hl-string">" &lt;span style=\"font-size:0.8em; color:#94a3b8;\"&gt;{$currency} (incl. VAT)&lt;/span&gt;"</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 2 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #2</span>
+            <span class="type-tag">Returns: array</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_before_checkout_validation($data, $settings, $items)</code></h4>
+          <p>
+            <strong>How it works:</strong> Executes before Omnify performs required-field verification. Use this to sanitize and clean user inputs, normalize phone numbers to international standard, or modify cart data.
+          </p>
+          <div style="margin: 12px 0 16px; font-size: 0.85rem; color: var(--text-dim);">
+            <strong>Parameters:</strong> <code>$data</code> <em>(array)</em> — Form submission keys (first_name, email, address, custom fields) &bull; <code>$settings</code> <em>(array)</em> — Store options &bull; <code>$items</code> <em>(array)</em> — Line items in cart.
+          </div>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Normalize Phone Numbers & Sanitize Custom Fields</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Standardize customer phone numbers to digits only and strip spaces.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_before_checkout_validation'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$data</span>, <span class="hl-variable">$settings</span>, <span class="hl-variable">$items</span>) {
+    <span class="hl-keyword">if</span> (! <span class="hl-function">empty</span>(<span class="hl-variable">$data</span>[<span class="hl-string">'phone'</span>])) {
+        <span class="hl-comment">// Strip all non-numeric characters except leading plus '+'</span>
+        <span class="hl-variable">$data</span>[<span class="hl-string">'phone'</span>] = <span class="hl-function">preg_replace</span>(<span class="hl-string">'/[^\d+]/'</span>, <span class="hl-string">''</span>, <span class="hl-variable">$data</span>[<span class="hl-string">'phone'</span>]);
+    }
+
+    <span class="hl-comment">// Sanitize customer delivery notes if provided</span>
+    <span class="hl-keyword">if</span> (! <span class="hl-function">empty</span>(<span class="hl-variable">$data</span>[<span class="hl-string">'delivery_notes'</span>])) {
+        <span class="hl-variable">$data</span>[<span class="hl-string">'delivery_notes'</span>] = <span class="hl-function">sanitize_textarea_field</span>(<span class="hl-variable">$data</span>[<span class="hl-string">'delivery_notes'</span>]);
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$data</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 3 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #3</span>
+            <span class="type-tag">Returns: null | WP_Error</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_after_checkout_validation($error, $data, $settings, $items)</code></h4>
+          <p>
+            <strong>How it works:</strong> The most crucial hook for custom business rules. Fires after all core validations pass. If you return <code>null</code>, the checkout succeeds. If you return a <code>WP_Error</code> object, checkout immediately stops and your message is highlighted in red on the checkout screen.
+          </p>
+          <div style="margin: 12px 0 16px; font-size: 0.85rem; color: var(--text-dim);">
+            <strong>Parameters:</strong> <code>$error</code> <em>(null|\WP_Error)</em> — Initial state &bull; <code>$data</code> <em>(array)</em> — Validated checkout data &bull; <code>$settings</code> <em>(array)</em> — Store settings &bull; <code>$items</code> <em>(array)</em> — Line items.
+          </div>
+
+          <!-- Example A -->
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">Example A — Enforce Minimum Order Subtotal ($25.00)</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Block checkout if the customer's total purchase is less than $25.00.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_after_checkout_validation'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$error</span>, <span class="hl-variable">$data</span>, <span class="hl-variable">$settings</span>, <span class="hl-variable">$items</span>) {
+    <span class="hl-variable">$subtotal</span> = <span class="hl-number">0.0</span>;
+    <span class="hl-keyword">foreach</span> (<span class="hl-variable">$items</span> <span class="hl-keyword">as</span> <span class="hl-variable">$item</span>) {
+        <span class="hl-variable">$subtotal</span> += (float) (<span class="hl-variable">$item</span>[<span class="hl-string">'price'</span>] ?? <span class="hl-number">0</span>) * (int) (<span class="hl-variable">$item</span>[<span class="hl-string">'quantity'</span>] ?? <span class="hl-number">1</span>);
+    }
+
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$subtotal</span> < <span class="hl-number">25.00</span>) {
+        <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> \<span class="hl-function">WP_Error</span>(
+            <span class="hl-string">'subtotal_too_low'</span>,
+            <span class="hl-function">__</span>(<span class="hl-string">'Our store requires a minimum purchase subtotal of $25.00.'</span>, <span class="hl-string">'my-store'</span>)
+        );
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$error</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">4</span>);</code></pre>
+          </div>
+
+          <!-- Example B -->
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">Example B — Block Fraudulent Throwaway / Disposable Emails</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Reject temporary disposable emails (e.g. mailinator, tempmail) to protect digital downloads.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_after_checkout_validation'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$error</span>, <span class="hl-variable">$data</span>) {
+    <span class="hl-variable">$email</span> = <span class="hl-function">strtolower</span>(<span class="hl-function">trim</span>(<span class="hl-variable">$data</span>[<span class="hl-string">'email'</span>] ?? <span class="hl-string">''</span>));
+    <span class="hl-variable">$blocked_domains</span> = [<span class="hl-string">'mailinator.com'</span>, <span class="hl-string">'tempmail.com'</span>, <span class="hl-string">'10minutemail.com'</span>, <span class="hl-string">'guerrillamail.com'</span>];
+
+    <span class="hl-keyword">foreach</span> (<span class="hl-variable">$blocked_domains</span> <span class="hl-keyword">as</span> <span class="hl-variable">$domain</span>) {
+        <span class="hl-keyword">if</span> (<span class="hl-function">str_ends_with</span>(<span class="hl-variable">$email</span>, <span class="hl-string">'@'</span> . <span class="hl-variable">$domain</span>)) {
+            <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> \<span class="hl-function">WP_Error</span>(
+                <span class="hl-string">'blocked_email_provider'</span>,
+                <span class="hl-function">__</span>(<span class="hl-string">'Temporary or disposable email addresses are not permitted. Please use your real email.'</span>, <span class="hl-string">'my-store'</span>)
+            );
+        }
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$error</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 4 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #4</span>
+            <span class="type-tag">Returns: array</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_get_products_args($args)</code></h4>
+          <p>
+            <strong>How it works:</strong> Intercepts parameters sent to <code>Omnify_Product_Repository::all()</code>. Use this to automatically filter storefront query results without modifying templates.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Automatically Hide Out-of-Stock Items & Restrict VIP Catalog</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Enforce in-stock only for visitors, and restrict category 'wholesale' to B2B users.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_get_products_args'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$args</span>) {
+    <span class="hl-comment">// 1. Always hide out of stock items on public frontend</span>
+    <span class="hl-keyword">if</span> (! <span class="hl-function">is_admin</span>()) {
+        <span class="hl-variable">$args</span>[<span class="hl-string">'stock_status'</span>] = <span class="hl-string">'instock'</span>;
+    }
+
+    <span class="hl-comment">// 2. If user is NOT a verified wholesale buyer, exclude wholesale catalog</span>
+    <span class="hl-keyword">if</span> (! <span class="hl-function">current_user_can</span>(<span class="hl-string">'wholesale_buyer'</span>)) {
+        <span class="hl-variable">$args</span>[<span class="hl-string">'exclude_category'</span>] = <span class="hl-string">'wholesale-exclusive'</span>;
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$args</span>;
+});</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 5 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #5</span>
+            <span class="type-tag">Returns: int (Seconds)</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_signed_download_expires_in($seconds, $file_id, $customer_id)</code></h4>
+          <p>
+            <strong>How it works:</strong> Omnify signs digital downloads using HMAC-SHA256 to stop link piracy. By default, links expire after 900 seconds (15 minutes). Use this hook to lengthen or shorten the window depending on file size or customer status.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Extend Download Window to 48 Hours for VIP Members</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * VIP customers get 48 hours (172,800s); regular customers get 1 hour (3,600s).
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_signed_download_expires_in'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$seconds</span>, <span class="hl-variable">$file_id</span>, <span class="hl-variable">$customer_id</span>) {
+    <span class="hl-variable">$customer</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Customer_Repository::<span class="hl-keyword">class</span>)->find(<span class="hl-variable">$customer_id</span>);
+
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$customer</span> && (<span class="hl-variable">$customer</span>[<span class="hl-string">'group'</span>] ?? <span class="hl-string">''</span>) === <span class="hl-string">'vip'</span>) {
+        <span class="hl-keyword">return</span> <span class="hl-number">172800</span>; <span class="hl-comment">// 48 hours in seconds</span>
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-number">3600</span>; <span class="hl-comment">// 1 hour for standard customers</span>
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 6 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #6</span>
+            <span class="type-tag">Returns: bool | WP_Error</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_rest_can_manage($can_manage, $request, $server)</code></h4>
+          <p>
+            <strong>How it works:</strong> Controls administrative access to REST API routes under <code>/wp-json/omnify/v1/</code>. Return <code>true</code> to grant authorization, or return a <code>WP_Error</code> to deny access. Perfect for headless systems and automated ERP bots.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Authorize External ERP Inventory Sync via Secret API Token</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Allow automated inventory sync bot using a custom Bearer token.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_rest_can_manage'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$can_manage</span>, <span class="hl-variable">$request</span>) {
+    <span class="hl-variable">$auth_header</span> = <span class="hl-variable">$request</span>-><span class="hl-function">get_header</span>(<span class="hl-string">'authorization'</span>) ?? <span class="hl-string">''</span>;
+    <span class="hl-variable">$secret_token</span> = <span class="hl-string">'erp_live_sec_994827104829104820'</span>;
+
+    <span class="hl-keyword">if</span> (<span class="hl-function">hash_equals</span>(<span class="hl-string">'Bearer '</span> . <span class="hl-variable">$secret_token</span>, <span class="hl-variable">$auth_header</span>)) {
+        <span class="hl-keyword">return</span> <span class="hl-keyword">true</span>; <span class="hl-comment">// Authorized external sync</span>
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$can_manage</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Filter 7 -->
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span class="recipe-badge">Filter Hook #7</span>
+            <span class="type-tag">Returns: array</span>
+          </div>
+          <h4 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 8px;"><code>omnify_email_arguments($args)</code></h4>
+          <p>
+            <strong>How it works:</strong> Intercepts transactional emails before dispatch. You can add BCC headers for internal order archiving or attach PDF receipts and license agreements.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Add Accounting Team BCC & Attach PDF Terms</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Automatically BCC accounting team on all order confirmation emails.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_email_arguments'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$args</span>) {
+    <span class="hl-keyword">if</span> (<span class="hl-function">str_contains</span>(<span class="hl-variable">$args</span>[<span class="hl-string">'subject'</span>] ?? <span class="hl-string">''</span>, <span class="hl-string">'Order Confirmation'</span>)) {
+        <span class="hl-variable">$args</span>[<span class="hl-string">'headers'</span>][] = <span class="hl-string">'Bcc: accounting@my-company.com'</span>;
+    }
+    <span class="hl-keyword">return</span> <span class="hl-variable">$args</span>;
+});</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Developer Recipes (Dedicated Section) -->
+      <section id="developer-recipes">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Developer Recipes & Real-World Guides
+        </h2>
+        <p>
+          Complete, production-tested, copy-pasteable step-by-step guides for extending Omnify in real-world commercial WordPress deployments.
+        </p>
+
+        <!-- Recipe 1 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 1 • Checkout Customization</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Custom Checkout Fields (VAT / Tax ID & Delivery Instructions)</h3>
+          <p>
+            <strong>Problem:</strong> You need B2B customers to enter a European VAT ID or shipping instructions on checkout, validate it, and store it visibly in the order history.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Step 1: Validation with omnify_after_checkout_validation</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Step 1: Validate custom VAT number during checkout.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_after_checkout_validation'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$error</span>, <span class="hl-variable">$data</span>) {
+    <span class="hl-variable">$vat</span> = <span class="hl-function">trim</span>(<span class="hl-variable">$data</span>[<span class="hl-string">'vat_number'</span>] ?? <span class="hl-string">''</span>);
+    
+    <span class="hl-comment">// If customer provided a VAT ID, ensure it has at least 8 alphanumeric characters</span>
+    <span class="hl-keyword">if</span> (! <span class="hl-function">empty</span>(<span class="hl-variable">$vat</span>) && <span class="hl-function">strlen</span>(<span class="hl-variable">$vat</span>) < <span class="hl-number">8</span>) {
+        <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> \<span class="hl-function">WP_Error</span>(<span class="hl-string">'invalid_vat'</span>, <span class="hl-function">__</span>(<span class="hl-string">'Please provide a valid VAT / Tax registration ID.'</span>, <span class="hl-string">'my-theme'</span>));
+    }
+    
+    <span class="hl-keyword">return</span> <span class="hl-variable">$error</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Step 2: Store in Order Notes via Omnify_Order_Repository</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Step 2: Save custom VAT and delivery instructions into Order Notes upon creation.
+ */</span>
+<span class="hl-function">add_action</span>(<span class="hl-string">'omnify_order_created'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$order_id</span>, <span class="hl-variable">$order_data</span>) {
+    <span class="hl-variable">$orders</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::<span class="hl-keyword">class</span>);
+    
+    <span class="hl-keyword">if</span> (! <span class="hl-function">empty</span>($_POST[<span class="hl-string">'vat_number'</span>])) {
+        <span class="hl-variable">$vat</span> = <span class="hl-function">sanitize_text_field</span>(<span class="hl-function">wp_unslash</span>($_POST[<span class="hl-string">'vat_number'</span>]));
+        <span class="hl-variable">$orders</span>-><span class="hl-function">add_note</span>(<span class="hl-variable">$order_id</span>, <span class="hl-string">"Customer VAT / Tax ID: {$vat}"</span>, <span class="hl-property">customer_visible</span>: <span class="hl-keyword">true</span>);
+    }
+
+    <span class="hl-keyword">if</span> (! <span class="hl-function">empty</span>($_POST[<span class="hl-string">'delivery_notes'</span>])) {
+        <span class="hl-variable">$notes</span> = <span class="hl-function">sanitize_textarea_field</span>(<span class="hl-function">wp_unslash</span>($_POST[<span class="hl-string">'delivery_notes'</span>]));
+        <span class="hl-variable">$orders</span>-><span class="hl-function">add_note</span>(<span class="hl-variable">$order_id</span>, <span class="hl-string">"Delivery Instructions: {$notes}"</span>, <span class="hl-property">customer_visible</span>: <span class="hl-keyword">true</span>);
+    }
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 2 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 2 • Automation & Notifications</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Real-Time Discord or Slack Order Alerts</h3>
+          <p>
+            <strong>Problem:</strong> Your operations team needs an instant rich notification in Discord or Slack whenever a customer completes a purchase.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Webhook Dispatch on Order Completion</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Send real-time webhook alert to Discord or Slack when an order is paid.
+ */</span>
+<span class="hl-function">add_action</span>(<span class="hl-string">'omnify_order_status_changed'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$order_id</span>, <span class="hl-variable">$new_status</span>) {
+    <span class="hl-comment">// Trigger only when order reaches 'completed' or 'processing'</span>
+    <span class="hl-keyword">if</span> (! <span class="hl-function">in_array</span>(<span class="hl-variable">$new_status</span>, [<span class="hl-string">'completed'</span>, <span class="hl-string">'processing'</span>], <span class="hl-keyword">true</span>)) {
+        <span class="hl-keyword">return</span>;
+    }
+
+    <span class="hl-variable">$order</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::<span class="hl-keyword">class</span>)->find(<span class="hl-variable">$order_id</span>);
+    <span class="hl-keyword">if</span> (! <span class="hl-variable">$order</span>) {
+        <span class="hl-keyword">return</span>;
+    }
+
+    <span class="hl-variable">$webhook_url</span> = <span class="hl-string">'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE'</span>;
+
+    <span class="hl-variable">$payload</span> = [
+        <span class="hl-string">'embeds'</span> => [
+            [
+                <span class="hl-string">'title'</span>       => <span class="hl-string">"🎉 New Order #{$order_id} Received!"</span>,
+                <span class="hl-string">'color'</span>       => <span class="hl-number">3921912</span>, <span class="hl-comment">// Emerald green</span>
+                <span class="hl-string">'description'</span> => <span class="hl-string">"**Customer:** {$order['billing_first_name']} {$order['billing_last_name']} ({$order['email']})\n"</span>
+                               . <span class="hl-string">"**Total:** {$order['currency']} \${$order['total']}\n"</span>
+                               . <span class="hl-string">"**Gateway:** {$order['payment_method']}\n"</span>
+                               . <span class="hl-string">"**Status:** {$new_status}"</span>,
+                <span class="hl-string">'timestamp'</span>   => <span class="hl-function">date</span>(<span class="hl-string">'c'</span>)
+            ]
+        ]
+    ];
+
+    <span class="hl-function">wp_remote_post</span>(<span class="hl-variable">$webhook_url</span>, [
+        <span class="hl-string">'headers'</span>  => [<span class="hl-string">'Content-Type'</span> => <span class="hl-string">'application/json'</span>],
+        <span class="hl-string">'body'</span>     => <span class="hl-function">wp_json_encode</span>(<span class="hl-variable">$payload</span>),
+        <span class="hl-string">'blocking'</span> => <span class="hl-keyword">false</span>, <span class="hl-comment">// Non-blocking async dispatch for maximum performance</span>
+        <span class="hl-string">'timeout'</span>  => <span class="hl-number">5</span>,
+    ]);
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 3 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 3 • Headless Frontend</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Headless Next.js 14 / React Catalog & Headless Checkout</h3>
+          <p>
+            <strong>Problem:</strong> You want a lightning-fast React frontend querying Omnify's public endpoints using Next.js Incremental Static Regeneration (ISR) and server components.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">TypeScript / Next.js 14 — Catalog Fetching with 60s Revalidation</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">// app/products/page.tsx (Next.js 14 App Router Server Component)</span>
+<span class="hl-keyword">interface</span> Product {
+  id: number;
+  name: string;
+  slug: string;
+  price: number;
+  sale_price: number | null;
+  stock_status: string;
+}
+
+<span class="hl-keyword">export default async function</span> ProductsPage() {
+  <span class="hl-keyword">const</span> res = <span class="hl-keyword">await</span> fetch(<span class="hl-string">'https://your-site.com/wp-json/omnify/v1/products/public?per_page=12'</span>, {
+    next: { revalidate: <span class="hl-number">60</span> } <span class="hl-comment">// Revalidate every 60 seconds (ISR)</span>
+  });
+  <span class="hl-keyword">const</span> products: Product[] = <span class="hl-keyword">await</span> res.json();
+
+  <span class="hl-keyword">return</span> (
+    &lt;div className="max-w-6xl mx-auto py-12 px-4"&gt;
+      &lt;h1 className="text-3xl font-extrabold mb-8"&gt;Product Catalog&lt;/h1&gt;
+      &lt;div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"&gt;
+        {products.map((p) => (
+          &lt;div key={p.id} className="border border-slate-800 rounded-xl p-5 bg-slate-900"&gt;
+            &lt;h3 className="font-bold text-lg text-white"&gt;{p.name}&lt;/h3&gt;
+            &lt;p className="text-sky-400 font-semibold text-xl mt-2"&gt;
+              ${p.sale_price ?? p.price}
+            &lt;/p&gt;
+            &lt;a href={`/products/${p.slug}`} className="block mt-4 text-center bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2 rounded-lg"&gt;
+              View Details
+            &lt;/a&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 4 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 4 • Digital Goods & Licensing</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Auto-Generating & Emailing Software License Keys</h3>
+          <p>
+            <strong>Problem:</strong> When a customer purchases software or plugins, you want to automatically mint a formatted license key (<code>XXXX-XXXX-XXXX-XXXX</code>) and email it to them.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — License Key Generation & Automated Email</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Automatically mint a 16-character license key upon digital access grant.
+ */</span>
+<span class="hl-function">add_action</span>(<span class="hl-string">'omnify_customer_access_granted'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$customer_id</span>, <span class="hl-variable">$product_id</span>) {
+    <span class="hl-comment">// Format: XXXX-XXXX-XXXX-XXXX</span>
+    <span class="hl-variable">$raw_bytes</span>   = <span class="hl-function">random_bytes</span>(<span class="hl-number">8</span>);
+    <span class="hl-variable">$hex_string</span>  = <span class="hl-function">strtoupper</span>(<span class="hl-function">bin2hex</span>(<span class="hl-variable">$raw_bytes</span>));
+    <span class="hl-variable">$license_key</span> = <span class="hl-function">implode</span>(<span class="hl-string">'-'</span>, <span class="hl-function">str_split</span>(<span class="hl-variable">$hex_string</span>, <span class="hl-number">4</span>));
+
+    <span class="hl-comment">// Retrieve customer details</span>
+    <span class="hl-variable">$customer</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Customer_Repository::<span class="hl-keyword">class</span>)->find(<span class="hl-variable">$customer_id</span>);
+    <span class="hl-keyword">if</span> (! <span class="hl-variable">$customer</span>) {
+        <span class="hl-keyword">return</span>;
+    }
+
+    <span class="hl-comment">// Store license key in customer options</span>
+    <span class="hl-function">update_user_meta</span>(<span class="hl-variable">$customer</span>[<span class="hl-string">'user_id'</span>] ?? <span class="hl-number">0</span>, <span class="hl-string">"omnify_license_{$product_id}"</span>, <span class="hl-variable">$license_key</span>);
+
+    <span class="hl-comment">// Dispatch email to customer</span>
+    <span class="hl-variable">$subject</span> = <span class="hl-string">'Your Software License Activation Key'</span>;
+    <span class="hl-variable">$message</span> = <span class="hl-string">"Hello {$customer['first_name']},\n\n"</span>
+             . <span class="hl-string">"Thank you for your order! Here is your official activation license key:\n\n"</span>
+             . <span class="hl-string">"  {$license_key}\n\n"</span>
+             . <span class="hl-string">"You can download your product files anytime from your customer account portal.\n\n"</span>
+             . <span class="hl-string">"Best regards,\nThe Team"</span>;
+
+    <span class="hl-function">wp_mail</span>(<span class="hl-variable">$customer</span>[<span class="hl-string">'email'</span>], <span class="hl-variable">$subject</span>, <span class="hl-variable">$message</span>);
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 5 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 5 • Pricing & Promotions</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Tiered Bulk Volume Discount Engine</h3>
+          <p>
+            <strong>Problem:</strong> You want an automated volume promotion: Buy 3+ items and get 10% off, buy 5+ items and get 20% off total cart value.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Volume Discount Application</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Automatically adjust cart subtotal based on volume quantity.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_before_checkout_validation'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$data</span>, <span class="hl-variable">$settings</span>, <span class="hl-variable">$items</span>) {
+    <span class="hl-variable">$total_qty</span> = <span class="hl-number">0</span>;
+    <span class="hl-keyword">foreach</span> (<span class="hl-variable">$items</span> <span class="hl-keyword">as</span> <span class="hl-variable">$item</span>) {
+        <span class="hl-variable">$total_qty</span> += (int) (<span class="hl-variable">$item</span>[<span class="hl-string">'quantity'</span>] ?? <span class="hl-number">1</span>);
+    }
+
+    <span class="hl-comment">// Apply 20% discount for 5+ items, or 10% for 3+ items</span>
+    <span class="hl-variable">$discount_rate</span> = <span class="hl-number">0.0</span>;
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$total_qty</span> >= <span class="hl-number">5</span>) {
+        <span class="hl-variable">$discount_rate</span> = <span class="hl-number">0.20</span>;
+    } <span class="hl-keyword">elseif</span> (<span class="hl-variable">$total_qty</span> >= <span class="hl-number">3</span>) {
+        <span class="hl-variable">$discount_rate</span> = <span class="hl-number">0.10</span>;
+    }
+
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$discount_rate</span> > <span class="hl-number">0</span>) {
+        <span class="hl-variable">$data</span>[<span class="hl-string">'volume_discount_rate'</span>] = <span class="hl-variable">$discount_rate</span>;
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$data</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 6 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 6 • Payment Gateways</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Custom Offline Bank Wire Transfer / Direct Invoice Method</h3>
+          <p>
+            <strong>Problem:</strong> You need an offline "Wire Transfer / Invoice" payment method that puts orders in <code>on-hold</code> status until wire verification, displaying wire instructions to the customer.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Registering Custom Wire Transfer Method</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Set custom wire transfer orders to 'on-hold' status and append bank details.
+ */</span>
+<span class="hl-function">add_action</span>(<span class="hl-string">'omnify_order_created'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$order_id</span>, <span class="hl-variable">$order_data</span>) {
+    <span class="hl-keyword">if</span> ((<span class="hl-variable">$order_data</span>[<span class="hl-string">'payment_method'</span>] ?? <span class="hl-string">''</span>) === <span class="hl-string">'wire_transfer'</span>) {
+        <span class="hl-variable">$orders</span> = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::<span class="hl-keyword">class</span>);
+        
+        <span class="hl-comment">// Set status to 'on-hold' until bank funds clear</span>
+        <span class="hl-variable">$orders</span>-><span class="hl-function">update</span>(<span class="hl-variable">$order_id</span>, [<span class="hl-string">'status'</span> => <span class="hl-string">'on-hold'</span>]);
+        
+        <span class="hl-comment">// Add wire instructions for customer view</span>
+        <span class="hl-variable">$orders</span>-><span class="hl-function">add_note</span>(
+            <span class="hl-variable">$order_id</span>,
+            <span class="hl-string">'Bank: Chase Bank | Account: #987654321 | Routing: #123456789. Please mention Order #'</span> . <span class="hl-variable">$order_id</span>,
+            <span class="hl-property">customer_visible</span>: <span class="hl-keyword">true</span>
+        );
+    }
+}, <span class="hl-number">10</span>, <span class="hl-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 7 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 7 • International Commerce</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Dynamic Multi-Currency Pricing with Live Geo-Location</h3>
+          <p>
+            <strong>Problem:</strong> Show European customers prices in EUR (€) and UK customers prices in GBP (£) dynamically based on visitor IP address.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Geo-Currency Conversion via omnify_format_price</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Dynamically convert base USD amounts to EUR or GBP based on Cloudflare or IP headers.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_format_price'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$formatted</span>, <span class="hl-variable">$amount</span>, <span class="hl-variable">$settings</span>) {
+    <span class="hl-variable">$country</span> = $_SERVER[<span class="hl-string">'HTTP_CF_IPCOUNTRY'</span>] ?? <span class="hl-string">'US'</span>;
+
+    <span class="hl-keyword">if</span> (<span class="hl-function">in_array</span>(<span class="hl-variable">$country</span>, [<span class="hl-string">'FR'</span>, <span class="hl-string">'DE'</span>, <span class="hl-string">'IT'</span>, <span class="hl-string">'ES'</span>, <span class="hl-string">'NL'</span>], <span class="hl-keyword">true</span>)) {
+        <span class="hl-comment">// EUR conversion rate (e.g. 1 USD = 0.92 EUR)</span>
+        <span class="hl-variable">$eur_price</span> = <span class="hl-function">number_format</span>(<span class="hl-variable">$amount</span> * <span class="hl-number">0.92</span>, <span class="hl-number">2</span>);
+        <span class="hl-keyword">return</span> <span class="hl-string">"€{$eur_price} EUR"</span>;
+    }
+
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$country</span> === <span class="hl-string">'GB'</span>) {
+        <span class="hl-comment">// GBP conversion rate (e.g. 1 USD = 0.79 GBP)</span>
+        <span class="hl-variable">$gbp_price</span> = <span class="hl-function">number_format</span>(<span class="hl-variable">$amount</span> * <span class="hl-number">0.79</span>, <span class="hl-number">2</span>);
+        <span class="hl-keyword">return</span> <span class="hl-string">"£{$gbp_price} GBP"</span>;
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$formatted</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+
+        <!-- Recipe 8 -->
+        <div class="recipe-card">
+          <span class="recipe-badge">Recipe 8 • Security & Digital Locker</span>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Restricting Digital Downloads by Maximum Download Count</h3>
+          <p>
+            <strong>Problem:</strong> Prevent customers from sharing digital download links by capping file access to a maximum of 5 downloads per customer.
+          </p>
+
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span class="code-title">PHP — Download Quota Enforcement via wp_omnify_download_logs</span>
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            </div>
+            <pre><code><span class="hl-comment">/**
+ * Enforce a strict 5-download limit per digital product file.
+ */</span>
+<span class="hl-function">add_filter</span>(<span class="hl-string">'omnify_signed_download_expires_in'</span>, <span class="hl-keyword">function</span>(<span class="hl-variable">$seconds</span>, <span class="hl-variable">$file_id</span>, <span class="hl-variable">$customer_id</span>) {
+    <span class="hl-keyword">global</span> <span class="hl-variable">$wpdb</span>;
+    <span class="hl-variable">$table</span> = <span class="hl-variable">$wpdb</span>-><span class="hl-variable">prefix</span> . <span class="hl-string">'omnify_download_logs'</span>;
+
+    <span class="hl-comment">// Count successful past downloads for this customer and file</span>
+    <span class="hl-variable">$download_count</span> = (int) <span class="hl-variable">$wpdb</span>-><span class="hl-function">get_var</span>(<span class="hl-variable">$wpdb</span>-><span class="hl-function">prepare</span>(
+        <span class="hl-string">"SELECT COUNT(*) FROM {$table} WHERE customer_id = %d AND file_id = %d AND status = 'success'"</span>,
+        <span class="hl-variable">$customer_id</span>,
+        <span class="hl-variable">$file_id</span>
+    ));
+
+    <span class="hl-keyword">if</span> (<span class="hl-variable">$download_count</span> >= <span class="hl-number">5</span>) {
+        <span class="hl-comment">// Return 0 to immediately invalidate and expire the link</span>
+        <span class="hl-function">wp_die</span>(<span class="hl-function">__</span>(<span class="hl-string">'You have reached the maximum allowed downloads (5/5) for this file. Please contact support.'</span>, <span class="hl-string">'my-store'</span>), <span class="hl-number">403</span>);
+    }
+
+    <span class="hl-keyword">return</span> <span class="hl-variable">$seconds</span>;
+}, <span class="hl-number">10</span>, <span class="hl-number">3</span>);</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer style="margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="font-size: 0.85rem; color: var(--text-dim);">
+          OmnifyWP eCommerce &copy; 2026. Distributed under GPL-2.0-or-later.
+        </div>
+        <div style="display: flex; gap: 20px; font-size: 0.85rem;">
+          <a href="https://github.com/omnifywp/omnifywp-ecommerce" target="_blank" rel="noreferrer" style="color: var(--text-muted); text-decoration: none;">GitHub Repository</a>
+          <a href="https://github.com/omnifywp/omnifywp-ecommerce/issues" target="_blank" rel="noreferrer" style="color: var(--text-muted); text-decoration: none;">Issues</a>
+          <a href="https://github.com/omnifywp/omnifywp-ecommerce/discussions" target="_blank" rel="noreferrer" style="color: var(--text-muted); text-decoration: none;">Discussions</a>
+        </div>
+      </footer>
+
+    </main>
+
+    <!-- Right Rail TOC -->
+    <aside class="docs-toc">
+      <div class="toc-title">On This Page</div>
+      <ul class="toc-list">
+        <li><a href="#introduction" class="toc-link">Introduction</a></li>
+        <li><a href="#pipeline-flow" class="toc-link">Pipeline Flow</a></li>
+        <li><a href="#quickstart" class="toc-link">Quickstart</a></li>
+        <li><a href="#architecture" class="toc-link">Architecture & DI</a></li>
+        <li><a href="#schema-design" class="toc-link">18 SQL Tables</a></li>
+        <li><a href="#repo-overview" class="toc-link">Repositories SDK</a></li>
+        <li><a href="#shortcodes-directory" class="toc-link">Shortcodes</a></li>
+        <li><a href="#api-simulator" class="toc-link">API Sandbox</a></li>
+        <li><a href="#api-auth" class="toc-link">REST API Reference</a></li>
+        <li><a href="#actions-directory" class="toc-link">Action Hooks</a></li>
+        <li><a href="#filters-directory" class="toc-link">Filter Hooks</a></li>
+        <li><a href="#developer-recipes" class="toc-link">Developer Recipes</a></li>
+      </ul>
+    </aside>
+
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="searchModal">
+    <div class="search-box">
+      <div class="search-input-wrap">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search documentation, classes, endpoints..." autocomplete="off">
+        <span class="kbd-shortcut">ESC</span>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <script>
+    // Copy Snippet
+    function copySnippet(btn) {
+      const code = btn.closest('.code-wrapper').querySelector('pre code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+          btn.innerText = orig;
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    let currentTheme = localStorage.getItem('omnify_theme_pref') || 'dark';
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('omnify_theme_pref', theme);
+      if (theme === 'light') {
+        themeIcon.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+      } else {
+        themeIcon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+      }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(currentTheme);
+    });
+    applyTheme(currentTheme);
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const docsSidebar = document.getElementById('docsSidebar');
+    mobileMenuBtn.addEventListener('click', () => {
+      docsSidebar.classList.toggle('active');
+    });
+
+    // Interactive REST API Sandbox Simulator Engine
+    const simEndpoints = {
+      products_public: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/products/public?per_page=2",
+        desc: "List published catalog products with search, pagination, category, and faceted price filtering.",
+        reqHeaders: "// Request Headers\nAccept: application/json\nHost: store.local",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "1.2ms",
+        size: "1.4 KB",
+        response: [
+          {
+            "id": 101,
+            "name": "OmniStudio Pro Theme",
+            "slug": "omnistudio-pro-theme",
+            "type": "downloadable",
+            "price": 79.00,
+            "sale_price": 59.00,
+            "stock_status": "instock",
+            "categories": ["WordPress", "Themes"],
+            "files_count": 2
+          },
+          {
+            "id": 102,
+            "name": "CloudSync SaaS Extension",
+            "slug": "cloudsync-saas-extension",
+            "type": "downloadable",
+            "price": 129.00,
+            "sale_price": null,
+            "stock_status": "instock",
+            "categories": ["Plugins", "Integrations"],
+            "files_count": 1
+          }
+        ]
+      },
+      status: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/status",
+        desc: "System runtime health, database migration schema version, and active payment gateway list.",
+        reqHeaders: "// Request Headers\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "0.8ms",
+        size: "380 B",
+        response: {
+          "status": "healthy",
+          "engine_version": "1.2.0",
+          "php_version": "8.2.14",
+          "mysql_version": "8.0.36",
+          "database_schema": "2026_09_24_000000",
+          "active_gateways": ["stripe", "paypal", "wire_transfer"],
+          "timestamp": "2026-10-03T07:00:00Z"
+        }
+      },
+      product_by_slug: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/products/public/omnistudio-pro-theme",
+        desc: "Fetch full product entity by URL slug with variations, downloads metadata, and pricing.",
+        reqHeaders: "// Request Headers\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "1.5ms",
+        size: "2.1 KB",
+        response: {
+          "id": 101,
+          "name": "OmniStudio Pro Theme",
+          "slug": "omnistudio-pro-theme",
+          "type": "downloadable",
+          "price": 79.00,
+          "sale_price": 59.00,
+          "stock_status": "instock",
+          "manage_stock": true,
+          "stock_quantity": 498,
+          "files": [
+            { "id": 44, "name": "OmniStudio Installable Theme ZIP", "size": "8.4 MB" },
+            { "id": 45, "name": "Documentation & Demo Data PDF", "size": "1.2 MB" }
+          ]
+        }
+      },
+      validate_coupon: {
+        method: "POST",
+        badgeClass: "badge-post",
+        url: "https://store.local/wp-json/omnify/v1/checkout/validate-coupon",
+        desc: "Verify promotional coupon validity, check usage restrictions, and calculate dynamic discount.",
+        reqHeaders: "// Request Headers\nContent-Type: application/json\nX-WP-Nonce: 48f932e01b\n\n// Request Body\n{\n  \"coupon_code\": \"SUMMER20\",\n  \"subtotal\": 120.00\n}",
+        reqType: "application/json (POST)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "2.1ms",
+        size: "340 B",
+        response: {
+          "valid": true,
+          "code": "SUMMER20",
+          "discount_type": "percentage",
+          "discount_value": 20.00,
+          "discount_amount": 24.00,
+          "new_total": 96.00
+        }
+      },
+      checkout_order: {
+        method: "POST",
+        badgeClass: "badge-post",
+        url: "https://store.local/wp-json/omnify/v1/checkout",
+        desc: "Process decoupled single-page checkout, validate inventory, and create order transaction.",
+        reqHeaders: "// Request Headers\nContent-Type: application/json\nAccept: application/json\n\n// Request Body\n{\n  \"billing_first_name\": \"Sarah\",\n  \"billing_last_name\": \"Connor\",\n  \"email\": \"sarah@cyberdyne.org\",\n  \"payment_method\": \"stripe\",\n  \"items\": [\n    { \"product_id\": 101, \"quantity\": 1 }\n  ]\n}",
+        reqType: "application/json (POST)",
+        status: "201 Created",
+        statusClass: "badge-status-ok",
+        latency: "4.6ms",
+        size: "940 B",
+        response: {
+          "success": true,
+          "order_id": 1042,
+          "order_number": "OMN-2026-1042",
+          "status": "completed",
+          "currency": "USD",
+          "total": 59.00,
+          "downloads": [
+            {
+              "file_id": 44,
+              "filename": "omnistudio-pro-v1.2.zip",
+              "download_url": "https://store.local/?omnify_download=1&file_id=44&token=a8f94e...&expires=1790934000"
+            }
+          ]
+        }
+      },
+      orders_list: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/orders?status=completed&per_page=2",
+        desc: "Retrieve paginated orders with customer references, line items, and financial summaries.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "3.2ms",
+        size: "1.8 KB",
+        response: [
+          {
+            "id": 1042,
+            "order_number": "OMN-2026-1042",
+            "customer_id": 88,
+            "customer_email": "sarah@cyberdyne.org",
+            "status": "completed",
+            "total": 59.00,
+            "payment_method": "stripe",
+            "created_at": "2026-10-03 07:00:00"
+          },
+          {
+            "id": 1041,
+            "order_number": "OMN-2026-1041",
+            "customer_id": 74,
+            "customer_email": "john.doe@example.com",
+            "status": "completed",
+            "total": 129.00,
+            "payment_method": "paypal",
+            "created_at": "2026-10-02 21:14:00"
+          }
+        ]
+      },
+      order_detail: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/orders/1042",
+        desc: "Fetch single order transaction record with customer billing details and order notes.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "1.8ms",
+        size: "1.2 KB",
+        response: {
+          "id": 1042,
+          "order_number": "OMN-2026-1042",
+          "customer_id": 88,
+          "status": "completed",
+          "total": 59.00,
+          "payment_method": "stripe",
+          "transaction_id": "ch_3Nxy99Lkd891",
+          "line_items": [
+            { "product_id": 101, "name": "OmniStudio Pro Theme", "quantity": 1, "price": 59.00 }
+          ],
+          "notes": [
+            { "note": "Payment confirmed via Stripe webhook.", "customer_visible": false }
+          ]
+        }
+      },
+      order_mark_paid: {
+        method: "POST",
+        badgeClass: "badge-post",
+        url: "https://store.local/wp-json/omnify/v1/orders/1042/mark-paid",
+        desc: "Transition order to completed, reduce stock atomically, and grant customer file access.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nContent-Type: application/json\n\n// Request Body\n{\n  \"transaction_id\": \"ch_3Nxy99Lkd891\",\n  \"notify_customer\": true\n}",
+        reqType: "application/json (POST)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "5.1ms",
+        size: "520 B",
+        response: {
+          "success": true,
+          "order_id": 1042,
+          "new_status": "completed",
+          "downloads_granted": 2,
+          "customer_notified": true
+        }
+      },
+      customer_activity: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/customers/88/activity",
+        desc: "Retrieve customer CRM audit timeline events including logins, purchases, and downloads.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "2.4ms",
+        size: "980 B",
+        response: [
+          { "type": "order_placed", "order_id": 1042, "amount": 59.00, "timestamp": "2026-10-03 07:00:00" },
+          { "type": "file_downloaded", "file_id": 44, "ip": "192.168.1.1", "timestamp": "2026-10-03 07:02:15" },
+          { "type": "customer_login", "ip": "192.168.1.1", "timestamp": "2026-10-03 06:58:10" }
+        ]
+      },
+      grant_access: {
+        method: "POST",
+        badgeClass: "badge-post",
+        url: "https://store.local/wp-json/omnify/v1/access",
+        desc: "Manually grant digital product file access to a specific customer account.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nContent-Type: application/json\n\n// Request Body\n{\n  \"customer_id\": 88,\n  \"product_id\": 101,\n  \"expires_days\": 365\n}",
+        reqType: "application/json (POST)",
+        status: "201 Created",
+        statusClass: "badge-status-ok",
+        latency: "3.0ms",
+        size: "460 B",
+        response: {
+          "success": true,
+          "access_id": 312,
+          "customer_id": 88,
+          "product_id": 101,
+          "expires_at": "2027-10-03 07:00:00"
+        }
+      },
+      store_stats: {
+        method: "GET",
+        badgeClass: "badge-get",
+        url: "https://store.local/wp-json/omnify/v1/stats",
+        desc: "Real-time analytics engine calculating gross sales, net revenue, AOV, and refund rates.",
+        reqHeaders: "// Request Headers\nAuthorization: Bearer omnify_sec_99482...\nAccept: application/json",
+        reqType: "No Body (GET)",
+        status: "200 OK",
+        statusClass: "badge-status-ok",
+        latency: "2.8ms",
+        size: "540 B",
+        response: {
+          "gross_sales": 148520.00,
+          "net_sales": 142100.00,
+          "total_orders": 1840,
+          "average_order_value": 80.71,
+          "refunded_orders": 12,
+          "active_subscribers": 420
+        }
+      }
+    };
+
+    function updateSimulator(key) {
+      const data = simEndpoints[key];
+      if (!data) return;
+
+      const methodBadge = document.getElementById('simMethodBadge');
+      const urlInput = document.getElementById('simUrlInput');
+      const descEl = document.getElementById('simEndpointDesc');
+      const statusBadge = document.getElementById('simStatusBadge');
+      const latencyEl = document.getElementById('simLatency');
+      const payloadSizeEl = document.getElementById('simPayloadSize');
+      const reqTypeBadge = document.getElementById('simReqTypeBadge');
+      const reqBodyEl = document.getElementById('simRequestBody');
+      const resBodyEl = document.getElementById('simResponseBody');
+
+      if (methodBadge) {
+        methodBadge.innerText = data.method;
+        methodBadge.className = 'badge ' + data.badgeClass;
+      }
+      if (urlInput) urlInput.value = data.url;
+      if (descEl) descEl.innerText = data.desc;
+      if (statusBadge) {
+        statusBadge.innerText = data.status;
+        statusBadge.className = 'badge ' + data.statusClass;
+      }
+      if (latencyEl) latencyEl.innerText = '⚡ ' + data.latency;
+      if (payloadSizeEl) payloadSizeEl.innerText = '📦 ' + data.size;
+      if (reqTypeBadge) reqTypeBadge.innerText = data.reqType;
+      if (reqBodyEl) reqBodyEl.innerText = data.reqHeaders;
+      if (resBodyEl) resBodyEl.innerText = JSON.stringify(data.response, null, 2);
+    }
+
+    const simSelect = document.getElementById('simEndpointSelect');
+    const simRunBtn = document.getElementById('simRunBtn');
+
+    if (simSelect) {
+      simSelect.addEventListener('change', (e) => {
+        updateSimulator(e.target.value);
+      });
+      // Initialize on load
+      updateSimulator(simSelect.value);
+    }
+
+    if (simRunBtn) {
+      simRunBtn.addEventListener('click', () => {
+        const origText = simRunBtn.innerHTML;
+        simRunBtn.innerHTML = '<span style="display:inline-block; animation:spin 0.6s linear infinite;">↻</span> Sending...';
+        simRunBtn.style.opacity = '0.7';
+
+        setTimeout(() => {
+          simRunBtn.innerHTML = origText;
+          simRunBtn.style.opacity = '1';
+          const key = simSelect ? simSelect.value : 'products_public';
+          updateSimulator(key);
+
+          // Subtle pulse on response
+          const resBox = document.getElementById('simResponseBody');
+          if (resBox) {
+            resBox.parentElement.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.4)';
+            setTimeout(() => {
+              resBox.parentElement.style.boxShadow = '';
+            }, 400);
+          }
+        }, 220);
+      });
+    }
+
+    function copySimResponse(btn) {
+      const resEl = document.getElementById('simResponseBody');
+      if (resEl) {
+        navigator.clipboard.writeText(resEl.innerText).then(() => {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied!';
+          btn.style.color = '#10b981';
+          setTimeout(() => {
+            btn.innerText = orig;
+            btn.style.color = '';
+          }, 2000);
+        });
+      }
+    }
+
+    // Client-side search index
+    const searchModal = document.getElementById('searchModal');
+    const searchTrigger = document.getElementById('searchTrigger');
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    const searchIndex = [
+      { title: "Introduction & Philosophy", snippet: "Decoupled architecture, normalized relational schema, headless-ready.", url: "#introduction" },
+      { title: "System Pipeline Diagram", snippet: "Interactive data flow from storefront to REST API, repositories, and custom tables.", url: "#pipeline-flow" },
+      { title: "Quickstart & Requirements", snippet: "PHP 8.2+, WordPress 5.8+, cloning from github.com/omnifywp/omnifywp-ecommerce.", url: "#quickstart" },
+      { title: "Architecture & Container", snippet: "Omnify_Plugin singleton, dependency injection container, service resolution.", url: "#architecture" },
+      { title: "Database: 18 SQL Tables", snippet: "wp_omnify_products, orders, customers, downloads, coupons, reviews, etc.", url: "#database-tables" },
+      { title: "Product Repository API", snippet: "find_by_slug(), reduce_stock(), create(), faceted filtering, atomic stock control.", url: "#repo-products" },
+      { title: "Order Repository API", snippet: "create(), add_note(), batch hydration without N+1 queries.", url: "#repo-orders" },
+      { title: "Storefront Shortcodes", snippet: "[omnify_storefront], [omnify_cart], [omnify_checkout], [omnify_order_tracking].", url: "#shortcodes-directory" },
+      { title: "API Sandbox & Simulator", snippet: "Interactive live tester for Omnify REST API endpoints with request and response inspect.", url: "#api-simulator" },
+      { title: "REST API Reference", snippet: "Storefront public and admin protected management endpoints.", url: "#api-auth" },
+      { title: "Action Hooks Directory", snippet: "omnify_order_created, omnify_order_status_changed, omnify_stock_reduced.", url: "#actions-directory" },
+      { title: "Filter Hooks Directory", snippet: "omnify_format_price, omnify_after_checkout_validation, omnify_signed_download_expires_in.", url: "#filters-directory" },
+      { title: "Developer Recipes", snippet: "Custom checkout fields, Discord/Slack webhooks, Next.js 14, and license keys.", url: "#developer-recipes" }
+    ];
+
+    function openSearch() {
+      searchModal.classList.add('active');
+      searchInput.value = '';
+      renderSearchResults('');
+      setTimeout(() => searchInput.focus(), 50);
+    }
+
+    function closeSearch() {
+      searchModal.classList.remove('active');
+    }
+
+    searchTrigger.addEventListener('click', openSearch);
+    searchModal.addEventListener('click', (e) => {
+      if (e.target === searchModal) closeSearch();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearch();
+      }
+      if (e.key === 'Escape' && searchModal.classList.contains('active')) {
+        closeSearch();
+      }
+    });
+
+    function renderSearchResults(query) {
+      const q = query.toLowerCase().trim();
+      const filtered = q === '' 
+        ? searchIndex.slice(0, 6)
+        : searchIndex.filter(item => item.title.toLowerCase().includes(q) || item.snippet.toLowerCase().includes(q));
+
+      if (filtered.length === 0) {
+        searchResults.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-dim);">No matching documentation found.</div>';
+        return;
+      }
+
+      searchResults.innerHTML = filtered.map(item => `
+        <a href="${item.url}" class="search-result-item" onclick="closeSearch()">
+          <div class="search-result-title">${item.title}</div>
+          <div class="search-result-snippet">${item.snippet}</div>
+        </a>
+      `).join('');
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      renderSearchResults(e.target.value);
+    });
+
+    // Universal Smooth Anchor Scroll with Fixed Header Offset
+    function scrollToAnchor(targetId, updateHistory = true) {
+      if (!targetId || !targetId.startsWith('#')) return;
+      const targetEl = document.querySelector(targetId);
+      if (targetEl) {
+        const header = document.querySelector('.top-header');
+        const headerHeight = header ? header.offsetHeight : 68;
+        const extraOffset = 20;
+        const elementPosition = targetEl.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - (headerHeight + extraOffset);
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth'
+        });
+
+        if (updateHistory) {
+          history.pushState(null, '', targetId);
+        }
+
+        if (window.innerWidth <= 768 && docsSidebar) {
+          docsSidebar.classList.remove('active');
+        }
+      }
+    }
+
+    // Attach click handler to all anchor links targeting IDs
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (href && href.length > 1 && !href.startsWith('#/')) {
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          e.preventDefault();
+          scrollToAnchor(href);
+        }
+      }
+    });
+
+    // Handle direct page load with anchor hash in URL
+    window.addEventListener('load', () => {
+      if (window.location.hash) {
+        setTimeout(() => {
+          scrollToAnchor(window.location.hash, false);
+        }, 100);
+      }
+    });
+
+    // Handle browser back/forward hash changes
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash) {
+        scrollToAnchor(window.location.hash, false);
+      }
+    });
+
+    // Scrollspy for sidebar & table of contents
+    const trackedSections = document.querySelectorAll('section[id]');
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    window.addEventListener('scroll', () => {
+      let currentId = '';
+      const header = document.querySelector('.top-header');
+      const headerOffset = header ? header.offsetHeight + 30 : 98;
+      const scrollPos = window.pageYOffset + headerOffset;
+
+      trackedSections.forEach(sec => {
+        const top = sec.getBoundingClientRect().top + window.pageYOffset;
+        if (top <= scrollPos) {
+          currentId = sec.getAttribute('id');
+        }
+      });
+
+      if (currentId) {
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + currentId);
+        });
+        sidebarLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + currentId);
+        });
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
