@@ -1,183 +1,162 @@
-# ⚡ Omnify
+<p align="center">
+  <img src="assets/banner-1544x500.png" alt="OmnifyWP eCommerce Banner" width="100%" />
+</p>
 
-[![WordPress Version](https://img.shields.io/badge/WordPress-5.8+-21759B.svg?style=flat-square&logo=wordpress)](https://wordpress.org)
-[![PHP Version](https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php)](https://php.net)
-[![License](https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square)](https://gnu.org/licenses/gpl.html)
-[![Documentation](https://img.shields.io/badge/Docs-omnifywp.com%2Fdoc-blueviolet.svg?style=flat-square)](https://omnifywp.com/doc/)
-[![Live Demo](https://img.shields.io/badge/WordPress%20Playground-Live%20Demo-38bdf8.svg?style=flat-square&logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json)
-[![Developer Friendly](https://img.shields.io/badge/Extensible-Filters%20%26%20Actions-brightgreen.svg?style=flat-square)](#-developer-extensibility)
+# ⚡ OmnifyWP eCommerce
 
-**Omnify** is a high-performance, developer-first eCommerce engine built for WordPress. Highly optimized, extremely secure, and headless-ready, Omnify gives you the ultimate storefront, checkouts, payment integrations, and secure digital downloads experience without the bloat of traditional eCommerce plugins.
+<p align="center">
+  <strong>Fast, Lightweight, and Conversion-Optimized eCommerce Engine for WordPress.</strong><br>
+  Sell digital downloads, software, physical products, and multi-format variations with built-in global payment gateways and zero transaction fees.
+</p>
 
-> 🎮 **[Try Live Demo (No Setup Required)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json)**  
-> 📘 **Complete User Documentation:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md) | [Interactive User Guide](docs/user-guide.html)  
-> 📖 **Official Developer Documentation:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)  
-> 💻 **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-6.5+-21759B.svg?style=flat-square&logo=wordpress" alt="WordPress Version" /></a>
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php" alt="PHP Version" /></a>
+  <a href="https://gnu.org/licenses/gpl.html"><img src="https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square" alt="License" /></a>
+  <a href="https://omnifywp.com/doc/"><img src="https://img.shields.io/badge/Docs-omnifywp.com%2Fdoc-18794E.svg?style=flat-square" alt="Documentation" /></a>
+  <a href="https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json"><img src="https://img.shields.io/badge/Playground-Live%20Demo-34D399.svg?style=flat-square&logo=wordpress" alt="Live Demo" /></a>
+  <a href="#-developer-extensibility"><img src="https://img.shields.io/badge/Extensible-Hooks%20%26%20REST%20API-brightgreen.svg?style=flat-square" alt="Developer Friendly" /></a>
+</p>
 
 ---
 
-## 🌟 Highly Sellable Core Features
+## 🚀 Quick Links & Live Preview
 
-### 🛍️ Storefront & Conversion-Optimization
-* **Premium Storefront Grid Layout**: High-end storefront layout displaying catalog items with responsive grid adjustments, visual layout style toggles, integrated cart buttons in filter panels, and brand/category title headers.
-* **Storefront Quick Add**: Hovering over product images reveals a Quick Add icon that instantly adds items to the cart via AJAX, showing a beautiful checkmark animation and updating the cart badge count instantly.
-* **Premium Product Details Layout**: 3-column details layout with a media gallery, trust badges, features checklist, and a sticky purchase card housing format swatches and quantity inputs.
-* **Smart Checkout Engine**: Frictionless single-page checkout form featuring country-first selectors, region/state handles, and a saved address autocomplete autofill dropdown.
-* **Variable & Simple Products**: Switch variations dynamically with format-specific pricing, descriptions, SKUs, and variation file attachments.
-* **Product Bundles**: Group multiple digital products together so a single purchase grants access to all child files.
-* **Wishlist Integration**: Built-in wishlist mechanism to let users add products to their favorites list.
-* **Cart Scarcity & Progress Tracker**: Real-time Cart Scarcity Countdown Timer (with sessionStorage persistence) and a Free Shipping Progress Tracker to optimize user conversions.
-* **Segmented Settings Toggle Switches**: Clean, modern Yes/No segmented controls for managing setting options.
+* 🎮 **Interactive Live Demo (Browser Playground):** [Launch OmnifyWP Demo →](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json) *(Full store & admin preview, zero installation required)*
+* 📘 **User Documentation & Merchant Guide:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md) | [Interactive User Guide](docs/user-guide.html)
+* 📖 **Developer Documentation & REST API:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)
+* 💻 **Official Website:** [https://omnifywp.com](https://omnifywp.com)
 
-### 💳 Comprehensive Payment Gateways (Multi-Currency & Global Support)
-Omnify comes pre-integrated with the world's most popular payment processors, featuring automatic refunds and instant digital file access revocation upon refund processing:
-* **Stripe Integration**: Supports credit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout.
-* **PayPal Commerce**: Secure Express Checkout, credit/debit cards, and smart payment buttons.
-* **Razorpay**: Best-in-class checkout for India, supporting UPI, cards, netbanking, and wallets.
-* **Alipay**: Trusted payment service for Chinese buyers.
-* **WeChat Pay**: Integrated WeChat mobile payment QR code flow.
-* **SSLCommerz**: Highly trusted payment gateway for Bangladesh, supporting cards, mobile banking, and netbanking.
-* **Manual Payment Methods**: Fully configurable custom instruction flows for **Direct Bank Transfer**, **Cheque Payments**, **Cash on Delivery**, and custom **Manual Payments**.
-
-### 🔒 Secure Digital Locker & Downloads
-* **Cryptographically Signed Links**: Dynamically generated secure download links signed via SHA-256 HMAC (salted with WP auth salts) with user-defined expiry windows.
-* **Direct Protected File Delivery**: Prevents resource exposure by streaming files securely using chunked read buffers without revealing actual server paths.
-* **Customer Downloads Portal**: Shortcode (`[omnify_customer_downloads]`) mounting a tabbed account dashboard for file access and shipping/billing address book management.
-* **Bandwidth & Attempt Logs**: Tracks all download transactions, IP addresses, download states, and server bandwidth consumption.
-
-### ⚙️ Modern Admin Dashboard & Data Management
-* **Unified & Modern Listing UI**: Clean lists across Products, Orders, Customers, Coupons, Abandoned Carts, and Reviews with shared layouts.
-* **Trash / Soft Delete**: Safely trash records across all main entities. Restore or permanently delete them via dedicated Trash status tabs.
-* **Advanced Filter Panel**: Persistent filtering (via URL query params) with status pills, search, categories, dates, and sorting options.
-* **Coupons Engine Rules**: Promotional code management supporting percentage/fixed discounts, usage limits, expiration dates, and free shipping overrides.
-* **Reviews Moderation System**: Moderation portal to approve, unapprove, edit, or trash customer reviews and ratings.
-* **Abandoned Cart Recovery**: Captures incomplete checkouts in the dashboard with tools to dispatch manual recovery emails containing checkout restore links.
-* **Customer CRM Timelines**: Individual customer detail timelines auditing actions like `checkout_started`, `wishlist_added`, and support notes.
-* **Inventory Logs & Stock Control**: Stock validation comparison on checkout, maximum purchase limits per checkout session, and automated restocking on returns/cancellation.
-* **Gateway API Refunds & Access Revocations**: Automated API refund calls which trigger automatic revocation of corresponding digital file entitlements.
 ---
 
-## 📚 Complete Developer Documentation
+## ✨ Why OmnifyWP?
 
-Explore interactive guides, repository SDK references, database schemas, and step-by-step developer recipes on our official documentation portal:
+* 🏎️ **Sub-100ms Performance**: Purpose-engineered relational tables (`wp_omnify_*`) eliminate `wp_postmeta` overhead, guaranteeing instant storefront and checkout response times.
+* 💸 **0% Platform Fees**: Keep 100% of your store revenue. No arbitrary platform commissions or forced monthly subscriptions.
+* 🌍 **Global & Regional Payment Methods**: 10+ payment methods pre-integrated out of the box with zero third-party plugin bloat.
+* 🔐 **Cryptographically Protected Downloads**: Time-limited SHA-256 HMAC digital tokens prevent asset piracy and unauthorized file hotlinking.
+* 🎨 **Clean, Native Admin Experience**: Built with modern, streamlined UI patterns that integrate seamlessly into the WordPress admin dashboard.
 
-👉 **[https://omnifywp.com/doc/](https://omnifywp.com/doc/)**
+---
 
-* **Interactive REST API Sandbox**: Test public and protected endpoints with live mock responses.
-* **18 SQL Tables & Relational Schema**: Normalized schema reference avoiding `wp_postmeta` latency.
-* **Repositories SDK**: Clean object-oriented queries for products, orders, customers, and downloads.
-* **Filter Hooks & Developer Recipes**: Ready-to-use production recipes for custom checkout fields, Discord/Slack webhooks, Next.js 14 headless catalogs, and software licensing.
+## 🌟 Core Features
+
+### 🛍️ Storefront & Conversion Architecture
+* **Responsive Storefront Catalog Grid**: High-end storefront layout with instant filter drawers, search, category pills, and responsive layout toggles.
+* **1-Click AJAX Quick Add**: Add products directly to cart without page reloads, accompanied by instant micro-animations and live badge counts.
+* **3-Column Product Details**: Media gallery, feature highlights, trust signals, customer reviews, and a sticky purchase action panel.
+* **Variable, Simple & Bundled Products**: Offer format-specific pricing, custom licenses, digital asset files, or multi-item bundles.
+* **Customer Wishlist**: Save favorite items to user accounts for increased returning-visitor conversions.
+* **Cart Scarcity Countdown & Free Shipping Bar**: Session-persisted countdown timer and free-shipping progress tracker designed to minimize checkout drop-offs.
+
+### 💳 Complete Global Payment Gateways
+OmnifyWP includes first-party payment processing integrations with automatic status sync, refunds, and access revocations:
+* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout.
+* **PayPal Commerce**: Express Checkout, smart payment buttons, and card handling.
+* **Paystack**: Top payment gateway for Nigeria, Ghana, South Africa, and Kenya.
+* **Tap Payments**: Comprehensive card, KNET, Mada, and Benefit payments across GCC/Middle East.
+* **Mollie**: Ideal for Europe (iDEAL, Bancontact, SEPA Bank Transfer, SOFORT).
+* **Razorpay**: UPI, cards, netbanking, and wallets for Indian commerce.
+* **Alipay & WeChat Pay**: Seamless QR code and mobile checkout for East Asian shoppers.
+* **Khalti & eSewa**: Trusted digital wallets and mobile banking for Nepal.
+* **SSLCommerz**: Dedicated card, internet banking, and mobile wallet flow for Bangladesh.
+* **Manual Payment Workflows**: Direct Bank Transfer (BACS), Cheque, Cash on Delivery (COD), and custom manual payment instructions.
+
+### 🔒 Cryptographic Digital Locker
+* **HMAC-SHA256 Signed Links**: Generated with user-configurable expiry times, download count limits, and IP audit logging.
+* **Chunked Streaming Delivery**: Protected digital files are streamed safely via PHP buffers without revealing actual file paths on the filesystem.
+* **Customer Account Dashboard**: Shortcode (`[omnify_customer_downloads]`) provides customers with direct access to file licenses, orders, and address books.
+* **Bandwidth & Usage Auditing**: Detailed tracking of downloads, IP logs, and server throughput.
+
+### 📊 Modern Management & CRM Tools
+* **Unified Admin Panel**: Standardized management tables across Products, Orders, Customers, Coupons, Abandoned Carts, and Reviews.
+* **Trash & Soft Delete**: Full safety net allowing restoring or permanent purging of deleted store records.
+* **Coupons & Discount Rules**: Percentage, fixed, minimum cart subtotals, and expiration configurations.
+* **Review Moderation System**: Dedicated workflow to approve, edit, filter, or trash user reviews and star ratings.
+* **Abandoned Cart Recovery**: Automatic recording of abandoned sessions with manual checkout recovery email dispatches.
+* **Customer Activity CRM**: Timeline tracking customer actions such as checkout initiation, completed orders, and support notes.
 
 ---
 
 ## 📡 REST API Reference
 
-The plugin exposes routes under the `/wp-json/omnify/v1` namespace.
+OmnifyWP provides a fully functional REST API under `/wp-json/omnify/v1` for headless frontends, mobile apps, and custom webhooks.
 
-### Storefront Public Endpoints (Headless Ready)
-
+### Public Storefront Endpoints
 | Route | Method | Description |
 | :--- | :---: | :--- |
-| `/status` | `GET` | Get plugin status and database migration details. |
-| `/checkout` | `POST` | Submits checkout details. |
-| `/checkout/validate-coupon` | `POST` | Validates coupon discount. |
-| `/checkout/payment-methods` | `GET` | Get configured payment methods. |
-| `/cart` | `GET` \| `POST` \| `DELETE` | Read, save, or clear customer cart. |
-| `/products/public` | `GET` | Search and retrieve published storefront products. |
-| `/products/public/slug/{slug}` | `GET` | Retrieve a published product details by URL slug. |
-| `/products/public/sku/{sku}` | `GET` | Retrieve a published product details by SKU. |
+| `/status` | `GET` | Retrieve store status and database migration health. |
+| `/products/public` | `GET` | Query catalog products with filters, sorting, and pagination. |
+| `/products/public/slug/{slug}` | `GET` | Retrieve product details by slug. |
+| `/cart` | `GET` \| `POST` \| `DELETE` | Read, update, or clear customer cart contents. |
+| `/checkout` | `POST` | Process customer checkout payload. |
+| `/checkout/validate-coupon` | `POST` | Validate and calculate coupon discounts. |
+| `/checkout/payment-methods` | `GET` | Fetch enabled storefront payment gateways. |
 
-### Administrative Protected Endpoints
-
+### Protected Management Endpoints
 | Route | Method | Description |
 | :--- | :---: | :--- |
-| `/settings` | `GET` \| `POST` | Retrieve or save global settings. |
-| `/activity-logs` | `GET` \| `DELETE` | Retrieve or clear activity logs. |
-| `/products` | `GET` \| `POST` | List all catalog items or create a product. |
-| `/products/{id}` | `GET` \| `PUT` \| `DELETE` | Retrieve, update, or delete a product. |
-| `/products/{id}/trash` \| `/restore` | `POST` | Soft-delete or recover a product. |
-| `/orders` | `GET` | List orders (supports status, search, and sort filters). |
-| `/orders/{id}` | `GET` | Retrieve details of a single order. |
-| `/orders/{id}/history` | `GET` | Retrieve the notes and status history audit trail. |
-| `/orders/{id}/trash` \| `/restore` | `POST` | Soft-delete or recover an order. |
-| `/customers` | `GET` \| `POST` | List or register customers. |
-| `/customers/{id}/notes` | `GET` \| `POST` \| `DELETE` | Manage notes attached to a customer. |
-| `/customers/{id}/activity` | `GET` | Fetch customer timeline events. |
-| `/access` \| `/access/revoke` | `GET` \| `POST` | Grant or revoke customer product access. |
+| `/products` | `GET` \| `POST` | Create or list catalog products. |
+| `/products/{id}` | `GET` \| `PUT` \| `DELETE` | Read, update, or delete an existing product. |
+| `/orders` | `GET` | List store orders with status and date filters. |
+| `/orders/{id}` | `GET` | Fetch full order details including line items and customer records. |
+| `/customers` | `GET` \| `POST` | List or register customer profiles. |
+| `/settings` | `GET` \| `POST` | Retrieve or update store configuration. |
 
 ---
 
 ## 🔌 Developer Extensibility
 
-Omnify was built from the ground up for developers. You can extend its queries, filter data structures, hook into events, and resolve classes from its internal container.
+OmnifyWP is architected around WordPress hooks and an extensible dependency injection container.
 
-### Core Extensibility Hooks
-* **`omnify_settings_saved`**: Action fired after settings section update. Passes `$section` (string) and `$posted` (array).
-* **`omnify_before_checkout_validation`**: Action fired before checkout validation starts. Passes `$data` (array), `$settings` (array), `$items` (array).
-* **`omnify_after_checkout_validation`**: Filter to inject custom validation logic. Passes `null|WP_Error $error`, `$data`, `$settings`, `$items`. Returning a `WP_Error` halts checkout.
-* **`omnify_format_price`**: Filter to intercept price strings. Passes `$formatted_price` (string), `$amount` (float), `$settings` (array).
+### Core Action & Filter Hooks
+```php
+// Intercept or customize price formatting
+add_filter('omnify_format_price', function($formatted_price, $amount, $settings) {
+    return $formatted_price;
+}, 10, 3);
 
-### Resolving Dependencies
-Fetch any repository or service class directly from the main plugin container:
+// Custom validation rule during checkout
+add_filter('omnify_after_checkout_validation', function($error, $data, $settings, $items) {
+    if (empty($data['billing_email'])) {
+        return new \WP_Error('invalid_email', 'Please enter a valid email address.');
+    }
+    return $error;
+}, 10, 4);
+
+// Hook into settings updates
+add_action('omnify_settings_saved', function($section, $posted) {
+    // Perform custom cache invalidation or audit logging
+}, 10, 2);
+```
+
+### Accessing Internal Services
 ```php
 $container = omnify()->container();
 $product_repo = $container->get(\Omnify\eCommerce\Repositories\Product_Repository::class);
-$products = $product_repo->all();
+$featured_products = $product_repo->all(['is_featured' => 1]);
 ```
 
 ---
 
 ## 🌐 External Services
 
-Omnify integrates with third-party payment gateways, analytics services, and external APIs to process transactions, handle webhooks, measure conversions, and display customer avatars. These services are optional and only connect when configured by the site administrator or chosen by the customer at checkout:
+OmnifyWP integrates with external third-party payment gateways and services to process orders and transactions. Data is transmitted securely only when the respective service is enabled by the administrator or chosen by the buyer:
 
-* **PayPal Commerce & REST API**
-  * **What it is and what it is used for**: Processes customer payments (Express Checkout, card payments, smart buttons, order capture, refunds) and verifies webhook/IPN notifications.
-  * **What data is sent and when**: When a customer chooses PayPal during checkout or an admin issues a PayPal refund, order items, transaction amounts, currency, customer email, billing details, invoice references, and return/cancel URLs are sent to PayPal's REST API endpoints via `wp_remote_post()` and `wp_remote_request()`. Endpoints accessed include OAuth token authentication (`https://api-m.paypal.com/v1/oauth2/token` or sandbox), order creation and capture (`https://api-m.paypal.com/v2/checkout/orders`), refund processing (`https://api-m.paypal.com/v2/payments/captures/{id}/refund`), and webhook verification (`https://api-m.paypal.com/v1/notifications/verify-webhook-signature`).
-  * **Terms of Service**: [PayPal User Agreement](https://www.paypal.com/us/legalhub/useragreement-full)
-  * **Privacy Policy**: [PayPal Privacy Statement](https://www.paypal.com/us/legalhub/privacy-full)
-
-* **Stripe**
-  * **What it is and what it is used for**: Processes credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout sessions, as well as webhook event verifications and refunds.
-  * **What data is sent and when**: When a customer enters payment information or selects Stripe at checkout, order totals, currency, customer name, email address, payment method tokens, and order line items are transmitted to Stripe's API (`api.stripe.com`).
-  * [Terms of Service](https://stripe.com/legal/consumer) | [Privacy Policy](https://stripe.com/privacy)
-
-* **Razorpay**
-  * **What it is and what it is used for**: Processes payments via UPI, netbanking, cards, and wallets for India-based transactions, verifies payment signatures, and processes refunds.
-  * **What data is sent and when**: When a customer selects Razorpay at checkout, order amounts, currency, receipt identifiers, customer name, email, and phone number are sent to Razorpay (`api.razorpay.com`).
-  * [Terms of Service](https://razorpay.com/terms/) | [Privacy Policy](https://razorpay.com/privacy/)
-
-* **Alipay**
-  * **What it is and what it is used for**: Generates Alipay payment orders, verifies digital signatures, and processes customer transactions for Alipay users.
-  * **What data is sent and when**: When a customer selects Alipay at checkout, order numbers, subject descriptions, currency, total amounts, and merchant parameters are sent to Alipay gateway endpoints (`openapi.alipay.com` or sandbox).
-  * [Terms of Service](https://render.alipay.com/p/f/agreementpages/alipayterms.html) | [Privacy Policy](https://render.alipay.com/p/f/agreementpages/alipayprivacy.html)
-
-* **WeChat Pay**
-  * **What it is and what it is used for**: Creates WeChat Pay unified orders and QR codes, processes mobile payments, and handles payment notifications.
-  * **What data is sent and when**: When a customer selects WeChat Pay at checkout, order IDs, total fees, product descriptions, customer IP address, and transaction metadata are sent to WeChat Pay API (`api.mch.weixin.qq.com`).
-  * [Terms of Service](https://www.wechat.com/en/service_terms.html) | [Privacy Policy](https://www.wechat.com/en/privacy_policy.html)
-
-* **SSLCommerz**
-  * **What it is and what it is used for**: Processes cards, mobile banking, and internet banking for South Asian transactions, and validates IPN transaction sessions.
-  * **What data is sent and when**: When a customer chooses SSLCommerz at checkout, customer name, email, phone, billing address, order ID, currency, and total amount are sent to SSLCommerz (`sslcommerz.com` or sandbox).
-  * [Terms of Service](https://sslcommerz.com/terms-and-conditions/) | [Privacy Policy](https://sslcommerz.com/privacy-policy/)
-
-* **Gravatar**
-  * **What it is and what it is used for**: Displays customer and reviewer avatars in the admin dashboard and testimonials.
-  * **What data is sent and when**: An MD5 hash of the customer's email address is sent to Gravatar (`secure.gravatar.com`) when displaying user avatars.
-  * [Terms of Service](https://automattic.com/tos/) | [Privacy Policy](https://automattic.com/privacy/)
-
-* **Google Analytics 4 / Google Tag Manager** (Optional conversion tracking)
-  * **What it is and what it is used for**: Measures storefront traffic, page views, and eCommerce conversion events when the merchant enables GA4 tracking in Omnify settings and provides a Measurement ID.
-  * **What data is sent and when**: When enabled by the admin, the visitor's browser loads Google Tag Manager scripts from `googletagmanager.com` and sends page views, purchase events, and browser/device metadata. No scripts are loaded if disabled.
-  * [Terms of Service](https://policies.google.com/terms) | [Privacy Policy](https://policies.google.com/privacy)
-
-* **Meta Pixel (Facebook)** (Optional conversion tracking)
-  * **What it is and what it is used for**: Tracks page views and purchase conversion events for advertising and analytics when the merchant enables Meta Pixel tracking in Omnify settings and provides a Pixel ID.
-  * **What data is sent and when**: When enabled by the admin, the visitor's browser loads Meta Pixel scripts from `connect.facebook.net` and sends page view and conversion signals to `facebook.com/tr`. No scripts are loaded if disabled.
-  * [Terms of Service](https://www.facebook.com/legal/terms) | [Privacy Policy](https://www.facebook.com/privacy/policy/)
+* **Stripe** ([Terms](https://stripe.com/legal/consumer) | [Privacy](https://stripe.com/privacy))
+* **PayPal Commerce** ([User Agreement](https://www.paypal.com/us/legalhub/useragreement-full) | [Privacy Statement](https://www.paypal.com/us/legalhub/privacy-full))
+* **Paystack** ([Terms](https://paystack.com/terms) | [Privacy](https://paystack.com/privacy))
+* **Tap Payments** ([Terms & Privacy](https://tap.company/privacy))
+* **Mollie** ([Terms & Privacy](https://www.mollie.com/en/privacy))
+* **Razorpay** ([Terms](https://razorpay.com/terms/) | [Privacy](https://razorpay.com/privacy/))
+* **Alipay** ([Terms](https://render.alipay.com/p/f/agreementpages/alipayterms.html) | [Privacy](https://render.alipay.com/p/f/agreementpages/alipayprivacy.html))
+* **WeChat Pay** ([Terms](https://www.wechat.com/en/service_terms.html) | [Privacy](https://www.wechat.com/en/privacy_policy.html))
+* **SSLCommerz** ([Terms](https://sslcommerz.com/terms-and-conditions/) | [Privacy](https://sslcommerz.com/privacy-policy/))
+* **Gravatar** ([Automattic Privacy](https://automattic.com/privacy/))
+* **Google Analytics 4 & Meta Pixel** *(Optional merchant conversion tracking)*
 
 ---
 
 ## 📄 License
-Omnify is open-source software licensed under the GPL-2.0-or-later.
+
+OmnifyWP eCommerce is open-source software licensed under the **GPL-2.0-or-later**.

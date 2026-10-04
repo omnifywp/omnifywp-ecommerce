@@ -43,6 +43,10 @@ $omnify_admin_nav_tabs = [
 ?>
 
 <div class="omnify-tabs-wrapper">
+	<div class="omnify-nav-brand" style="display: inline-flex; align-items: center; padding: 4px 14px 4px 4px; margin-right: 6px; border-right: 1px solid var(--omnify-gray-200, #e2e8f0);">
+		<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" style="width: 24px; height: 24px; border-radius: 6px; margin-right: 8px; box-shadow: 0 2px 6px rgba(11, 81, 53, 0.15);" />
+		<span style="font-weight: 800; font-size: 13.5px; letter-spacing: -0.02em; color: #0B5135;">Omnify<span style="color: #22A06B;">WP</span></span>
+	</div>
 	<?php foreach ($omnify_admin_nav_tabs as $omnify_key => $omnify_tab): 
 		$omnify_is_active = ($omnify_active_tab === $omnify_key);
 		$omnify_classes = 'omnify-tab' . ($omnify_is_active ? ' is-active' : '');

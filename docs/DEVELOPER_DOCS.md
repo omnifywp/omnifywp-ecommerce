@@ -1,9 +1,11 @@
 # OmnifyWP eCommerce — Complete Developer Documentation
 
 > **Version:** 1.2.0  
+> **Official Website:** [https://omnifywp.com](https://omnifywp.com)  
+> **wp.org Directory:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)  
 > **Minimum Requirements:** PHP 8.2+, WordPress 5.8+, MySQL 5.7+ / MariaDB 10.3+  
-> **Official Documentation Site:** [https://omnifywp.com/doc/](https://omnifywp.com/doc/) (or open [`docs/index.html`](./index.html))  
+> **Interactive Documentation:** Open [`docs/index.html`](./index.html) or [`docs/user-guide.html`](./user-guide.html)  
 
 ---
 

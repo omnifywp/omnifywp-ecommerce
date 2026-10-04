@@ -173,9 +173,9 @@ ksort($omnify_all_currencies);
 	<div class="omnify-setup-wizard-container">
 		<!-- Wizard Header -->
 		<div class="omnify-setup-wizard-header">
-			<div class="omnify-setup-wizard-logo">
-				<span class="dashicons dashicons-cart"></span>
-				<h1><?php esc_html_e('Omnify Setup Wizard', 'omnifywp-ecommerce'); ?></h1>
+			<div class="omnify-setup-wizard-logo" style="display: flex; align-items: center; justify-content: center; gap: 14px;">
+				<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" style="width: 44px; height: 44px; border-radius: 11px; display: block; box-shadow: 0 4px 12px rgba(11, 81, 53, 0.2);" />
+				<h1 style="margin: 0;"><?php esc_html_e('Omnify Setup Wizard', 'omnifywp-ecommerce'); ?></h1>
 			</div>
 			<p class="omnify-setup-wizard-subtitle"><?php esc_html_e('Configure your eCommerce store in a few quick steps.', 'omnifywp-ecommerce'); ?></p>
 

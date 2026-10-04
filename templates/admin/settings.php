@@ -105,8 +105,8 @@ function omnify_render_form_footer() {
 	
 	<!-- Rebuilt Settings Header -->
 	<div class="omnify-modern-settings-header">
-		<div class="omnify-modern-header-logo">
-			<span class="dashicons dashicons-admin-generic"></span>
+		<div class="omnify-modern-header-logo" style="background: transparent !important; border-radius: 0 !important; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+			<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" style="width: 48px; height: 48px; border-radius: 12px; display: block; box-shadow: 0 4px 12px rgba(11, 81, 53, 0.2);" />
 		</div>
 		<div class="omnify-modern-header-text">
 			<h2><?php esc_html_e('Store Settings', 'omnifywp-ecommerce'); ?></h2>

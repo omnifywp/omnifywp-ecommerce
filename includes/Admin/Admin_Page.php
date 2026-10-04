@@ -60,6 +60,9 @@ class Omnify_Admin_Page {
 
 		// Page States
 		add_filter('display_post_states', [$this, 'add_omnify_post_states'], 10, 2);
+
+		// Admin menu custom icon styles
+		add_action('admin_head', [$this, 'admin_menu_icon_styles']);
 	}
 
 	private function register_post_actions(): void {
@@ -216,6 +219,40 @@ class Omnify_Admin_Page {
 		return $omnify_value;
 	}
 
+	/**
+	 * Get the Base64 SVG data URI for the WordPress admin menu icon based on new brand logo.
+	 * Uses a transparent background so it seamlessly integrates into the WordPress admin sidebar.
+	 */
+	public static function get_admin_menu_icon(): string {
+		$svg = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">'
+			. '<g transform="translate(1, 1) scale(0.5)">'
+			. '<path d="M18 7.5C12.201 7.5 7.5 12.201 7.5 18C7.5 23.799 12.201 28.5 18 28.5C21.468 28.5 24.526 26.815 26.4 24.225C26.828 23.636 26.545 22.809 25.828 22.607C25.178 22.423 24.522 22.754 24.161 23.313C22.695 25.586 20.518 26.7 18 26.7C13.195 26.7 9.3 22.805 9.3 18C9.3 13.195 13.195 9.3 18 9.3C20.655 9.3 23.018 10.493 24.606 12.383L22.188 14.502C21.579 15.035 21.954 16.05 22.768 16.05H28.65C29.119 16.05 29.5 15.669 29.5 15.2V9.45C29.5 8.647 28.497 8.273 27.973 8.877L25.986 10.749C24.004 8.736 21.157 7.5 18 7.5Z" fill="#F0FDF4"/>'
+			. '<path d="M19.75 12.5L14.25 19.25H18.25L16.25 24.5L22.75 17.25H18.75L19.75 12.5Z" fill="#34D399"/>'
+			. '</g>'
+			. '</svg>';
+
+		return 'data:image/svg+xml;base64,' . base64_encode( $svg );
+	}
+
+	/**
+	 * Output custom CSS for the WordPress admin menu icon.
+	 */
+	public function admin_menu_icon_styles(): void {
+		echo '<style>
+			#adminmenu .toplevel_page_omnifywp-ecommerce .wp-menu-image img {
+				width: 18px !important;
+				height: 18px !important;
+				padding: 8px 0 0 0 !important;
+				transition: transform 0.18s ease, filter 0.18s ease !important;
+			}
+			#adminmenu .toplevel_page_omnifywp-ecommerce:hover .wp-menu-image img,
+			#adminmenu .toplevel_page_omnifywp-ecommerce.wp-has-current-submenu .wp-menu-image img {
+				filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.7)) !important;
+				transform: scale(1.08) !important;
+			}
+		</style>';
+	}
+
 	public function register_menu(): void {
 		add_menu_page(
 			__('Omnify', 'omnifywp-ecommerce'),
@@ -223,7 +260,7 @@ class Omnify_Admin_Page {
 			'manage_omnify',
 			'omnifywp-ecommerce',
 			[$this, 'render_dashboard'],
-			'dashicons-cart',
+			self::get_admin_menu_icon(),
 			56
 		);
 

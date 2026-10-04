@@ -2,7 +2,8 @@
 
 > **Official User Documentation for OmnifyWP eCommerce**  
 > **Plugin Version:** 1.2.0 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
-> **Developer Documentation:** [`docs/DEVELOPER_DOCS.md`](./DEVELOPER_DOCS.md) | **API Reference:** [https://omnifywp.com/doc/](https://omnifywp.com/doc/)
+> **Official Website:** [https://omnifywp.com](https://omnifywp.com) | **wp.org:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
+> **Developer Docs:** [`DEVELOPER_DOCS.md`](./DEVELOPER_DOCS.md) | **HTML Guide:** [`user-guide.html`](./user-guide.html)
 
 ---
 

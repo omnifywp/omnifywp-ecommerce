@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { mockups } = require('./mockups.js');
 
 console.log('Generating OmnifyWP eCommerce User Documentation Website...');
 
@@ -8,19 +9,19 @@ const chapters = [
   {
     id: 'intro',
     title: '1. Introduction to OmnifyWP',
-    badge: 'Overview',
+    badge: 'Overview & Philosophy',
     icon: '✨',
     summary: 'Discover how OmnifyWP eCommerce delivers ultra-high performance and a modern commerce experience on WordPress.',
     content: `
       <p class="lead-text">
-        <strong>OmnifyWP eCommerce</strong> is an enterprise-grade, high-performance eCommerce solution built specifically for the modern WordPress ecosystem. Designed to eliminate the slow database queries and bloat of legacy plugins, OmnifyWP uses dedicated normalized SQL tables to provide instant page loads, robust digital asset security, and friction-free checkouts.
+        <strong>OmnifyWP eCommerce</strong> is an enterprise-grade, high-performance eCommerce solution engineered specifically for modern WordPress sites. By completely bypassing the legacy <code>wp_posts</code> and <code>wp_postmeta</code> bottleneck, OmnifyWP delivers sub-millisecond page loads, military-grade digital asset security, and high-converting checkouts.
       </p>
 
       <div class="grid-cards-3">
         <div class="feature-card">
           <div class="feature-card-icon">⚡</div>
           <h4>Zero-Postmeta Latency</h4>
-          <p>Product, order, customer, and inventory records live in 18 dedicated relational SQL tables with optimized multi-column indexes, achieving sub-millisecond queries even with millions of items.</p>
+          <p>Product, order, customer, and inventory records live in 18 dedicated normalized relational SQL tables with optimized multi-column indexes, achieving sub-millisecond queries even with catalogs of millions of items.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">🔒</div>
@@ -30,14 +31,52 @@ const chapters = [
         <div class="feature-card">
           <div class="feature-card-icon">🛍️</div>
           <h4>Conversion-First Storefront</h4>
-          <p>Modern responsive shop grid, sticky product cards, variant swatches, urgency badges, real-time cart scarcity timers, and single/multi-step checkouts designed to convert.</p>
+          <p>Modern responsive shop grid, sticky product cards, variant swatches, urgency badges, real-time cart scarcity timers, and frictionless single/multi-step checkouts designed to convert.</p>
         </div>
       </div>
+
+      <h3>Architectural Comparison: OmnifyWP vs Legacy WooCommerce</h3>
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Architecture Dimension</th>
+            <th>Legacy WooCommerce</th>
+            <th>OmnifyWP eCommerce</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database Storage</strong></td>
+            <td>Overloaded <code>wp_posts</code> & <code>wp_postmeta</code> EAV table joins</td>
+            <td><strong>18 Dedicated Normalized SQL Tables</strong> (Clean Separation)</td>
+          </tr>
+          <tr>
+            <td><strong>Query Execution Time</strong></td>
+            <td>45ms – 250ms+ under large catalogs</td>
+            <td><strong>0.4ms – 2.5ms</strong> indexed direct SQL queries</td>
+          </tr>
+          <tr>
+            <td><strong>Digital Asset Delivery</strong></td>
+            <td>Basic PHP redirects or exposed download URLs</td>
+            <td><strong>HMAC-SHA256 Signed Tokens</strong>, 8KB chunk streaming</td>
+          </tr>
+          <tr>
+            <td><strong>Refund Asset Security</strong></td>
+            <td>Manual access revocation required</td>
+            <td><strong>Instant Automatic File Revocation</strong> on order refund</td>
+          </tr>
+          <tr>
+            <td><strong>Block Editor Integration</strong></td>
+            <td>Heavy legacy widgets & shortcode wrappers</td>
+            <td><strong>100% Native Gutenberg Full Site Editing</strong> blocks</td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="callout tip">
         <div class="callout-icon">💡</div>
         <div class="callout-body">
-          <strong>Built for Scale:</strong> Unlike standard WooCommerce setups that overload <code>wp_posts</code> and <code>wp_postmeta</code>, OmnifyWP maintains clean separation of concern. Your blog posts remain completely isolated from high-volume catalog queries.
+          <strong>Built for Scale:</strong> Your blog posts, pages, and custom post types remain completely isolated from high-volume catalog queries. Backups, queries, and caching remain lightning fast as your store scales to millions in revenue.
         </div>
       </div>
     `
@@ -57,27 +96,31 @@ const chapters = [
           <tr><th>Component</th><th>Minimum Required</th><th>Recommended</th></tr>
         </thead>
         <tbody>
-          <tr><td>WordPress</td><td>6.5+</td><td>Latest Stable</td></tr>
-          <tr><td>PHP Version</td><td>8.2+</td><td>8.2 or 8.3 (with curl, mbstring, openssl)</td></tr>
+          <tr><td>WordPress</td><td>6.5+</td><td>Latest Stable (Block Editor Enabled)</td></tr>
+          <tr><td>PHP Version</td><td>8.2+</td><td>8.2 or 8.3 (with curl, mbstring, openssl, json)</td></tr>
           <tr><td>Database</td><td>MySQL 5.7+ / MariaDB 10.3+</td><td>MySQL 8.0+ / MariaDB 10.6+</td></tr>
-          <tr><td>SSL Certificate</td><td>HTTPS Required</td><td>Strict Transport Security (HSTS)</td></tr>
+          <tr><td>Web Server</td><td>Nginx or Apache with mod_rewrite</td><td>Nginx with HTTP/2 or HTTP/3</td></tr>
+          <tr><td>SSL Certificate</td><td>HTTPS Required</td><td>Strict Transport Security (HSTS) Active</td></tr>
         </tbody>
       </table>
 
       <h3>Onboarding Setup Wizard</h3>
-      <p>Navigate to <strong>Omnify → Setup Wizard</strong> to initialize your store settings in 4 simple steps: Store Profile, Currency & Locale, Payment Setup, and Page Generation.</p>
+      <p>Upon plugin activation, navigate to <strong>Omnify → Setup Wizard</strong> to initialize your store in 4 simple guided steps:</p>
+      <ul class="styled-list">
+        <li><strong>Step 1: Store Profile:</strong> Business name, operational headquarters, physical address, and contact email.</li>
+        <li><strong>Step 2: Currency & Locale:</strong> Operational base currency, thousand/decimal separator, symbol placement, and measurement units.</li>
+        <li><strong>Step 3: Payment Gateways:</strong> One-click enablement for Stripe Elements, PayPal Commerce, Razorpay, SSLCommerz, and Cash on Delivery.</li>
+        <li><strong>Step 4: Page Generation:</strong> Automatic creation and shortcode binding for Storefront, Cart, Checkout, Customer Portal, and Order Tracking.</li>
+      </ul>
 
-      <div class="screenshot-container">
-        <img src="screenshots/24-setup-wizard.png" alt="Setup Wizard" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 2.1: OmnifyWP Setup Wizard guiding new merchants through initial store configuration.</div>
-      </div>
+      ${mockups.setup_wizard}
 
-      <h3>Generated Store Pages</h3>
+      <h3>Generated Core Store Pages</h3>
       <p>OmnifyWP automatically generates dedicated pages with embedded shortcodes:</p>
       <ul class="styled-list">
         <li><strong>Storefront (<code>/storefront/</code>):</strong> Houses <code>[omnify_storefront]</code> to display the responsive product catalog grid.</li>
         <li><strong>Cart (<code>/cart/</code>):</strong> Houses <code>[omnify_cart]</code> for interactive line-item management and coupon applications.</li>
-        <li><strong>Checkout (<code>/checkout/</code>):</strong> Houses <code>[omnify_checkout]</code> for high-converting multi-step checkout.</li>
+        <li><strong>Checkout (<code>/checkout/</code>):</strong> Houses <code>[omnify_checkout]</code> for high-converting single/multi-step checkout.</li>
         <li><strong>Customer Portal (<code>/customer-portal/</code>):</strong> Houses <code>[omnify_customer_portal]</code> for buyer account management and downloads.</li>
         <li><strong>Order Tracking (<code>/order-tracking/</code>):</strong> Houses <code>[omnify_order_tracking]</code> for guest order status lookups.</li>
         <li><strong>Secure Download (<code>/secure-download/</code>):</strong> Houses <code>[omnify_download_page]</code> for encrypted streaming delivery.</li>
@@ -91,12 +134,9 @@ const chapters = [
     icon: '📊',
     summary: 'Real-time financial KPI cards, store status badges, recent transactions feed, and one-click quick actions.',
     content: `
-      <p>The <strong>Omnify Dashboard</strong> (located under <strong>Omnify → Dashboard</strong>) serves as the primary overview for store health, performance trends, and order activity.</p>
+      <p>The <strong>Omnify Dashboard</strong> (located under <strong>Omnify → Dashboard</strong>) serves as the executive command center for store health, performance trends, and real-time transaction activity.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/01-dashboard.png" alt="Omnify Store Dashboard" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 3.1: Executive store dashboard displaying live metrics, trend comparisons, recent orders, and quick actions.</div>
-      </div>
+      ${mockups.dashboard}
 
       <h3>Key Performance Indicators (KPI Cards)</h3>
       <div class="grid-cards-2">
@@ -106,15 +146,15 @@ const chapters = [
         </div>
         <div class="feature-card">
           <h4>Total Orders</h4>
-          <p>Total transaction volume across all order states, allowing you to gauge operational velocity.</p>
+          <p>Total transaction volume across all order states, allowing you to gauge operational velocity and sales velocity.</p>
         </div>
         <div class="feature-card">
-          <h4>Registered Customers</h4>
-          <p>Total verified customer accounts and guest purchasing records preserved in the custom CRM schema.</p>
+          <h4>Active Customers</h4>
+          <p>Total verified customer accounts and repeat purchasing records preserved in the custom normalized CRM schema.</p>
         </div>
         <div class="feature-card">
-          <h4>Total Downloads</h4>
-          <p>Count of authorized cryptographic digital downloads streamed safely to verified purchasers.</p>
+          <h4>Digital Downloads</h4>
+          <p>Count of authorized cryptographic digital downloads streamed safely to verified purchasers with zero memory leakage.</p>
         </div>
       </div>
 
@@ -123,8 +163,8 @@ const chapters = [
       <ul class="styled-list">
         <li><strong>+ Add New Product:</strong> Jump straight into the comprehensive product authoring suite.</li>
         <li><strong>Create Coupon:</strong> Launch a flash sale or custom discount code promotion.</li>
-        <li><strong>Manage Orders:</strong> View and filter all incoming customer transactions.</li>
-        <li><strong>Settings & Integrations:</strong> Update payment gateway credentials, shipping zones, and tax rates.</li>
+        <li><strong>Export Accounting CSV:</strong> Generate QuickBooks and Xero compatible financial exports.</li>
+        <li><strong>Verify 18 SQL Tables:</strong> Run instant schema diagnostic checks across all custom tables.</li>
       </ul>
     `
   },
@@ -137,49 +177,31 @@ const chapters = [
     content: `
       <p>Navigate to <strong>Omnify → Products</strong> to view, search, and organize your store's inventory. Products can be filtered by taxonomy, type, status, and creation date, or exported to CSV.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/02-products-list.png" alt="Products Directory" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.1: Product catalog listing with multi-parameter filtering, stock indicators, and quick action buttons.</div>
-      </div>
+      ${mockups.products_list}
 
       <h3>Supported Product Types</h3>
       <ul class="styled-list">
+        <li><strong>Digital / Downloadable:</strong> Software applications, WordPress plugins/themes, eBooks, audio/video lessons, presets, and digital graphics linked to secure cryptographic file delivery lockers.</li>
         <li><strong>Physical Products:</strong> Tangible items requiring weight, package dimensions, stock tracking, and shipping calculations.</li>
-        <li><strong>Digital / Downloadable:</strong> Software applications, eBooks, audio/video lessons, presets, and digital graphics linked to secure file delivery lockers.</li>
-        <li><strong>Variable Products:</strong> Configurable products offering variation matrices based on attributes (e.g. Size: S/M/L, Color: Navy/Black).</li>
-        <li><strong>Product Bundles:</strong> Curated package deals grouping multiple digital or physical assets into a single SKU.</li>
+        <li><strong>Variable Products:</strong> Configurable products offering variation matrices based on attributes (e.g. License Tier: Single Site / 5 Sites / Agency, or Size / Color).</li>
+        <li><strong>Product Bundles:</strong> Curated package deals grouping multiple digital or physical assets into a single discounted SKU.</li>
       </ul>
 
       <h3>Product Editor Interface</h3>
       <p>Click <strong>Create Product</strong> or edit an existing item to access the product management workspace.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/03-product-editor.png" alt="Product Editor" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.2: Comprehensive product editor with pricing, stock rules, file lockers, and gallery controls.</div>
-      </div>
+      ${mockups.product_editor}
 
       <h3>Product Taxonomies</h3>
-      <p>Organize your catalog with structured taxonomies that drive storefront filtering and navigation:</p>
+      <p>Organize your catalog with structured taxonomies that drive storefront filtering, search, and navigation:</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/04-categories.png" alt="Product Categories" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.3: Product Categories management screen for hierarchical catalog grouping.</div>
-      </div>
+      ${mockups.categories}
 
-      <div class="screenshot-container">
-        <img src="screenshots/05-tags.png" alt="Product Tags" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.4: Granular product tags for cross-category search and thematic tagging.</div>
-      </div>
+      ${mockups.tags}
 
-      <div class="screenshot-container">
-        <img src="screenshots/06-brands.png" alt="Product Brands" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.5: Manufacturer and brand assignments with storefront brand logos.</div>
-      </div>
+      ${mockups.brands}
 
-      <div class="screenshot-container">
-        <img src="screenshots/07-attributes.png" alt="Product Attributes" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 4.6: Global Attributes manager for configuring variation axes (Size, Color, Material).</div>
-      </div>
+      ${mockups.attributes}
     `
   },
   {
@@ -191,10 +213,7 @@ const chapters = [
     content: `
       <p>The orders fulfillment center under <strong>Omnify → Orders</strong> gives you complete control over transaction statuses, fulfillment workflows, and customer updates.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/08-orders-list.png" alt="Orders Management Directory" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 5.1: Orders management table showing order numbers, customer names, status badges, and transaction totals.</div>
-      </div>
+      ${mockups.orders_list}
 
       <h3>Order Lifecycle Workflows</h3>
       <table class="doc-table">
@@ -214,15 +233,12 @@ const chapters = [
       <h3>Order Detail, Fraud Assessment & Refunds</h3>
       <p>Click on any order to view line items, customer addresses, transaction records, and the fraud risk assessment badge.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/09-order-detail.png" alt="Order Detail Screen" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 5.2: Order detail view with item breakdown, risk score analysis, refund manager, and receipt tools.</div>
-      </div>
+      ${mockups.order_detail}
 
       <div class="callout warning">
         <div class="callout-icon">⚠️</div>
         <div class="callout-body">
-          <strong>Automatic File Revocation:</strong> Processing a full refund automatically revokes customer access to digital files, canceling existing download tokens to protect your intellectual property.
+          <strong>Automatic File Revocation:</strong> Processing a full refund automatically revokes customer access to digital files, immediately canceling existing download tokens to protect your intellectual property.
         </div>
       </div>
     `
@@ -236,10 +252,7 @@ const chapters = [
     content: `
       <p>Under <strong>Omnify → Customers</strong>, store owners have a built-in CRM directory capturing valuable buyer intelligence without requiring third-party plugins.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/10-customers.png" alt="Customers Directory" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 6.1: Customer relationship management directory with purchase history, LTV, and status indicators.</div>
-      </div>
+      ${mockups.customers}
 
       <h3>Customer Profile Capabilities</h3>
       <ul class="styled-list">
@@ -259,10 +272,7 @@ const chapters = [
     content: `
       <p>Run targeted promotions, seasonal flash sales, and customer loyalty rewards via <strong>Omnify → Coupons</strong>.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/11-coupons.png" alt="Coupons Management" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 7.1: Promotional coupon management with usage counters, expiration dates, and discount rules.</div>
-      </div>
+      ${mockups.coupons}
 
       <h3>Discount Types</h3>
       <ul class="styled-list">
@@ -291,10 +301,7 @@ const chapters = [
     content: `
       <p>Under <strong>Omnify → Analytics</strong>, gain instant visibility into store health through interactive charts and performance summaries.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/12-analytics.png" alt="Store Analytics" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 8.1: Real-time analytics dashboard with gross/net sales, AOV, tax breakdowns, and CSV export.</div>
-      </div>
+      ${mockups.analytics}
 
       <h3>Core Financial Metrics</h3>
       <div class="grid-cards-3">
@@ -308,14 +315,14 @@ const chapters = [
         </div>
         <div class="feature-card">
           <h4>Average Order Value (AOV)</h4>
-          <p>Average transaction size, helping evaluate upsell effectiveness.</p>
+          <p>Average transaction size, helping evaluate upsell and cross-sell effectiveness.</p>
         </div>
       </div>
 
       <div class="callout tip">
         <div class="callout-icon">📊</div>
         <div class="callout-body">
-          <strong>CSV Export for Accounting:</strong> Click <strong>Export Report (CSV)</strong> in the top-right corner to export comprehensive financial data for QuickBooks, Xero, or custom spreadsheet analysis.
+          <strong>CSV Export for Accounting:</strong> Click <strong>Export Report (CSV)</strong> in the top-right corner to export comprehensive financial data formatted for QuickBooks, Xero, or custom spreadsheet analysis.
         </div>
       </div>
     `
@@ -329,10 +336,7 @@ const chapters = [
     content: `
       <p>Customer testimonials build purchasing confidence. Navigate to <strong>Omnify → Reviews</strong> to moderate submitted buyer reviews and ratings.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/13-reviews.png" alt="Reviews Moderation" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 9.1: Reviews moderation directory showing verified buyer badges, ratings, and status actions.</div>
-      </div>
+      ${mockups.reviews}
 
       <h3>Review Management Features</h3>
       <ul class="styled-list">
@@ -349,12 +353,9 @@ const chapters = [
     icon: '🛒',
     summary: 'Automatically track dropped checkout sessions and recover lost sales with scheduled reminders.',
     content: `
-      <p>Under <strong>Omnify → Abandoned Carts</strong>, OmnifyWP tracks incomplete checkout sessions and helps recover potential lost revenue.</p>
+      <p>Under <strong>Omnify → Abandoned Carts</strong>, OmnifyWP tracks incomplete checkout sessions and helps recover potential lost revenue automatically.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/14-abandoned-carts.png" alt="Abandoned Cart Recovery" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 10.1: Abandoned cart tracker displaying customer emails, abandoned items, subtotals, and recovery status.</div>
-      </div>
+      ${mockups.abandoned_carts}
 
       <h3>Recovery Workflow</h3>
       <ol class="styled-list">
@@ -376,17 +377,11 @@ const chapters = [
 
       <h3>General Settings</h3>
       <p>Configure store currency, symbol placement, decimal formatting, and physical measurement units.</p>
-      <div class="screenshot-container">
-        <img src="screenshots/15-settings-general.png" alt="Settings - General" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.1: General store settings for currency, formatting, and measurement units.</div>
-      </div>
+      ${mockups.settings_general}
 
       <h3>Payment Gateways</h3>
       <p>Connect and manage integrated payment processors for your store:</p>
-      <div class="screenshot-container">
-        <img src="screenshots/16-settings-payments.png" alt="Settings - Payments" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.2: Payment gateways screen supporting Stripe, PayPal, Razorpay, SSLCommerz, and manual payments.</div>
-      </div>
+      ${mockups.settings_payments}
 
       <div class="grid-cards-2">
         <div class="feature-card">
@@ -408,34 +403,19 @@ const chapters = [
       </div>
 
       <h3>Delivery & Shipping Options</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/17-settings-delivery.png" alt="Settings - Delivery" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.3: Delivery settings for configuring Flat Rates, Free Shipping thresholds, and Local Pickup.</div>
-      </div>
+      ${mockups.settings_delivery}
 
       <h3>Taxes & Calculations</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/18-settings-taxes.png" alt="Settings - Taxes" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.4: Tax calculation options for inclusive/exclusive pricing and regional tax rates.</div>
-      </div>
+      ${mockups.settings_taxes}
 
       <h3>Automated Email Notifications</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/19-settings-emails.png" alt="Settings - Emails" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.5: Automated customer and admin email notification templates.</div>
-      </div>
+      ${mockups.settings_emails}
 
       <h3>Checkout Experience</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/20-settings-checkout.png" alt="Settings - Checkout" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.6: Checkout options for guest purchases, account creation, and terms acceptance.</div>
-      </div>
+      ${mockups.settings_checkout}
 
       <h3>Store Page Mapping</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/20b-settings-pages.png" alt="Settings - Pages" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 11.7: Core page mappings linking shortcodes to active WordPress pages.</div>
-      </div>
+      ${mockups.settings_pages}
     `
   },
   {
@@ -447,14 +427,11 @@ const chapters = [
     content: `
       <p>Under <strong>Omnify → Tools & Seeding</strong>, manage maintenance operations and developer utilities.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/21-tools.png" alt="Tools & Maintenance" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 12.1: System diagnostics, demo data seeding/cleanup, and database optimization tools.</div>
-      </div>
+      ${mockups.tools}
 
       <h3>Available Tools</h3>
       <ul class="styled-list">
-        <li><strong>Generate Demo Data:</strong> Seeds sample products, orders, customers, and categories to preview themes.</li>
+        <li><strong>Generate Demo Data:</strong> Seeds 50 sample products, orders, customers, and categories to preview themes.</li>
         <li><strong>Clear Demo Data:</strong> Safely removes generated demo records without affecting real customer purchases.</li>
         <li><strong>Flush Transients & Caches:</strong> Flushes cached queries and price calculations to reflect catalog changes immediately.</li>
         <li><strong>Verify Database Tables:</strong> Validates indexes and schemas across all 18 custom Omnify database tables.</li>
@@ -470,10 +447,7 @@ const chapters = [
     content: `
       <p>Under <strong>Omnify → Activity Log</strong>, view a complete chronological audit trail of administrative changes for accountability and security.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/22-activity-log.png" alt="Activity Audit Log" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 13.1: Chronological audit log showing user actions, setting changes, and timestamps.</div>
-      </div>
+      ${mockups.activity_log}
 
       <h3>Tracked Events Include</h3>
       <ul class="styled-list">
@@ -493,15 +467,12 @@ const chapters = [
     content: `
       <p>Under <strong>Omnify → API Keys</strong>, generate and manage REST API credentials for external integrations.</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/23-api-keys.png" alt="API Keys Management" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 14.1: REST API key management panel for headless commerce and external integrations.</div>
-      </div>
+      ${mockups.api_keys}
 
       <h3>Generating API Credentials</h3>
       <ol class="styled-list">
-        <li>Click <strong>+ Add Key</strong>.</li>
-        <li>Provide a descriptive label (e.g. <em>iOS Mobile App</em> or <em>Inventory Sync</em>).</li>
+        <li>Click <strong>+ Generate API Key</strong>.</li>
+        <li>Provide a descriptive label (e.g. <em>Next.js Headless Front</em> or <em>iOS Mobile App</em>).</li>
         <li>Select permission scope: <code>Read</code>, <code>Write</code>, or <code>Read/Write</code>.</li>
         <li>Save to reveal the generated <strong>Consumer Key</strong> and <strong>Consumer Secret</strong>.</li>
       </ol>
@@ -517,41 +488,23 @@ const chapters = [
       <p>OmnifyWP delivers a fast, modern shopping experience with clean layouts and responsive controls.</p>
 
       <h3>Product Catalog Grid (<code>[omnify_storefront]</code>)</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/25-storefront-catalog.png" alt="Storefront Catalog Grid" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.1: Responsive catalog grid with sidebar category/brand filters and quick add-to-cart buttons.</div>
-      </div>
+      ${mockups.storefront_catalog}
 
       <h3>Product Details Page</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/26-storefront-product.png" alt="Product Details Page" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.2: Product details layout featuring gallery zoom, format selection swatches, and verified reviews.</div>
-      </div>
+      ${mockups.storefront_product}
 
       <h3>Shopping Cart (<code>[omnify_cart]</code>)</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/27-storefront-cart.png" alt="Shopping Cart Page" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.3: Interactive cart page with quantity updates, coupon redemption box, and shipping preview.</div>
-      </div>
+      ${mockups.storefront_cart}
 
       <h3>Conversion-Optimized Checkout (<code>[omnify_checkout]</code>)</h3>
-      <div class="screenshot-container">
-        <img src="screenshots/28-storefront-checkout.png" alt="Checkout Page" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.4: Modern multi-step checkout with live order summary, available promo codes, and payment inputs.</div>
-      </div>
+      ${mockups.storefront_checkout}
 
       <h3>Customer Portal & Public Order Tracking</h3>
       <p>Customers can manage their past orders, addresses, and digital downloads in the Customer Portal (<code>[omnify_customer_portal]</code>) or track purchases via the public Order Tracking page (<code>[omnify_order_tracking]</code>).</p>
 
-      <div class="screenshot-container">
-        <img src="screenshots/29-customer-portal.png" alt="Customer Portal" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.5: Self-service Customer Portal for past orders, address management, and digital files.</div>
-      </div>
+      ${mockups.customer_portal}
 
-      <div class="screenshot-container">
-        <img src="screenshots/30-order-tracking.png" alt="Order Tracking Portal" class="doc-screenshot" loading="lazy" onclick="openLightbox(this)" />
-        <div class="screenshot-caption">Figure 15.6: Guest order tracking lookup requiring only Order Number and Billing Email.</div>
-      </div>
+      ${mockups.order_tracking}
     `
   },
   {
@@ -563,7 +516,7 @@ const chapters = [
     content: `
       <div class="faq-item">
         <h4>Q: How does OmnifyWP achieve sub-millisecond database queries?</h4>
-        <p>OmnifyWP stores products, variations, orders, and customer data in 18 dedicated normalized SQL tables (<code>wp_omnify_*</code>) with explicit indexes, bypassing WordPress's shared <code>wp_posts</code> and <code>wp_postmeta</code> tables completely.</p>
+        <p>OmnifyWP stores products, variations, orders, and customer data in 18 dedicated normalized SQL tables (<code>wp_omnify_*</code>) with explicit multi-column indexes, bypassing WordPress's shared <code>wp_posts</code> and <code>wp_postmeta</code> tables completely.</p>
       </div>
 
       <div class="faq-item">
@@ -573,12 +526,22 @@ const chapters = [
 
       <div class="faq-item">
         <h4>Q: How do I test Stripe payments without charging real credit cards?</h4>
-        <p>Navigate to <strong>Omnify → Settings → Payments</strong>, toggle <strong>Test Mode</strong> on, enter your Stripe Test Publishable and Secret Keys, and use Stripe's standard test card numbers.</p>
+        <p>Navigate to <strong>Omnify → Settings → Payments</strong>, toggle <strong>Test Mode</strong> on, enter your Stripe Test Publishable and Secret Keys, and use Stripe's standard test card numbers (e.g. <code>4242 4242 4242 4242</code>).</p>
       </div>
 
       <div class="faq-item">
         <h4>Q: What happens to customer download access when an order is refunded?</h4>
         <p>When an order is refunded in <strong>Omnify → Orders</strong>, OmnifyWP immediately revokes all associated download tokens, preventing future file access.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Q: Can OmnifyWP run alongside standard WordPress block themes?</h4>
+        <p>Yes! OmnifyWP is 100% Full Site Editing (FSE) ready and includes native Gutenberg blocks, patterns, and templates. It works seamlessly with block themes, classic themes, and headless frontends (Next.js, Nuxt).</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Q: Where can I get support or report an issue?</h4>
+        <p>Visit the official website at <a href="https://omnifywp.com" target="_blank" rel="noopener">omnifywp.com</a> or our plugin page on <a href="https://wordpress.org/plugins/omnifywp-ecommerce/" target="_blank" rel="noopener">wp.org</a>.</p>
       </div>
     `
   }
@@ -676,54 +639,94 @@ const fullHtml = `<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
+  <script>
+    // System color scheme auto-detection on initial load
+    (function() {
+      var saved = localStorage.getItem('omnify_theme_pref');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else {
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      }
+    })();
+  </script>
+
   <style>
+    /* Website Palette (Forest Green, Emerald, Mint & Obsidian) */
     :root {
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      
-      /* Dark Theme (Default) - Linear & Vercel minimal obsidian */
-      --bg-body: #07090e;
-      --bg-surface: #0c1017;
-      --bg-card: #121824;
-      --bg-card-hover: #17202f;
-      --bg-glass: rgba(12, 16, 23, 0.88);
-      --bg-code: #090d15;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-highlight: rgba(255, 255, 255, 0.18);
-      --border-accent: rgba(56, 189, 248, 0.4);
-      
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      
-      --brand-cyan: #38bdf8;
-      --brand-violet: #818cf8;
-      --brand-emerald: #10b981;
-      --brand-amber: #f59e0b;
-      --brand-rose: #f43f5e;
-      --brand-purple: #c084fc;
-      
-      --brand-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-      --glow-cyan: 0 0 35px -5px rgba(56, 189, 248, 0.25);
-      --grid-pattern: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     }
 
-    [data-theme="light"] {
-      --bg-body: #ffffff;
-      --bg-surface: #f8fafc;
-      --bg-card: #f1f5f9;
-      --bg-card-hover: #e2e8f0;
-      --bg-glass: rgba(255, 255, 255, 0.94);
-      --bg-code: #0f172a;
-      --border-subtle: #e2e8f0;
-      --border-highlight: #cbd5e1;
-      --border-accent: rgba(56, 189, 248, 0.5);
-      
-      --text-main: #090d16;
-      --text-muted: #475569;
-      --text-dim: #94a3b8;
-      
-      --grid-pattern: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    /* Light Mode (Omnify Website Color Palette) */
+    :root[data-theme="light"] {
+      --bg-body: #F7FCF9;
+      --bg-surface: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #EFF8F2;
+      --bg-subtle: #EFF8F2;
+      --bg-glass: rgba(255, 255, 255, 0.92);
+      --bg-code: #0D1B12;
+      --border-subtle: #D4E8DC;
+      --border-highlight: #BCE0CB;
+      --border-accent: #22A06B;
+
+      --text-main: #0D1B12;
+      --text-muted: #3D5147;
+      --text-dim: #6B7F74;
+
+      --brand-forest-dark: #063d26;
+      --brand-forest: #0B5135;
+      --brand-forest-mid: #126343;
+      --brand-forest-light: #18794E;
+      --brand-emerald: #22A06B;
+      --brand-emerald-vivid: #34D399;
+      --brand-mint-light: #A8DFBF;
+      --brand-mint-pale: #EFF8F2;
+      --brand-amber: #D97706;
+      --brand-rose: #DC2626;
+
+      --brand-gradient: linear-gradient(135deg, #0B5135 0%, #18794E 45%, #22A06B 100%);
+      --brand-button-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 100%);
+      --hero-gradient: linear-gradient(160deg, #0B5135 0%, #18794E 40%, #22A06B 100%);
+      --glow-emerald: 0 0 35px -5px rgba(34, 160, 107, 0.25);
+      --grid-pattern: radial-gradient(rgba(11, 81, 53, 0.08) 1px, transparent 1px);
+    }
+
+    /* Dark Mode (Forest Obsidian & Vivid Emerald) */
+    :root[data-theme="dark"] {
+      --bg-body: #08100B;
+      --bg-surface: #0E1A13;
+      --bg-card: #13241B;
+      --bg-card-hover: #193024;
+      --bg-subtle: #162B20;
+      --bg-glass: rgba(14, 26, 19, 0.90);
+      --bg-code: #050B07;
+      --border-subtle: rgba(212, 232, 220, 0.12);
+      --border-highlight: rgba(52, 211, 153, 0.28);
+      --border-accent: #22A06B;
+
+      --text-main: #F4FAF6;
+      --text-muted: #A3BFB0;
+      --text-dim: #718F7F;
+
+      --brand-forest-dark: #063d26;
+      --brand-forest: #126343;
+      --brand-forest-mid: #18794E;
+      --brand-forest-light: #22A06B;
+      --brand-emerald: #34D399;
+      --brand-emerald-vivid: #6EE7B7;
+      --brand-mint-light: #A8DFBF;
+      --brand-mint-pale: #1A3326;
+      --brand-amber: #FBBF24;
+      --brand-rose: #F87171;
+
+      --brand-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 50%, #34D399 100%);
+      --brand-button-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 100%);
+      --hero-gradient: linear-gradient(160deg, #063d26 0%, #0B5135 40%, #18794E 100%);
+      --glow-emerald: 0 0 35px -5px rgba(52, 211, 153, 0.2);
+      --grid-pattern: radial-gradient(rgba(52, 211, 153, 0.08) 1px, transparent 1px);
     }
 
     html {
@@ -760,7 +763,7 @@ const fullHtml = `<!DOCTYPE html>
       transform: translateX(-50%);
       width: 1100px;
       height: 480px;
-      background: radial-gradient(50% 50% at 50% 0%, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.06) 50%, transparent 100%);
+      background: radial-gradient(50% 50% at 50% 0%, rgba(34, 160, 107, 0.12) 0%, rgba(11, 81, 53, 0.06) 50%, transparent 100%);
       pointer-events: none;
       z-index: 0;
     }
@@ -793,11 +796,11 @@ const fullHtml = `<!DOCTYPE html>
       width: 34px;
       height: 34px;
       border-radius: 9px;
-      background: var(--brand-gradient);
+      background: var(--brand-button-gradient);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+      box-shadow: 0 4px 12px rgba(34, 160, 107, 0.3);
       color: #fff;
       font-weight: 800;
       font-size: 1.1rem;
@@ -819,9 +822,9 @@ const fullHtml = `<!DOCTYPE html>
       font-weight: 600;
       padding: 2px 7px;
       border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--brand-cyan);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(34, 160, 107, 0.12);
+      color: var(--brand-emerald);
+      border: 1px solid rgba(34, 160, 107, 0.25);
     }
 
     /* Doc Mode Switcher Segmented Control */
@@ -854,8 +857,8 @@ const fullHtml = `<!DOCTYPE html>
 
     .switcher-btn.active {
       background: var(--bg-card);
-      color: var(--brand-cyan);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      color: var(--brand-emerald);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--border-subtle);
     }
 
@@ -863,6 +866,26 @@ const fullHtml = `<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    .header-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .header-nav-link:hover {
+      color: var(--brand-emerald);
+      background: var(--bg-card-hover);
+      border-color: var(--border-subtle);
     }
 
     .search-btn {
@@ -1002,8 +1025,8 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .sidebar-link.active {
-      color: var(--brand-cyan);
-      background: rgba(56, 189, 248, 0.08);
+      color: var(--brand-emerald);
+      background: rgba(34, 160, 107, 0.1);
       font-weight: 600;
     }
 
@@ -1038,11 +1061,11 @@ const fullHtml = `<!DOCTYPE html>
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 4px 12px;
+      padding: 4px 14px;
       border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: var(--brand-cyan);
+      background: rgba(34, 160, 107, 0.12);
+      border: 1px solid rgba(34, 160, 107, 0.28);
+      color: var(--brand-emerald);
       font-size: 0.8rem;
       font-weight: 600;
       margin-bottom: 16px;
@@ -1054,15 +1077,7 @@ const fullHtml = `<!DOCTYPE html>
       letter-spacing: -0.04em;
       line-height: 1.15;
       margin-bottom: 16px;
-      background: linear-gradient(180deg, var(--text-main) 0%, rgba(255, 255, 255, 0.75) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    [data-theme="light"] .hero-title {
-      background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-main);
     }
 
     .hero-description {
@@ -1070,6 +1085,48 @@ const fullHtml = `<!DOCTYPE html>
       color: var(--text-muted);
       max-width: 820px;
       line-height: 1.6;
+    }
+
+    .hero-meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-ext-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 9px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .hero-ext-btn.primary {
+      background: var(--brand-button-gradient);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(34, 160, 107, 0.3);
+    }
+
+    .hero-ext-btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(34, 160, 107, 0.4);
+    }
+
+    .hero-ext-btn.secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .hero-ext-btn.secondary:hover {
+      border-color: var(--border-highlight);
+      background: var(--bg-card-hover);
     }
 
     /* Section Styling */
@@ -1097,9 +1154,9 @@ const fullHtml = `<!DOCTYPE html>
       letter-spacing: 0.08em;
       padding: 2px 8px;
       border-radius: 6px;
-      background: rgba(129, 140, 248, 0.12);
-      color: var(--brand-violet);
-      border: 1px solid rgba(129, 140, 248, 0.25);
+      background: rgba(34, 160, 107, 0.12);
+      color: var(--brand-emerald);
+      border: 1px solid rgba(34, 160, 107, 0.25);
     }
 
     .section-title {
@@ -1164,7 +1221,7 @@ const fullHtml = `<!DOCTYPE html>
     .feature-card:hover {
       border-color: var(--border-highlight);
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .feature-card-icon {
@@ -1186,37 +1243,726 @@ const fullHtml = `<!DOCTYPE html>
       line-height: 1.55;
     }
 
-    /* Screenshot Card Container */
-    .screenshot-container {
-      margin: 28px 0;
+    /* UI Mockup Window Styles */
+    .ui-mockup-window {
+      margin: 32px 0;
       border: 1px solid var(--border-subtle);
       border-radius: 14px;
       overflow: hidden;
       background: var(--bg-card);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 12px 36px rgba(11, 81, 53, 0.08);
       transition: all 0.2s ease;
     }
 
-    .screenshot-container:hover {
+    .ui-mockup-window:hover {
       border-color: var(--border-highlight);
+      box-shadow: 0 16px 48px rgba(11, 81, 53, 0.12);
     }
 
-    .doc-screenshot {
-      width: 100%;
-      height: auto;
-      display: block;
-      cursor: zoom-in;
-      transition: transform 0.25s ease;
+    .ui-mockup-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    .screenshot-caption {
-      padding: 12px 18px;
+    .ui-mockup-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .ui-mockup-address {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 4px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ui-mockup-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(34, 160, 107, 0.12);
+      color: var(--brand-emerald);
+      border: 1px solid rgba(34, 160, 107, 0.25);
+    }
+
+    .ui-mockup-body {
+      padding: 24px;
+      background: var(--bg-card);
+    }
+
+    .ui-mockup-caption {
+      padding: 12px 20px;
       background: var(--bg-surface);
       border-top: 1px solid var(--border-subtle);
       font-size: 0.85rem;
       color: var(--text-dim);
-      font-weight: 500;
       font-style: italic;
+    }
+
+    /* Sub-components for UI Mockups */
+    .mockup-wizard {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .wizard-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .step.active {
+      color: var(--brand-emerald);
+    }
+
+    .step.completed {
+      color: var(--brand-forest);
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .step.active .step-num {
+      background: var(--brand-emerald);
+      color: #fff;
+      border-color: var(--brand-emerald);
+    }
+
+    .step.completed .step-num {
+      background: var(--brand-forest);
+      color: #fff;
+      border-color: var(--brand-forest);
+    }
+
+    .step-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--border-subtle);
+      margin: 0 10px;
+    }
+
+    .step-connector.completed {
+      background: var(--brand-forest);
+    }
+
+    .wizard-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .wizard-card-header h4 {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .wizard-card-header p {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    .mockup-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .mockup-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .mockup-input-text, .mockup-input-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 7px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+
+    .wizard-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 16px;
+      margin-top: 20px;
+    }
+
+    .btn-mockup {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-mockup.btn-primary {
+      background: var(--brand-button-gradient);
+      color: #fff;
+    }
+
+    .btn-mockup.btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-mockup.btn-outline.danger {
+      color: var(--brand-rose);
+      border-color: rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-xs {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .btn-xs.danger {
+      color: var(--brand-rose);
+    }
+
+    .mockup-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .mockup-pills {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mockup-pill {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .mockup-pill.active {
+      background: var(--brand-forest);
+      color: #fff;
+      border-color: var(--brand-forest);
+    }
+
+    .mockup-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .kpi-label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .kpi-val {
+      display: block;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .kpi-trend {
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .kpi-trend.up {
+      color: var(--brand-emerald);
+    }
+
+    .mockup-split-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .mockup-card-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+    }
+
+    .panel-link {
+      font-size: 0.75rem;
+      color: var(--brand-emerald);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mockup-table-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .table-mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.82rem;
+    }
+
+    .table-mini-row.header {
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-subtle);
+    }
+
+    .quick-action-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .qa-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .qa-icon {
+      font-size: 1.25rem;
+    }
+
+    .qa-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .qa-desc {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .mockup-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .mockup-tabs-bar {
+      display: flex;
+      gap: 6px;
+    }
+
+    .m-tab {
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .m-tab.active {
+      background: var(--brand-forest);
+      color: #fff;
+      border-color: var(--brand-forest);
+    }
+
+    .mockup-data-table {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+
+    .table-head {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .table-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .table-row:last-child {
+      border-bottom: none;
+    }
+
+    .p-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .p-sku {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .editor-title-input {
+      flex: 1;
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .editor-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 16px;
+    }
+
+    .e-tab {
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      border-bottom: 2px solid transparent;
+    }
+
+    .e-tab.active {
+      color: var(--brand-emerald);
+      border-bottom-color: var(--brand-emerald);
+    }
+
+    .file-locker-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 8px;
+    }
+
+    .tag-cloud-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-pill {
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--brand-forest-light);
+    }
+
+    .risk-badge-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: rgba(34, 160, 107, 0.12);
+      border: 1px solid rgba(34, 160, 107, 0.3);
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .gateway-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+    }
+
+    .gateway-row:last-child {
+      border-bottom: none;
+    }
+
+    .g-icon {
+      font-size: 1.5rem;
+    }
+
+    .mockup-chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      height: 120px;
+      padding-top: 20px;
+    }
+
+    .chart-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .bar-fill {
+      width: 100%;
+      background: var(--brand-button-gradient);
+      border-radius: 4px 4px 0 0;
+      min-height: 8px;
+    }
+
+    .storefront-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .store-product-card {
+      position: relative;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-badge-sale {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--brand-rose);
+      color: #fff;
+    }
+
+    .product-card-img {
+      height: 120px;
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+
+    .product-card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .product-cat-tag {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .product-card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .product-stars {
+      color: #FBBF24;
+      font-size: 0.75rem;
+    }
+
+    .product-price-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0 8px;
+    }
+
+    .price-current {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-main);
+    }
+
+    .price-old {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .product-gallery-mock {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .main-gallery-preview {
+      height: 180px;
+      background: var(--bg-subtle);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .gallery-thumbs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: var(--bg-card);
+    }
+
+    .thumb.active {
+      border-color: var(--brand-emerald);
+      box-shadow: 0 0 0 1px var(--brand-emerald);
+    }
+
+    .product-meta-mock {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .qty-stepper {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
     }
 
     /* Tables */
@@ -1271,14 +2017,14 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .callout.tip {
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(34, 160, 107, 0.08);
+      border: 1px solid rgba(34, 160, 107, 0.25);
       color: var(--text-main);
     }
 
     .callout.warning {
-      background: rgba(245, 158, 11, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.25);
+      background: rgba(217, 119, 6, 0.08);
+      border: 1px solid rgba(217, 119, 6, 0.25);
       color: var(--text-main);
     }
 
@@ -1292,10 +2038,10 @@ const fullHtml = `<!DOCTYPE html>
       font-family: var(--font-mono);
     }
 
-    .badge.success { background: rgba(16, 185, 129, 0.15); color: var(--brand-emerald); }
-    .badge.info { background: rgba(56, 189, 248, 0.15); color: var(--brand-cyan); }
-    .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--brand-amber); }
-    .badge.danger { background: rgba(244, 63, 94, 0.15); color: var(--brand-rose); }
+    .badge.success { background: rgba(34, 160, 107, 0.15); color: var(--brand-emerald); }
+    .badge.info { background: rgba(18, 99, 67, 0.15); color: var(--brand-forest-light); }
+    .badge.warning { background: rgba(217, 119, 6, 0.15); color: var(--brand-amber); }
+    .badge.danger { background: rgba(220, 38, 38, 0.15); color: var(--brand-rose); }
     .badge.neutral { background: rgba(255, 255, 255, 0.08); color: var(--text-dim); }
 
     /* Lists */
@@ -1314,8 +2060,9 @@ const fullHtml = `<!DOCTYPE html>
       font-size: 0.85em;
       padding: 2px 6px;
       border-radius: 5px;
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--brand-cyan);
+      background: rgba(34, 160, 107, 0.08);
+      color: var(--brand-emerald);
+      border: 1px solid rgba(34, 160, 107, 0.2);
     }
 
     /* Right Rail TOC */
@@ -1361,9 +2108,9 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .toc-link.active {
-      color: var(--brand-cyan);
+      color: var(--brand-emerald);
       font-weight: 600;
-      background: rgba(56, 189, 248, 0.08);
+      background: rgba(34, 160, 107, 0.08);
     }
 
     /* FAQ Item */
@@ -1395,7 +2142,7 @@ const fullHtml = `<!DOCTYPE html>
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(8px);
       z-index: 100;
       display: none;
@@ -1458,7 +2205,7 @@ const fullHtml = `<!DOCTYPE html>
     .search-result-title {
       font-size: 0.95rem;
       font-weight: 600;
-      color: var(--brand-cyan);
+      color: var(--brand-emerald);
       margin-bottom: 4px;
     }
 
@@ -1466,57 +2213,6 @@ const fullHtml = `<!DOCTYPE html>
       font-size: 0.82rem;
       color: var(--text-dim);
       line-height: 1.4;
-    }
-
-    /* Lightbox Modal */
-    .lightbox-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(12px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-    }
-
-    .lightbox-modal.active {
-      display: flex;
-    }
-
-    .lightbox-img {
-      max-width: 92vw;
-      max-height: 90vh;
-      object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
-    .lightbox-close {
-      position: absolute;
-      top: 24px;
-      right: 28px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      font-size: 1.5rem;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .lightbox-close:hover {
-      background: rgba(255, 255, 255, 0.25);
     }
 
     @media (max-width: 980px) {
@@ -1532,7 +2228,7 @@ const fullHtml = `<!DOCTYPE html>
 
   <!-- Top Sticky Header -->
   <header class="top-header">
-    <div style="display: flex; align-items: center; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
       <a href="user-guide.html" class="brand-wrap">
         <div class="brand-icon">⚡</div>
         <div class="brand-text">
@@ -1553,6 +2249,16 @@ const fullHtml = `<!DOCTYPE html>
     </div>
 
     <div class="header-right">
+      <a href="https://omnifywp.com" target="_blank" rel="noopener" class="header-nav-link" title="Official Website">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>omnifywp.com</span>
+      </a>
+
+      <a href="https://wordpress.org/plugins/omnifywp-ecommerce/" target="_blank" rel="noopener" class="header-nav-link" title="wp.org Plugin Directory">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.73-1.5l3.89-10.66 3.99 10.94a8.16 8.16 0 0 1-3.15 1.22zm6.26-4.63l-2.4-6.57a3.44 3.44 0 0 0-1.89-1.89l.86-.04a6.6 6.6 0 0 1 4.22 3.63 8.17 8.17 0 0 1-.79 4.87zM5.74 15.57A8.17 8.17 0 0 1 3.8 12a8.16 8.16 0 0 1 2.37-5.74l3.15 8.63zm8.38-11.45a8.2 8.2 0 0 1 3.41 1.76l-1.39 3.8a4 4 0 0 0-2.02-.56zm-4.24.47A8.15 8.15 0 0 1 12 3.8a8.23 8.23 0 0 1 2.06.26l-1.77 5.12z"/></svg>
+        <span>wp.org</span>
+      </a>
+
       <button class="search-btn" id="search-trigger">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <span>Search User Guide...</span>
@@ -1588,8 +2294,23 @@ const fullHtml = `<!DOCTYPE html>
         </div>
         <h1 class="hero-title">OmnifyWP eCommerce<br>Complete User Manual</h1>
         <p class="hero-description">
-          The comprehensive operating handbook for store managers, operators, and merchants. Learn how to configure your catalog, fulfill orders, manage customers, execute promotional campaigns, and run a high-converting storefront.
+          The comprehensive operating handbook for store managers, operators, and merchants. Learn how to configure your catalog, fulfill orders, manage customer CRM profiles, execute promotional campaigns, and run a high-converting storefront.
         </p>
+
+        <div class="hero-meta-bar">
+          <a href="https://omnifywp.com" target="_blank" rel="noopener" class="hero-ext-btn primary">
+            <span>Visit Website (omnifywp.com)</span>
+            <span>↗</span>
+          </a>
+          <a href="https://wordpress.org/plugins/omnifywp-ecommerce/" target="_blank" rel="noopener" class="hero-ext-btn secondary">
+            <span>wp.org Directory</span>
+            <span>↗</span>
+          </a>
+          <a href="index.html" class="hero-ext-btn secondary">
+            <span>Developer Documentation & REST API</span>
+            <span>→</span>
+          </a>
+        </div>
       </div>
 
       ${mainContentHtml}
@@ -1615,23 +2336,15 @@ const fullHtml = `<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- Lightbox Modal -->
-  <div class="lightbox-modal" id="lightbox-modal" onclick="closeLightbox()">
-    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-    <img src="" alt="Enlarged Screenshot" class="lightbox-img" id="lightbox-img">
-  </div>
-
   <script>
     const searchIndex = ${JSON.stringify(searchIndex, null, 2)};
 
-    // Dark/Light Theme Switching
+    // System Color Scheme Auto-Detection & Persistent Manual Toggle
     const themeToggle = document.getElementById('theme-toggle');
     const themeSun = document.getElementById('theme-sun');
     const themeMoon = document.getElementById('theme-moon');
 
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('omnify_theme', theme);
+    function updateThemeIcons(theme) {
       if (theme === 'light') {
         themeSun.style.display = 'none';
         themeMoon.style.display = 'block';
@@ -1641,25 +2354,36 @@ const fullHtml = `<!DOCTYPE html>
       }
     }
 
-    const savedTheme = localStorage.getItem('omnify_theme') || 'dark';
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme') || 'dark';
-      applyTheme(current === 'dark' ? 'light' : 'dark');
-    });
-
-    // Lightbox Functionality
-    const lightboxModal = document.getElementById('lightbox-modal');
-    const lightboxImg = document.getElementById('lightbox-img');
-
-    function openLightbox(imgEl) {
-      lightboxImg.src = imgEl.src;
-      lightboxModal.classList.add('active');
+    function applyTheme(theme, save = true) {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (save) {
+        localStorage.setItem('omnify_theme_pref', theme);
+      }
+      updateThemeIcons(theme);
     }
 
-    function closeLightbox() {
-      lightboxModal.classList.remove('active');
+    function getInitialTheme() {
+      const saved = localStorage.getItem('omnify_theme_pref');
+      if (saved) return saved;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    const currentTheme = getInitialTheme();
+    applyTheme(currentTheme, false);
+
+    // Toggle theme manually
+    themeToggle.addEventListener('click', () => {
+      const active = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(active === 'dark' ? 'light' : 'dark', true);
+    });
+
+    // React to system color scheme changes if user hasn't explicitly overridden
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('omnify_theme_pref')) {
+          applyTheme(e.matches ? 'dark' : 'light', false);
+        }
+      });
     }
 
     // Search Trigger and Modal
@@ -1691,7 +2415,6 @@ const fullHtml = `<!DOCTYPE html>
       }
       if (e.key === 'Escape') {
         closeSearch();
-        closeLightbox();
       }
     });
 
