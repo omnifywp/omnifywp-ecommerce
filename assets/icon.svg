@@ -1,6 +1,65 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Background Gradient: Deep Luxury Obsidian to Radiant Emerald Core -->
+    <style>
+      @keyframes coreBreathe {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 0.85;
+        }
+        50% {
+          transform: scale(1.035);
+          opacity: 1;
+        }
+      }
+
+      @keyframes boltPulse {
+        0%, 100% {
+          transform: translateY(0);
+          filter: drop-shadow(0 0 6px #34D399) drop-shadow(0 3px 5px rgba(0,0,0,0.5));
+        }
+        50% {
+          transform: translateY(-2px);
+          filter: drop-shadow(0 0 14px #6EE7B7) drop-shadow(0 0 4px #FFFFFF);
+        }
+      }
+
+      @keyframes ringOrbit {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes lightSweep {
+        0%, 100% {
+          opacity: 0.28;
+        }
+        50% {
+          opacity: 0.55;
+        }
+      }
+
+      .anim-loop {
+        transform-origin: 128px 128px;
+        animation: coreBreathe 3s ease-in-out infinite;
+      }
+
+      .anim-bolt {
+        animation: boltPulse 3s ease-in-out infinite;
+      }
+
+      .anim-orbit {
+        transform-origin: 128px 128px;
+        animation: ringOrbit 8s linear infinite;
+      }
+
+      .anim-sheen {
+        animation: lightSweep 3s ease-in-out infinite;
+      }
+    </style>
+
     <radialGradient id="icon-bg-dark" cx="50%" cy="30%" r="75%">
       <stop offset="0%" stop-color="#145A38"/>
       <stop offset="35%" stop-color="#0A3622"/>
@@ -8,14 +67,12 @@
       <stop offset="100%" stop-color="#02110B"/>
     </radialGradient>
 
-    <!-- Top Ambient Specular Light -->
     <radialGradient id="icon-top-sheen" cx="128" cy="16" r="140" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6EE7B7" stop-opacity="0.32"/>
-      <stop offset="40%" stop-color="#34D399" stop-opacity="0.10"/>
+      <stop offset="0%" stop-color="#6EE7B7" stop-opacity="0.38"/>
+      <stop offset="40%" stop-color="#34D399" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#059669" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Center Kinetic Energy Glow -->
     <radialGradient id="icon-core-glow" cx="128" cy="128" r="95" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#34D399" stop-opacity="0.45"/>
       <stop offset="45%" stop-color="#10B981" stop-opacity="0.20"/>
@@ -23,7 +80,6 @@
       <stop offset="100%" stop-color="#02110B" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Luxury Glass Bevel Rim -->
     <linearGradient id="icon-rim-stroke" x1="20" y1="20" x2="236" y2="236" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#A7F3D0" stop-opacity="0.75"/>
       <stop offset="25%" stop-color="#FFFFFF" stop-opacity="0.40"/>
@@ -32,7 +88,6 @@
       <stop offset="100%" stop-color="#022515" stop-opacity="0.80"/>
     </linearGradient>
 
-    <!-- Sweeping Continuous Loop Ribbon Gradient -->
     <linearGradient id="loop-ribbon-grad" x1="44" y1="44" x2="212" y2="212" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FFFFFF"/>
       <stop offset="40%" stop-color="#F0FDF4"/>
@@ -40,48 +95,38 @@
       <stop offset="100%" stop-color="#A7F3D0"/>
     </linearGradient>
 
-    <!-- Electric Lightning Bolt Gradient -->
     <linearGradient id="bolt-grad-front" x1="140" y1="70" x2="114" y2="186" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F0FDF4"/>
+      <stop offset="0%" stop-color="#FFFFFF"/>
       <stop offset="25%" stop-color="#6EE7B7"/>
       <stop offset="65%" stop-color="#34D399"/>
       <stop offset="100%" stop-color="#059669"/>
     </linearGradient>
 
-    <!-- Drop Shadows for 3D Levitation -->
     <filter id="icon-emboss-shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#010905" flood-opacity="0.6"/>
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#010905" flood-opacity="0.3"/>
     </filter>
-    <filter id="bolt-energy-glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#34D399" flood-opacity="0.55"/>
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#010905" flood-opacity="0.4"/>
-    </filter>
   </defs>
 
-  <!-- 1. Background Squircle Base -->
   <rect x="6" y="6" width="244" height="244" rx="58" fill="url(#icon-bg-dark)"/>
-  
-  <!-- 2. Ambient Lighting Layers -->
-  <rect x="6" y="6" width="244" height="244" rx="58" fill="url(#icon-top-sheen)"/>
+  <rect class="anim-sheen" x="6" y="6" width="244" height="244" rx="58" fill="url(#icon-top-sheen)"/>
   <circle cx="128" cy="128" r="95" fill="url(#icon-core-glow)"/>
-
-  <!-- 3. Glass Inset Beveled Stroke -->
   <rect x="7" y="7" width="242" height="242" rx="57" stroke="url(#icon-rim-stroke)" stroke-width="2"/>
 
-  <!-- 4. Subtle Creative Micro Orbit Lines -->
-  <circle cx="128" cy="128" r="102" stroke="#34D399" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="3 7"/>
-  <circle cx="128" cy="128" r="44" stroke="#6EE7B7" stroke-opacity="0.10" stroke-width="1" stroke-dasharray="2 5"/>
+  <!-- Rotating Orbit -->
+  <g class="anim-orbit">
+    <circle cx="128" cy="128" r="102" stroke="#34D399" stroke-opacity="0.18" stroke-width="1.5" stroke-dasharray="8 12"/>
+    <circle cx="230" cy="128" r="3" fill="#6EE7B7" filter="drop-shadow(0 0 6px #6EE7B7)"/>
+  </g>
 
-  <!-- 5. BRAND VECTOR MARK -->
-  <g transform="translate(27.2, 27.2) scale(5.6)" filter="url(#icon-emboss-shadow)">
-    <!-- Brand Ribbon Loop -->
+  <!-- Ribbon Loop with Gentle Breathing -->
+  <g class="anim-loop" transform="translate(27.2, 27.2) scale(5.6)" filter="url(#icon-emboss-shadow)">
     <path d="M18 7.5C12.201 7.5 7.5 12.201 7.5 18C7.5 23.799 12.201 28.5 18 28.5C21.468 28.5 24.526 26.815 26.4 24.225C26.828 23.636 26.545 22.809 25.828 22.607C25.178 22.423 24.522 22.754 24.161 23.313C22.695 25.586 20.518 26.7 18 26.7C13.195 26.7 9.3 22.805 9.3 18C9.3 13.195 13.195 9.3 18 9.3C20.655 9.3 23.018 10.493 24.606 12.383L22.188 14.502C21.579 15.035 21.954 16.05 22.768 16.05H28.65C29.119 16.05 29.5 15.669 29.5 15.2V9.45C29.5 8.647 28.497 8.273 27.973 8.877L25.986 10.749C24.004 8.736 21.157 7.5 18 7.5Z" 
           fill="url(#loop-ribbon-grad)"/>
   </g>
 
-  <!-- 6. HIGH-PRECISION BOLT WITH RIDGE HIGHLIGHT -->
-  <g filter="url(#bolt-energy-glow)">
+  <!-- Lightning Bolt with Energy Pulse -->
+  <g class="anim-bolt">
     <path d="M 136 74 
              L 100 134 
              L 126 134 
@@ -90,7 +135,6 @@
              L 130 122 
              L 136 74 Z" 
           fill="url(#bolt-grad-front)"/>
-    <!-- Crisp highlight spine on bolt -->
     <path d="M 136 74 L 100 134 L 126 134 L 122 142 L 109 134 L 134 82 Z" fill="#FFFFFF" fill-opacity="0.45"/>
   </g>
 </svg>
