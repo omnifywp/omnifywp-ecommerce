@@ -223,19 +223,13 @@ Yes. OmnifyWP provides one-click refund processing directly from the order detai
 1. Executive store dashboard with real-time financial KPIs, recent transactions, and quick action shortcuts.
 2. Product catalog management table with multi-attribute filtering, date ranges, and stock indicators.
 3. Comprehensive product editor interface for pricing, stock management, dimensions, and digital file attachments.
-4. Product taxonomies manager for categories, tags, brands, and variable product attributes.
-5. Order fulfillment directory with status workflows, item breakdowns, fraud risk assessment, and one-click refund handling.
-6. Customer Relationship Management (CRM) directory tracking buyer histories, lifetime value, and saved addresses.
-7. Promotional coupons engine with percentage/fixed discounts, usage limits, and expiration controls.
-8. Store analytics dashboard presenting sales figures, conversion metrics, AOV, and CSV export.
-9. Customer reviews moderation portal with verified buyer badges and star ratings.
-10. Automated abandoned cart recovery tracking lost checkouts and customer re-engagement workflows.
-11. Comprehensive store settings panel covering currency, payment gateways, delivery zones, taxes, and notification emails.
-12. System tools for one-click demo data generation/cleanup and database optimization.
-13. Modern customer storefront catalog grid with responsive sidebar filters and AJAX Quick Add.
-14. High-converting single product page with gallery zoom, format swatches, and verified reviews.
-15. Frictionless multi-step checkout with live order summary, available coupon trays, and secure payments.
-16. Self-service Customer Portal with secure cryptographic file downloads and address books.
+4. Order fulfillment directory with status workflows, item breakdowns, fraud risk assessment, and one-click refund handling.
+5. Customer Relationship Management (CRM) directory tracking buyer histories, lifetime value, and saved addresses.
+6. Promotional coupons engine with percentage/fixed discounts, usage limits, and expiration controls.
+7. Store analytics dashboard presenting sales figures, conversion metrics, AOV, and CSV export.
+8. Automated abandoned cart recovery tracking lost checkouts and customer re-engagement workflows.
+9. Comprehensive store payment center covering 10+ global and regional gateways with zero platform fees.
+10. High-converting customer storefront catalog grid with responsive sidebar filters and AJAX Quick Add.
 
 == Changelog ==
 
