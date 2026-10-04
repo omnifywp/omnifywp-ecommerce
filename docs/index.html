@@ -161,6 +161,42 @@
       border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
+    /* Doc Mode Switcher Segmented Control */
+    .doc-switcher {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      margin-left: 12px;
+    }
+
+    .switcher-btn {
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text-muted);
+      border-radius: 7px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .switcher-btn:hover {
+      color: var(--text-main);
+    }
+
+    .switcher-btn.active {
+      background: var(--bg-card);
+      color: var(--brand-cyan);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+    }
+
     .header-right {
       display: flex;
       align-items: center;
@@ -1146,6 +1182,16 @@
           <span class="brand-version-pill">v1.2.0</span>
         </div>
       </a>
+
+      <!-- Doc Mode Switcher -->
+      <nav class="doc-switcher">
+        <a href="user-guide.html" class="switcher-btn">
+          <span>📘 User Guide</span>
+        </a>
+        <a href="index.html" class="switcher-btn active">
+          <span>⚡ Developer Docs</span>
+        </a>
+      </nav>
     </div>
 
     <div class="header-right">
