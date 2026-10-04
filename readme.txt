@@ -16,7 +16,9 @@ Lightweight, high-converting eCommerce engine for WordPress. Sell digital downlo
 
 Whether you're selling digital downloads (ebooks, software, audio, photography, courses, design assets), physical merchandise, product bundles, or variable items with multi-format pricing, OmnifyWP delivers a frictionless customer journey with instant storefront loading, frictionless 1-page checkout, and pre-integrated payment gateways for every continent.
 
-**Official Documentation & API Sandbox**: https://omnifywp.com/doc/
+Try Live Demo (No Setup Required): https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json
+Official User Documentation: https://omnifywp.com/doc/user-guide.html
+Developer Documentation & API Sandbox: https://omnifywp.com/doc/
 
 > **🚀 Why Choose OmnifyWP eCommerce?**
 > * **Zero Bloat & Blazing Fast**: Engineered with pure, optimized database queries and ultra-lightweight frontend assets (<35KB). Say goodbye to sluggish checkout experiences.
@@ -213,16 +215,27 @@ Yes. OmnifyWP provides one-click refund processing directly from the order detai
 
 == Screenshots ==
 
-1. Modern storefront catalog grid with category filters, instant search, and AJAX Quick Add.
-2. Product details layout featuring responsive media gallery, format swatches, and sticky purchase card.
-3. High-converting 1-page checkout with cart countdown timer, free shipping progress meter, and global payment options.
-4. Self-service Customer Portal with secure file access and address management.
-5. Intuitive admin settings panel with regional payment gateway configuration and live/test mode toggles.
-6. Order management dashboard with one-click refund handling and download audit logs.
+1. Executive store dashboard with real-time financial KPIs, recent transactions, and quick action shortcuts.
+2. Product catalog management table with multi-attribute filtering, date ranges, and stock indicators.
+3. Comprehensive product editor interface for pricing, stock management, dimensions, and digital file attachments.
+4. Product taxonomies manager for categories, tags, brands, and variable product attributes.
+5. Order fulfillment directory with status workflows, item breakdowns, fraud risk assessment, and one-click refund handling.
+6. Customer Relationship Management (CRM) directory tracking buyer histories, lifetime value, and saved addresses.
+7. Promotional coupons engine with percentage/fixed discounts, usage limits, and expiration controls.
+8. Store analytics dashboard presenting sales figures, conversion metrics, AOV, and CSV export.
+9. Customer reviews moderation portal with verified buyer badges and star ratings.
+10. Automated abandoned cart recovery tracking lost checkouts and customer re-engagement workflows.
+11. Comprehensive store settings panel covering currency, payment gateways, delivery zones, taxes, and notification emails.
+12. System tools for one-click demo data generation/cleanup and database optimization.
+13. Modern customer storefront catalog grid with responsive sidebar filters and AJAX Quick Add.
+14. High-converting single product page with gallery zoom, format swatches, and verified reviews.
+15. Frictionless multi-step checkout with live order summary, available coupon trays, and secure payments.
+16. Self-service Customer Portal with secure cryptographic file downloads and address books.
 
 == Changelog ==
 
 = 1.2.0 =
+* Documentation & Demo: Added complete user documentation website, interactive screenshot suite, and 1-click WordPress Playground live demo blueprint.
 * Critical Bug Fix: Fixed purchase verification blocking buyers of physical products from submitting reviews. Reviews now verify completed orders in addition to digital access entitlements.
 * Critical Bug Fix: Resolved false 403 Forbidden errors on digital downloads in Windows server environments by normalizing file paths with wp_normalize_path().
 * Performance & Stability: Replaced memory-buffering file streaming with 8KB chunked streaming and buffer flushes, preventing memory exhaustion when delivering large digital downloads.
