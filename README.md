@@ -4,11 +4,13 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square)](https://gnu.org/licenses/gpl.html)
 [![Documentation](https://img.shields.io/badge/Docs-omnifywp.com%2Fdoc-blueviolet.svg?style=flat-square)](https://omnifywp.com/doc/)
+[![Live Demo](https://img.shields.io/badge/WordPress%20Playground-Live%20Demo-38bdf8.svg?style=flat-square&logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json)
 [![Developer Friendly](https://img.shields.io/badge/Extensible-Filters%20%26%20Actions-brightgreen.svg?style=flat-square)](#-developer-extensibility)
 
 **Omnify** is a high-performance, developer-first eCommerce engine built for WordPress. Highly optimized, extremely secure, and headless-ready, Omnify gives you the ultimate storefront, checkouts, payment integrations, and secure digital downloads experience without the bloat of traditional eCommerce plugins.
 
-> 📘 **Complete User Documentation:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md)  
+> 🎮 **[Try Live Demo (No Setup Required)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json)**  
+> 📘 **Complete User Documentation:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md) | [Interactive User Guide](docs/user-guide.html)  
 > 📖 **Official Developer Documentation:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)  
 > 💻 **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)
 
