@@ -17,7 +17,8 @@ const includeItems = [
     'languages',
     'index.php',
     'omnifywp-ecommerce.php',
-    'readme.txt'
+    'readme.txt',
+    'blueprint.json'
 ];
 
 console.log('🚀 Starting build process...');
