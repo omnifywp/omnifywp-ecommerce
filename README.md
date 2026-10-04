@@ -8,7 +8,8 @@
 
 **Omnify** is a high-performance, developer-first eCommerce engine built for WordPress. Highly optimized, extremely secure, and headless-ready, Omnify gives you the ultimate storefront, checkouts, payment integrations, and secure digital downloads experience without the bloat of traditional eCommerce plugins.
 
-> 📖 **Official Developer Documentation:** [https://omnifywp.com/doc/](https://omnifywp.com/doc/)  
+> 📘 **Complete User Documentation:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md)  
+> 📖 **Official Developer Documentation:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)  
 > 💻 **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)
 
 ---
