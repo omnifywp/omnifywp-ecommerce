@@ -16,9 +16,14 @@ Lightweight, high-converting eCommerce engine for WordPress. Sell digital downlo
 
 Whether you're selling digital downloads (ebooks, software, audio, photography, courses, design assets), physical merchandise, product bundles, or variable items with multi-format pricing, OmnifyWP delivers a frictionless customer journey with instant storefront loading, frictionless 1-page checkout, and pre-integrated payment gateways for every continent.
 
-Try Live Demo (No Setup Required): https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json
-Official User Documentation: https://omnifywp.com/doc/user-guide.html
-Developer Documentation & API Sandbox: https://omnifywp.com/doc/
+> 🎮 **Interactive Live Sandbox (No Setup Required):**  
+> 🚀 **[Try Live Demo on WordPress Playground →](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json)**  
+> *Test drive the entire store, admin dashboard, cart, and checkouts immediately in your browser.*
+
+> 📚 **Official Guides & Resources:**  
+> 📘 **[Complete User Manual & Merchant Guide →](https://omnifywp.com/doc/user-guide.html)**  
+> 📖 **[Developer Documentation & REST API Reference →](https://omnifywp.com/doc/)**  
+> 💻 **[GitHub Repository & Source Code →](https://github.com/omnifywp/omnifywp-ecommerce)**
 
 > **🚀 Why Choose OmnifyWP eCommerce?**
 > * **Zero Bloat & Blazing Fast**: Engineered with pure, optimized database queries and ultra-lightweight frontend assets (<35KB). Say goodbye to sluggish checkout experiences.
