@@ -32,10 +32,12 @@ $omnify_currencies = [
 	'CHF' => 'CHF — Swiss Franc (Fr)',
 	'CNY' => 'CNY — Chinese Yuan (¥)',
 	'INR' => 'INR — Indian Rupee (₹)',
+	'NPR' => 'NPR — Nepalese Rupee (रू)',
 	'AED' => 'AED — UAE Dirham (د.إ)',
 	'SAR' => 'SAR — Saudi Riyal (ر.س)',
 	'SGD' => 'SGD — Singapore Dollar (S$)',
 	'MYR' => 'MYR — Malaysia Ringgit (RM)',
+	'NGN' => 'NGN — Nigerian Naira (₦)',
 	'NZD' => 'NZD — New Zealand Dollar (NZ$)',
 	'BRL' => 'BRL — Brazil Real (R$)',
 	'MXN' => 'MXN — Mexico Peso ($)',
@@ -101,18 +103,24 @@ function omnify_render_form_footer() {
 
 <div class="omnify-admin-wrapper omnify-settings-page">
 	<?php $omnify_active_tab = 'settings'; ?>
-	<?php include __DIR__ . '/partials/nav.php'; ?>
-	
-	<!-- Rebuilt Settings Header -->
-	<div class="omnify-modern-settings-header">
-		<div class="omnify-modern-header-logo" style="background: transparent !important; border-radius: 0 !important; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-			<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" style="width: 48px; height: 48px; border-radius: 12px; display: block; box-shadow: 0 4px 12px rgba(11, 81, 53, 0.2);" />
+	<div class="omnify-header-row">
+		<div class="omnify-header-row__title">
+			<h1><?php esc_html_e('Settings', 'omnifywp-ecommerce'); ?></h1>
+			<p><?php esc_html_e('Manage your store configuration, payment gateways, delivery rules, and preferences.', 'omnifywp-ecommerce'); ?></p>
 		</div>
-		<div class="omnify-modern-header-text">
-			<h2><?php esc_html_e('Store Settings', 'omnifywp-ecommerce'); ?></h2>
-			<p><?php esc_html_e('Manage your store configuration and preferences.', 'omnifywp-ecommerce'); ?></p>
+		<div class="omnify-header-row__actions">
+			<a href="<?php echo esc_url(home_url('/')); ?>" target="_blank" class="omnify-button omnify-button--secondary">
+				<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
+				<?php esc_html_e('View Storefront', 'omnifywp-ecommerce'); ?>
+			</a>
+			<a href="<?php echo esc_url('https://omnifywp.com/doc/'); ?>" target="_blank" class="omnify-button omnify-button--secondary">
+				<span class="dashicons dashicons-book-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
+				<?php esc_html_e('Documentation', 'omnifywp-ecommerce'); ?>
+			</a>
 		</div>
 	</div>
+
+	<?php include __DIR__ . '/partials/nav.php'; ?>
 
 	<?php
 	// Left Sidebar Category Navigation Items
@@ -143,11 +151,11 @@ function omnify_render_form_footer() {
 			<!-- Need Help Card -->
 			<div class="omnify-modern-help-card">
 				<div class="omnify-modern-help-header">
-					<span class="dashicons dashicons-phone" style="color: #136c5f;"></span>
+					<span class="dashicons dashicons-phone" style="color: #059669;"></span>
 					<?php esc_html_e('Need help?', 'omnifywp-ecommerce'); ?>
 				</div>
 				<p><?php esc_html_e('Learn more about store setup in our documentation.', 'omnifywp-ecommerce'); ?></p>
-				<a href="https://docs.omnify.com" target="_blank" rel="noopener">
+				<a href="https://omnifywp.com/doc/" target="_blank" rel="noopener">
 					<?php esc_html_e('View Docs', 'omnifywp-ecommerce'); ?>
 					<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px;"></span>
 				</a>
@@ -307,6 +315,33 @@ function omnify_render_form_footer() {
 									<div class="omnify-modern-form-group">
 										<label><?php esc_html_e('Enable Test Mode', 'omnifywp-ecommerce'); ?></label>
 										<?php omnify_render_toggle('test_mode', $omnify_settings['test_mode'] ?? 0, __('Checkouts bypass payment gateway verification.', 'omnifywp-ecommerce')); ?>
+									</div>
+								</div>
+
+								<!-- Navigation & Menu Cart -->
+								<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; margin-bottom: 10px;">
+									<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Navigation & Menu Cart', 'omnifywp-ecommerce'); ?></h4>
+								</div>
+
+								<div class="omnify-modern-form-row">
+									<div class="omnify-modern-form-group">
+										<label><?php esc_html_e('Attach Mini Cart to Menu', 'omnifywp-ecommerce'); ?></label>
+										<?php omnify_render_toggle('mini_cart_menu_enabled', $omnify_settings['mini_cart_menu_enabled'] ?? 0, __('Automatically inject a live shopping cart badge and counter into your website navigation menu.', 'omnifywp-ecommerce')); ?>
+									</div>
+									<div class="omnify-modern-form-group" data-cond-field="mini_cart_menu_enabled" data-cond-val="1">
+										<label for="mini_cart_menu_location"><?php esc_html_e('Theme Menu Location', 'omnifywp-ecommerce'); ?></label>
+										<select id="mini_cart_menu_location" name="mini_cart_menu_location">
+											<option value=""><?php esc_html_e('All / Any Menu Location', 'omnifywp-ecommerce'); ?></option>
+											<?php
+											$omnify_nav_menus = get_registered_nav_menus();
+											foreach ($omnify_nav_menus as $omnify_loc => $omnify_loc_name) :
+											?>
+												<option value="<?php echo esc_attr($omnify_loc); ?>" <?php selected($omnify_settings['mini_cart_menu_location'] ?? '', $omnify_loc); ?>>
+													<?php echo esc_html($omnify_loc_name . ' (' . $omnify_loc . ')'); ?>
+												</option>
+											<?php endforeach; ?>
+										</select>
+										<span class="help-text"><?php esc_html_e('Choose which registered navigation menu location displays the cart widget.', 'omnifywp-ecommerce'); ?></span>
 									</div>
 								</div>
 
@@ -515,597 +550,8 @@ function omnify_render_form_footer() {
 					<input type="hidden" name="action" value="omnify_save_settings" />
 					<input type="hidden" name="section" value="payments" />
 
-					<div class="omnify-modern-card-body">
-						<?php omnify_render_section_title(__('Payment Methods', 'omnifywp-ecommerce'), __('Configure active credit cards, digital wallets, and manual payment arrangements.', 'omnifywp-ecommerce')); ?>
-
-						<!-- Stripe Settings -->
-						<div style="grid-column: span 2; margin-top: 10px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Stripe Credit Card Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Stripe Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('stripe_checkout_enabled', $omnify_settings['stripe_checkout_enabled'] ?? 0, __('Shoppers can pay via Credit Cards powered by Stripe.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="stripe_checkout_enabled" data-cond-val="1">
-								<label for="stripe_mode"><?php esc_html_e('Stripe Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="stripe_mode" name="stripe_mode">
-									<option value="test" <?php selected($omnify_settings['stripe_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['stripe_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Credit Cards', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="stripe_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="stripe-test-keys-row" data-cond-field="stripe_mode" data-cond-val="test">
-								<div class="omnify-modern-form-group">
-									<label for="stripe_test_publishable_key"><?php esc_html_e('Stripe Test Publishable Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="stripe_test_publishable_key" name="stripe_test_publishable_key" value="<?php echo esc_attr($omnify_settings['stripe_test_publishable_key'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="stripe_test_secret_key"><?php esc_html_e('Stripe Test Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="stripe_test_secret_key" name="stripe_test_secret_key" value="<?php echo esc_attr($omnify_settings['stripe_test_secret_key'] ?? ''); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="stripe-live-keys-row" data-cond-field="stripe_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="stripe_live_publishable_key"><?php esc_html_e('Stripe Live Publishable Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="stripe_live_publishable_key" name="stripe_live_publishable_key" value="<?php echo esc_attr($omnify_settings['stripe_live_publishable_key'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="stripe_live_secret_key"><?php esc_html_e('Stripe Live Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="stripe_live_secret_key" name="stripe_live_secret_key" value="<?php echo esc_attr($omnify_settings['stripe_live_secret_key'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- PayPal Settings -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('PayPal Gateway Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable PayPal Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('paypal_checkout_enabled', $omnify_settings['paypal_checkout_enabled'] ?? 0, __('Shoppers can pay via PayPal.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="paypal_checkout_enabled" data-cond-val="1">
-								<label for="paypal_mode"><?php esc_html_e('PayPal Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="paypal_mode" name="paypal_mode">
-									<option value="sandbox" <?php selected($omnify_settings['paypal_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['paypal_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live PayPal Accounts', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="paypal_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="paypal-sandbox-keys-row" data-cond-field="paypal_mode" data-cond-val="sandbox">
-								<div class="omnify-modern-form-group">
-									<label for="paypal_sandbox_client_id"><?php esc_html_e('PayPal Sandbox Client ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="paypal_sandbox_client_id" name="paypal_sandbox_client_id" value="<?php echo esc_attr($omnify_settings['paypal_sandbox_client_id'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="paypal_sandbox_secret"><?php esc_html_e('PayPal Sandbox Secret', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="paypal_sandbox_secret" name="paypal_sandbox_secret" value="<?php echo esc_attr($omnify_settings['paypal_sandbox_secret'] ?? ''); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="paypal-live-keys-row" data-cond-field="paypal_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="paypal_live_client_id"><?php esc_html_e('PayPal Live Client ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="paypal_live_client_id" name="paypal_live_client_id" value="<?php echo esc_attr($omnify_settings['paypal_live_client_id'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="paypal_live_secret"><?php esc_html_e('PayPal Live Secret', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="paypal_live_secret" name="paypal_live_secret" value="<?php echo esc_attr($omnify_settings['paypal_live_secret'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Razorpay Settings -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Razorpay Gateway Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Razorpay Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('razorpay_checkout_enabled', $omnify_settings['razorpay_checkout_enabled'] ?? 0, __('Shoppers can pay via Razorpay (India).', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="razorpay_checkout_enabled" data-cond-val="1">
-								<label for="razorpay_mode"><?php esc_html_e('Razorpay Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="razorpay_mode" name="razorpay_mode">
-									<option value="test" <?php selected($omnify_settings['razorpay_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Test / Sandbox', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['razorpay_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Razorpay Accounts', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="razorpay_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="razorpay-test-keys-row" data-cond-field="razorpay_mode" data-cond-val="test">
-								<div class="omnify-modern-form-group">
-									<label for="razorpay_test_key_id"><?php esc_html_e('Razorpay Test Key ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="razorpay_test_key_id" name="razorpay_test_key_id" value="<?php echo esc_attr($omnify_settings['razorpay_test_key_id'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="razorpay_test_key_secret"><?php esc_html_e('Razorpay Test Key Secret', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="razorpay_test_key_secret" name="razorpay_test_key_secret" value="<?php echo esc_attr($omnify_settings['razorpay_test_key_secret'] ?? ''); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="razorpay-live-keys-row" data-cond-field="razorpay_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="razorpay_live_key_id"><?php esc_html_e('Razorpay Live Key ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="razorpay_live_key_id" name="razorpay_live_key_id" value="<?php echo esc_attr($omnify_settings['razorpay_live_key_id'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="razorpay_live_key_secret"><?php esc_html_e('Razorpay Live Key Secret', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="razorpay_live_key_secret" name="razorpay_live_key_secret" value="<?php echo esc_attr($omnify_settings['razorpay_live_key_secret'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Alipay Settings -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Alipay Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Alipay Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('alipay_checkout_enabled', $omnify_settings['alipay_checkout_enabled'] ?? 0, __('Shoppers can pay via Alipay.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="alipay_checkout_enabled" data-cond-val="1">
-								<label for="alipay_mode"><?php esc_html_e('Alipay Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="alipay_mode" name="alipay_mode">
-									<option value="sandbox" <?php selected($omnify_settings['alipay_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['alipay_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live Alipay Accounts', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="alipay_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label for="alipay_app_id"><?php esc_html_e('Alipay App ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="alipay_app_id" name="alipay_app_id" value="<?php echo esc_attr($omnify_settings['alipay_app_id'] ?? ''); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group">
-									<label for="alipay_merchant_private_key"><?php esc_html_e('Merchant Private Key', 'omnifywp-ecommerce'); ?></label>
-									<textarea id="alipay_merchant_private_key" name="alipay_merchant_private_key" rows="3"><?php echo esc_textarea($omnify_settings['alipay_merchant_private_key'] ?? ''); ?></textarea>
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="alipay_alipay_public_key"><?php esc_html_e('Alipay Public Key', 'omnifywp-ecommerce'); ?></label>
-									<textarea id="alipay_alipay_public_key" name="alipay_alipay_public_key" rows="3"><?php echo esc_textarea($omnify_settings['alipay_alipay_public_key'] ?? ''); ?></textarea>
-								</div>
-							</div>
-						</div>
-
-						<!-- WeChat Pay Settings -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('WeChat Pay Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable WeChat Pay Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('wechat_checkout_enabled', $omnify_settings['wechat_checkout_enabled'] ?? 0, __('Shoppers can pay via WeChat Pay.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="wechat_checkout_enabled" data-cond-val="1">
-								<label for="wechat_mode"><?php esc_html_e('WeChat Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="wechat_mode" name="wechat_mode">
-									<option value="sandbox" <?php selected($omnify_settings['wechat_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['wechat_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live WeChat Pay', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="wechat_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group">
-									<label for="wechat_appid"><?php esc_html_e('WeChat App ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="wechat_appid" name="wechat_appid" value="<?php echo esc_attr($omnify_settings['wechat_appid'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="wechat_mchid"><?php esc_html_e('WeChat Merchant ID (MCH ID)', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="wechat_mchid" name="wechat_mchid" value="<?php echo esc_attr($omnify_settings['wechat_mchid'] ?? ''); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label for="wechat_key"><?php esc_html_e('WeChat API Key (v2)', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="wechat_key" name="wechat_key" value="<?php echo esc_attr($omnify_settings['wechat_key'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- SSLCommerz Settings -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('SSLCommerz Settings', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable SSLCommerz Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('sslcommerz_checkout_enabled', $omnify_settings['sslcommerz_checkout_enabled'] ?? 0, __('Shoppers can pay via SSLCommerz (Bangladesh).', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="sslcommerz_checkout_enabled" data-cond-val="1">
-								<label for="sslcommerz_mode"><?php esc_html_e('SSLCommerz Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="sslcommerz_mode" name="sslcommerz_mode">
-									<option value="sandbox" <?php selected($omnify_settings['sslcommerz_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['sslcommerz_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live SSLCommerz', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="sslcommerz_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group">
-									<label for="sslcommerz_store_id"><?php esc_html_e('Store ID', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="sslcommerz_store_id" name="sslcommerz_store_id" value="<?php echo esc_attr($omnify_settings['sslcommerz_store_id'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="sslcommerz_store_password"><?php esc_html_e('Store Password', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="sslcommerz_store_password" name="sslcommerz_store_password" value="<?php echo esc_attr($omnify_settings['sslcommerz_store_password'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Paystack Settings (Africa) -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Paystack Gateway Settings (Africa)', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Paystack Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('paystack_checkout_enabled', $omnify_settings['paystack_checkout_enabled'] ?? 0, __('Shoppers can pay via Cards, Mobile Money (M-Pesa, MTN, Airtel), and Bank Transfer across Africa.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="paystack_checkout_enabled" data-cond-val="1">
-								<label for="paystack_mode"><?php esc_html_e('Paystack Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="paystack_mode" name="paystack_mode">
-									<option value="test" <?php selected($omnify_settings['paystack_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['paystack_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Paystack Accounts', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="paystack_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="paystack-test-keys-row" data-cond-field="paystack_mode" data-cond-val="test">
-								<div class="omnify-modern-form-group">
-									<label for="paystack_test_public_key"><?php esc_html_e('Test Public Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="paystack_test_public_key" name="paystack_test_public_key" value="<?php echo esc_attr($omnify_settings['paystack_test_public_key'] ?? ''); ?>" placeholder="pk_test_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="paystack_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="paystack_test_secret_key" name="paystack_test_secret_key" value="<?php echo esc_attr($omnify_settings['paystack_test_secret_key'] ?? ''); ?>" placeholder="sk_test_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="paystack-live-keys-row" data-cond-field="paystack_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="paystack_live_public_key"><?php esc_html_e('Live Public Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="paystack_live_public_key" name="paystack_live_public_key" value="<?php echo esc_attr($omnify_settings['paystack_live_public_key'] ?? ''); ?>" placeholder="pk_live_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="paystack_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="paystack_live_secret_key" name="paystack_live_secret_key" value="<?php echo esc_attr($omnify_settings['paystack_live_secret_key'] ?? ''); ?>" placeholder="sk_live_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group">
-									<label for="paystack_webhook_secret"><?php esc_html_e('Paystack Webhook Secret (Optional)', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="paystack_webhook_secret" name="paystack_webhook_secret" value="<?php echo esc_attr($omnify_settings['paystack_webhook_secret'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label><?php esc_html_e('Paystack Webhook URL', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" readonly value="<?php echo esc_url(rest_url('omnify/v1/paystack/webhook')); ?>" style="background: #f8fafc; color: #64748b;" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Tap Payments Settings (Middle East / GCC) -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Tap Payments Settings (Middle East / GCC)', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Tap Payments Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('tap_checkout_enabled', $omnify_settings['tap_checkout_enabled'] ?? 0, __('Shoppers can pay via mada, KNET, Benefit, NAPS, Apple Pay, and Cards across the Middle East.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="tap_checkout_enabled" data-cond-val="1">
-								<label for="tap_mode"><?php esc_html_e('Tap Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="tap_mode" name="tap_mode">
-									<option value="test" <?php selected($omnify_settings['tap_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['tap_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Tap Accounts', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="tap_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="tap-test-keys-row" data-cond-field="tap_mode" data-cond-val="test">
-								<div class="omnify-modern-form-group">
-									<label for="tap_test_publishable_key"><?php esc_html_e('Test Publishable Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="tap_test_publishable_key" name="tap_test_publishable_key" value="<?php echo esc_attr($omnify_settings['tap_test_publishable_key'] ?? ''); ?>" placeholder="pk_test_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="tap_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="tap_test_secret_key" name="tap_test_secret_key" value="<?php echo esc_attr($omnify_settings['tap_test_secret_key'] ?? ''); ?>" placeholder="sk_test_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="tap-live-keys-row" data-cond-field="tap_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="tap_live_publishable_key"><?php esc_html_e('Live Publishable Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="tap_live_publishable_key" name="tap_live_publishable_key" value="<?php echo esc_attr($omnify_settings['tap_live_publishable_key'] ?? ''); ?>" placeholder="pk_live_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="tap_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="tap_live_secret_key" name="tap_live_secret_key" value="<?php echo esc_attr($omnify_settings['tap_live_secret_key'] ?? ''); ?>" placeholder="sk_live_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label><?php esc_html_e('Tap Webhook URL', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" readonly value="<?php echo esc_url(rest_url('omnify/v1/tap/webhook')); ?>" style="background: #f8fafc; color: #64748b;" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Mollie Settings (European Union) -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Mollie Gateway Settings (European Union)', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Mollie Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('mollie_checkout_enabled', $omnify_settings['mollie_checkout_enabled'] ?? 0, __('Shoppers can pay via iDEAL, Bancontact, SEPA Direct Debit, EPS, Przelewy24, Klarna, and Cards across Europe.', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="mollie_checkout_enabled" data-cond-val="1">
-								<label for="mollie_mode"><?php esc_html_e('Mollie Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="mollie_mode" name="mollie_mode">
-									<option value="test" <?php selected($omnify_settings['mollie_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Test Mode', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['mollie_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Mollie Account', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="mollie_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="mollie-test-key-row" data-cond-field="mollie_mode" data-cond-val="test">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label for="mollie_test_api_key"><?php esc_html_e('Test API Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="mollie_test_api_key" name="mollie_test_api_key" value="<?php echo esc_attr($omnify_settings['mollie_test_api_key'] ?? ''); ?>" placeholder="test_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="mollie-live-key-row" data-cond-field="mollie_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label for="mollie_live_api_key"><?php esc_html_e('Live API Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="mollie_live_api_key" name="mollie_live_api_key" value="<?php echo esc_attr($omnify_settings['mollie_live_api_key'] ?? ''); ?>" placeholder="live_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row">
-								<div class="omnify-modern-form-group" style="grid-column: span 2;">
-									<label><?php esc_html_e('Mollie Webhook URL', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" readonly value="<?php echo esc_url(rest_url('omnify/v1/mollie/webhook')); ?>" style="background: #f8fafc; color: #64748b;" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Khalti Settings (Nepal) -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Khalti Gateway Settings (Nepal)', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable Khalti Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('khalti_checkout_enabled', $omnify_settings['khalti_checkout_enabled'] ?? 0, __('Shoppers can pay via Khalti Digital Wallet, Mobile Banking, and ConnectIPS (Nepal).', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="khalti_checkout_enabled" data-cond-val="1">
-								<label for="khalti_mode"><?php esc_html_e('Khalti Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="khalti_mode" name="khalti_mode">
-									<option value="sandbox" <?php selected($omnify_settings['khalti_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['khalti_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live Khalti Merchant', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="khalti_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="khalti-sandbox-keys-row" data-cond-field="khalti_mode" data-cond-val="sandbox">
-								<div class="omnify-modern-form-group">
-									<label for="khalti_test_public_key"><?php esc_html_e('Khalti Test Public Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="khalti_test_public_key" name="khalti_test_public_key" value="<?php echo esc_attr($omnify_settings['khalti_test_public_key'] ?? ''); ?>" placeholder="test_public_key_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="khalti_test_secret_key"><?php esc_html_e('Khalti Test Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="khalti_test_secret_key" name="khalti_test_secret_key" value="<?php echo esc_attr($omnify_settings['khalti_test_secret_key'] ?? ''); ?>" placeholder="test_secret_key_..." />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="khalti-live-keys-row" data-cond-field="khalti_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="khalti_live_public_key"><?php esc_html_e('Khalti Live Public Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="khalti_live_public_key" name="khalti_live_public_key" value="<?php echo esc_attr($omnify_settings['khalti_live_public_key'] ?? ''); ?>" placeholder="live_public_key_..." />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="khalti_live_secret_key"><?php esc_html_e('Khalti Live Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="khalti_live_secret_key" name="khalti_live_secret_key" value="<?php echo esc_attr($omnify_settings['khalti_live_secret_key'] ?? ''); ?>" placeholder="live_secret_key_..." />
-								</div>
-							</div>
-						</div>
-
-						<!-- eSewa Settings (Nepal) -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('eSewa Gateway Settings (Nepal)', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<div class="omnify-modern-form-row">
-							<div class="omnify-modern-form-group">
-								<label><?php esc_html_e('Enable eSewa Checkout', 'omnifywp-ecommerce'); ?></label>
-								<?php omnify_render_toggle('esewa_checkout_enabled', $omnify_settings['esewa_checkout_enabled'] ?? 0, __('Shoppers can pay via eSewa Digital Wallet and SCT cards (Nepal).', 'omnifywp-ecommerce')); ?>
-							</div>
-							<div class="omnify-modern-form-group" data-cond-field="esewa_checkout_enabled" data-cond-val="1">
-								<label for="esewa_mode"><?php esc_html_e('eSewa Mode', 'omnifywp-ecommerce'); ?></label>
-								<select id="esewa_mode" name="esewa_mode">
-									<option value="sandbox" <?php selected($omnify_settings['esewa_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
-									<option value="live" <?php selected($omnify_settings['esewa_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live eSewa Merchant', 'omnifywp-ecommerce'); ?></option>
-								</select>
-							</div>
-						</div>
-
-						<div data-cond-field="esewa_checkout_enabled" data-cond-val="1">
-							<div class="omnify-modern-form-row" id="esewa-sandbox-keys-row" data-cond-field="esewa_mode" data-cond-val="sandbox">
-								<div class="omnify-modern-form-group">
-									<label for="esewa_test_product_code"><?php esc_html_e('Test Product Code (Merchant ID)', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="esewa_test_product_code" name="esewa_test_product_code" value="<?php echo esc_attr($omnify_settings['esewa_test_product_code'] ?? 'EPAYTEST'); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="esewa_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="esewa_test_secret_key" name="esewa_test_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_test_secret_key'] ?? '8gBm/:&EnhH.1/q'); ?>" />
-								</div>
-							</div>
-
-							<div class="omnify-modern-form-row" id="esewa-live-keys-row" data-cond-field="esewa_mode" data-cond-val="live">
-								<div class="omnify-modern-form-group">
-									<label for="esewa_live_product_code"><?php esc_html_e('Live Product Code (Merchant ID)', 'omnifywp-ecommerce'); ?></label>
-									<input type="text" id="esewa_live_product_code" name="esewa_live_product_code" value="<?php echo esc_attr($omnify_settings['esewa_live_product_code'] ?? ''); ?>" />
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="esewa_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="esewa_live_secret_key" name="esewa_live_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_live_secret_key'] ?? ''); ?>" />
-								</div>
-							</div>
-						</div>
-
-						<!-- Manual Payment Methods Settings Loop -->
-						<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
-							<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Manual / Offline Payment Methods', 'omnifywp-ecommerce'); ?></h4>
-						</div>
-
-						<?php
-						$omnify_method_defs = [
-							[
-								'id'   => 'bank_transfer',
-								'icon' => '🏦',
-								'name' => __('Bank Transfer', 'omnifywp-ecommerce'),
-								'desc' => __('Customers transfer the payment directly to your bank account. Order stays pending until you mark it paid.', 'omnifywp-ecommerce'),
-							],
-							[
-								'id'   => 'cheque',
-								'icon' => '✉️',
-								'name' => __('Cheque / Money Order', 'omnifywp-ecommerce'),
-								'desc' => __('Customers mail you a cheque. Order stays pending until you receive and mark it paid.', 'omnifywp-ecommerce'),
-							],
-							[
-								'id'   => 'cash_on_delivery',
-								'icon' => '💵',
-								'name' => __('Cash on Delivery', 'omnifywp-ecommerce'),
-								'desc' => __('Customers pay when they receive the product or meet you in person.', 'omnifywp-ecommerce'),
-							],
-						];
-						foreach ($omnify_method_defs as $omnify_def):
-							$omnify_saved    = $omnify_pm_map[$omnify_def['id']] ?? [];
-							$omnify_enabled  = ! empty($omnify_saved['enabled']);
-							$omnify_name_val = $omnify_saved['name'] ?? $omnify_def['name'];
-							$omnify_instr    = $omnify_saved['instructions'] ?? '';
-						?>
-							<div style="grid-column: span 2; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; margin-bottom: 10px; background: #ffffff;">
-								<div class="omnify-modern-form-row" style="grid-template-columns: 1fr 1fr; gap: 20px 30px;">
-									<div class="omnify-modern-form-group">
-										<label style="font-size: 15px; font-weight: 500; color: #0f172a;"><?php echo esc_html($omnify_def['icon'] . ' ' . $omnify_def['name']); ?></label>
-										<p style="font-size: 12.5px; color: #64748b; margin: 4px 0 20px 0; line-height: 1.5;"><?php echo esc_html($omnify_def['desc']); ?></p>
-										
-										<div data-cond-field="payment_methods[<?php echo esc_attr($omnify_def['id']); ?>][enabled]" data-cond-val="1">
-											<label for="pm_name_<?php echo esc_attr($omnify_def['id']); ?>"><?php esc_html_e('Display Name', 'omnifywp-ecommerce'); ?></label>
-											<input type="text" id="pm_name_<?php echo esc_attr($omnify_def['id']); ?>" name="payment_methods[<?php echo esc_attr($omnify_def['id']); ?>][name]" value="<?php echo esc_attr($omnify_name_val); ?>" required />
-										</div>
-									</div>
-									<div class="omnify-modern-form-group">
-										<label><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></label>
-										<?php omnify_render_toggle("payment_methods[{$omnify_def['id']}][enabled]", $omnify_enabled ? 1 : 0); ?>
-										
-										<div data-cond-field="payment_methods[<?php echo esc_attr($omnify_def['id']); ?>][enabled]" data-cond-val="1" style="margin-top: 20px; width: 100%;">
-											<label for="pm_instr_<?php echo esc_attr($omnify_def['id']); ?>"><?php esc_html_e('Payment Instructions', 'omnifywp-ecommerce'); ?></label>
-											<textarea id="pm_instr_<?php echo esc_attr($omnify_def['id']); ?>" name="payment_methods[<?php echo esc_attr($omnify_def['id']); ?>][instructions]" rows="3"><?php echo esc_textarea($omnify_instr); ?></textarea>
-										</div>
-									</div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-
-						<!-- Repeatable Custom payment methods list -->
-						<?php
-						$omnify_custom_methods = [];
-						foreach ($omnify_pm_map as $omnify_id => $omnify_saved) {
-							if (in_array($omnify_id, ['bank_transfer', 'cheque', 'cash_on_delivery'], true)) {
-								continue;
-							}
-							$omnify_custom_methods[] = $omnify_saved;
-						}
-						?>
-
-						<div id="omnify-custom-payment-methods-container" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-							<?php foreach ($omnify_custom_methods as $omnify_custom_pm) :
-								$omnify_custom_id = $omnify_custom_pm['id'];
-								$omnify_custom_enabled = ! empty($omnify_custom_pm['enabled']);
-								$omnify_custom_name = $omnify_custom_pm['name'] ?? __('Manual Payment', 'omnifywp-ecommerce');
-								$omnify_custom_instr = $omnify_custom_pm['instructions'] ?? '';
-							?>
-								<div class="omnify-delivery-zone-card omnify-custom-pm-card" data-pm-id="<?php echo esc_attr($omnify_custom_id); ?>" style="grid-column: span 2; border: 1px solid rgba(226, 232, 240, 0.8); padding: 24px; border-radius: 12px; margin-bottom: 16px; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); transition: all 0.2s ease;">
-									<div class="omnify-modern-form-row" style="grid-template-columns: 1fr 1fr; gap: 20px 30px;">
-										<div class="omnify-modern-form-group">
-											<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-												<div style="display: flex; align-items: center; gap: 10px;">
-													<span class="omnify-pm-icon-wrap" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(13, 148, 136, 0.08); color: #0d9488;">
-														<span class="dashicons dashicons-admin-generic" style="font-size: 15px; width: 15px; height: 15px;"></span>
-													</span>
-													<label style="font-size: 14px; font-weight: 600; color: #0f172a; margin: 0;"><?php esc_html_e('Custom / Manual Payment', 'omnifywp-ecommerce'); ?></label>
-												</div>
-												<button type="button" class="omnify-remove-pm-icon-btn omnify-remove-pm" title="<?php esc_attr_e('Delete', 'omnifywp-ecommerce'); ?>" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); color: #ef4444; cursor: pointer; transition: all 0.2s ease; padding: 0;">
-													<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; margin: 0;"></span>
-												</button>
-											</div>
-											<p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0; line-height: 1.5;"><?php esc_html_e('A flexible method for any other offline arrangement (e.g. PayPal invoice, wire transfer).', 'omnifywp-ecommerce'); ?></p>
-											
-											<div data-cond-field="payment_methods[<?php echo esc_attr($omnify_custom_id); ?>][enabled]" data-cond-val="1">
-												<label for="pm_name_<?php echo esc_attr($omnify_custom_id); ?>"><?php esc_html_e('Display Name', 'omnifywp-ecommerce'); ?></label>
-												<input type="text" id="pm_name_<?php echo esc_attr($omnify_custom_id); ?>" name="payment_methods[<?php echo esc_attr($omnify_custom_id); ?>][name]" value="<?php echo esc_attr($omnify_custom_name); ?>" required />
-											</div>
-										</div>
-										
-										<div class="omnify-modern-form-group">
-											<label><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></label>
-											<?php omnify_render_toggle("payment_methods[{$omnify_custom_id}][enabled]", $omnify_custom_enabled ? 1 : 0); ?>
-											
-											<div data-cond-field="payment_methods[<?php echo esc_attr($omnify_custom_id); ?>][enabled]" data-cond-val="1" style="margin-top: 20px; width: 100%;">
-												<label for="pm_instr_<?php echo esc_attr($omnify_custom_id); ?>"><?php esc_html_e('Payment Instructions', 'omnifywp-ecommerce'); ?></label>
-												<textarea id="pm_instr_<?php echo esc_attr($omnify_custom_id); ?>" name="payment_methods[<?php echo esc_attr($omnify_custom_id); ?>][instructions]" rows="3"><?php echo esc_textarea($omnify_custom_instr); ?></textarea>
-											</div>
-										</div>
-									</div>
-								</div>
-							<?php endforeach; ?>
-						</div>
-
-						<div style="grid-column: span 2; margin-top: 10px; margin-bottom: 20px;">
-							<button type="button" id="omnify-add-custom-pm" class="omnify-modern-btn omnify-modern-btn-secondary">
-								<span class="dashicons dashicons-plus-alt2" style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; display: inline-flex; align-items: center; justify-content: center; margin: 0;"></span>
-								<span><?php esc_html_e('Add Custom Payment Method', 'omnifywp-ecommerce'); ?></span>
-							</button>
-						</div>
-
+					<div class="omnify-modern-card-body" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+						<?php include __DIR__ . '/partials/payment-settings-directory.php'; ?>
 					</div>
 					<?php omnify_render_form_footer(); ?>
 				</form>
@@ -1403,6 +849,33 @@ function omnify_render_form_footer() {
 								</div>
 							</div>
 
+							<!-- Checkout Order Bump -->
+							<div style="grid-column: span 2; margin-top: 30px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
+								<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Checkout Order Bump', 'omnifywp-ecommerce'); ?></h4>
+							</div>
+
+							<div class="omnify-modern-form-row">
+								<div class="omnify-modern-form-group">
+									<label><?php esc_html_e('Enable Checkout Order Bump', 'omnifywp-ecommerce'); ?></label>
+									<?php omnify_render_toggle('order_bump_enabled', $omnify_settings['order_bump_enabled'] ?? 1, __('Display an impulse add-on / upsell card directly on the checkout page.', 'omnifywp-ecommerce')); ?>
+								</div>
+								<div class="omnify-modern-form-group" data-cond-field="order_bump_enabled" data-cond-val="1">
+									<label for="order_bump_price"><?php esc_html_e('Order Bump Price', 'omnifywp-ecommerce'); ?> (<?php echo esc_html($omnify_settings['currency'] ?? 'USD'); ?>)</label>
+									<input type="number" step="0.01" min="0" id="order_bump_price" name="order_bump_price" value="<?php echo esc_attr($omnify_settings['order_bump_price'] ?? 4.99); ?>" />
+								</div>
+							</div>
+
+							<div class="omnify-modern-form-row" data-cond-field="order_bump_enabled" data-cond-val="1">
+								<div class="omnify-modern-form-group">
+									<label for="order_bump_title"><?php esc_html_e('Order Bump Title', 'omnifywp-ecommerce'); ?></label>
+									<input type="text" id="order_bump_title" name="order_bump_title" value="<?php echo esc_attr($omnify_settings['order_bump_title'] ?? 'VIP Priority Processing & Extended Warranty'); ?>" />
+								</div>
+								<div class="omnify-modern-form-group">
+									<label for="order_bump_desc"><?php esc_html_e('Order Bump Description', 'omnifywp-ecommerce'); ?></label>
+									<textarea id="order_bump_desc" name="order_bump_desc" rows="2"><?php echo esc_textarea($omnify_settings['order_bump_desc'] ?? 'Skip the fulfillment queue with front-of-line priority dispatch plus 1-year accidental replacement guarantee.'); ?></textarea>
+								</div>
+							</div>
+
 							<!-- Terms & Conditions -->
 							<div style="grid-column: span 2; margin-top: 30px; border-bottom: 1px solid #edf2f6; padding-bottom: 12px; margin-bottom: 10px;">
 								<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Terms & Conditions', 'omnifywp-ecommerce'); ?></h4>
@@ -1689,8 +1162,11 @@ function omnify_render_form_footer() {
 									<div class="omnify-modern-form-group">
 										<label for="storefront_catalog_layout"><?php esc_html_e('Default Product View', 'omnifywp-ecommerce'); ?></label>
 										<select id="storefront_catalog_layout" name="storefront_catalog_layout">
-											<option value="grid" <?php selected($omnify_catalog_layout, 'grid'); ?>><?php esc_html_e('Grid cards', 'omnifywp-ecommerce'); ?></option>
-											<option value="list" <?php selected($omnify_catalog_layout, 'list'); ?>><?php esc_html_e('List rows', 'omnifywp-ecommerce'); ?></option>
+											<option value="grid" <?php selected($omnify_catalog_layout, 'grid'); ?>><?php esc_html_e('Grid cards (Standard 3 Columns)', 'omnifywp-ecommerce'); ?></option>
+											<option value="2" <?php selected($omnify_catalog_layout, '2'); ?>><?php esc_html_e('2 Columns (Large View)', 'omnifywp-ecommerce'); ?></option>
+											<option value="4" <?php selected($omnify_catalog_layout, '4'); ?>><?php esc_html_e('4 Columns (Dense View)', 'omnifywp-ecommerce'); ?></option>
+											<option value="list" <?php selected($omnify_catalog_layout, 'list'); ?>><?php esc_html_e('Detailed List rows', 'omnifywp-ecommerce'); ?></option>
+											<option value="compact" <?php selected($omnify_catalog_layout, 'compact'); ?>><?php esc_html_e('Compact Rows', 'omnifywp-ecommerce'); ?></option>
 										</select>
 									</div>
 									<div class="omnify-modern-form-group">
@@ -1703,8 +1179,9 @@ function omnify_render_form_footer() {
 									<div class="omnify-modern-form-group">
 										<label for="storefront_grid_columns"><?php esc_html_e('Grid Columns', 'omnifywp-ecommerce'); ?></label>
 										<select id="storefront_grid_columns" name="storefront_grid_columns">
-											<option value="2" <?php selected($omnify_storefront_grid_columns, 2); ?>><?php esc_html_e('2 Columns', 'omnifywp-ecommerce'); ?></option>
-											<option value="3" <?php selected($omnify_storefront_grid_columns, 3); ?>><?php esc_html_e('3 Columns', 'omnifywp-ecommerce'); ?></option>
+											<option value="2" <?php selected($omnify_storefront_grid_columns, 2); ?>><?php esc_html_e('2 Columns (Large View)', 'omnifywp-ecommerce'); ?></option>
+											<option value="3" <?php selected($omnify_storefront_grid_columns, 3); ?>><?php esc_html_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?></option>
+											<option value="4" <?php selected($omnify_storefront_grid_columns, 4); ?>><?php esc_html_e('4 Columns (Dense View)', 'omnifywp-ecommerce'); ?></option>
 										</select>
 									</div>
 									<div class="omnify-modern-form-group">
@@ -1730,6 +1207,13 @@ function omnify_render_form_footer() {
 											<option value="name_asc" <?php selected($omnify_settings['storefront_default_sort'] ?? 'latest', 'name_asc'); ?>><?php esc_html_e('Name: A to Z', 'omnifywp-ecommerce'); ?></option>
 											<option value="name_desc" <?php selected($omnify_settings['storefront_default_sort'] ?? 'latest', 'name_desc'); ?>><?php esc_html_e('Name: Z to A', 'omnifywp-ecommerce'); ?></option>
 										</select>
+									</div>
+								</div>
+
+								<div class="omnify-modern-form-row" style="margin-top: 15px;">
+									<div class="omnify-modern-form-group">
+										<label><?php esc_html_e('Infinite Scroll Loading', 'omnifywp-ecommerce'); ?></label>
+										<?php omnify_render_toggle('storefront_infinite_scroll', ! isset($omnify_settings['storefront_infinite_scroll']) || ! empty($omnify_settings['storefront_infinite_scroll']) ? 1 : 0, __('Continuously fetch more products as customer reaches end of page.', 'omnifywp-ecommerce')); ?>
 									</div>
 								</div>
 
@@ -1877,10 +1361,22 @@ function omnify_render_form_footer() {
 									</div>
 								</div>
 
-								<!-- Reassurance Checklist Customization -->
-								<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; margin-bottom: 10px;">
-									<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Reassurance Checklist Customization', 'omnifywp-ecommerce'); ?></h4>
+								<div class="omnify-modern-form-row" style="margin-top: 15px;">
+									<div class="omnify-modern-form-group">
+										<label><?php esc_html_e('Show Sale / Discount Badge', 'omnifywp-ecommerce'); ?></label>
+										<?php omnify_render_toggle('storefront_show_discount_badge', ! isset($omnify_settings['storefront_show_discount_badge']) || ! empty($omnify_settings['storefront_show_discount_badge']), __('Displays ribbon or percentage discount tag on cards.', 'omnifywp-ecommerce')); ?>
+									</div>
+									<div class="omnify-modern-form-group">
+										<label><?php esc_html_e('Show Product Page Trust Badges', 'omnifywp-ecommerce'); ?></label>
+										<?php omnify_render_toggle('storefront_show_reassurance', ! isset($omnify_settings['storefront_show_reassurance']) || ! empty($omnify_settings['storefront_show_reassurance']), __('Displays the 3-point security and support card on product pages.', 'omnifywp-ecommerce')); ?>
+									</div>
 								</div>
+
+								<!-- Reassurance Checklist Customization -->
+								<div data-cond-field="storefront_show_reassurance" data-cond-val="1">
+									<div style="grid-column: span 2; margin-top: 30px; border-top: 1px solid #edf2f6; padding-top: 25px; margin-bottom: 10px;">
+										<h4 style="font-weight: 500; color: #0f172a; margin: 0;"><?php esc_html_e('Reassurance Checklist Customization', 'omnifywp-ecommerce'); ?></h4>
+									</div>
 
 								<div class="omnify-modern-form-row">
 									<div class="omnify-modern-form-group">
@@ -1913,6 +1409,7 @@ function omnify_render_form_footer() {
 										<label for="storefront_reassurance_3_desc"><?php esc_html_e('24/7 Support: Description', 'omnifywp-ecommerce'); ?></label>
 										<input type="text" id="storefront_reassurance_3_desc" name="storefront_reassurance_3_desc" value="<?php echo esc_attr($omnify_settings['storefront_reassurance_3_desc'] ?? "We're here to help"); ?>" />
 									</div>
+								</div>
 								</div>
 
 								<!-- Cart Urgency Urgency Scarcity & Free Shipping -->

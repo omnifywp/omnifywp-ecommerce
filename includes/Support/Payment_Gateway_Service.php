@@ -307,6 +307,54 @@ class Omnify_Payment_Gateway_Service {
 		return new WP_Error('omnify_esewa_automated_refund_unsupported', __('eSewa does not provide an automated merchant refund API. Please process this refund directly in the eSewa Merchant Portal.', 'omnifywp-ecommerce'));
 	}
 
+	public function refund_paddle_payment(string $omnify_transaction_id, float $omnify_amount, string $omnify_currency): string|WP_Error {
+		$omnify_settings = $this->omnify_settings->all();
+		$omnify_mode = 'live' === ($omnify_settings['paddle_mode'] ?? 'sandbox') ? 'live' : 'sandbox';
+		$omnify_api_key = trim((string) ($omnify_settings["paddle_{$omnify_mode}_api_key"] ?? ''));
+
+		if ('' === $omnify_api_key) {
+			return new WP_Error('omnify_paddle_credentials_missing', __('Paddle API key is missing.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_base = 'live' === $omnify_mode ? 'https://api.paddle.com' : 'https://sandbox-api.paddle.com';
+
+		$omnify_body = [
+			'action'         => 'refund',
+			'transaction_id' => $omnify_transaction_id,
+			'reason'         => __('Order refund requested via Omnify e-Commerce', 'omnifywp-ecommerce'),
+			'type'           => 'full',
+		];
+
+		$omnify_response = wp_remote_post(
+			$omnify_base . '/adjustments',
+			[
+				'timeout' => 30,
+				'headers' => [
+					'Authorization' => 'Bearer ' . $omnify_api_key,
+					'Content-Type'  => 'application/json',
+					'Accept'        => 'application/json',
+				],
+				'body'    => wp_json_encode($omnify_body),
+			]
+		);
+
+		if (is_wp_error($omnify_response)) {
+			return $omnify_response;
+		}
+
+		$omnify_code = (int) wp_remote_retrieve_response_code($omnify_response);
+		$omnify_decoded = json_decode((string) wp_remote_retrieve_body($omnify_response), true);
+
+		if ($omnify_code < 200 || $omnify_code >= 300) {
+			$omnify_msg = is_array($omnify_decoded) && ! empty($omnify_decoded['error']['detail'])
+				? (string) $omnify_decoded['error']['detail']
+				: (is_array($omnify_decoded) && ! empty($omnify_decoded['error']['message']) ? (string) $omnify_decoded['error']['message'] : __('Paddle adjustment failed.', 'omnifywp-ecommerce'));
+			return new WP_Error('omnify_paddle_refund_failed', $omnify_msg);
+		}
+
+		return (string) ($omnify_decoded['data']['id'] ?? ('paddle_adj_' . uniqid()));
+	}
+
 	// Helper methods copied from Rest_Server
 	private function stripe_secret_key(array $omnify_settings): string {
 		$omnify_mode = 'live' === ($omnify_settings['stripe_mode'] ?? 'test') ? 'live' : 'test';

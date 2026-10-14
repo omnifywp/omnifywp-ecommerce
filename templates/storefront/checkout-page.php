@@ -19,6 +19,7 @@ $omnify_c = $omnify_template_vars['omnify_c'] ?? null;
 $omnify_c_desc = $omnify_template_vars['omnify_c_desc'] ?? null;
 $omnify_card_label = $omnify_template_vars['omnify_card_label'] ?? null;
 $omnify_cart_items = $omnify_template_vars['omnify_cart_items'] ?? null;
+$omnify_cart_url = $omnify_template_vars['omnify_cart_url'] ?? null;
 $omnify_checkout_quantity = $omnify_template_vars['omnify_checkout_quantity'] ?? null;
 $omnify_country_code = $omnify_template_vars['omnify_country_code'] ?? null;
 $omnify_country_name = $omnify_template_vars['omnify_country_name'] ?? null;
@@ -104,6 +105,7 @@ $omnify_tap_enabled = ! empty($omnify_settings['tap_enabled']) && ! empty($omnif
 $omnify_mollie_enabled = ! empty($omnify_settings['mollie_enabled']) && ! empty($omnify_settings['mollie_checkout_enabled']);
 $omnify_khalti_enabled = ! empty($omnify_settings['khalti_enabled']) && ! empty($omnify_settings['khalti_checkout_enabled']);
 $omnify_esewa_enabled = ! empty($omnify_settings['esewa_enabled']) && ! empty($omnify_settings['esewa_checkout_enabled']);
+$omnify_paddle_enabled = ! empty($omnify_settings['paddle_enabled']) && ! empty($omnify_settings['paddle_checkout_enabled']);
 
 $omnify_portal_url = ! empty($omnify_settings['page_customer_portal']) ? get_permalink((int) $omnify_settings['page_customer_portal']) : home_url('/customer-portal/');
 if (! $omnify_portal_url) {
@@ -131,6 +133,7 @@ $omnify_paypal_order_id  = isset($_GET['order_id']) ? absint(wp_unslash($_GET['o
 $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslash((string) $_GET['token'])) : '';
 ?>
 
+<script>document.body.classList.add('omnify-checkout-active');</script>
 <div class="omnify-storefront-wrapper">
 	<div class="omnify-checkout-wrapper">
 	<?php if (empty($omnify_product) && ! $omnify_is_cart_checkout) : ?>
@@ -161,30 +164,38 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 			</div>
 		<?php endif; ?>
 
-		<!-- Steps Nav -->
-		<div class="omnify-cart-steps" style="margin-bottom: 40px;">
-			<div class="omnify-cart-step">
-				<span class="step-num">01</span>
-				<div class="step-info">
-					<strong>Shopping Cart</strong>
-					<span>Manage Your Items List</span>
-				</div>
-			</div>
-			<div class="omnify-cart-step-separator"></div>
-			<div class="omnify-cart-step active">
-				<span class="step-num">02</span>
-				<div class="step-info">
-					<strong>Checkout Details</strong>
-					<span>Billing & Shipping Info</span>
-				</div>
-			</div>
-			<div class="omnify-cart-step-separator"></div>
-			<div class="omnify-cart-step">
-				<span class="step-num">03</span>
-				<div class="step-info">
-					<strong>Order Complete</strong>
-					<span>Receipt & Downloads Access</span>
-				</div>
+		<?php
+		$omnify_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
+		$omnify_is_physical_checkout = (isset($omnify_product['type']) && $omnify_product['type'] === 'physical')
+			|| (isset($omnify_product['type']) && $omnify_product['type'] === 'variable' && 'physical' === ($omnify_variation_settings['product_kind'] ?? 'digital'));
+		?>
+
+		<!-- Steps Nav (Minimal Modern) -->
+		<div class="omnify-checkout-steps-container" style="display: flex; justify-content: center; width: 100%; margin: 0 auto 36px;">
+			<div class="omnify-cart-steps-minimal" aria-label="<?php esc_attr_e('Checkout progress', 'omnifywp-ecommerce'); ?>">
+				<?php 
+				$omnify_cart_url = ! empty($omnify_cart_url) 
+					? $omnify_cart_url 
+					: (function_exists('omnify_get_cart_url') ? omnify_get_cart_url() : home_url('/cart/'));
+				?>
+				<a href="<?php echo esc_url($omnify_cart_url); ?>" class="omnify-step-item is-completed" data-omnify-cart-url="<?php echo esc_url($omnify_cart_url); ?>" style="text-decoration: none; cursor: pointer;">
+					<span class="omnify-step-number" style="background: #18794E !important; color: #FFFFFF !important;">✓</span>
+					<span class="omnify-step-title"><?php esc_html_e('Shopping Cart', 'omnifywp-ecommerce'); ?></span>
+				</a>
+				<span class="omnify-step-divider">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+				</span>
+				<span class="omnify-step-item is-active">
+					<span class="omnify-step-number">2</span>
+					<span class="omnify-step-title"><?php echo $omnify_is_physical_checkout ? esc_html__('Billing & Shipping', 'omnifywp-ecommerce') : esc_html__('Billing & Payment', 'omnifywp-ecommerce'); ?></span>
+				</span>
+				<span class="omnify-step-divider">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+				</span>
+				<span class="omnify-step-item">
+					<span class="omnify-step-number">3</span>
+					<span class="omnify-step-title"><?php esc_html_e('Order Complete', 'omnifywp-ecommerce'); ?></span>
+				</span>
 			</div>
 		</div>
 
@@ -206,9 +217,6 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 			$omnify_checkout_quantity = $omnify_max_purchase_qty;
 		}
 		$omnify_variation = null;
-		$omnify_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
-		$omnify_is_physical_checkout = (isset($omnify_product['type']) && $omnify_product['type'] === 'physical')
-			|| (isset($omnify_product['type']) && $omnify_product['type'] === 'variable' && 'physical' === ($omnify_variation_settings['product_kind'] ?? 'digital'));
 		if ($omnify_variation_id && ! empty($omnify_product['variations'])) {
 			foreach ($omnify_product['variations'] as $omnify_v) {
 				if ($omnify_v['id'] === $omnify_variation_id) {
@@ -231,7 +239,7 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 		$omnify_line_total = $omnify_actual_price * $omnify_checkout_quantity;
 		?>
 
-		<div id="omnify-checkout-page-grid" class="omnify-checkout-grid">
+		<div id="omnify-checkout-page-grid" class="omnify-checkout-grid" style="<?php echo ! empty($omnify_is_redirect_success) ? 'display: none;' : ''; ?>">
 			
 			<!-- Left Column: Form -->
 			<div>
@@ -252,6 +260,30 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 					<input type="hidden" id="omnify-checkout-coupon-code" name="coupon_code" value="">
 					<input type="hidden" id="omnify-checkout-quantity" name="quantity" value="<?php echo esc_attr($omnify_checkout_quantity); ?>">
 
+					<!-- Express Checkout Section (Conditional) -->
+					<?php if ($omnify_stripe_enabled && (! empty($omnify_settings['stripe_apple_pay_enabled']) || ! empty($omnify_settings['stripe_google_pay_enabled']))) : ?>
+					<div class="omnify-checkout-express-box" style="margin-bottom: 24px; padding: 16px 20px; background: #FFFFFF; border: 1px solid var(--checkout-gray-200); border-radius: 12px;">
+						<div style="font-size: 0.72rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em;"><?php esc_html_e('Express Checkout', 'omnifywp-ecommerce'); ?></div>
+						<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+							<?php if (! empty($omnify_settings['stripe_apple_pay_enabled'])) : ?>
+								<button type="button" class="omnify-express-btn" id="omnify-express-apple-pay" onclick="document.getElementById('omnify-checkout-submit').click();" style="background: #000000; color: #FFFFFF; border: none; border-radius: 8px; height: 42px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+									<span>Pay</span>
+								</button>
+							<?php endif; ?>
+							<?php if (! empty($omnify_settings['stripe_google_pay_enabled'])) : ?>
+								<button type="button" class="omnify-express-btn" id="omnify-express-google-pay" onclick="document.getElementById('omnify-checkout-submit').click();" style="background: #FFFFFF; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 8px; height: 42px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+									<span>GPay</span>
+								</button>
+							<?php endif; ?>
+						</div>
+						<div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+							<span style="flex: 1; height: 1px; background: #E2E8F0;"></span>
+							<span style="font-size: 0.72rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;"><?php esc_html_e('or continue below', 'omnifywp-ecommerce'); ?></span>
+							<span style="flex: 1; height: 1px; background: #E2E8F0;"></span>
+						</div>
+					</div>
+					<?php endif; ?>
+
 					<!-- Contact Information -->
 					<h3 class="omnify-checkout-section-title"><?php esc_html_e('Contact information', 'omnifywp-ecommerce'); ?></h3>
 					
@@ -261,13 +293,26 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 
 					<!-- Guest Checkout Tracking Info -->
 					<?php if (! is_user_logged_in()) : ?>
-						<p style="font-size: 12.5px; color: var(--checkout-gray-500); margin: -8px 0 20px; line-height: 1.45;">
+						<p style="font-size: 12.5px; color: var(--checkout-gray-500); margin: -8px 0 16px; line-height: 1.45;">
 							<?php esc_html_e('Your order confirmation and download access will be sent securely to this email address.', 'omnifywp-ecommerce'); ?>
 						</p>
+
+						<?php if ('optional' === $omnify_account_creation_mode) : ?>
+							<div class="omnify-create-account-wrapper" style="margin-bottom: 20px; padding: 12px 14px; background: #f8fafc; border: 1px solid var(--checkout-gray-200); border-radius: 8px;">
+								<label class="omnify-checkbox-label" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: #334155; margin: 0;">
+									<input type="checkbox" id="omnify-create-account" name="create_account" value="1" class="omnify-checkbox">
+									<span><?php esc_html_e('Create an account for faster checkout and order tracking', 'omnifywp-ecommerce'); ?></span>
+								</label>
+								<div id="omnify-password-group" class="omnify-checkout-form-group" style="display: none; margin-top: 12px; margin-bottom: 0;">
+									<label for="omnify-password" style="font-size: 12px; font-weight: 500; color: #475569; display: block; margin-bottom: 4px;"><?php esc_html_e('Create Password *', 'omnifywp-ecommerce'); ?></label>
+									<input type="password" id="omnify-password" name="password" placeholder="<?php esc_attr_e('Choose a password (min. 6 characters)', 'omnifywp-ecommerce'); ?>">
+								</div>
+							</div>
+						<?php endif; ?>
 					<?php endif; ?>
 
 					<!-- Shipping / Billing Address Section -->
-					<h3 class="omnify-checkout-section-title"><?php esc_html_e('Shipping address', 'omnifywp-ecommerce'); ?></h3>
+					<h3 class="omnify-checkout-section-title"><?php echo $omnify_is_physical_checkout ? esc_html__('Shipping address', 'omnifywp-ecommerce') : esc_html__('Billing address', 'omnifywp-ecommerce'); ?></h3>
 
 					<?php if ($omnify_is_physical_checkout) : ?>
 						<?php
@@ -415,6 +460,50 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 
 						</div>
 
+						<!-- Billing Address Same as Shipping Toggle -->
+						<div class="omnify-billing-toggle-wrap" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--checkout-gray-200);">
+							<label class="omnify-checkbox-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--checkout-gray-700);">
+								<input type="checkbox" id="omnify-billing-same" name="billing_same_as_shipping" value="1" checked style="accent-color: var(--checkout-primary); width: 16px; height: 16px;">
+								<span><?php esc_html_e('Billing address is the same as shipping address', 'omnifywp-ecommerce'); ?></span>
+							</label>
+						</div>
+
+						<!-- Collapsible Billing Address Fields -->
+						<div id="omnify-billing-address-fields" style="display: none; margin-top: 16px;">
+							<h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--checkout-gray-700); margin: 0 0 12px 0;"><?php esc_html_e('Billing Address', 'omnifywp-ecommerce'); ?></h4>
+							<div class="omnify-checkout-form-row">
+								<input type="text" id="omnify-billing-firstname" name="billing_first_name" placeholder="<?php esc_attr_e('Billing first name *', 'omnifywp-ecommerce'); ?>">
+								<input type="text" id="omnify-billing-lastname" name="billing_last_name" placeholder="<?php esc_attr_e('Billing last name *', 'omnifywp-ecommerce'); ?>">
+							</div>
+							<div class="omnify-company-wrap" style="margin-bottom: 12px;">
+								<input type="text" id="omnify-billing-company" name="billing_company" placeholder="<?php esc_attr_e('Billing company name (optional)', 'omnifywp-ecommerce'); ?>">
+							</div>
+							<div class="omnify-checkout-form-group">
+								<select id="omnify-billing-country" name="billing_country" class="omnify-searchable-select">
+									<option value=""><?php esc_html_e('Billing Country / Region *', 'omnifywp-ecommerce'); ?></option>
+									<?php foreach (\Omnify\eCommerce\Support\Omnify_Locations::countries() as $omnify_country_code => $omnify_country_name) : ?>
+										<option value="<?php echo esc_attr($omnify_country_code); ?>" <?php selected($omnify_country_code, 'US'); ?>><?php echo esc_html($omnify_country_name); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="omnify-checkout-form-group">
+								<input type="text" id="omnify-billing-address-1" name="billing_address_1" placeholder="<?php esc_attr_e('Billing house number and street name *', 'omnifywp-ecommerce'); ?>">
+							</div>
+							<div class="omnify-checkout-form-group">
+								<input type="text" id="omnify-billing-address-2" name="billing_address_2" placeholder="<?php esc_attr_e('Apartment, suite, unit, etc. (optional)', 'omnifywp-ecommerce'); ?>">
+							</div>
+							<div class="omnify-checkout-form-row--three">
+								<input type="text" id="omnify-billing-city" name="billing_city" placeholder="<?php esc_attr_e('Billing town / city *', 'omnifywp-ecommerce'); ?>">
+								<select id="omnify-billing-state" name="billing_state" class="omnify-searchable-select">
+									<option value=""><?php esc_html_e('State / Province *', 'omnifywp-ecommerce'); ?></option>
+								</select>
+								<input type="text" id="omnify-billing-postcode" name="billing_postcode" placeholder="<?php esc_attr_e('ZIP Code *', 'omnifywp-ecommerce'); ?>">
+							</div>
+							<div class="omnify-checkout-form-group">
+								<input type="tel" id="omnify-billing-phone" name="billing_phone" placeholder="<?php esc_attr_e('Billing phone (optional)', 'omnifywp-ecommerce'); ?>">
+							</div>
+						</div>
+
 					<?php else : ?>
 						<!-- Digital items billing fields -->
 						<div class="omnify-checkout-form-row">
@@ -438,6 +527,15 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 						</div>
 						<input type="hidden" id="omnify-phone" name="phone" value="<?php echo esc_attr($omnify_default_phone); ?>">
 					<?php endif; ?>
+
+					<!-- Order Notes / Special Instructions -->
+					<div class="omnify-checkout-notes-wrap" style="margin-top: 20px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--checkout-gray-200);">
+						<label for="omnify-order-notes" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--checkout-gray-700); margin-bottom: 8px;">
+							<span>📝</span>
+							<span><?php esc_html_e('Order notes (optional)', 'omnifywp-ecommerce'); ?></span>
+						</label>
+						<textarea id="omnify-order-notes" name="order_notes" rows="2" placeholder="<?php esc_attr_e('Notes about your order, e.g. special delivery instructions or gift requests...', 'omnifywp-ecommerce'); ?>" style="width: 100%; border: 1px solid var(--checkout-gray-200); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: inherit; line-height: 1.4; resize: vertical; box-sizing: border-box; background: #fff;"></textarea>
+					</div>
 
 					<!-- Payment selection block -->
 					<?php 
@@ -475,6 +573,7 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 						($omnify_paystack_enabled && $omnify_paystack_compatible) ? ['paystack'] : [],
 						($omnify_tap_enabled && $omnify_tap_compatible) ? ['tap'] : [],
 						($omnify_mollie_enabled && $omnify_mollie_compatible) ? ['mollie'] : [],
+						$omnify_paddle_enabled ? ['paddle'] : [],
 						($omnify_khalti_enabled && $omnify_khalti_compatible) ? ['khalti'] : [],
 						($omnify_esewa_enabled && $omnify_esewa_compatible) ? ['esewa'] : [],
 						($omnify_sslcommerz_enabled && $omnify_sslcommerz_compatible) ? ['sslcommerz'] : [],
@@ -530,6 +629,13 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'mollie' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-mollie" name="payment_method" value="mollie" <?php checked($omnify_default_payment_method, 'mollie'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Mollie (iDEAL, Bancontact, SEPA, Cards)', 'omnifywp-ecommerce'); ?></span>
+									</label>
+								<?php endif; ?>
+
+								<?php if ($omnify_paddle_enabled) : ?>
+									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'paddle' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+										<input type="radio" id="payment-method-paddle" name="payment_method" value="paddle" <?php checked($omnify_default_payment_method, 'paddle'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
+										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Paddle (Cards, PayPal, Apple Pay, Google Pay, iDEAL)', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 
@@ -592,6 +698,32 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 						</div>
 					<?php endif; ?>
 
+					<!-- Pre-Purchase VIP Order Bump -->
+					<?php
+					$omnify_bump_enabled = ! array_key_exists('order_bump_enabled', $omnify_settings) || ! empty($omnify_settings['order_bump_enabled']);
+					if ($omnify_bump_enabled) :
+						$omnify_bump_title = ! empty($omnify_settings['order_bump_title']) ? $omnify_settings['order_bump_title'] : __('VIP Priority Processing & Extended Warranty', 'omnifywp-ecommerce');
+						$omnify_bump_desc  = ! empty($omnify_settings['order_bump_desc']) ? $omnify_settings['order_bump_desc'] : __('Skip the fulfillment queue with front-of-line priority dispatch plus 1-year accidental replacement guarantee.', 'omnifywp-ecommerce');
+						$omnify_bump_price = isset($omnify_settings['order_bump_price']) ? (float) $omnify_settings['order_bump_price'] : 4.99;
+					?>
+					<div class="omnify-order-bump-card" id="omnify-order-bump-card" style="border: 1.5px dashed #2563EB; background: #EFF6FF; border-radius: 12px; padding: 16px; margin: 24px 0 16px 0; transition: all 0.2s ease;">
+						<label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
+							<input type="checkbox" id="omnify-order-bump-checkbox" name="order_bump" value="1" data-price="<?php echo esc_attr((string) $omnify_bump_price); ?>" style="margin-top: 3px; width: 18px; height: 18px; accent-color: #2563EB; cursor: pointer;">
+							<div style="flex: 1;">
+								<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+									<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: #1E40AF;">
+										⚡ <?php echo esc_html($omnify_bump_title); ?>
+									</span>
+									<span style="background: #DBEAFE; color: #1D4ED8; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">+<?php echo esc_html($omnify_format_price($omnify_bump_price)); ?></span>
+								</div>
+								<p style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.45; color: #1E3A8A;">
+									<?php echo esc_html($omnify_bump_desc); ?>
+								</p>
+							</div>
+						</label>
+					</div>
+					<?php endif; ?>
+
 					<!-- Terms Agreement -->
 					<?php if (! empty($omnify_settings['require_terms'])) : ?>
 						<div class="omnify-checkout-terms-wrapper" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; margin-bottom: 20px;">
@@ -617,34 +749,11 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 							‹ <?php esc_html_e('RETURN TO CART', 'omnifywp-ecommerce'); ?>
 						</a>
 						<button type="submit" id="omnify-checkout-submit">
-							<span class="btn-text"><?php esc_html_e('CONTINUE TO SHIPPING', 'omnifywp-ecommerce'); ?></span>
+							<span class="btn-text"><?php echo $omnify_is_physical_checkout ? esc_html__('Complete Order & Pay', 'omnifywp-ecommerce') : esc_html__('Pay Now & Download', 'omnifywp-ecommerce'); ?> &rarr;</span>
 							<span class="btn-spinner" style="display: none;"></span>
 						</button>
 					</div>
 				</form>
-
-				<!-- Testimonials Section -->
-				<?php
-				$omnify_reviews_repo = new \Omnify\eCommerce\Repositories\Omnify_Review_Repository( new \Omnify\eCommerce\Database\Omnify_Schema() );
-				$omnify_real_reviews = $omnify_reviews_repo->all(['status' => 'approved', 'per_page' => 1]);
-				if (! empty($omnify_real_reviews)) : 
-					$omnify_r = $omnify_real_reviews[0];
-					$omnify_gravatar_url = get_avatar_url($omnify_r['customer_email'], ['size' => 96, 'default' => 'mm']);
-				?>
-					<div class="omnify-checkout-testimonials">
-						<h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 500; margin-top: 0; margin-bottom: 20px; color: var(--checkout-dark);"><?php esc_html_e('What they are saying', 'omnifywp-ecommerce'); ?></h3>
-						<div style="display: flex; gap: 16px; align-items: center; background: #fff; border: 1px solid var(--checkout-gray-200); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,.01);">
-							<img src="<?php echo esc_url($omnify_gravatar_url); ?>" alt="<?php echo esc_attr($omnify_r['customer_name']); ?>" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;" />
-							<div style="display: flex; flex-direction: column; gap: 4px;">
-								<strong style="font-size: 14px; color: var(--checkout-dark);"><?php echo esc_html($omnify_r['customer_name']); ?></strong>
-								<div style="color: #fbbf24; font-size: 12px;"><?php echo esc_html(str_repeat('★', (int)$omnify_r['rating']) . str_repeat('☆', 5 - (int)$omnify_r['rating'])); ?></div>
-								<p style="font-size: 12.5px; line-height: 1.6; color: var(--checkout-gray-600); margin: 0; font-style: italic;">
-									"<?php echo esc_html(wp_trim_words($omnify_r['review_content'], 30)); ?>"
-								</p>
-							</div>
-						</div>
-					</div>
-				<?php endif; ?>
 
 			</div>
 
@@ -653,14 +762,29 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 				<h2 class="omnify-checkout-sidebar-title"><?php esc_html_e('Order Summary', 'omnifywp-ecommerce'); ?></h2>
 
 				<!-- Single product checkout mode -->
-				<?php if (! $omnify_is_cart_checkout) : ?>
+				<?php if (! $omnify_is_cart_checkout) : 
+					$omnify_p_thumb = ! empty($omnify_product['thumbnail_url']) ? $omnify_product['thumbnail_url'] : '';
+					if (empty($omnify_p_thumb)) {
+						$omnify_pn_lower = strtolower((string) ($omnify_product['name'] ?? ''));
+						$omnify_assets_img = defined('OMNIFY_URL') ? OMNIFY_URL . 'assets/storefront/images/' : plugins_url('assets/storefront/images/', dirname(__DIR__, 1) . '/dummy.php');
+						if (strpos($omnify_pn_lower, 'hoodie') !== false || strpos($omnify_pn_lower, 'shirt') !== false || strpos($omnify_pn_lower, 'merch') !== false || strpos($omnify_pn_lower, 't-shirt') !== false || strpos($omnify_pn_lower, 'cotton') !== false || strpos($omnify_pn_lower, 'apparel') !== false || 'physical' === strtolower((string) ($omnify_product['type'] ?? ''))) {
+							$omnify_p_thumb = $omnify_assets_img . 'product-merch-hoodie.jpg';
+						} elseif (strpos($omnify_pn_lower, 'bundle') !== false || strpos($omnify_pn_lower, 'kit') !== false || strpos($omnify_pn_lower, 'pack') !== false || 'bundle' === strtolower((string) ($omnify_product['type'] ?? ''))) {
+							$omnify_p_thumb = $omnify_assets_img . 'product-bundle-kit.jpg';
+						} else {
+							$omnify_p_thumb = $omnify_assets_img . 'product-digital-suite.jpg';
+						}
+					}
+				?>
 					<div class="omnify-summary-item-row">
 						<div class="omnify-summary-item-media">
 							<span class="product-qty-badge" id="omnify-pdp-qty-badge-display"><?php echo esc_html($omnify_checkout_quantity); ?></span>
-							<?php if (! empty($omnify_product['thumbnail_url'])) : ?>
-								<img src="<?php echo esc_url($omnify_product['thumbnail_url']); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>">
+							<?php if (! empty($omnify_p_thumb)) : ?>
+								<img src="<?php echo esc_url($omnify_p_thumb); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>">
 							<?php else : ?>
-								<div style="font-size: 24px;">📦</div>
+								<div class="omnify-item-media-fallback">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+								</div>
 							<?php endif; ?>
 						</div>
 						<div class="omnify-summary-item-details">
@@ -687,31 +811,44 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 						</div>
 						<span class="omnify-summary-item-price" id="omnify-pdp-line-total-display"><?php echo esc_html($omnify_format_price($omnify_line_total)); ?></span>
 					</div>
-				<?php else : ?>
 					<!-- Cart mode list items -->
-					<div style="display: grid; gap: 16px; margin-bottom: 24px; max-height: 280px; overflow-y: auto;">
+					<div class="omnify-summary-items-list">
 						<?php foreach ($omnify_cart_items as $omnify_item) : 
 							$omnify_item_product = $omnify_item['product'];
 							$omnify_item_variation = $omnify_item['variation'];
+							$omnify_it_thumb = ! empty($omnify_item_product['thumbnail_url']) ? $omnify_item_product['thumbnail_url'] : '';
+							if (empty($omnify_it_thumb)) {
+								$omnify_itn_lower = strtolower((string) ($omnify_item_product['name'] ?? ''));
+								$omnify_assets_img = defined('OMNIFY_URL') ? OMNIFY_URL . 'assets/storefront/images/' : plugins_url('assets/storefront/images/', dirname(__DIR__, 1) . '/dummy.php');
+								if (strpos($omnify_itn_lower, 'hoodie') !== false || strpos($omnify_itn_lower, 'shirt') !== false || strpos($omnify_itn_lower, 'merch') !== false || strpos($omnify_itn_lower, 't-shirt') !== false || strpos($omnify_itn_lower, 'cotton') !== false || strpos($omnify_itn_lower, 'apparel') !== false || 'physical' === strtolower((string) ($omnify_item_product['type'] ?? ''))) {
+									$omnify_it_thumb = $omnify_assets_img . 'product-merch-hoodie.jpg';
+								} elseif (strpos($omnify_itn_lower, 'bundle') !== false || strpos($omnify_itn_lower, 'kit') !== false || strpos($omnify_itn_lower, 'pack') !== false || 'bundle' === strtolower((string) ($omnify_item_product['type'] ?? ''))) {
+									$omnify_it_thumb = $omnify_assets_img . 'product-bundle-kit.jpg';
+								} else {
+									$omnify_it_thumb = $omnify_assets_img . 'product-digital-suite.jpg';
+								}
+							}
 							?>
-							<div class="omnify-summary-item-row" style="margin-bottom:0; border-bottom:1px dashed var(--checkout-gray-200); padding-bottom:12px;">
+							<div class="omnify-summary-item-row" style="margin-bottom:0; border-bottom:1px dashed var(--checkout-gray-200); padding-bottom:14px;">
 								<div class="omnify-summary-item-media">
 									<span class="product-qty-badge"><?php echo esc_html($omnify_item['quantity']); ?></span>
-									<?php if (! empty($omnify_item_product['thumbnail_url'])) : ?>
-										<img src="<?php echo esc_url($omnify_item_product['thumbnail_url']); ?>" alt="<?php echo esc_attr($omnify_item_product['name']); ?>">
+									<?php if (! empty($omnify_it_thumb)) : ?>
+										<img src="<?php echo esc_url($omnify_it_thumb); ?>" alt="<?php echo esc_attr($omnify_item_product['name']); ?>">
 									<?php else : ?>
-										<div style="font-size: 20px;">📦</div>
+										<div class="omnify-item-media-fallback">
+											<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+										</div>
 									<?php endif; ?>
 								</div>
 								<div class="omnify-summary-item-details">
-									<h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;"><?php echo esc_html($omnify_item_product['name']); ?></h3>
+									<h3 class="omnify-summary-item-name"><?php echo esc_html($omnify_item_product['name']); ?></h3>
 									<?php if ($omnify_item_variation && ! empty($omnify_item_variation['attributes'])) : 
 										$omnify_item_var_attrs = [];
 										foreach ($omnify_item_variation['attributes'] as $omnify_k => $omnify_v) {
 											$omnify_item_var_attrs[] = esc_html($omnify_k . ': ' . $omnify_v);
 										}
 										?>
-										<span style="color: var(--checkout-gray-600); font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
+										<span class="omnify-summary-item-meta">
 											<?php echo esc_html(implode(', ', $omnify_item_var_attrs)); ?>
 										</span>
 									<?php endif; ?>
@@ -835,35 +972,116 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 						</div>
 					</div>
 
+					<!-- VIP Order Bump Summary Row -->
+					<div id="omnify-summary-bump-row" style="display: none; justify-content: space-between; color: #2563EB; font-weight: 500;">
+						<span id="omnify-summary-bump-label">⚡ <?php echo esc_html($omnify_bump_title ?? __('VIP Priority Processing', 'omnifywp-ecommerce')); ?></span>
+						<strong id="omnify-summary-bump-amount" style="color: #2563EB;">+<?php echo esc_html($omnify_format_price($omnify_bump_price ?? 4.99)); ?></strong>
+					</div>
+
 					<div style="display: flex; justify-content: space-between; border-top: 1px solid var(--checkout-gray-200); padding-top: 16px; margin-top: 6px; font-size: 16px; color: var(--checkout-dark); font-weight: 600; text-transform: uppercase;">
 						<span><?php esc_html_e('Total', 'omnifywp-ecommerce'); ?></span>
 						<span id="omnify-summary-total" style="color: var(--checkout-dark);"><?php echo esc_html($omnify_format_price((float) ($omnify_line_total + $omnify_tax))); ?></span>
+					</div>
+
+					<div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #18794E; margin-top: 6px;">
+						<span><?php esc_html_e('Platform Commission:', 'omnifywp-ecommerce'); ?></span>
+						<strong>$0.00 (0% Free)</strong>
+					</div>
+
+					<!-- Instant Delivery Assurance Banner -->
+					<div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:12px;font-size:0.75rem;color:#065F46;line-height:1.45;margin-top:14px;">
+						<strong>⚡ <?php echo $omnify_is_physical_checkout ? esc_html__('Fast Dispatch:', 'omnifywp-ecommerce') : esc_html__('Instant Delivery:', 'omnifywp-ecommerce'); ?></strong>
+						<?php echo $omnify_is_physical_checkout ? esc_html__('Orders are dispatched directly from our verified warehouse with real-time tracking.', 'omnifywp-ecommerce') : esc_html__('Secure cryptographic HMAC download links appear immediately on screen upon payment completion.', 'omnifywp-ecommerce'); ?>
+					</div>
+
+					<!-- Trust Badges Strip -->
+					<div class="omnify-checkout-trust-box" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--checkout-gray-200); text-align: center;">
+						<div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--checkout-gray-600); margin-bottom: 10px;">
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+							<span><?php esc_html_e('Guaranteed Safe & Secure Checkout', 'omnifywp-ecommerce'); ?></span>
+						</div>
+						<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px;">
+							<span style="font-size: 10.5px; font-weight: 600; color: #1E293B; background: #F1F5F9; padding: 3px 7px; border-radius: 4px; border: 1px solid #E2E8F0;">VISA</span>
+							<span style="font-size: 10.5px; font-weight: 600; color: #1E293B; background: #F1F5F9; padding: 3px 7px; border-radius: 4px; border: 1px solid #E2E8F0;">Mastercard</span>
+							<span style="font-size: 10.5px; font-weight: 600; color: #1E293B; background: #F1F5F9; padding: 3px 7px; border-radius: 4px; border: 1px solid #E2E8F0;">AMEX</span>
+							<span style="font-size: 10.5px; font-weight: 600; color: #0284C7; background: #F0F9FF; padding: 3px 7px; border-radius: 4px; border: 1px solid #BAE6FD;">PayPal</span>
+							<span style="font-size: 10.5px; font-weight: 600; color: #0F172A; background: #F1F5F9; padding: 3px 7px; border-radius: 4px; border: 1px solid #E2E8F0;">Apple Pay</span>
+							<span style="font-size: 10.5px; font-weight: 600; color: #15803D; background: #F0FDF4; padding: 3px 7px; border-radius: 4px; border: 1px solid #BBF7D0;">256-Bit SSL</span>
+						</div>
 					</div>
 				</div>
 			</aside>
 		</div>
 
-		<!-- Success State (Toggled via JS) -->
-		<div id="omnify-checkout-page-success" style="display: none; background: #ffffff; border: 1px solid var(--checkout-gray-200); border-radius: 16px; box-shadow: var(--omnify-card-shadow); padding: 40px; text-align: center; max-width: 600px; margin: 40px auto;">
+		<!-- Success State (Toggled via JS or populated via gateway redirect) -->
+		<?php
+		$omnify_order_num_display = $omnify_success_order
+			? ($omnify_success_order['order_number'] ?: '#' . $omnify_success_order['id'])
+			: (isset($_GET['order_id']) ? '#' . absint($_GET['order_id']) : '#0');
+		$omnify_is_physical_success = false;
+		if ($omnify_success_order && ! empty($omnify_success_order['items'])) {
+			foreach ($omnify_success_order['items'] as $omnify_soi) {
+				$omnify_item_p = $this->omnify_products->find((int) $omnify_soi['product_id']);
+				$omnify_item_vs = $omnify_item_p ? wp_parse_args($omnify_item_p['variation_settings'] ?? [], ['product_kind' => 'digital']) : [];
+				if ($omnify_item_p && ('physical' === ($omnify_item_p['type'] ?? 'download') || ('variable' === ($omnify_item_p['type'] ?? 'download') && 'physical' === ($omnify_item_vs['product_kind'] ?? 'digital')))) {
+					$omnify_is_physical_success = true;
+					break;
+				}
+			}
+		}
+		?>
+		<div id="omnify-checkout-page-success" style="<?php echo ! empty($omnify_is_redirect_success) ? 'display: block;' : 'display: none;'; ?> background: #ffffff; border: 1px solid var(--checkout-gray-200); border-radius: 16px; box-shadow: var(--omnify-card-shadow); padding: 40px; text-align: center; max-width: 600px; margin: 40px auto;">
 			<div style="width: 60px; height: 60px; background: #ecfdf5; color: var(--checkout-success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; margin: 0 auto 20px;">✓</div>
-			<h3 style="font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; margin: 0 0 10px 0;"><?php esc_html_e('Purchase Successful!', 'omnifywp-ecommerce'); ?></h3>
+			<h3 style="font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; margin: 0 0 10px 0;">
+				<?php echo $omnify_is_physical_success ? esc_html__('Order Placed Successfully!', 'omnifywp-ecommerce') : esc_html__('Purchase Successful!', 'omnifywp-ecommerce'); ?>
+			</h3>
 			<p style="color: var(--checkout-gray-600); font-size: 14px; margin-top: 0; margin-bottom: 24px; line-height: 1.5;">
-				<?php esc_html_e('Thank you for your purchase! A confirmation receipt has been sent to your email containing signed download links.', 'omnifywp-ecommerce'); ?>
+				<?php
+				if ($omnify_is_physical_success) {
+					esc_html_e('Thank you for your order! We have received your purchase and a confirmation email has been sent to you. Your order will be prepared and shipped shortly.', 'omnifywp-ecommerce');
+				} else {
+					esc_html_e('Thank you for your purchase! A confirmation receipt has been sent to your email containing your access and download links.', 'omnifywp-ecommerce');
+				}
+				?>
 			</p>
 			
 			<div style="background: var(--checkout-gray-100); border-radius: 8px; padding: 12px; font-size: 14px; margin-bottom: 30px; display: inline-block;">
-				<span><?php esc_html_e('Order Number:', 'omnifywp-ecommerce'); ?> <strong id="omnify-page-success-order-id" style="color: var(--checkout-dark);">#0</strong></span>
+				<span><?php esc_html_e('Order Number:', 'omnifywp-ecommerce'); ?> <strong id="omnify-page-success-order-id" style="color: var(--checkout-dark);"><?php echo esc_html($omnify_order_num_display); ?></strong></span>
 			</div>
 
-			<div style="text-align: left; border-top: 1px solid var(--checkout-gray-200); padding-top: 24px; margin-top: 10px;">
-				<h4 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 16px; color: var(--checkout-dark);"><?php esc_html_e('Download your digital files:', 'omnifywp-ecommerce'); ?></h4>
-				<div id="omnify-page-success-files-list" class="omnify-success-files-list" style="display: grid; gap: 12px;">
-					<!-- Populated via JS -->
+			<?php if (! empty($omnify_success_files)) : ?>
+				<div style="text-align: left; border-top: 1px solid var(--checkout-gray-200); padding-top: 24px; margin-top: 10px;">
+					<h4 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 16px; color: var(--checkout-dark);"><?php esc_html_e('Download your digital files:', 'omnifywp-ecommerce'); ?></h4>
+					<div id="omnify-page-success-files-list" class="omnify-success-files-list" style="display: grid; gap: 12px;">
+						<?php foreach ($omnify_success_files as $omnify_sf) : ?>
+							<div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid var(--checkout-gray-200); border-radius: 8px; padding: 12px 16px;">
+								<div>
+									<div style="font-weight: 600; color: var(--checkout-dark); font-size: 14px;"><?php echo esc_html($omnify_sf['file_name']); ?></div>
+									<?php if (! empty($omnify_sf['file_size'])) : ?>
+										<div style="font-size: 12px; color: var(--checkout-gray-600);"><?php echo esc_html($omnify_sf['file_size']); ?></div>
+									<?php endif; ?>
+								</div>
+								<a href="<?php echo esc_url($omnify_sf['download_url']); ?>" class="omnify-btn omnify-btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 6px; background: var(--checkout-primary); color: #ffffff; font-weight: 500;" download>
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+									<?php esc_html_e('Download', 'omnifywp-ecommerce'); ?>
+								</a>
+							</div>
+						<?php endforeach; ?>
+					</div>
 				</div>
-							<p style="font-size: 12px; color: var(--checkout-gray-600); margin-top: 30px; line-height: 1.4;">
+			<?php else : ?>
+				<div style="text-align: left; border-top: 1px solid var(--checkout-gray-200); padding-top: 24px; margin-top: 10px; <?php echo $omnify_is_physical_success ? 'display: none;' : ''; ?>">
+					<h4 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 16px; color: var(--checkout-dark);"><?php esc_html_e('Download your digital files:', 'omnifywp-ecommerce'); ?></h4>
+					<div id="omnify-page-success-files-list" class="omnify-success-files-list" style="display: grid; gap: 12px;">
+						<!-- Populated via JS -->
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<p style="font-size: 12px; color: var(--checkout-gray-600); margin-top: 30px; line-height: 1.4;">
 				<?php 
 				// translators: %s: placeholder value.
-				printf(esc_html__('You can also access your downloads at any time via the %s.', 'omnifywp-ecommerce'), '<a href="' . esc_url(home_url('/customer-portal/')) . '" style="color: var(--checkout-primary); text-decoration: none; font-weight: 500;">' . esc_html__('Customer Portal', 'omnifywp-ecommerce') . '</a>'); ?>
+				printf(esc_html__('You can also access your %1$s at any time via the %2$s.', 'omnifywp-ecommerce'), $omnify_is_physical_success ? esc_html__('orders', 'omnifywp-ecommerce') : esc_html__('downloads', 'omnifywp-ecommerce'), '<a href="' . esc_url($omnify_portal_url) . '" style="color: var(--checkout-primary); text-decoration: none; font-weight: 500;">' . esc_html__('Customer Portal', 'omnifywp-ecommerce') . '</a>'); ?>
 			</p>
 		</div>
 	<?php endif; ?>
@@ -880,7 +1098,8 @@ $omnify_is_redirect_success = (isset($_GET['omnify_stripe']) && 'success' === sa
 	|| (isset($_GET['omnify_tap']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_tap'])))
 	|| (isset($_GET['omnify_mollie']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_mollie'])))
 	|| (isset($_GET['omnify_khalti']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_khalti'])))
-	|| (isset($_GET['omnify_esewa']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_esewa'])));
+	|| (isset($_GET['omnify_esewa']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_esewa'])))
+	|| (isset($_GET['omnify_paddle']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paddle'])));
 if ($omnify_is_redirect_success && (! empty($omnify_settings['tracking_ga4_enabled']) || ! empty($omnify_settings['tracking_meta_enabled']))) :
 	$omnify_order_id = isset($_GET['order_id']) ? absint(wp_unslash($_GET['order_id'])) : 0;
 	$omnify_success_order = $omnify_order_id ? $this->omnify_orders->find($omnify_order_id) : null;

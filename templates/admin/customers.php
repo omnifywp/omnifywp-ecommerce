@@ -422,15 +422,15 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 		<input type="hidden" name="page" value="omnify-customers" />
 
 		<div class="omnify-filter-row">
-			<div class="omnify-filter-group">
+			<div class="omnify-filter-group omnify-filter-group--search">
 				<label for="search_customer"><?php esc_html_e('Search', 'omnifywp-ecommerce'); ?></label>
 				<input type="text" id="search_customer" name="search" placeholder="<?php esc_attr_e('Search name or email...', 'omnifywp-ecommerce'); ?>" value="<?php echo esc_attr($omnify_filter_search); ?>" />
 			</div>
-			<div class="omnify-filter-group">
+			<div class="omnify-filter-group omnify-filter-group--date">
 				<label for="date_from"><?php esc_html_e('Joined From', 'omnifywp-ecommerce'); ?></label>
 				<input type="date" id="date_from" name="date_from" value="<?php echo esc_attr($omnify_filter_date_from); ?>" />
 			</div>
-			<div class="omnify-filter-group">
+			<div class="omnify-filter-group omnify-filter-group--date">
 				<label for="date_to"><?php esc_html_e('Joined To', 'omnifywp-ecommerce'); ?></label>
 				<input type="date" id="date_to" name="date_to" value="<?php echo esc_attr($omnify_filter_date_to); ?>" />
 			</div>
@@ -452,10 +452,12 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 			</div>
 			<div class="omnify-filter-actions">
 				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
 				</button>
 				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-customers')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
 			</div>
 		</div>

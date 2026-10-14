@@ -2,7 +2,7 @@
   <img src="assets/banner-1544x500.png" alt="OmnifyWP eCommerce Banner" width="100%" />
 </p>
 
-# ⚡ OmnifyWP eCommerce
+# OmnifyWP eCommerce
 
 <p align="center">
   <strong>Fast, Lightweight, and Conversion-Optimized eCommerce Engine for WordPress.</strong><br>
@@ -10,65 +10,78 @@
 </p>
 
 <p align="center">
+  <a href="https://wordpress.org/plugins/omnifywp-ecommerce/"><img src="https://img.shields.io/badge/Version-1.4.0-18794E.svg?style=flat-square" alt="Plugin Version" /></a>
   <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-6.5+-21759B.svg?style=flat-square&logo=wordpress" alt="WordPress Version" /></a>
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php" alt="PHP Version" /></a>
   <a href="https://gnu.org/licenses/gpl.html"><img src="https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square" alt="License" /></a>
   <a href="https://omnifywp.com/doc/"><img src="https://img.shields.io/badge/Docs-omnifywp.com%2Fdoc-18794E.svg?style=flat-square" alt="Documentation" /></a>
   <a href="https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json"><img src="https://img.shields.io/badge/Playground-Live%20Demo-34D399.svg?style=flat-square&logo=wordpress" alt="Live Demo" /></a>
-  <a href="#-developer-extensibility"><img src="https://img.shields.io/badge/Extensible-Hooks%20%26%20REST%20API-brightgreen.svg?style=flat-square" alt="Developer Friendly" /></a>
+  <a href="#developer-extensibility"><img src="https://img.shields.io/badge/Extensible-Hooks%20%26%20REST%20API-brightgreen.svg?style=flat-square" alt="Developer Friendly" /></a>
 </p>
 
 ---
 
-## 🚀 Quick Links & Live Preview
+## Quick Links & Live Preview
 
-* 🎮 **Interactive Live Demo (Browser Playground):** [Launch OmnifyWP Demo →](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json) *(Full store & admin preview, zero installation required)*
-* 📘 **User Documentation & Merchant Guide:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md) | [Interactive User Guide](docs/user-guide.html)
-* 📖 **Developer Documentation & REST API:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)
-* 💻 **Official Website:** [https://omnifywp.com](https://omnifywp.com)
-
----
-
-## ✨ Why OmnifyWP?
-
-* 🏎️ **Sub-100ms Performance**: Purpose-engineered relational tables (`wp_omnify_*`) eliminate `wp_postmeta` overhead, guaranteeing instant storefront and checkout response times.
-* 💸 **0% Platform Fees**: Keep 100% of your store revenue. No arbitrary platform commissions or forced monthly subscriptions.
-* 🌍 **Global & Regional Payment Methods**: 10+ payment methods pre-integrated out of the box with zero third-party plugin bloat.
-* 🔐 **Cryptographically Protected Downloads**: Time-limited SHA-256 HMAC digital tokens prevent asset piracy and unauthorized file hotlinking.
-* 🎨 **Clean, Native Admin Experience**: Built with modern, streamlined UI patterns that integrate seamlessly into the WordPress admin dashboard.
+* **Interactive Live Demo (Browser Playground):** [Launch OmnifyWP Demo →](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fomnifywp%2Fomnifywp-ecommerce%2Fmain%2Fblueprint.json) *(Full store & admin preview, zero installation required)*
+* **User Documentation & Merchant Guide:** [`docs/USER_DOCUMENTATION.md`](docs/USER_DOCUMENTATION.md) | [Interactive User Guide](docs/user-guide.html)
+* **Developer Documentation & REST API:** [`docs/DEVELOPER_DOCS.md`](docs/DEVELOPER_DOCS.md) | [https://omnifywp.com/doc/](https://omnifywp.com/doc/)
+* **Official Website:** [https://omnifywp.com](https://omnifywp.com)
 
 ---
 
-## 🌟 Core Features
+## Why OmnifyWP?
 
-### 🛍️ Storefront & Conversion Architecture
-* **Responsive Storefront Catalog Grid**: High-end storefront layout with instant filter drawers, search, category pills, and responsive layout toggles.
+* **Sub-100ms Performance**: Purpose-engineered relational tables (`wp_omnify_*`) eliminate `wp_postmeta` overhead, guaranteeing instant storefront and checkout response times.
+* **0% Platform Fees**: Keep 100% of your store revenue. No arbitrary platform commissions or forced monthly subscriptions.
+* **Global & Regional Payment Methods**: 11 payment methods pre-integrated out of the box with zero third-party plugin bloat.
+* **Cryptographically Protected Downloads**: Time-limited SHA-256 HMAC digital tokens prevent asset piracy and unauthorized file hotlinking.
+* **Clean, Native Admin Experience**: Built with modern, streamlined UI patterns that integrate seamlessly into the WordPress admin dashboard.
+
+---
+
+## Core Features
+
+### Storefront & Conversion Architecture
+* **Modern Luxury Storefront**: Clean, conversion-focused design with subtle status badges (`SAVE XX%`, `BESTSELLER`, `NEW`, `IN STOCK`) and fluid micro-interactions.
+* **4-Layout Dynamic Catalog Switcher**: Instant switching without page reloads:
+  * **4-Column Dense Grid** (`data-cols="4"`): High-density catalog view with compact pill buttons, balanced font sizing, and 2-line title clamps.
+  * **3-Column Standard Grid** (`data-cols="3"`): Balanced grid layout for balanced presentation of imagery and meta details.
+  * **2-Column Large Grid** (`data-cols="2"`): Large editorial cards emphasizing detailed product photography and descriptions.
+  * **1-Column Detailed List View** (`data-cols="list"`): Three-column row layout (thumbnail, center details/attributes, and right purchase block).
+* **Responsive Full-Width Image Cards**: Engineered container rules (`width: 100%`, `max-width: 100%`, `aspect-ratio: auto`, `object-fit: cover`) preventing gap distortions or squishing across themes.
+* **Balanced Typography Hierarchy**: Calibrated font scales and line-heights ensuring long product titles never truncate prematurely.
+* **Compact Pill Action Buttons**: Sleek, non-wrapping `+ Quick Add` and `View Details` action buttons with balanced padding and font size.
+* **Recently Viewed Products Engine**: Cookie-backed recently viewed section with automatic product cloning, 4-column responsive grid, and auto-hiding when empty.
+* **Storefront Value Propositions Bar**: Customizable 4-slot trust bar highlighting secure payments, instant access, money-back guarantees, and customer support.
 * **1-Click AJAX Quick Add**: Add products directly to cart without page reloads, accompanied by instant micro-animations and live badge counts.
+* **Faceted Sidebar Filtering**: Instant price range sliders, category pills, brand toggles, and stock status filters.
 * **3-Column Product Details**: Media gallery, feature highlights, trust signals, customer reviews, and a sticky purchase action panel.
 * **Variable, Simple & Bundled Products**: Offer format-specific pricing, custom licenses, digital asset files, or multi-item bundles.
 * **Customer Wishlist**: Save favorite items to user accounts for increased returning-visitor conversions.
 * **Cart Scarcity Countdown & Free Shipping Bar**: Session-persisted countdown timer and free-shipping progress tracker designed to minimize checkout drop-offs.
 
-### 💳 Complete Global Payment Gateways
-OmnifyWP includes first-party payment processing integrations with automatic status sync, refunds, and access revocations:
-* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout.
-* **PayPal Commerce**: Express Checkout, smart payment buttons, and card handling.
+### Complete Global Payment Gateways (Secure-by-Default)
+OmnifyWP features a **Secure-by-Default Architecture**: all gateways are disabled by default (`0`) upon installation. Merchants simply toggle on their preferred gateways and paste their API credentials. Built-in first-party integrations include:
+* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout. Webhook: `/wp-json/omnify/v1/webhook/stripe`.
+* **PayPal Commerce**: Express Checkout, smart payment buttons, Pay in 4, and card handling. Webhook: `/wp-json/omnify/v1/webhook/paypal`.
+* **Razorpay**: UPI (Google Pay, PhonePe, Paytm), RuPay, cards, and netbanking for India. Webhook: `/wp-json/omnify/v1/webhook/razorpay`.
+* **SSLCommerz**: Dedicated card, internet banking, and mobile wallet flow (bKash, Nagad, Rocket) for Bangladesh. IPN: `/wp-json/omnify/v1/webhook/sslcommerz`.
 * **Paystack**: Top payment gateway for Nigeria, Ghana, South Africa, and Kenya.
 * **Tap Payments**: Comprehensive card, KNET, Mada, and Benefit payments across GCC/Middle East.
 * **Mollie**: Ideal for Europe (iDEAL, Bancontact, SEPA Bank Transfer, SOFORT).
-* **Razorpay**: UPI, cards, netbanking, and wallets for Indian commerce.
 * **Alipay & WeChat Pay**: Seamless QR code and mobile checkout for East Asian shoppers.
 * **Khalti & eSewa**: Trusted digital wallets and mobile banking for Nepal.
-* **SSLCommerz**: Dedicated card, internet banking, and mobile wallet flow for Bangladesh.
-* **Manual Payment Workflows**: Direct Bank Transfer (BACS), Cheque, Cash on Delivery (COD), and custom manual payment instructions.
+* **Paddle Billing**: Merchant-of-Record checkout with automatic tax handling and webhooks.
+* **Offline Payment Workflows**: Cash on Delivery (COD) with physical item gating, Direct Bank Transfer (BACS) with automated bank detail presentation, and Cheque Payments.
 
-### 🔒 Cryptographic Digital Locker
+### Cryptographic Digital Locker
 * **HMAC-SHA256 Signed Links**: Generated with user-configurable expiry times, download count limits, and IP audit logging.
-* **Chunked Streaming Delivery**: Protected digital files are streamed safely via PHP buffers without revealing actual file paths on the filesystem.
+* **Chunked Streaming Delivery**: Protected digital files are streamed safely via 8KB PHP buffers without revealing actual file paths on the filesystem.
 * **Customer Account Dashboard**: Shortcode (`[omnify_customer_downloads]`) provides customers with direct access to file licenses, orders, and address books.
 * **Bandwidth & Usage Auditing**: Detailed tracking of downloads, IP logs, and server throughput.
 
-### 📊 Modern Management & CRM Tools
+### Modern Management & CRM Tools
 * **Unified Admin Panel**: Standardized management tables across Products, Orders, Customers, Coupons, Abandoned Carts, and Reviews.
 * **Trash & Soft Delete**: Full safety net allowing restoring or permanent purging of deleted store records.
 * **Coupons & Discount Rules**: Percentage, fixed, minimum cart subtotals, and expiration configurations.
@@ -78,7 +91,7 @@ OmnifyWP includes first-party payment processing integrations with automatic sta
 
 ---
 
-## 📡 REST API Reference
+## REST API Reference
 
 OmnifyWP provides a fully functional REST API under `/wp-json/omnify/v1` for headless frontends, mobile apps, and custom webhooks.
 
@@ -105,7 +118,7 @@ OmnifyWP provides a fully functional REST API under `/wp-json/omnify/v1` for hea
 
 ---
 
-## 🔌 Developer Extensibility
+## Developer Extensibility
 
 OmnifyWP is architected around WordPress hooks and an extensible dependency injection container.
 
@@ -139,7 +152,7 @@ $featured_products = $product_repo->all(['is_featured' => 1]);
 
 ---
 
-## 🌐 External Services
+## External Services
 
 OmnifyWP integrates with external third-party payment gateways and services to process orders and transactions. Data is transmitted securely only when the respective service is enabled by the administrator or chosen by the buyer:
 
@@ -157,6 +170,12 @@ OmnifyWP integrates with external third-party payment gateways and services to p
 
 ---
 
-## 📄 License
+## Changelog
+
+For a full release history and changelog, please refer to [`readme.txt`](./readme.txt).
+
+---
+
+## License
 
 OmnifyWP eCommerce is open-source software licensed under the **GPL-2.0-or-later**.

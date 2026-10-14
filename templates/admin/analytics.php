@@ -114,15 +114,15 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 }
 ?>
 <div class="omnify-admin-wrapper omnify-analytics-page">
-	<!-- Title and Export Header -->
-	<div class="omnify-header-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+	<div class="omnify-header-row">
 		<div class="omnify-header-row__title">
-			<h1 style="margin: 0 0 4px; font-family: 'Outfit', sans-serif; font-weight: 500; color: var(--omnify-dark);"><?php esc_html_e('Analytics', 'omnifywp-ecommerce'); ?></h1>
-			<p style="margin: 0; font-size: 13px; color: var(--omnify-gray-600);"><?php esc_html_e('Analyze your storefront performance, coupon conversions, and sales metrics.', 'omnifywp-ecommerce'); ?></p>
+			<h1><?php esc_html_e('Analytics', 'omnifywp-ecommerce'); ?></h1>
+			<p><?php esc_html_e('Analyze your storefront performance, coupon conversions, and sales metrics.', 'omnifywp-ecommerce'); ?></p>
 		</div>
-		<div>
-			<a href="<?php echo esc_url(add_query_arg('export_csv', '1')); ?>" class="omnify-button omnify-button--primary" style="display: inline-flex; align-items: center; gap: 8px;">
-				<span class="dashicons dashicons-download" style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span> <?php esc_html_e('Export Report (CSV)', 'omnifywp-ecommerce'); ?>
+		<div class="omnify-header-row__actions">
+			<a href="<?php echo esc_url(add_query_arg('export_csv', '1')); ?>" class="omnify-button omnify-button--primary">
+				<span class="dashicons dashicons-download" style="font-size: 15px; width: 15px; height: 15px; line-height: 1; vertical-align: middle;"></span>
+				<?php esc_html_e('Export Report (CSV)', 'omnifywp-ecommerce'); ?>
 			</a>
 		</div>
 	</div>
@@ -223,10 +223,12 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 
 			<div class="omnify-filter-actions">
 				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
 				</button>
-				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-analytics')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
-					<span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-analytics')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
 			</div>
 		</div>
@@ -381,7 +383,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 	<!-- Charts Layout Grid -->
 	<div class="omnify-charts-grid">
 		<!-- Sales & Orders Chart Card -->
-		<div class="omnify-card" data-analytics-section="overview" style="padding: 0 !important; overflow: hidden; display: flex; flex-direction: column;">
+		<div class="omnify-card" data-analytics-section="overview charts" style="padding: 0 !important; overflow: hidden; display: flex; flex-direction: column;">
 			<div class="omnify-card__header" style="padding: 16px 20px; border-bottom: 1px solid var(--omnify-gray-200);">
 				<h3 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--omnify-dark); font-weight: 600;"><?php esc_html_e('Sales & Orders Performance', 'omnifywp-ecommerce'); ?></h3>
 			</div>

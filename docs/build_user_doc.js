@@ -4,13 +4,38 @@ const { mockups } = require('./mockups.js');
 
 console.log('Generating OmnifyWP eCommerce User Documentation Website...');
 
+const svgIcons = {
+  intro: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  onboarding: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  dashboard: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  products: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+  orders: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+  customers: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>',
+  coupons: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>',
+  analytics: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  reviews: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  abandonedCarts: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  settings: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  tools: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+  activity: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  api: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  storefront: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  faq: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  lightning: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  lock: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  shop: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+  info: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  alert: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+};
+
+
 // Data structure for all chapters and subsections
 const chapters = [
   {
     id: 'intro',
     title: '1. Introduction to OmnifyWP',
     badge: 'Overview & Philosophy',
-    icon: '✨',
+    icon: svgIcons.intro,
     summary: 'Discover how OmnifyWP eCommerce delivers ultra-high performance and a modern commerce experience on WordPress.',
     content: `
       <p class="lead-text">
@@ -19,17 +44,17 @@ const chapters = [
 
       <div class="grid-cards-3">
         <div class="feature-card">
-          <div class="feature-card-icon">⚡</div>
+          <div class="feature-card-icon">${svgIcons.lightning}</div>
           <h4>Zero-Postmeta Latency</h4>
           <p>Product, order, customer, and inventory records live in 18 dedicated normalized relational SQL tables with optimized multi-column indexes, achieving sub-millisecond queries even with catalogs of millions of items.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-card-icon">🔒</div>
+          <div class="feature-card-icon">${svgIcons.lock}</div>
           <h4>Cryptographic Digital Locker</h4>
           <p>Deliver software, digital downloads, courses, and media securely with SHA-256 HMAC-signed URLs, time-based expiration, download caps, and automated file revocation upon refund.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-card-icon">🛍️</div>
+          <div class="feature-card-icon">${svgIcons.shop}</div>
           <h4>Conversion-First Storefront</h4>
           <p>Modern responsive shop grid, sticky product cards, variant swatches, urgency badges, real-time cart scarcity timers, and frictionless single/multi-step checkouts designed to convert.</p>
         </div>
@@ -74,7 +99,7 @@ const chapters = [
       </table>
 
       <div class="callout tip">
-        <div class="callout-icon">💡</div>
+        <div class="callout-icon">${svgIcons.info}</div>
         <div class="callout-body">
           <strong>Built for Scale:</strong> Your blog posts, pages, and custom post types remain completely isolated from high-volume catalog queries. Backups, queries, and caching remain lightning fast as your store scales to millions in revenue.
         </div>
@@ -85,7 +110,7 @@ const chapters = [
     id: 'onboarding',
     title: '2. Installation & Setup Wizard',
     badge: 'Getting Started',
-    icon: '🚀',
+    icon: svgIcons.onboarding,
     summary: 'Step-by-step installation instructions, system prerequisites, and the 4-step store setup wizard.',
     content: `
       <p>Getting your store live with OmnifyWP eCommerce takes less than five minutes. The built-in setup wizard automatically configures core currency settings, payment gateways, and necessary storefront shortcodes.</p>
@@ -131,7 +156,7 @@ const chapters = [
     id: 'dashboard',
     title: '3. Store Dashboard Overview',
     badge: 'Analytics & KPIs',
-    icon: '📊',
+    icon: svgIcons.dashboard,
     summary: 'Real-time financial KPI cards, store status badges, recent transactions feed, and one-click quick actions.',
     content: `
       <p>The <strong>Omnify Dashboard</strong> (located under <strong>Omnify → Dashboard</strong>) serves as the executive command center for store health, performance trends, and real-time transaction activity.</p>
@@ -172,7 +197,7 @@ const chapters = [
     id: 'products',
     title: '4. Product Catalog Management',
     badge: 'Catalog & Stock',
-    icon: '📦',
+    icon: svgIcons.products,
     summary: 'Create and edit Physical, Variable, Digital, and Bundled products, configure pricing, and manage inventory.',
     content: `
       <p>Navigate to <strong>Omnify → Products</strong> to view, search, and organize your store's inventory. Products can be filtered by taxonomy, type, status, and creation date, or exported to CSV.</p>
@@ -208,7 +233,7 @@ const chapters = [
     id: 'orders',
     title: '5. Order Fulfillment & Refunds',
     badge: 'Sales & Operations',
-    icon: '🛒',
+    icon: svgIcons.orders,
     summary: 'Manage incoming orders, review line items, inspect fraud risk scores, print packing slips, and issue refunds.',
     content: `
       <p>The orders fulfillment center under <strong>Omnify → Orders</strong> gives you complete control over transaction statuses, fulfillment workflows, and customer updates.</p>
@@ -236,7 +261,7 @@ const chapters = [
       ${mockups.order_detail}
 
       <div class="callout warning">
-        <div class="callout-icon">⚠️</div>
+        <div class="callout-icon">${svgIcons.alert}</div>
         <div class="callout-body">
           <strong>Automatic File Revocation:</strong> Processing a full refund automatically revokes customer access to digital files, immediately canceling existing download tokens to protect your intellectual property.
         </div>
@@ -247,7 +272,7 @@ const chapters = [
     id: 'customers',
     title: '6. Customer Management (CRM)',
     badge: 'Profiles & LTV',
-    icon: '👥',
+    icon: svgIcons.customers,
     summary: 'Centralized directory of customer profiles, purchase histories, lifetime value calculations, and address books.',
     content: `
       <p>Under <strong>Omnify → Customers</strong>, store owners have a built-in CRM directory capturing valuable buyer intelligence without requiring third-party plugins.</p>
@@ -267,7 +292,7 @@ const chapters = [
     id: 'coupons',
     title: '7. Promotions & Coupons Engine',
     badge: 'Marketing & Discounts',
-    icon: '🎟️',
+    icon: svgIcons.coupons,
     summary: 'Create percentage or fixed discount coupons with minimum spend thresholds, usage caps, and expiration limits.',
     content: `
       <p>Run targeted promotions, seasonal flash sales, and customer loyalty rewards via <strong>Omnify → Coupons</strong>.</p>
@@ -296,7 +321,7 @@ const chapters = [
     id: 'analytics',
     title: '8. Store Analytics & Reports',
     badge: 'Business Intelligence',
-    icon: '📈',
+    icon: svgIcons.analytics,
     summary: 'Monitor sales trends, net revenues, Average Order Value (AOV), refund rates, and export accounting CSVs.',
     content: `
       <p>Under <strong>Omnify → Analytics</strong>, gain instant visibility into store health through interactive charts and performance summaries.</p>
@@ -320,7 +345,7 @@ const chapters = [
       </div>
 
       <div class="callout tip">
-        <div class="callout-icon">📊</div>
+        <div class="callout-icon">${svgIcons.analytics}</div>
         <div class="callout-body">
           <strong>CSV Export for Accounting:</strong> Click <strong>Export Report (CSV)</strong> in the top-right corner to export comprehensive financial data formatted for QuickBooks, Xero, or custom spreadsheet analysis.
         </div>
@@ -331,7 +356,7 @@ const chapters = [
     id: 'reviews',
     title: '9. Customer Reviews Moderation',
     badge: 'Social Proof',
-    icon: '⭐',
+    icon: svgIcons.reviews,
     summary: 'Review moderation queue, verified buyer badges, star ratings management, and spam protection.',
     content: `
       <p>Customer testimonials build purchasing confidence. Navigate to <strong>Omnify → Reviews</strong> to moderate submitted buyer reviews and ratings.</p>
@@ -350,7 +375,7 @@ const chapters = [
     id: 'abandoned-carts',
     title: '10. Abandoned Cart Recovery',
     badge: 'Revenue Recovery',
-    icon: '🛒',
+    icon: svgIcons.orders,
     summary: 'Automatically track dropped checkout sessions and recover lost sales with scheduled reminders.',
     content: `
       <p>Under <strong>Omnify → Abandoned Carts</strong>, OmnifyWP tracks incomplete checkout sessions and helps recover potential lost revenue automatically.</p>
@@ -370,7 +395,7 @@ const chapters = [
     id: 'settings',
     title: '11. Store Configuration & Settings',
     badge: 'Core Configuration',
-    icon: '⚙️',
+    icon: svgIcons.settings,
     summary: 'Configure store currencies, payment processors, delivery methods, tax rates, emails, and checkout rules.',
     content: `
       <p>Under <strong>Omnify → Settings</strong>, customize your store's business logic, regional formats, payment processors, and notification templates.</p>
@@ -379,26 +404,94 @@ const chapters = [
       <p>Configure store currency, symbol placement, decimal formatting, and physical measurement units.</p>
       ${mockups.settings_general}
 
-      <h3>Payment Gateways</h3>
-      <p>Connect and manage integrated payment processors for your store:</p>
+      <h3>Payment Gateways Configuration & Setup Guides</h3>
+      <p>Connect and configure integrated payment processors for your store. <strong>Secure-by-Default Architecture:</strong> When OmnifyWP is installed, all payment gateways start disabled by default (<code>0</code>). Gateways only appear on the checkout once the merchant configures valid credentials and explicitly enables them.</p>
       ${mockups.settings_payments}
 
-      <div class="grid-cards-2">
-        <div class="feature-card">
-          <h4>Stripe Elements</h4>
-          <p>Credit/debit cards, Apple Pay, Google Pay, and localized EU payment options with automated webhook verification.</p>
+      <div class="gateway-setup-guides" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>1. Stripe Setup Guide (Credit/Debit, Apple Pay, Google Pay, SEPA)</h4>
+          <p><strong>Step 1:</strong> Log in to your Stripe Dashboard at <code>stripe.com</code>.</p>
+          <p><strong>Step 2:</strong> Go to <strong>Developers → API keys</strong>. Copy your <strong>Publishable key</strong> (<code>pk_live_...</code> or <code>pk_test_...</code>) and <strong>Secret key</strong> (<code>sk_live_...</code> or <code>sk_test_...</code>).</p>
+          <p><strong>Step 3:</strong> Go to <strong>Developers → Webhooks → Add endpoint</strong>. Set URL to <code>https://yourdomain.com/wp-json/omnify/v1/webhook/stripe</code>. Select events: <code>payment_intent.succeeded</code>, <code>payment_intent.payment_failed</code>, and <code>charge.refunded</code>. Copy the <strong>Signing secret</strong> (<code>whsec_...</code>).</p>
+          <p><strong>Step 4:</strong> In WordPress, open <strong>Omnify → Settings → Payments → Stripe</strong>. Paste your Publishable Key, Secret Key, and Webhook Secret. Toggle Test Mode ON for sandbox testing, or OFF for live processing, and click <strong>Save Changes</strong>.</p>
+          <p><strong>Step 5:</strong> Test transactions using Stripe's official card number <code>4242 4242 4242 4242</code>, any future expiry date, and any 3-digit CVC.</p>
         </div>
-        <div class="feature-card">
-          <h4>PayPal Commerce</h4>
-          <p>Direct PayPal Express checkout, Pay in 4 installment financing, and credit card processing.</p>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>2. PayPal Commerce Platform Setup Guide</h4>
+          <p><strong>Step 1:</strong> Visit <code>developer.paypal.com</code> and navigate to <strong>Dashboard → Apps & Credentials</strong>.</p>
+          <p><strong>Step 2:</strong> Switch to Sandbox or Live, click <strong>Create App</strong>, select Merchant type, and copy your <strong>Client ID</strong> and <strong>Secret Key</strong>.</p>
+          <p><strong>Step 3:</strong> Under App Webhooks, add <code>https://yourdomain.com/wp-json/omnify/v1/webhook/paypal</code> listening for <code>CHECKOUT.ORDER.APPROVED</code>, <code>PAYMENT.CAPTURE.COMPLETED</code>, and <code>PAYMENT.CAPTURE.REFUNDED</code>.</p>
+          <p><strong>Step 4:</strong> In Omnify Settings → Payments → PayPal, paste Client ID and Secret, choose Sandbox or Live environment, enable Smart Buttons (PayPal, Pay in 4, Venmo, Cards), and save.</p>
         </div>
-        <div class="feature-card">
-          <h4>Regional Gateways</h4>
-          <p>Pre-integrated support for Razorpay (India: UPI, NetBanking, RuPay) and SSLCommerz (Bangladesh: bKash, Nagad).</p>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>3. Razorpay Setup Guide (India: UPI, NetBanking, RuPay)</h4>
+          <p><strong>Step 1:</strong> Log in to your Razorpay Dashboard at <code>dashboard.razorpay.com</code>.</p>
+          <p><strong>Step 2:</strong> Go to <strong>Account & Settings → API Keys</strong>. Click <strong>Generate Key</strong> to receive your <strong>Key ID</strong> and <strong>Key Secret</strong>.</p>
+          <p><strong>Step 3:</strong> Go to <strong>Settings → Webhooks → Add New Webhook</strong>. Set URL to <code>https://yourdomain.com/wp-json/omnify/v1/webhook/razorpay</code>, enter a webhook secret passphrase, and select <code>payment.captured</code>, <code>payment.failed</code>, and <code>refund.processed</code>.</p>
+          <p><strong>Step 4:</strong> In Omnify Settings → Payments → Razorpay, enter Key ID, Key Secret, and Webhook Secret, toggle Enable to ON, and save.</p>
         </div>
-        <div class="feature-card">
-          <h4>Manual Methods</h4>
-          <p>Configurable workflows for Cash on Delivery (COD), Direct Bank Wire Transfer (BACS), and Cheque Payments.</p>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>4. SSLCommerz Setup Guide (Bangladesh: bKash, Nagad, Rocket)</h4>
+          <p><strong>Step 1:</strong> Register a merchant account at <code>sslcommerz.com</code>. Obtain Sandbox credentials from integration support and production credentials from <code>merchant.sslcommerz.com</code>.</p>
+          <p><strong>Step 2:</strong> Configure IPN (Instant Payment Notification) listener URL in SSLCommerz merchant panel: <code>https://yourdomain.com/wp-json/omnify/v1/webhook/sslcommerz</code>.</p>
+          <p><strong>Step 3:</strong> In Omnify Settings → Payments → SSLCommerz, select Sandbox or Live environment, input your <strong>Store ID</strong> and <strong>Store Password</strong>, and save.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>5. Cash on Delivery (COD) Setup Guide</h4>
+          <p><strong>Step 1:</strong> Open <strong>Omnify → Settings → Payments → Cash on Delivery</strong> and toggle Enable to ON.</p>
+          <p><strong>Step 2:</strong> Configure Title, Description, and Customer Instructions for couriers.</p>
+          <p><strong>Step 3:</strong> Restrict COD to physical items (virtual/downloadable items automatically hide COD). Set optional minimum and maximum order thresholds.</p>
+          <p><strong>Step 4:</strong> Orders are initially assigned <code>Processing</code> or <code>Pending Payment</code>, transitioning to <code>Completed</code> when cash is received.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>6. Direct Bank Wire Transfer (BACS) Setup Guide</h4>
+          <p><strong>Step 1:</strong> Open <strong>Omnify → Settings → Payments → Direct Bank Transfer</strong> and toggle Enable to ON.</p>
+          <p><strong>Step 2:</strong> Add one or more business bank accounts: Account Name, Account Number, Bank Name, Sort Code/Routing Number, IBAN, and BIC/SWIFT.</p>
+          <p><strong>Step 3:</strong> Orders are placed on <code>On Hold</code> status with account instructions displayed on screen and emailed to the buyer. Once the wire transfer clears in your bank, administrators mark the order as <code>Processing</code> or <code>Completed</code>.</p>
+        </div>
+
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>8. Paystack Setup Guide (Africa: Nigeria, Ghana, Kenya, South Africa)</h4>
+          <p><strong>Step 1:</strong> Register at <code>paystack.com</code> and copy your Public Key (<code>pk_live_...</code>) and Secret Key (<code>sk_live_...</code>).</p>
+          <p><strong>Step 2:</strong> Set Webhook URL to <code>https://yourdomain.com/wp-json/omnify/v1/paystack/webhook</code>.</p>
+          <p><strong>Step 3:</strong> In Omnify Settings → Payments → Paystack, toggle Enable to ON, select Test or Live environment, paste keys, and save.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>9. Tap Payments Setup Guide (Middle East & GCC)</h4>
+          <p><strong>Step 1:</strong> Register at <code>tap.company</code> and obtain your Public and Secret API keys.</p>
+          <p><strong>Step 2:</strong> Point webhook destination to <code>https://yourdomain.com/wp-json/omnify/v1/tap/webhook</code>.</p>
+          <p><strong>Step 3:</strong> In Omnify Settings → Payments → Tap Payments, paste your credentials and save.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>10. Mollie Setup Guide (European Union: iDEAL, Bancontact, SEPA)</h4>
+          <p><strong>Step 1:</strong> Obtain your Live or Test API Key from <code>mollie.com</code> dashboard.</p>
+          <p><strong>Step 2:</strong> In Omnify Settings → Payments → Mollie, enter your API Key and save. All localized European payment schemes are enabled automatically.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>11. Khalti & eSewa Setup Guides (Nepal)</h4>
+          <p><strong>Khalti:</strong> Enter Live/Test Secret Key in Omnify Settings → Payments → Khalti.</p>
+          <p><strong>eSewa:</strong> Enter Merchant Code and HMAC-SHA256 Secret Key in Omnify Settings → Payments → eSewa.</p>
+        </div>
+
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>12. Paddle Billing Setup Guide (Global Merchant of Record)</h4>
+          <p><strong>Step 1:</strong> In Paddle dashboard, obtain Client-Side Token, API Secret Key, and configure webhook to <code>https://yourdomain.com/wp-json/omnify/v1/paddle/webhook</code>.</p>
+          <p><strong>Step 2:</strong> In Omnify Settings → Payments → Paddle, enter your credentials and save.</p>
+        </div>
+        <div class="feature-card" style="padding: 1.5rem;">
+          <h4>7. Cheque Payment Setup Guide</h4>
+          <p><strong>Step 1:</strong> Open <strong>Omnify → Settings → Payments → Cheque Payment</strong> and toggle Enable to ON.</p>
+          <p><strong>Step 2:</strong> Enter Payee Name and physical mailing address for checks. Orders stay <code>On Hold</code> until paper checks are received, deposited, and cleared.</p>
         </div>
       </div>
 
@@ -422,7 +515,7 @@ const chapters = [
     id: 'tools',
     title: '12. System Tools & Maintenance',
     badge: 'Diagnostics & Seed',
-    icon: '🛠️',
+    icon: svgIcons.tools,
     summary: 'One-click demo data generation and cleanup, database table verification, and cache flushing.',
     content: `
       <p>Under <strong>Omnify → Tools & Seeding</strong>, manage maintenance operations and developer utilities.</p>
@@ -442,7 +535,7 @@ const chapters = [
     id: 'activity',
     title: '13. Administrative Activity Log',
     badge: 'Audit Trail',
-    icon: '📝',
+    icon: svgIcons.activity,
     summary: 'Maintain an immutable audit trail of administrator actions, price changes, and order modifications.',
     content: `
       <p>Under <strong>Omnify → Activity Log</strong>, view a complete chronological audit trail of administrative changes for accountability and security.</p>
@@ -462,7 +555,7 @@ const chapters = [
     id: 'api',
     title: '14. REST API Key Management',
     badge: 'Headless & API',
-    icon: '🔑',
+    icon: svgIcons.api,
     summary: 'Generate secure Consumer Key and Consumer Secret pairs for headless frontends, mobile apps, and ERP sync.',
     content: `
       <p>Under <strong>Omnify → API Keys</strong>, generate and manage REST API credentials for external integrations.</p>
@@ -480,29 +573,84 @@ const chapters = [
   },
   {
     id: 'storefront',
-    title: '15. Customer Storefront Experience',
-    badge: 'Shopper Journey',
-    icon: '🌐',
-    summary: 'Walkthrough of the customer experience: catalog grid, product pages, cart, checkout, and portal.',
+    title: '15. Customer Storefront & Portal 2.0',
+    badge: 'Shopper Experience',
+    icon: svgIcons.storefront,
+    summary: 'Comprehensive walkthrough of the modern shopper experience: faceted catalog filtering, sticky checkout, and the Customer Portal 2.0 hub.',
     content: `
-      <p>OmnifyWP delivers a fast, modern shopping experience with clean layouts and responsive controls.</p>
+      <p class="lead-text">
+        OmnifyWP eCommerce features a high-converting storefront design inspired by modern apparel and luxury fashion brands. Shoppers enjoy sub-millisecond catalog browsing, multi-layout switching, interactive color/size swatches, social proof notifications, and seamless checkout journeys.
+      </p>
 
-      <h3>Product Catalog Grid (<code>[omnify_storefront]</code>)</h3>
+      <h3>Catalog Multi-Layout Switcher (<code>[omnify_storefront]</code>)</h3>
+      <p>The catalog toolbar includes an interactive layout switcher with preferences saved in <code>localStorage</code>:</p>
+
+      <div class="grid-cards-3" style="margin-top:1.25rem;">
+        <div class="feature-card">
+          <h4>1. 4-Column Modern Grid (<code>data-cols="4"</code>)</h4>
+          <p><strong>Clean borderless cards:</strong> Soft <code>#f6f6f8</code> image box (1:1.18 aspect ratio), pill badges (<code>HOT</code>, <code>-14%</code>, <code>LIMITED</code>), outline heart wishlist button (turns red on click), slide-in hover tools (Quick View & Compare), floating sizes (<code>S M</code>), circular plus button, and price with swatches.</p>
+        </div>
+        <div class="feature-card">
+          <h4>2. 2-Column Split View (<code>data-cols="2"</code>)</h4>
+          <p><strong>Horizontal split cards:</strong> Left image column (46% width) paired with right details column (54% width) displaying title, 5-star rating (5.0 / 5.0 Stars), price, swatches, sizes, full-width "Select options" button, and Quick View/Compare links.</p>
+        </div>
+        <div class="feature-card">
+          <h4>3. 1-Column List View (<code>data-cols="list"</code>)</h4>
+          <p><strong>3-Section row layout:</strong> Left 220px image, center details (title, rating, swatches, sizes, 2-line excerpt), and right panel with price, green <code>292 IN STOCK</code> badge, full-width button, and vertical action links (Wishlist, Quick View, Compare).</p>
+        </div>
+      </div>
+
       ${mockups.storefront_catalog}
 
+      <div class="grid-cards-3" style="margin-top:1.5rem;">
+        <div class="feature-card">
+          <h4>Faceted Sidebar Filters</h4>
+          <p>Collapsible accordions for category, price range, brand, color swatches, and size facets allow customers to zero in on products instantly without page reloads.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Instant Single-Click Tabs</h4>
+          <p>Category and collection switcher tabs update product cards dynamically, preserving customer scroll position and reducing bounce rates.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Slide-Over Quick Checkout</h4>
+          <p>Slide-over modal allows instant purchase completion directly from the catalog page without leaving the storefront.</p>
+        </div>
+      </div>
+
       <h3>Product Details Page</h3>
+      <p>High-resolution gallery sliders, variation attribute swatches (color, size, format), live stock counters, and sticky add-to-cart bars optimize individual product conversions.</p>
       ${mockups.storefront_product}
 
       <h3>Shopping Cart (<code>[omnify_cart]</code>)</h3>
+      <p>Slide-out AJAX mini cart drawer and full-page cart with item quantity steppers, discount promo codes, and real-time shipping zone estimates.</p>
       ${mockups.storefront_cart}
 
       <h3>Conversion-Optimized Checkout (<code>[omnify_checkout]</code>)</h3>
+      <p>Single-page, friction-free checkout featuring country-first address auto-detection, optional 1-click account creation, and native payment gateway buttons.</p>
       ${mockups.storefront_checkout}
 
-      <h3>Customer Portal & Public Order Tracking</h3>
-      <p>Customers can manage their past orders, addresses, and digital downloads in the Customer Portal (<code>[omnify_customer_portal]</code>) or track purchases via the public Order Tracking page (<code>[omnify_order_tracking]</code>).</p>
+      <h3>Customer Portal 2.0 (<code>[omnify_customer_portal]</code>)</h3>
+      <p>A centered <code>1360px</code> modern self-service hub built with the SupportHub emerald design system. Customers can track orders, manage addresses, update security credentials, and access cryptographically protected digital downloads.</p>
 
       ${mockups.customer_portal}
+
+      <div class="grid-cards-3" style="margin-top:1.5rem;">
+        <div class="feature-card">
+          <h4>4-Column KPI Stats Grid</h4>
+          <p>Real-time customer analytics displaying Lifetime Spent, Total Orders, Digital Assets, and Saved Addresses with contextual status subtitles.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Live Tab Counter Pills</h4>
+          <p>Navigation tabs with dynamic counter badges (e.g., <em>Orders (4)</em>, <em>Downloads (2)</em>) and horizontal auto-scrolling on mobile devices.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Balanced 2-Column Settings</h4>
+          <p>Symmetrical account settings layout pairing personal profile management on the left with password security and address book stacked on the right.</p>
+        </div>
+      </div>
+
+      <h3>Public Order Tracking (<code>[omnify_order_tracking]</code>)</h3>
+      <p>Guests and unregistered shoppers can look up their orders using only their Order ID and Billing Email, accessing live fulfillment progress steps and digital files.</p>
 
       ${mockups.order_tracking}
     `
@@ -511,7 +659,7 @@ const chapters = [
     id: 'faq',
     title: '16. FAQ & Troubleshooting',
     badge: 'Help & Support',
-    icon: '❓',
+    icon: svgIcons.faq,
     summary: 'Frequently asked questions, common troubleshooting scenarios, and performance tips.',
     content: `
       <div class="faq-item">
@@ -562,46 +710,46 @@ const sidebarNavHtml = `
   <div class="sidebar-group">
     <div class="sidebar-heading">Getting Started</div>
     <ul class="sidebar-items">
-      <li><a href="#intro" class="sidebar-link active"><span>✨ Introduction</span> <span class="sidebar-tag">Start</span></a></li>
-      <li><a href="#onboarding" class="sidebar-link"><span>🚀 Setup Wizard</span> <span class="sidebar-tag">Setup</span></a></li>
-      <li><a href="#dashboard" class="sidebar-link"><span>📊 Dashboard Overview</span> <span class="sidebar-tag">KPIs</span></a></li>
+      <li><a href="#intro" class="sidebar-link active"><span>Introduction</span> <span class="sidebar-tag">Start</span></a></li>
+      <li><a href="#onboarding" class="sidebar-link"><span>Setup Wizard</span> <span class="sidebar-tag">Setup</span></a></li>
+      <li><a href="#dashboard" class="sidebar-link"><span>Dashboard Overview</span> <span class="sidebar-tag">KPIs</span></a></li>
     </ul>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-heading">Catalog & Fulfillment</div>
     <ul class="sidebar-items">
-      <li><a href="#products" class="sidebar-link"><span>📦 Products Catalog</span> <span class="sidebar-tag">Stock</span></a></li>
-      <li><a href="#orders" class="sidebar-link"><span>🛒 Orders & Refunds</span> <span class="sidebar-tag">Sales</span></a></li>
-      <li><a href="#customers" class="sidebar-link"><span>👥 Customers (CRM)</span> <span class="sidebar-tag">LTV</span></a></li>
-      <li><a href="#coupons" class="sidebar-link"><span>🎟️ Coupons & Promos</span> <span class="sidebar-tag">Deals</span></a></li>
+      <li><a href="#products" class="sidebar-link"><span>Products Catalog</span> <span class="sidebar-tag">Stock</span></a></li>
+      <li><a href="#orders" class="sidebar-link"><span>Orders & Refunds</span> <span class="sidebar-tag">Sales</span></a></li>
+      <li><a href="#customers" class="sidebar-link"><span>Customers (CRM)</span> <span class="sidebar-tag">LTV</span></a></li>
+      <li><a href="#coupons" class="sidebar-link"><span>Coupons & Promos</span> <span class="sidebar-tag">Deals</span></a></li>
     </ul>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-heading">Analytics & Marketing</div>
     <ul class="sidebar-items">
-      <li><a href="#analytics" class="sidebar-link"><span>📈 Store Analytics</span> <span class="sidebar-tag">Reports</span></a></li>
-      <li><a href="#reviews" class="sidebar-link"><span>⭐ Reviews Moderation</span> <span class="sidebar-tag">Trust</span></a></li>
-      <li><a href="#abandoned-carts" class="sidebar-link"><span>🛒 Abandoned Carts</span> <span class="sidebar-tag">Recovery</span></a></li>
+      <li><a href="#analytics" class="sidebar-link"><span>Store Analytics</span> <span class="sidebar-tag">Reports</span></a></li>
+      <li><a href="#reviews" class="sidebar-link"><span>Reviews Moderation</span> <span class="sidebar-tag">Trust</span></a></li>
+      <li><a href="#abandoned-carts" class="sidebar-link"><span>Abandoned Carts</span> <span class="sidebar-tag">Recovery</span></a></li>
     </ul>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-heading">Store Configuration</div>
     <ul class="sidebar-items">
-      <li><a href="#settings" class="sidebar-link"><span>⚙️ Store Settings</span> <span class="sidebar-tag">Config</span></a></li>
-      <li><a href="#tools" class="sidebar-link"><span>🛠️ Tools & Seeding</span> <span class="sidebar-tag">DB</span></a></li>
-      <li><a href="#activity" class="sidebar-link"><span>📝 Activity Audit Log</span> <span class="sidebar-tag">Audit</span></a></li>
-      <li><a href="#api" class="sidebar-link"><span>🔑 REST API Keys</span> <span class="sidebar-tag">REST</span></a></li>
+      <li><a href="#settings" class="sidebar-link"><span>Store Settings</span> <span class="sidebar-tag">Config</span></a></li>
+      <li><a href="#tools" class="sidebar-link"><span>Tools & Seeding</span> <span class="sidebar-tag">DB</span></a></li>
+      <li><a href="#activity" class="sidebar-link"><span>Activity Audit Log</span> <span class="sidebar-tag">Audit</span></a></li>
+      <li><a href="#api" class="sidebar-link"><span>REST API Keys</span> <span class="sidebar-tag">REST</span></a></li>
     </ul>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-heading">Storefront & Support</div>
     <ul class="sidebar-items">
-      <li><a href="#storefront" class="sidebar-link"><span>🌐 Customer Storefront</span> <span class="sidebar-tag">Shop</span></a></li>
-      <li><a href="#faq" class="sidebar-link"><span>❓ FAQ & Troubleshooting</span> <span class="sidebar-tag">Help</span></a></li>
+      <li><a href="#storefront" class="sidebar-link"><span>Customer Storefront</span> <span class="sidebar-tag">Shop</span></a></li>
+      <li><a href="#faq" class="sidebar-link"><span>FAQ & Troubleshooting</span> <span class="sidebar-tag">Help</span></a></li>
     </ul>
   </div>
 `;
@@ -1665,6 +1813,62 @@ const fullHtml = `<!DOCTYPE html>
       border-color: var(--brand-forest);
     }
 
+    .m-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 9999px;
+      margin-left: 6px;
+    }
+
+    .portal-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 768px) {
+      .portal-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .portal-kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .portal-kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .portal-kpi-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .portal-kpi-sub {
+      font-size: 0.72rem;
+      color: #059669;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
     .mockup-data-table {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -1857,12 +2061,25 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .product-card-img {
-      height: 120px;
+      height: 140px;
       background: var(--bg-subtle);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
+      overflow: hidden;
+      border-radius: 9px 9px 0 0;
+    }
+
+    .product-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.25s ease;
+    }
+
+    .store-product-card:hover .product-card-img img {
+      transform: scale(1.04);
     }
 
     .product-card-body {
@@ -1916,15 +2133,21 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .main-gallery-preview {
-      height: 180px;
+      height: 220px;
       background: var(--bg-subtle);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
-      font-weight: 700;
+      overflow: hidden;
       margin-bottom: 12px;
+    }
+
+    .main-gallery-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .gallery-thumbs {
@@ -1934,15 +2157,23 @@ const fullHtml = `<!DOCTYPE html>
     }
 
     .thumb {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 6px;
       border: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
       background: var(--bg-card);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .thumb.active {
@@ -2230,20 +2461,20 @@ const fullHtml = `<!DOCTYPE html>
   <header class="top-header">
     <div style="display: flex; align-items: center; gap: 20px;">
       <a href="user-guide.html" class="brand-wrap">
-        <div class="brand-icon">⚡</div>
+        <div class="brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
         <div class="brand-text">
           OmnifyWP
-          <span class="brand-version-pill">v1.2.0</span>
+          <span class="brand-version-pill">v1.4.2</span>
         </div>
       </a>
 
       <!-- Doc Switcher -->
       <nav class="doc-switcher">
         <a href="user-guide.html" class="switcher-btn active">
-          <span>📘 User Guide</span>
+          <span>User Guide</span>
         </a>
         <a href="index.html" class="switcher-btn">
-          <span>⚡ Developer Docs</span>
+          <span>Developer Docs</span>
         </a>
       </nav>
     </div>
@@ -2288,9 +2519,9 @@ const fullHtml = `<!DOCTYPE html>
     <main class="docs-main">
       <div class="doc-hero">
         <div class="hero-badge-pill">
-          <span>📚 Store Owner Manual</span>
+          <span>Store Owner Manual</span>
           <span>•</span>
-          <span>Version 1.2.0</span>
+          <span>Version 1.4.2</span>
         </div>
         <h1 class="hero-title">OmnifyWP eCommerce<br>Complete User Manual</h1>
         <p class="hero-description">

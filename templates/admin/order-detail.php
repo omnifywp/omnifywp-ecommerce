@@ -87,7 +87,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 ?>
 <div class="omnify-admin-wrapper">
 	<?php $omnify_active_tab = 'orders'; ?>
-	<div class="omnify-header-row" style="margin-bottom: 16px;">
+	<div class="omnify-header-row">
 		<div class="omnify-header-row__title">
 			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders')); ?>" style="text-decoration: none; color: var(--omnify-gray-800); font-weight: 500; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px;">
 				<span class="dashicons dashicons-arrow-left-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>

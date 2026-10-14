@@ -1297,6 +1297,10 @@ class Omnify_Migrations {
 		if (empty($this->table_indexes($omnify_table, 'created_at'))) {
 			$this->add_key($omnify_table, 'created_at', 'created_at');
 		}
+
+		if (empty($this->table_indexes($omnify_table, 'customer_status_created'))) {
+			$this->add_key($omnify_table, 'customer_status_created', 'customer_id, status, created_at');
+		}
 	}
 
 	private function record(string $omnify_migration): void {

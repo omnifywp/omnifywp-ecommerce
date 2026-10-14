@@ -97,6 +97,12 @@ $omnify_status_labels = [
 			<h1><?php esc_html_e('Product Reviews', 'omnifywp-ecommerce'); ?></h1>
 			<p><?php esc_html_e('Review customer feedback, publish useful testimonials, and keep rejected or pending comments organized.', 'omnifywp-ecommerce'); ?></p>
 		</div>
+		<div class="omnify-header-row__actions">
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-products&action=new')); ?>" class="omnify-button omnify-button--primary">
+				<span class="dashicons dashicons-plus" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle; margin-right: 4px;"></span>
+				<?php esc_html_e('Create Product', 'omnifywp-ecommerce'); ?>
+			</a>
+		</div>
 	</div>
 
 	<?php include __DIR__ . '/partials/nav.php'; ?>

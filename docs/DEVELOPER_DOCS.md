@@ -1,10 +1,10 @@
 # OmnifyWP eCommerce — Complete Developer Documentation
 
-> **Version:** 1.2.0  
+> **Version:** 1.4.0  
 > **Official Website:** [https://omnifywp.com](https://omnifywp.com)  
 > **wp.org Directory:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)  
-> **Minimum Requirements:** PHP 8.2+, WordPress 5.8+, MySQL 5.7+ / MariaDB 10.3+  
+> **Minimum Requirements:** PHP 8.2+, WordPress 6.5+, MySQL 5.7+ / MariaDB 10.3+  
 > **Interactive Documentation:** Open [`docs/index.html`](./index.html) or [`docs/user-guide.html`](./user-guide.html)  
 
 ---
@@ -13,6 +13,8 @@
 1. [Introduction & Core Philosophy](#1-introduction--core-philosophy)
 2. [Plugin Lifecycle & Container Architecture](#2-plugin-lifecycle--container-architecture)
 3. [Database Engine & 18 Relational Tables](#3-database-engine--18-relational-tables)
+   - [Architectural Schema Overview](#architectural-schema-overview)
+   - [Deep Column & Index Breakdown](#deep-column--index-breakdown)
 4. [Soft Deletions & Cache Invalidation System](#4-soft-deletions--cache-invalidation-system)
 5. [Repositories SDK & Query APIs](#5-repositories-sdk--query-apis)
    - [Product Repository (`Omnify_Product_Repository`)](#product-repository)
@@ -27,18 +29,22 @@
    - [Shortcodes Directory](#shortcodes-directory)
    - [Client-Side State Engine (`storefront.js`)](#client-side-state-engine)
 7. [Payment Gateways & Webhooks Engine](#7-payment-gateways--webhooks-engine)
-   - [Supported Gateways](#supported-gateways)
-   - [Webhook Signature Verification](#webhook-signature-verification)
+   - [Supported Gateways & Secure-by-Default Architecture](#supported-gateways)
+   - [Complete Webhook Endpoints & Verification Engine](#webhook-endpoints)
+   - [Building Custom Payment Gateways (`Payment_Gateway_Interface`)](#building-custom-payment-gateways)
    - [Automatic File Revocation on Refund](#automatic-file-revocation-on-refund)
 8. [Cryptographic Digital Locker Engine](#8-cryptographic-digital-locker-engine)
    - [HMAC-SHA256 Tokenization](#hmac-sha256-tokenization)
    - [Protected 8KB Chunked File Streaming](#protected-8kb-chunked-file-streaming)
+   - [Server Hardening Rules (Apache & Nginx)](#server-hardening-rules)
 9. [REST API Complete Reference](#9-rest-api-complete-reference)
    - [Authentication Methods](#authentication-methods)
    - [Storefront Public Endpoints](#storefront-public-endpoints)
    - [Administrative Protected Endpoints](#administrative-protected-endpoints)
+   - [Request & Response Payload Schemas](#request--response-payload-schemas)
 10. [Action & Filter Hooks Directory](#10-action--filter-hooks-directory)
-11. [Developer Recipes & Code Examples](#11-developer-recipes--code-examples)
+11. [Storefront Template Overriding & Theme Integration](#11-storefront-template-overriding--theme-integration)
+12. [Developer Recipes & Code Examples](#12-developer-recipes--code-examples)
 
 ---
 
@@ -86,6 +92,8 @@ $order_repo   = $container->get(Omnify_Order_Repository::class);
 
 ## 3. Database Engine & 18 Relational Tables
 
+### Architectural Schema Overview
+
 All custom tables use the `$wpdb->prefix . 'omnify_'` naming convention and InnoDB engine with `utf8mb4_unicode_ci` or standard WordPress charset collation.
 
 | Table Name | Primary Purpose | Key Indices |
@@ -108,6 +116,57 @@ All custom tables use the `$wpdb->prefix . 'omnify_'` naming convention and Inno
 | `wp_omnify_reviews` | Ratings, moderation status, and customer reviews | `PRIMARY (id)`, `KEY (product_id)`, `KEY (status)` |
 | `wp_omnify_abandoned_carts` | Incomplete checkout sessions, tokens, and recovery reminders | `PRIMARY (id)`, `UNIQUE KEY (token)`, `KEY email_status (email, status)` |
 | `wp_omnify_wishlists` | Customer product favorites associations | `PRIMARY (id)`, `UNIQUE KEY user_product (user_id, product_id)` |
+| `wp_omnify_activity_logs` | Admin action audits and security trace logs | `PRIMARY (id)`, `KEY (user_id)`, `KEY (action)` |
+
+### Deep Column & Index Breakdown
+
+#### 1. `wp_omnify_products` (Core Catalog)
+- `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Unique product ID.
+- `title` (VARCHAR(255) NOT NULL): Product display title.
+- `slug` (VARCHAR(255) NOT NULL UNIQUE): URL-safe permalink identifier.
+- `type` (ENUM('simple', 'variable', 'download', 'bundle') DEFAULT 'simple'): Product architecture type.
+- `status` (ENUM('published', 'draft', 'trash') DEFAULT 'published'): Catalog visibility status.
+- `price` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Regular selling price.
+- `sale_price` (DECIMAL(12,2) NULL): Discounted price if promotional pricing active.
+- `sku` (VARCHAR(100) NULL): Stock Keeping Unit identifier.
+- `stock_quantity` (INT NOT NULL DEFAULT 0): Available inventory count.
+- `manage_stock` (TINYINT(1) NOT NULL DEFAULT 0): Inventory tracking toggle (`1` = active).
+- `featured_image` (VARCHAR(500) NULL): URL or WordPress attachment ID of main photo.
+- `gallery` (LONGTEXT NULL): JSON array of secondary gallery image URLs.
+- `description` (LONGTEXT NULL): Full HTML product description.
+- `short_description` (TEXT NULL): Brief excerpt displayed on product cards and list views.
+- `total_sales` (INT UNSIGNED NOT NULL DEFAULT 0): Counter for popularity sorting.
+- `rating_cache` (DECIMAL(3,2) NOT NULL DEFAULT 0.00): Cached average customer star rating.
+- `rating_count` (INT UNSIGNED NOT NULL DEFAULT 0): Total count of approved reviews.
+- `created_at`, `updated_at`, `deleted_at` (DATETIME NULL): Audit timestamps.
+
+#### 2. `wp_omnify_orders` (Financial Transactions)
+- `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Internal order ID.
+- `order_number` (VARCHAR(64) NOT NULL UNIQUE): Sequential or randomized customer-facing reference (e.g. `#1042`).
+- `customer_id` (BIGINT UNSIGNED NULL): Foreign key referencing `wp_omnify_customers.id`.
+- `status` (ENUM('pending_payment', 'processing', 'completed', 'on_hold', 'cancelled', 'refunded', 'failed') NOT NULL DEFAULT 'pending_payment'): Order state machine value.
+- `currency` (VARCHAR(3) NOT NULL DEFAULT 'USD'): ISO 4217 currency code.
+- `subtotal` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Sum of line items before tax and shipping.
+- `discount_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Applied coupon discount amount.
+- `tax_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Calculated sales tax amount.
+- `shipping_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Shipping fee charged.
+- `total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Grand total charged to customer.
+- `payment_method` (VARCHAR(50) NOT NULL): Gateway identifier (e.g., `stripe`, `paypal`, `razorpay`, `cod`, `bacs`).
+- `transaction_id` (VARCHAR(255) NULL): Payment gateway reference token (e.g. `pi_3L714q...`).
+- `billing_first_name`, `billing_last_name`, `billing_email`, `billing_phone` (VARCHAR(255) NULL): Customer details.
+- `billing_address_1`, `billing_address_2`, `billing_city`, `billing_state`, `billing_postcode`, `billing_country`: Billing postal addresses.
+- `shipping_first_name`, `shipping_last_name`, `shipping_address_1`, `shipping_city`, `shipping_country`: Physical delivery destination.
+- `ip_address` (VARCHAR(45) NULL): IPv4 or IPv6 address for fraud auditing.
+- `created_at`, `updated_at`, `deleted_at` (DATETIME NULL): Lifecycle timestamps.
+
+#### 3. `wp_omnify_customer_access` (Digital Entitlements)
+- `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Access token ID.
+- `customer_id` (BIGINT UNSIGNED NOT NULL): Customer identifier.
+- `product_id` (BIGINT UNSIGNED NOT NULL): Purchased digital product.
+- `order_id` (BIGINT UNSIGNED NOT NULL): Reference order granting the entitlement.
+- `granted_at` (DATETIME NOT NULL): Timestamp when access was unlocked.
+- `expires_at` (DATETIME NULL): Timestamp when access terminates (`NULL` = lifetime).
+- `is_active` (TINYINT(1) NOT NULL DEFAULT 1): Hard kill switch (`0` upon refund).
 
 ---
 
@@ -265,27 +324,91 @@ window.omnifyStorefront = {
 
 ## 7. Payment Gateways & Webhooks Engine
 
-### Supported Gateways
+### Supported Gateways & Secure-by-Default Architecture
+OmnifyWP features a **Secure-by-Default Architecture**: all gateways default to disabled (`0`) upon initial database seeding, preventing accidental or unverified checkouts.
+
 1. **Stripe**: Payment Intents (custom elements, Apple Pay, Google Pay) + Hosted Checkout Sessions.
 2. **PayPal Commerce**: REST API v2 Orders & Captures with smart buttons.
 3. **Razorpay**: Standard Checkout flow supporting UPI, Indian debit/credit cards, and netbanking.
 4. **Alipay & WeChat Pay**: Chinese digital wallet checkout and QR codes.
 5. **SSLCommerz**: South Asian gateway supporting cards and mobile banking (bKash, Nagad).
-6. **Paystack, Tap Payments, Mollie, Khalti, eSewa**: Regional payment gateways.
-7. **Offline / Manual**: Cash on Delivery (COD), Direct Bank Transfer (BACS), Cheque Payments.
+6. **Paystack**: Top African payment gateway supporting cards, bank transfers, mobile money, and USSD.
+7. **Tap Payments**: Middle East & GCC gateway supporting mada, KNET, Benefit, NAPS, and cards.
+8. **Mollie**: European Union checkout covering iDEAL, Bancontact, SEPA, and cards.
+9. **Khalti & eSewa**: Leading digital wallets and mobile banking in Nepal.
+10. **Paddle Billing**: Merchant-of-Record infrastructure with automated tax calculations and webhooks.
+11. **Offline / Manual**: Cash on Delivery (COD), Direct Bank Transfer (BACS), Cheque Payments.
 
-### Webhook Endpoints
-- `POST /wp-json/omnify/v1/stripe/webhook` (Verifies `HTTP_STRIPE_SIGNATURE` HMAC-SHA256)
-- `POST /wp-json/omnify/v1/paypal/webhook` (Verifies via PayPal `verify-webhook-signature` API)
-- `POST /wp-json/omnify/v1/razorpay/webhook` (Verifies `HTTP_X_RAZORPAY_SIGNATURE`)
-- `POST /wp-json/omnify/v1/sslcommerz/ipn` (Verifies transaction validation session)
+### Complete Webhook Endpoints & Verification Engine
 
-### Automated File Revocation on Refund
+| Gateway | Webhook Route | Verification Signature / Handshake | Active Events Handled |
+| :--- | :--- | :--- | :--- |
+| **Stripe** | `POST /wp-json/omnify/v1/stripe/webhook` | `HTTP_STRIPE_SIGNATURE` HMAC-SHA256 against `stripe_webhook_secret` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |
+| **PayPal** | `POST /wp-json/omnify/v1/paypal/webhook` | Handshake via PayPal API `verify-webhook-signature` using `paypal_webhook_id` | `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED` |
+| **Razorpay** | `POST /wp-json/omnify/v1/razorpay/webhook` | `HTTP_X_RAZORPAY_SIGNATURE` HMAC-SHA256 against `razorpay_webhook_secret` | `payment.captured`, `payment.failed`, `refund.processed` |
+| **SSLCommerz** | `POST /wp-json/omnify/v1/sslcommerz/ipn` | Server-to-server transaction validation session inquiry with Store Password | Order validation, payment capture |
+| **Paystack** | `POST /wp-json/omnify/v1/paystack/webhook` | `HTTP_X_PAYSTACK_SIGNATURE` HMAC-SHA512 against Secret Key | `charge.success`, `refund.processed` |
+| **Tap Payments**| `POST /wp-json/omnify/v1/tap/webhook` | Header signature verification against Secret Key | `CHARGE.CAPTURED`, `CHARGE.FAILED` |
+| **Mollie** | `POST /wp-json/omnify/v1/mollie/webhook` | Server-to-server API check fetching payment object by ID | `paid`, `canceled`, `expired`, `failed` |
+| **Paddle** | `POST /wp-json/omnify/v1/paddle/webhook` | `Paddle-Signature` header verification against `paddle_webhook_secret` | `transaction.paid`, `transaction.billed`, `adjustment.updated` |
+| **Alipay** | `POST /wp-json/omnify/v1/alipay/webhook` | RSA2 / MD5 signature verification | Payment notify trade success |
+| **WeChat Pay**| `POST /wp-json/omnify/v1/wechat/webhook` | AES-256-GCM decrypt using APIv3 key | Resource trade success |
+
+### Building Custom Payment Gateways
+
+You can register custom payment gateways by implementing the gateway interface and hooking into `omnify_payment_gateways`:
+
+```php
+namespace MyPlugin\Gateways;
+
+class Custom_Cryptocurrency_Gateway {
+    public function get_id(): string {
+        return 'crypto_pay';
+    }
+
+    public function get_title(): string {
+        return __('Cryptocurrency (USDC / Bitcoin)', 'my-plugin');
+    }
+
+    public function is_enabled(): bool {
+        $settings = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Settings_Repository::class);
+        return (bool) $settings->get('custom_crypto_enabled', false);
+    }
+
+    public function process_payment(int $order_id, array $posted_data): array {
+        $orders = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Order_Repository::class);
+        $order  = $orders->find($order_id);
+
+        // Generate hosted crypto payment invoice URL
+        $invoice_url = "https://crypto-gateway.com/pay/{$order['order_number']}";
+
+        return [
+            'result'   => 'success',
+            'redirect' => $invoice_url,
+            'order_id' => $order_id,
+        ];
+    }
+
+    public function process_refund(int $order_id, float $amount, string $reason = ''): bool {
+        // Execute API refund call...
+        return true;
+    }
+}
+
+// Register gateway into Omnify
+add_filter('omnify_payment_gateways', function(array $gateways) {
+    $gateways['crypto_pay'] = new Custom_Cryptocurrency_Gateway();
+    return $gateways;
+});
+```
+
+### Automatic File Revocation on Refund
 When a refund is processed via `Omnify_Payment_Gateway_Service`:
 1. Communicates with gateway API to execute the refund.
 2. Updates order record to `refunded` (or increments `refunded_amount`).
 3. Automatically deletes corresponding customer access entitlements from `wp_omnify_customer_access`.
-4. Fires action hook `omnify_customer_access_revoked`.
+4. Fires action hook `omnify_customer_access_revoked($customer_id, $product_id)`.
+5. Logs the event into `wp_omnify_activity_logs`.
 
 ---
 
@@ -305,13 +428,29 @@ $signature = hash_hmac('sha256', $payload, wp_salt('auth'));
 `Omnify\eCommerce\Downloads\Omnify_Download_Controller::stream`
 - **Path Traversal Shield**: Verifies `realpath($file_path)` is strictly contained within the WordPress uploads directory via `wp_normalize_path()`.
 - **Output Buffer Flush**: Runs `while (ob_get_level() > 0) ob_end_clean();` to prevent memory exhaustion on large file deliveries.
-- **Chunked Delivery**: Streams file using `fread($handle, 8192)` and `flush()`.
-- **Headers Sent**:
-  - `Content-Type: application/octet-stream` (or file MIME)
-  - `Content-Disposition: attachment; filename="..."`
-  - `Content-Length: {filesize}`
-  - `X-Content-Type-Options: nosniff`
-  - `nocache_headers()`
+### Server Hardening Rules (Apache & Nginx)
+To guarantee that customers cannot bypass Omnify's PHP token validator and download protected assets directly via static URLs, place your files inside `wp-content/uploads/omnify-protected/` and apply the following server rules:
+
+#### Apache (`.htaccess` in `wp-content/uploads/omnify-protected/.htaccess`)
+```apache
+# Deny all direct HTTP requests to protected files
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
+```
+
+#### Nginx (`nginx.conf`)
+```nginx
+# Block direct static file downloads from the protected folder
+location ^~ /wp-content/uploads/omnify-protected/ {
+    internal; # Only accessible via PHP X-Accel-Redirect or chunked stream
+    return 403;
+}
+```
 
 ---
 
@@ -364,9 +503,64 @@ Requires `manage_omnify` capability or valid Consumer API key.
 | `/reviews` | `GET` | List reviews with moderation status filters. |
 | `/reviews/{id}` | `PUT` \| `DELETE` | Approve, reject, edit, or delete review. |
 | `/abandoned-carts` | `GET` | View captured abandoned checkout sessions. |
-| `/abandoned-carts/{id}/recover` | `POST` | Dispatch manual email recovery link. |
-| `/settings` | `GET` \| `POST` | View or update global plugin settings. |
 | `/stats` | `GET` | Dashboard sales, AOV, refunds, and analytics. |
+| `/activity-logs` | `GET` | Administrative security audit log feed. |
+| `/delivery-zones` | `GET` \| `POST` | List or update shipping delivery zones. |
+| `/tax-rules` | `GET` \| `POST` | List or update regional tax rates. |
+
+### Request & Response Payload Schemas
+
+#### Example 1: Submit Checkout (`POST /wp-json/omnify/v1/checkout`)
+**Request Headers**:
+```http
+POST /wp-json/omnify/v1/checkout HTTP/1.1
+Host: example.com
+Content-Type: application/json
+X-WP-Nonce: 4a28c9b1e5
+```
+**Request Body**:
+```json
+{
+  "billing_first_name": "Jane",
+  "billing_last_name": "Doe",
+  "billing_email": "jane@example.com",
+  "billing_phone": "+15551234567",
+  "billing_address_1": "742 Evergreen Terrace",
+  "billing_city": "Springfield",
+  "billing_state": "IL",
+  "billing_postcode": "62701",
+  "billing_country": "US",
+  "payment_method": "stripe",
+  "payment_token": "pm_card_visa",
+  "coupon_code": "WELCOME10",
+  "items": [
+    {
+      "product_id": 15,
+      "variation_id": null,
+      "quantity": 1
+    }
+  ]
+}
+```
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "order_id": 1042,
+  "order_number": "OMN-1042",
+  "status": "processing",
+  "total": 26.99,
+  "currency": "USD",
+  "redirect_url": "https://example.com/checkout/order-received/1042/?token=sec_abc123"
+}
+```
+
+#### Example 2: Public Products Query (`GET /wp-json/omnify/v1/products/public`)
+**cURL Command**:
+```bash
+curl -X GET "https://example.com/wp-json/omnify/v1/products/public?category=Apparel&per_page=12&sort=price_asc" \
+  -H "Accept: application/json"
+```
 
 ---
 
@@ -398,12 +592,84 @@ Requires `manage_omnify` capability or valid Consumer API key.
 | `omnify_get_products_args` | `$args` | `array` | Modify query parameters (filters, sorting, taxonomy) before catalog search queries run. |
 | `omnify_get_orders_args` | `$args` | `array` | Modify criteria when querying orders in the repository or customer dashboard. |
 | `omnify_signed_download_expires_in` | `$seconds, $file_id, $customer_id` | `int` | Adjust the expiration duration (default: 900s) for cryptographic digital download URLs. |
-| `omnify_rest_can_manage` | `$can_manage, $request, $server` | `bool\|WP_Error` | Override capability checks for administrative REST endpoints (e.g. external ERP bots). |
-| `omnify_email_arguments` | `$args` | `array` | Filter transactional email headers, recipient, subject, and attachments (e.g. PDF invoices). |
+---
+
+## 11. Storefront Template Overriding & Theme Integration
+
+OmnifyWP allows themes and child themes to override any storefront template file without modifying core plugin code.
+
+### Template Hierarchy
+Templates are located inside `omnifywp-ecommerce/templates/`. To override a template, create a matching file path inside your active WordPress theme directory:
+
+```
+your-active-theme/
+└── omnify/
+    ├── storefront/
+    │   ├── grid.php            # Storefront catalog grid layout
+    │   ├── single-product.php  # Product details page layout
+    │   ├── quick-view.php      # Quick view modal layout
+    │   └── compare-drawer.php  # Product comparison drawer
+    ├── cart/
+    │   └── cart.php            # Shopping cart table & coupons
+    ├── checkout/
+    │   ├── checkout.php        # 1-Page and slide-over checkout form
+    │   └── order-receipt.php   # Order confirmation & receipt
+    └── portal/
+        └── customer-portal.php # Customer downloads, licenses & orders
+```
+
+### CSS Design Tokens & Custom Properties
+Override these tokens in your theme's `style.css` to re-theme the entire storefront seamlessly:
+
+```css
+:root {
+  /* Brand Accents */
+  --omnify-primary: #18794e;
+  --omnify-primary-hover: #146340;
+  --omnify-primary-light: #ecfdf5;
+
+  /* Card Surfaces & Borders */
+  --omnify-surface: #ffffff;
+  --omnify-surface-alt: #f6f6f8;
+  --omnify-border: #e5e7eb;
+  --omnify-radius: 8px;
+  --omnify-radius-sm: 4px;
+
+  /* Typography Colors */
+  --omnify-text-main: #111827;
+  --omnify-text-muted: #6b7280;
+
+  /* Badge Accents */
+  --omnify-badge-hot: #ea3a3c;
+  --omnify-badge-sale: #22c55e;
+  --omnify-badge-limited: #f59e0b;
+}
+```
+
+### JavaScript Custom DOM Events
+The frontend storefront dispatches custom browser events on `document` that your theme scripts can listen to:
+
+```javascript
+// Cart updated event
+document.addEventListener('omnify:cart:updated', function(event) {
+    console.log('Cart count:', event.detail.count);
+    console.log('Cart subtotal:', event.detail.subtotal);
+});
+
+// Quick View opened event
+document.addEventListener('omnify:quickview:opened', function(event) {
+    console.log('Product ID opened:', event.detail.productId);
+});
+
+// Wishlist toggled event
+document.addEventListener('omnify:wishlist:toggled', function(event) {
+    console.log('Product ID:', event.detail.productId, 'Added:', event.detail.added);
+});
+```
 
 ---
 
-## 11. Developer Recipes & Code Examples
+## 12. Developer Recipes & Code Examples
 
 ### Recipe 1: Custom Checkout Fields (VAT / Tax ID & Delivery Instructions)
 Enforce and validate custom checkout fields submitted by customers, save them into order records, and display them in the admin dashboard:
@@ -461,7 +727,7 @@ add_action('omnify_order_status_changed', function($order_id, $new_status) {
     $payload = [
         'embeds' => [
             [
-                'title'       => "🎉 New Order #{$order_id} Received!",
+                'title'       => "[Order] New Order #{$order_id} Received!",
                 'color'       => 3921912, // Emerald green
                 'description' => "**Customer:** {$order['billing_first_name']} {$order['billing_last_name']} ({$order['email']})\n"
                                . "**Total:** {$order['currency']} \${$order['total']}\n"

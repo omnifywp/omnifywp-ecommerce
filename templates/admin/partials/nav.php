@@ -42,18 +42,22 @@ $omnify_admin_nav_tabs = [
 ];
 ?>
 
-<div class="omnify-tabs-wrapper">
-	<div class="omnify-nav-brand" style="display: inline-flex; align-items: center; padding: 4px 14px 4px 4px; margin-right: 6px; border-right: 1px solid var(--omnify-gray-200, #e2e8f0);">
-		<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" style="width: 24px; height: 24px; border-radius: 6px; margin-right: 8px; box-shadow: 0 2px 6px rgba(11, 81, 53, 0.15);" />
-		<span style="font-weight: 800; font-size: 13.5px; letter-spacing: -0.02em; color: #0B5135;">Omnify<span style="color: #22A06B;">WP</span></span>
+<div class="omnify-tabs-track">
+	<div class="omnify-tabs-wrapper" role="navigation" aria-label="<?php esc_attr_e('Omnify Navigation', 'omnifywp-ecommerce'); ?>">
+		<div class="omnify-nav-brand">
+			<img src="<?php echo esc_url(OMNIFY_URL . 'assets/icon-256x256.png'); ?>" alt="Omnify" class="omnify-nav-brand__icon" />
+			<span class="omnify-nav-brand__text">Omnify<span class="omnify-nav-brand__accent">WP</span></span>
+			<span class="omnify-nav-brand__badge"><?php echo esc_html(defined('OMNIFY_VERSION') ? 'v' . OMNIFY_VERSION : 'v1.4.1'); ?></span>
+		</div>
+		<?php foreach ($omnify_admin_nav_tabs as $omnify_key => $omnify_tab): 
+			$omnify_is_active = ($omnify_active_tab === $omnify_key);
+			$omnify_classes = 'omnify-tab' . ($omnify_is_active ? ' is-active' : '');
+		?>
+			<a href="<?php echo esc_url($omnify_tab['url']); ?>" class="<?php echo esc_attr($omnify_classes); ?>"<?php echo $omnify_is_active ? ' aria-current="page"' : ''; ?>>
+				<span class="dashicons <?php echo esc_attr($omnify_tab['icon_class']); ?> omnify-tab__icon"></span>
+				<span class="omnify-tab__label"><?php echo esc_html($omnify_tab['label']); ?></span>
+			</a>
+		<?php endforeach; ?>
 	</div>
-	<?php foreach ($omnify_admin_nav_tabs as $omnify_key => $omnify_tab): 
-		$omnify_is_active = ($omnify_active_tab === $omnify_key);
-		$omnify_classes = 'omnify-tab' . ($omnify_is_active ? ' is-active' : '');
-	?>
-		<a href="<?php echo esc_url($omnify_tab['url']); ?>" class="<?php echo esc_attr($omnify_classes); ?>">
-			<span class="dashicons <?php echo esc_attr($omnify_tab['icon_class']); ?>" style="font-size: 18px; width: 18px; height: 18px; margin-right: 6px; display: inline-flex; align-items: center; justify-content: center; vertical-align: text-bottom;"></span>
-			<?php echo esc_html($omnify_tab['label']); ?>
-		</a>
-	<?php endforeach; ?>
 </div>
+

@@ -328,6 +328,7 @@ class Omnify_Schema {
 				KEY transaction_id (transaction_id),
 				KEY status (status),
 				KEY created_at (created_at),
+				KEY customer_status_created (customer_id, status, created_at),
 				UNIQUE KEY order_number (order_number)
 			) {$omnify_charset};",
 			'order_items' => "CREATE TABLE {$this->table('order_items')} (

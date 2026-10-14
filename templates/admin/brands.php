@@ -16,6 +16,12 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 			<h1><?php esc_html_e('Product Brands', 'omnifywp-ecommerce'); ?></h1>
 			<p><?php esc_html_e('Create and manage product brands to power storefront filters and catalog badges.', 'omnifywp-ecommerce'); ?></p>
 		</div>
+		<div class="omnify-header-row__actions">
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-products&action=new')); ?>" class="omnify-button omnify-button--primary">
+				<span class="dashicons dashicons-plus" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle; margin-right: 4px;"></span>
+				<?php esc_html_e('Create Product', 'omnifywp-ecommerce'); ?>
+			</a>
+		</div>
 	</div>
 
 	<?php include __DIR__ . '/partials/nav.php'; ?>

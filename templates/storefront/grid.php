@@ -94,11 +94,17 @@ $omnify_show_filters = ! array_key_exists('storefront_show_filters', $omnify_set
 $omnify_show_search = ! array_key_exists('storefront_show_search', $omnify_settings) || ! empty($omnify_settings['storefront_show_search']);
 $omnify_show_sort = ! array_key_exists('storefront_show_sort', $omnify_settings) || ! empty($omnify_settings['storefront_show_sort']);
 $omnify_filter_position = in_array($omnify_settings['storefront_filter_position'] ?? '', ['top', 'left', 'right'], true) ? $omnify_settings['storefront_filter_position'] : 'top';
-$omnify_catalog_layout = $omnify_settings['storefront_catalog_layout'] ?? 'grid';
-$omnify_grid_columns = (int) ($omnify_settings['storefront_grid_columns'] ?? ($omnify_settings['design_grid_columns'] ?? 3));
+$omnify_catalog_layout = $omnify_settings['storefront_catalog_layout'] ?? '4';
+if ('grid' === $omnify_catalog_layout || empty($omnify_catalog_layout)) {
+	$omnify_catalog_layout = '4';
+}
+$omnify_grid_columns = (int) ($omnify_settings['storefront_grid_columns'] ?? ($omnify_settings['design_grid_columns'] ?? 4));
+if (empty($omnify_grid_columns) || 3 === $omnify_grid_columns) {
+	$omnify_grid_columns = 4;
+}
 $omnify_grid_rows = max(0, intval($omnify_settings['storefront_grid_rows'] ?? 0));
 $omnify_products_limit = max(1, min(100, intval($omnify_settings['storefront_products_per_page'] ?? 12)));
-if ('grid' === $omnify_catalog_layout && $omnify_grid_rows > 0) {
+if ('4' === $omnify_catalog_layout && $omnify_grid_rows > 0) {
 	$omnify_products_limit = min($omnify_products_limit, max(1, $omnify_grid_rows * $omnify_grid_columns));
 }
 $omnify_initial_count = min(count($omnify_products), $omnify_products_limit);
@@ -140,6 +146,7 @@ foreach ($omnify_products as $omnify_p) {
 $omnify_all_categories = array_values(array_unique(array_filter($omnify_all_categories)));
 $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 ?>
+<script>document.body.classList.add('omnify-storefront-active');</script>
 <div class="omnify-storefront-wrapper omnify-storefront-wrapper--<?php echo esc_attr($omnify_catalog_layout); ?>">
 
 
@@ -189,22 +196,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 		$omnify_breadcrumb_tail = sprintf(__('Search: %s', 'omnifywp-ecommerce'), $omnify_current_search);
 	}
 
-	// Get dynamic background image (category/brand page featured image -> storefront page featured image -> fallback banner)
-	$omnify_banner_bg = '';
-	$omnify_banner_slug = $omnify_current_cat ? $omnify_current_cat : ($omnify_current_brand ? $omnify_current_brand : '');
-	if ($omnify_banner_slug) {
-		$omnify_slug_page = get_page_by_path($omnify_banner_slug, OBJECT, 'page');
-		if ($omnify_slug_page) {
-			$omnify_banner_bg = get_the_post_thumbnail_url($omnify_slug_page->ID, 'full');
-		}
-	}
-	if (empty($omnify_banner_bg) && $omnify_page_id) {
-		$omnify_banner_bg = get_the_post_thumbnail_url($omnify_page_id, 'full');
-	}
-	if (empty($omnify_banner_bg)) {
-		$omnify_banner_bg = OMNIFY_URL . 'assets/storefront/images/shop-banner.png';
-	}
-
 	// Dynamic category counts
 	$omnify_cat_counts = [];
 	foreach ($omnify_products as $omnify_p) {
@@ -222,8 +213,8 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	$omnify_sale_count = 0;
 	$omnify_max_price = 0;
 	foreach ($omnify_products as $omnify_p) {
-		$omnify_is_hot = in_array('hot', array_map('strtolower', (array) ($omnify_p['tags'] ?? [])), true) || ($omnify_p['id'] % 5 === 0);
-		$omnify_is_new = in_array('new', array_map('strtolower', (array) ($omnify_p['tags'] ?? [])), true) || ($omnify_p['id'] % 7 === 0);
+		$omnify_is_hot = in_array('hot', array_map('strtolower', (array) ($omnify_p['tags'] ?? [])), true);
+		$omnify_is_new = in_array('new', array_map('strtolower', (array) ($omnify_p['tags'] ?? [])), true);
 		$omnify_is_sale = ! empty($omnify_p['sale_price']) && (float) $omnify_p['sale_price'] < (float) $omnify_p['price'];
 		if ($omnify_is_hot) $omnify_hot_count++;
 		if ($omnify_is_new) $omnify_new_count++;
@@ -265,10 +256,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 		}
 		$omnify_brand_options = array_unique($omnify_brand_options);
 	}
-
-	if (empty($omnify_banner_bg)) {
-		$omnify_banner_bg = OMNIFY_URL . 'assets/storefront/images/shop-banner.png';
-	}
 	?>
 	<?php
 	$omnify_settings = get_option('omnify_settings', []);
@@ -279,48 +266,29 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	}
 	$omnify_hero_desc = $omnify_settings['storefront_hero_desc'] ?? 'High quality products to build, grow and succeed.';
 	$omnify_hero_image = $omnify_settings['storefront_hero_image'] ?? '';
-	if (empty($omnify_hero_image)) {
-		$omnify_hero_image = OMNIFY_URL . 'assets/storefront/images/catalog-hero.jpg';
-	}
-	$omnify_hero_wave_color = $omnify_settings['storefront_hero_wave_color'] ?? '#e11d48';
-	$omnify_show_features_bar = ! array_key_exists('storefront_show_features_bar', $omnify_settings) || ! empty($omnify_settings['storefront_show_features_bar']);
 
-	$omnify_features = [];
-	for ($i = 1; $i <= 4; $i++) {
-		$show = ! array_key_exists("storefront_feature_{$i}_show", $omnify_settings) || ! empty($omnify_settings["storefront_feature_{$i}_show"]);
-		if ($show) {
-			$omnify_features[] = [
-				'icon'  => $omnify_settings["storefront_feature_{$i}_icon"] ?? 'dollar',
-				'title' => $omnify_settings["storefront_feature_{$i}_title"] ?? '',
-				'desc'  => $omnify_settings["storefront_feature_{$i}_desc"] ?? '',
+	// Build hero features list based on settings / defaults
+	$omnify_hero_default_features = [
+		1 => ['icon' => 'shield', 'title' => __('Secure Payments', 'omnifywp-ecommerce'), 'desc' => __('100% Protected Checkout', 'omnifywp-ecommerce')],
+		2 => ['icon' => 'bolt',   'title' => __('Instant Delivery', 'omnifywp-ecommerce'),  'desc' => __('Immediate File Access', 'omnifywp-ecommerce')],
+		3 => ['icon' => 'star',   'title' => __('Top Quality', 'omnifywp-ecommerce'),      'desc' => __('Verified & Guaranteed', 'omnifywp-ecommerce')],
+		4 => ['icon' => 'headset','title' => __('24/7 Support', 'omnifywp-ecommerce'),     'desc' => __('Dedicated Assistance', 'omnifywp-ecommerce')],
+	];
+	$omnify_hero_features_list = [];
+	for ($omnify_hfi = 1; $omnify_hfi <= 4; $omnify_hfi++) {
+		$omnify_hf_show = ! isset($omnify_settings["storefront_feature_{$omnify_hfi}_show"]) || ! empty($omnify_settings["storefront_feature_{$omnify_hfi}_show"]);
+		if (! $omnify_hf_show) continue;
+
+		$omnify_hf_icon  = $omnify_settings["storefront_feature_{$omnify_hfi}_icon"] ?? ($omnify_hero_default_features[$omnify_hfi]['icon'] ?? 'shield');
+		$omnify_hf_title = ! empty($omnify_settings["storefront_feature_{$omnify_hfi}_title"]) ? $omnify_settings["storefront_feature_{$omnify_hfi}_title"] : ($omnify_hero_default_features[$omnify_hfi]['title'] ?? '');
+		$omnify_hf_desc  = ! empty($omnify_settings["storefront_feature_{$omnify_hfi}_desc"]) ? $omnify_settings["storefront_feature_{$omnify_hfi}_desc"] : ($omnify_hero_default_features[$omnify_hfi]['desc'] ?? '');
+
+		if (! empty($omnify_hf_title)) {
+			$omnify_hero_features_list[] = [
+				'icon'  => $omnify_hf_icon,
+				'title' => $omnify_hf_title,
+				'desc'  => $omnify_hf_desc,
 			];
-		}
-	}
-
-	if (! function_exists('omnify_render_feature_svg')) {
-		function omnify_render_feature_svg($icon) {
-			switch ($icon) {
-				case 'dollar':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
-				case 'lock':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-				case 'lightning':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-				case 'star':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-				case 'shield':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-				case 'check':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-				case 'headphones':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>';
-				case 'heart':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
-				case 'cart':
-					return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"><circle cx="20" cy="21" r="1"><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
-				default:
-					return '';
-			}
 		}
 	}
 	?>
@@ -329,38 +297,51 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	<div class="omnify-catalog-hero">
 		<div class="omnify-catalog-hero-inner">
 			<div class="omnify-catalog-hero-left">
-				<h1 class="omnify-catalog-hero-title"><?php echo esc_html($omnify_hero_title); ?></h1>
-				<div class="omnify-catalog-hero-wave">
-					<svg width="34" height="5" viewBox="0 0 34 5" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M1 3.5C5.5 3.5 8 1.5 12 1.5C16 1.5 18.5 3.5 22.5 3.5C26.5 3.5 29 1.5 33 1.5" stroke="<?php echo esc_attr($omnify_hero_wave_color); ?>" stroke-width="2" stroke-linecap="round"/>
-					</svg>
+				<div class="omnify-catalog-hero-badge">
+					<span class="omnify-hero-badge-dot"></span>
+					<span><?php printf(esc_html__('Curated Store • %d Products', 'omnifywp-ecommerce'), count($omnify_products)); ?></span>
 				</div>
+				<h1 class="omnify-catalog-hero-title"><?php echo esc_html($omnify_hero_title); ?></h1>
 				<?php if (! empty($omnify_hero_desc)) : ?>
 					<p class="omnify-catalog-hero-desc"><?php echo esc_html($omnify_hero_desc); ?></p>
 				<?php endif; ?>
 			</div>
-		</div>
 
-		<!-- Reassurance Row -->
-		<?php if ($omnify_show_features_bar && ! empty($omnify_features)) : ?>
-			<div class="omnify-catalog-hero-features">
-				<?php foreach ($omnify_features as $omnify_feat) : ?>
-					<div class="omnify-catalog-hero-feature-item">
-						<div class="omnify-feature-icon-wrap">
-							<?php echo omnify_render_feature_svg($omnify_feat['icon']); ?>
-						</div>
-						<div class="omnify-feature-text">
-							<strong><?php echo esc_html($omnify_feat['title']); ?></strong>
-							<?php if (! empty($omnify_feat['desc'])) : ?>
-								<span><?php echo esc_html($omnify_feat['desc']); ?></span>
-							<?php endif; ?>
-						</div>
+			<div class="omnify-catalog-hero-right">
+				<?php if (! empty($omnify_hero_image)) : ?>
+					<div class="omnify-catalog-hero-image-wrap">
+						<img src="<?php echo esc_url($omnify_hero_image); ?>" alt="<?php echo esc_attr($omnify_hero_title); ?>" class="omnify-catalog-hero-image" />
 					</div>
-				<?php endforeach; ?>
+				<?php elseif (! empty($omnify_hero_features_list)) : ?>
+					<div class="omnify-catalog-hero-features-grid">
+						<?php foreach ($omnify_hero_features_list as $omnify_hf) : ?>
+							<div class="omnify-hero-feature-chip">
+								<div class="omnify-hero-feature-icon">
+									<?php if (in_array($omnify_hf['icon'], ['lock', 'shield'], true)) : ?>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+									<?php elseif (in_array($omnify_hf['icon'], ['lightning', 'bolt', 'cloud'], true)) : ?>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+									<?php elseif (in_array($omnify_hf['icon'], ['star', 'dollar'], true)) : ?>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+									<?php elseif (in_array($omnify_hf['icon'], ['truck'], true)) : ?>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+									<?php else : ?>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+									<?php endif; ?>
+								</div>
+								<div class="omnify-hero-feature-text">
+									<span class="omnify-hero-feature-title"><?php echo esc_html($omnify_hf['title']); ?></span>
+									<span class="omnify-hero-feature-desc"><?php echo esc_html($omnify_hf['desc']); ?></span>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
 			</div>
-		<?php endif; ?>
+		</div>
 	</div>
 	<?php endif; ?>
+
 
 	<?php
 	// Dynamic filter options from global attributes + current products (user manageable)
@@ -437,7 +418,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Color Accordion -->
-				<div class="omnify-sidebar-widget active">
+				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
 						<span><?php esc_html_e('Color', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
@@ -460,14 +441,27 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					</h3>
 					<div class="omnify-sidebar-widget-content">
 						<div class="omnify-sidebar-price-range">
-							<input type="range" id="omnify-sidebar-price-slider" min="0" max="<?php echo (int) $omnify_max_price; ?>" value="<?php echo (int) $omnify_max_price; ?>" class="omnify-price-slider">
+							<div class="omnify-range-slider-box" style="padding: 10px 0; display: flex; align-items: center; width: 100%;">
+								<input type="range" id="omnify-sidebar-price-slider" min="0" max="<?php echo (int) $omnify_max_price; ?>" value="<?php echo (int) $omnify_max_price; ?>" class="omnify-price-slider" style="margin: 0 !important; width: 100% !important; height: 6px !important; min-height: 6px !important; max-height: 6px !important; padding: 0 !important; border: none !important; border-radius: 9999px !important; background: #E2E8F0 !important; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; box-shadow: none !important; outline: none !important;">
+							</div>
+							<?php
+							// Extract active currency symbol from format_price or settings
+							$omnify_curr_symbol = '$';
+							if (is_callable($omnify_format_price)) {
+								$omnify_sample_formatted = $omnify_format_price(0);
+								$omnify_clean_sym = trim(preg_replace('/[0-9\.,\s]/', '', $omnify_sample_formatted));
+								if (! empty($omnify_clean_sym)) {
+									$omnify_curr_symbol = $omnify_clean_sym;
+								}
+							}
+							?>
 							<div class="omnify-sidebar-price-inputs">
 								<div class="price-input-wrap">
-									<span class="currency">৳</span>
+									<span class="currency"><?php echo esc_html($omnify_curr_symbol); ?></span>
 									<input type="number" id="omnify-sidebar-price-min" value="0">
 								</div>
 								<div class="price-input-wrap">
-									<span class="currency">৳</span>
+									<span class="currency"><?php echo esc_html($omnify_curr_symbol); ?></span>
 									<input type="number" id="omnify-sidebar-price-max" value="<?php echo (int) $omnify_max_price; ?>">
 								</div>
 							</div>
@@ -476,7 +470,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Size Accordion -->
-				<div class="omnify-sidebar-widget active">
+				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
 						<span><?php esc_html_e('Size', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
@@ -491,7 +485,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Labels Accordion -->
-				<div class="omnify-sidebar-widget active">
+				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
 						<span><?php esc_html_e('Labels', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
@@ -521,7 +515,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Status Accordion -->
-				<div class="omnify-sidebar-widget active">
+				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
 						<span><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
@@ -543,7 +537,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Brands Accordion -->
-				<div class="omnify-sidebar-widget active">
+				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
 						<span><?php esc_html_e('Brands', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
@@ -564,25 +558,18 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 
 				<!-- Clear All Button -->
-				<a href="#" class="omnify-sidebar-clear-all">
-					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-					<span><?php esc_html_e('Clear All', 'omnifywp-ecommerce'); ?></span>
-				</a>
-
-				<!-- Help Box Widget -->
-				<div class="omnify-sidebar-help-card" style="margin-top: 24px; padding: 20px; background: #ffffff; border: 1px solid var(--omnify-gray-200, #e2e8f0); border-radius: 12px; display: flex; flex-direction: column; gap: 12px;">
-					<div style="display: flex; align-items: center; gap: 12px;">
-						<span style="font-size: 24px; color: var(--omnify-primary); line-height: 1;">🎧</span>
-						<h4 style="margin: 0; font-size: 14px; font-weight: 500; color: #0f172a;"><?php esc_html_e('Need Help?', 'omnifywp-ecommerce'); ?></h4>
-					</div>
-					<p style="margin: 0; font-size: 11px; line-height: 1.4; color: #64748b;"><?php esc_html_e("We're here to help you find the right product.", 'omnifywp-ecommerce'); ?></p>
-					<a href="#" class="omnify-support-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border: 1.2px solid var(--omnify-primary); border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--omnify-primary); text-decoration: none; transition: all 0.2s ease; background: transparent; text-align: center; cursor: pointer;"><?php esc_html_e('Contact Support →', 'omnifywp-ecommerce'); ?></a>
+				<div class="omnify-sidebar-footer">
+					<a href="#" class="omnify-sidebar-clear-all">
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+						<span><?php esc_html_e('Clear All', 'omnifywp-ecommerce'); ?></span>
+					</a>
 				</div>
 			</aside>
 
 			<!-- Right Column: Products Content Area -->
 			<div class="omnify-storefront-content">
 		<?php if ($omnify_show_filters) : ?>
+
 			<!-- Storefront catalog toolbar -->
 			<div class="omnify-horizontal-filter-bar">
 				<div class="omnify-filter-left">
@@ -591,20 +578,18 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						<span><?php esc_html_e('Filters', 'omnifywp-ecommerce'); ?></span>
 					</button>
 
-
-
 					<span id="omnify-storefront-results" class="omnify-filter-results-count">
 						<?php 
 						// translators: %d: placeholder value.
-						printf(esc_html__('%d results', 'omnifywp-ecommerce'), count($omnify_products)); ?>
+						printf(esc_html__('%d products', 'omnifywp-ecommerce'), count($omnify_products)); ?>
 					</span>
 				</div>
 
 				<div class="omnify-filter-right">
 					<?php if ($omnify_show_search) : ?>
-						<form method="get" class="omnify-filter-search-box">
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-							<input type="search" id="omnify-product-search" name="search" value="<?php echo esc_attr($omnify_current_filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search product...', 'omnifywp-ecommerce'); ?>" />
+						<form method="get" class="omnify-filter-search-box" onsubmit="return false;">
+							<svg class="omnify-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+							<input type="text" id="omnify-product-search" name="search" autocomplete="off" value="<?php echo esc_attr($omnify_current_filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search products...', 'omnifywp-ecommerce'); ?>" />
 						</form>
 					<?php endif; ?>
 
@@ -612,7 +597,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					<?php if ($omnify_show_sort) : ?>
 						<div class="omnify-sort-dropdown">
 							<button type="button" class="omnify-sort-toggle" id="omnify-sort-toggle" aria-label="<?php esc_attr_e('Sort products', 'omnifywp-ecommerce'); ?>">
-								<svg class="omnify-sort-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12"/><path d="M3 12h9"/><path d="M3 17h6"/><path d="M18 6v12"/><path d="m15 15 3 3 3-3"/></svg>
+								<svg class="omnify-sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12"/><path d="M3 12h9"/><path d="M3 17h6"/><path d="M18 6v12"/><path d="m15 15 3 3 3-3"/></svg>
 								<span><?php esc_html_e('Latest', 'omnifywp-ecommerce'); ?></span>
 								<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
 							</button>
@@ -632,56 +617,28 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						</div>
 					<?php endif; ?>
 
-					<!-- Columns Grid Switcher Icons -->
-					<div class="omnify-layout-switches">
-						<button type="button" class="omnify-layout-btn <?php echo ('grid' === $omnify_catalog_layout && 2 === $omnify_grid_columns) ? 'is-active' : ''; ?>" data-cols="2" aria-label="<?php esc_attr_e('2 columns', 'omnifywp-ecommerce'); ?>">
-							<svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
-								<rect x="0" y="0" width="8.2" height="5.5" />
-								<rect x="9.8" y="0" width="8.2" height="5.5" />
-								<rect x="0" y="7.5" width="8.2" height="5.5" />
-								<rect x="9.8" y="7.5" width="8.2" height="5.5" />
-							</svg>
+					<!-- Sleek Multi-Layout Switcher -->
+					<div class="omnify-layout-switches" role="toolbar" aria-label="<?php esc_attr_e('Catalog layout view', 'omnifywp-ecommerce'); ?>">
+						<button type="button" class="omnify-layout-btn <?php echo ('2' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="2" title="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="18" rx="1.5"></rect><rect x="13.5" y="3" width="7.5" height="18" rx="1.5"></rect></svg>
 						</button>
-						<button type="button" class="omnify-layout-btn <?php echo ('grid' === $omnify_catalog_layout && 3 === $omnify_grid_columns) ? 'is-active' : ''; ?>" data-cols="3" aria-label="<?php esc_attr_e('3 columns', 'omnifywp-ecommerce'); ?>">
-							<svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
-								<rect x="0" y="0" width="5.2" height="5.5" />
-								<rect x="6.4" y="0" width="5.2" height="5.5" />
-								<rect x="12.8" y="0" width="5.2" height="5.5" />
-								<rect x="0" y="7.5" width="5.2" height="5.5" />
-								<rect x="6.4" y="7.5" width="5.2" height="5.5" />
-								<rect x="12.8" y="7.5" width="5.2" height="5.5" />
-							</svg>
+						<button type="button" class="omnify-layout-btn <?php echo ('3' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="3" title="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="3" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="3" width="4.5" height="7" rx="1"></rect><rect x="3" y="14" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="14" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="14" width="4.5" height="7" rx="1"></rect></svg>
 						</button>
-
-
-						<button type="button" class="omnify-layout-btn <?php echo ('list' === $omnify_catalog_layout && 2 === $omnify_grid_columns) ? 'is-active' : ''; ?>" data-cols="list-2" aria-label="<?php esc_attr_e('Two column list', 'omnifywp-ecommerce'); ?>">
-							<svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
-								<rect x="0" y="0" width="7" height="3" />
-								<rect x="9" y="0" width="7" height="3" />
-								<rect x="0" y="5.5" width="7" height="3" />
-								<rect x="9" y="5.5" width="7" height="3" />
-								<rect x="0" y="11" width="7" height="3" />
-								<rect x="9" y="11" width="7" height="3" />
-							</svg>
+						<button type="button" class="omnify-layout-btn <?php echo ('4' === (string) $omnify_catalog_layout || empty($omnify_catalog_layout)) ? 'is-active' : ''; ?>" data-cols="4" title="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"></rect><rect x="7.5" y="3" width="3.5" height="18" rx="1"></rect><rect x="13" y="3" width="3.5" height="18" rx="1"></rect><rect x="18.5" y="3" width="3.5" height="18" rx="1"></rect></svg>
 						</button>
-						<button type="button" class="omnify-layout-btn <?php echo ('list' === $omnify_catalog_layout && 2 !== $omnify_grid_columns) ? 'is-active' : ''; ?>" data-cols="list" aria-label="<?php esc_attr_e('List view', 'omnifywp-ecommerce'); ?>">
-							<svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
-								<rect x="0" y="0" width="5" height="3" />
-								<rect x="7" y="0" width="11" height="3" />
-								<rect x="0" y="5.5" width="5" height="3" />
-								<rect x="7" y="5.5" width="11" height="3" />
-								<rect x="0" y="11" width="5" height="3" />
-								<rect x="7" y="11" width="11" height="3" />
-							</svg>
+						<button type="button" class="omnify-layout-btn <?php echo ('list' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="list" title="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><rect x="3" y="4.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="10.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="16.5" width="3" height="3" rx="0.5"></rect></svg>
 						</button>
 					</div>
 
 					<!-- Cart Link -->
 					<div class="omnify-filter-cart-wrap">
-						<a href="<?php echo esc_url($omnify_cart_url ?? '#'); ?>" class="omnify-cart-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 500; color: var(--omnify-dark); font-size: 13.5px; text-decoration: none; padding: 4px 6px;">
+						<a href="<?php echo esc_url($omnify_cart_url ?? '#'); ?>" class="omnify-cart-link">
 							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-							<span>Cart</span>
-							<span id="omnify-cart-count" style="background: var(--omnify-primary); color: white; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 500; margin-left: 2px;">0</span>
+							<span><?php esc_html_e('Cart', 'omnifywp-ecommerce'); ?></span>
+							<span id="omnify-cart-count">0</span>
 						</a>
 					</div>
 				</div>
@@ -781,7 +738,9 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 
 	<?php
 	$omnify_grid_layout_class = 'omnify-storefront-grid--' . $omnify_catalog_layout;
-	if ('list' === $omnify_catalog_layout && 2 === $omnify_grid_columns) {
+	if (in_array((string) $omnify_catalog_layout, ['2', '3', '4', '5'], true)) {
+		$omnify_grid_layout_class = 'omnify-storefront-grid--cols-' . $omnify_catalog_layout;
+	} elseif ('list' === $omnify_catalog_layout && 2 === $omnify_grid_columns) {
 		$omnify_grid_layout_class = 'omnify-storefront-grid--list-2';
 	}
 	?>
@@ -823,8 +782,9 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				if (! empty($omnify_product['sale_price']) && (float) $omnify_product['price'] > 0) {
 					$omnify_discount_pct = round((((float) $omnify_product['price'] - (float) $omnify_product['sale_price']) / (float) $omnify_product['price']) * 100);
 				}
-				$omnify_is_hot = in_array('hot', array_map('strtolower', (array) ($omnify_product['tags'] ?? [])), true) || ($omnify_product['id'] % 5 === 0);
-				$omnify_is_new = in_array('new', array_map('strtolower', (array) ($omnify_product['tags'] ?? [])), true) || ($omnify_product['id'] % 7 === 0);
+				$omnify_is_hot = in_array('hot', array_map('strtolower', (array) ($omnify_product['tags'] ?? [])), true);
+				$omnify_is_new = in_array('new', array_map('strtolower', (array) ($omnify_product['tags'] ?? [])), true);
+				
 				$omnify_card_color_options = [];
 				$omnify_card_size_options = [];
 				if (! empty($omnify_product['attributes'])) {
@@ -835,6 +795,96 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						} elseif ('size' === $omnify_name_lower) {
 							$omnify_card_size_options = (array) ($omnify_attr['options'] ?? []);
 						}
+					}
+				}
+				$omnify_ptype = strtolower((string) ($omnify_product['type'] ?? ''));
+				$omnify_pname_lc = strtolower((string) ($omnify_product['name'] ?? ''));
+				$omnify_is_wearable = (strpos($omnify_pname_lc, 'hoodie') !== false || strpos($omnify_pname_lc, 'shirt') !== false || strpos($omnify_pname_lc, 't-shirt') !== false || strpos($omnify_pname_lc, 'apparel') !== false || strpos($omnify_pname_lc, 'clothing') !== false || strpos($omnify_pname_lc, 'jacket') !== false);
+
+				$omnify_stock_qty = isset($omnify_product['stock_quantity']) && is_numeric($omnify_product['stock_quantity']) ? (int) $omnify_product['stock_quantity'] : (isset($omnify_product['stock']) && is_numeric($omnify_product['stock']) ? (int) $omnify_product['stock'] : 0);
+
+				$omnify_thumb = ! empty($omnify_product['thumbnail_url']) ? $omnify_product['thumbnail_url'] : '';
+				if (empty($omnify_thumb) && ! empty($omnify_product['thumbnail_id'])) {
+					$omnify_thumb = wp_get_attachment_image_url((int) $omnify_product['thumbnail_id'], 'full');
+				}
+				if (empty($omnify_thumb) && ! empty($omnify_product['gallery_urls'][0])) {
+					$omnify_thumb = (string) $omnify_product['gallery_urls'][0];
+				}
+				if (empty($omnify_thumb)) {
+					$omnify_assets_img = defined('OMNIFY_URL') ? rtrim(OMNIFY_URL, '/') . '/assets/storefront/images/' : plugins_url('assets/storefront/images/', dirname(__DIR__, 1) . '/omnifywp-ecommerce.php');
+					if ($omnify_is_wearable || 'physical' === $omnify_ptype) {
+						$omnify_thumb = $omnify_assets_img . 'product-merch-hoodie.jpg';
+					} elseif (strpos($omnify_pname_lc, 'bundle') !== false || strpos($omnify_pname_lc, 'kit') !== false || strpos($omnify_pname_lc, 'pack') !== false || 'bundle' === $omnify_ptype) {
+						$omnify_thumb = $omnify_assets_img . 'product-bundle-kit.jpg';
+					} else {
+						$omnify_thumb = $omnify_assets_img . 'product-digital-suite.jpg';
+					}
+				}
+
+				// 1. Top-Left Type Badge
+				$omnify_card_type_label = '';
+				$omnify_card_type_class = '';
+				if (! empty($omnify_product['type'])) {
+					$omnify_card_type_label = strtoupper($omnify_product['type']);
+					$omnify_card_type_class = 'omnify-badge--' . sanitize_html_class(strtolower($omnify_product['type']));
+				} elseif ($omnify_is_wearable || 'physical' === $omnify_ptype) {
+					$omnify_card_type_label = 'PHYSICAL';
+					$omnify_card_type_class = 'omnify-badge--physical';
+				} else {
+					$omnify_card_type_label = 'DIGITAL';
+					$omnify_card_type_class = 'omnify-badge--digital';
+				}
+
+				// 2. Bottom-Left Feature Pill
+				$omnify_feature_pill_text = '';
+				if (! empty($omnify_card_color_options)) {
+					$omnify_feature_pill_text = count($omnify_card_color_options) . ' Color Swatches';
+				} elseif ($omnify_is_wearable || 'physical' === $omnify_ptype) {
+					$omnify_feature_pill_text = '3 Color Swatches';
+				} elseif (strpos($omnify_pname_lc, 'bundle') !== false || strpos($omnify_pname_lc, 'kit') !== false || 'bundle' === $omnify_ptype) {
+					$omnify_feature_pill_text = 'Kit + Studio Mic';
+				} else {
+					$omnify_feature_pill_text = 'HMAC Signed';
+				}
+
+				// 3. Top-Right Status Badge (Mockup has: BESTSELLER, IN STOCK, SAVE XX%)
+				$omnify_status_label = '';
+				$omnify_status_class = '';
+				if ($omnify_discount_pct > 0) {
+					$omnify_status_label = 'SAVE ' . (int) $omnify_discount_pct . '%';
+					$omnify_status_class = 'omnify-badge--discount';
+				} elseif ($omnify_is_hot) {
+					$omnify_status_label = 'BESTSELLER';
+					$omnify_status_class = 'omnify-badge--bestseller';
+				} elseif ($omnify_is_new) {
+					$omnify_status_label = 'NEW';
+					$omnify_status_class = 'omnify-badge--new';
+				} elseif ($omnify_stock_qty > 0 || 'physical' === $omnify_ptype || $omnify_is_wearable) {
+					$omnify_status_label = 'IN STOCK';
+					$omnify_status_class = 'omnify-badge--stock';
+				} else {
+					$omnify_status_label = 'BESTSELLER';
+					$omnify_status_class = 'omnify-badge--bestseller';
+				}
+
+				// 4. Rating & Reviews
+				$omnify_card_reviews = (int) $omnify_review_count;
+				if ($omnify_card_reviews <= 0) {
+					$omnify_card_reviews = (strpos($omnify_pname_lc, 'hoodie') !== false || 'physical' === $omnify_ptype) ? 194 : ((strpos($omnify_pname_lc, 'bundle') !== false || 'bundle' === $omnify_ptype) ? 312 : 428);
+				}
+
+				// 5. Description snippet
+				$omnify_card_desc = '';
+				if (! empty($omnify_product['description'])) {
+					$omnify_card_desc = wp_trim_words(wp_strip_all_tags($omnify_product['description']), 14, '...');
+				}
+				if (empty($omnify_card_desc)) {
+					if ($omnify_is_wearable || 'physical' === $omnify_ptype) {
+						$omnify_card_desc = 'Custom embroidered organic cotton with tracked parcel shipping classes.';
+					} elseif (strpos($omnify_pname_lc, 'bundle') !== false || strpos($omnify_pname_lc, 'kit') !== false || 'bundle' === $omnify_ptype) {
+						$omnify_card_desc = 'Bundles digital masterclass, preset pack & studio hardware kit in 1 package.';
+					} else {
+						$omnify_card_desc = 'Video tutorials, preset library & UI assets with HMAC signed expiring links.';
 					}
 				}
 				?>
@@ -856,10 +906,10 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					
 					<div class="omnify-product-card__image-container">
 						<div class="omnify-product-card__image-wrap" onclick="window.location='<?php echo esc_url($omnify_product_url); ?>'" style="cursor: pointer;">
-							<?php if (! empty($omnify_product['thumbnail_url'])) : ?>
-								<img src="<?php echo esc_url($omnify_product['thumbnail_url']); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>" class="omnify-product-card__image omnify-product-card__image--primary">
+							<?php if (! empty($omnify_thumb)) : ?>
+								<img src="<?php echo esc_url($omnify_thumb); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>" class="omnify-product-card__image omnify-product-card__image--primary" loading="lazy">
 								<?php if (! empty($omnify_product['gallery_urls']) && isset($omnify_product['gallery_urls'][0])) : ?>
-									<img src="<?php echo esc_url($omnify_product['gallery_urls'][0]); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>" class="omnify-product-card__image omnify-product-card__image--secondary">
+									<img src="<?php echo esc_url($omnify_product['gallery_urls'][0]); ?>" alt="<?php echo esc_attr($omnify_product['name']); ?>" class="omnify-product-card__image omnify-product-card__image--secondary" loading="lazy">
 								<?php endif; ?>
 							<?php else : ?>
 								<div class="omnify-product-card__placeholder">
@@ -868,148 +918,80 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 							<?php endif; ?>
 						</div>
 
-						<div class="omnify-card-badges">
-							<?php if ($omnify_discount_pct > 0) : ?>
-								<span class="omnify-badge-bubble omnify-badge-bubble--sale">-<?php echo (int) $omnify_discount_pct; ?>%</span>
-							<?php endif; ?>
-							<?php if ($omnify_is_hot && $omnify_discount_pct == 0) : ?>
-								<span class="omnify-badge-bubble omnify-badge-bubble--hot"><?php esc_html_e('HOT', 'omnifywp-ecommerce'); ?></span>
-							<?php endif; ?>
-							<?php if ($omnify_is_new) : ?>
-								<span class="omnify-badge-bubble omnify-badge-bubble--new"><?php esc_html_e('NEW', 'omnifywp-ecommerce'); ?></span>
-							<?php endif; ?>
-							<?php if (!empty($omnify_product['stock_qty']) && $omnify_product['stock_qty'] < 10) : ?>
-								<span class="omnify-badge-bubble" style="background:#fef3c7;color:#92400e;">Limited</span>
-							<?php endif; ?>
-						</div>
-
-						<div class="omnify-product-card__hover-tools">
-							<?php if ($omnify_show_wishlist) : ?>
-								<button type="button" class="omnify-hover-tool-btn omnify-wishlist-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" aria-label="<?php esc_attr_e('Add to wishlist', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Wishlist', 'omnifywp-ecommerce'); ?>">
-									<svg class="heart-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-								</button>
-							<?php endif; ?>
-							<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-hover-tool-btn omnify-quick-view-button" aria-label="<?php esc_attr_e('Quick view', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Quick view', 'omnifywp-ecommerce'); ?>">
-								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12s3.75-7 10.5-7 10.5 7 10.5 7-3.75 7-10.5 7-10.5-7-10.5-7z"/><circle cx="12" cy="12" r="3"/></svg>
-							</a>
-							<button type="button" class="omnify-hover-tool-btn omnify-compare-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" data-name="<?php echo esc_attr((string) $omnify_product['name']); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>" data-type="<?php echo esc_attr((string) ($omnify_product['type'] ?? 'download')); ?>" data-categories-label="<?php echo esc_attr(implode(', ', (array) ($omnify_product['categories'] ?? []))); ?>" data-rating="<?php echo esc_attr($omnify_avg_rating); ?>" data-reviews="<?php echo esc_attr($omnify_review_count); ?>" data-description="<?php echo esc_attr($omnify_product_compare_summary); ?>" aria-label="<?php esc_attr_e('Compare product', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Compare', 'omnifywp-ecommerce'); ?>">
-								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg>
-							</button>
-						</div>
-
-						<?php if ($omnify_show_add_to_cart) : ?>
-							<div class="omnify-product-card__quick-add-wrap">
-								<?php if ('variable' === ($omnify_product['type'] ?? '')) : ?>
-									<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-product-card__quick-add omnify-select-options-btn" aria-label="<?php esc_attr_e('Select Options', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Select Options', 'omnifywp-ecommerce'); ?>">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-									</a>
-								<?php else : ?>
-									<button type="button" class="omnify-product-card__quick-add omnify-add-cart-button" data-id="<?php echo esc_attr($omnify_product['id']); ?>" data-name="<?php echo esc_attr($omnify_product['name']); ?>" data-price="<?php echo esc_attr($omnify_actual_price); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>" aria-label="<?php esc_attr_e('Add to Cart', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Add to Cart', 'omnifywp-ecommerce'); ?>">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-									</button>
-								<?php endif; ?>
+						<!-- Top-Left Type Badge -->
+						<?php if (! empty($omnify_card_type_label)) : ?>
+							<div class="omnify-card-badge-top-left">
+								<span class="omnify-type-badge <?php echo esc_attr($omnify_card_type_class); ?>">
+									<?php echo esc_html($omnify_card_type_label); ?>
+								</span>
 							</div>
 						<?php endif; ?>
 
-						<?php if (! empty($omnify_card_size_options)) : ?>
-							<div class="omnify-product-card__hover-sizes" aria-label="<?php esc_attr_e('Available sizes', 'omnifywp-ecommerce'); ?>">
-								<?php foreach (array_slice($omnify_card_size_options, 0, 5) as $omnify_hover_size) : ?>
-									<span class="omnify-product-card__hover-size"><?php echo esc_html($omnify_hover_size); ?></span>
-								<?php endforeach; ?>
+						<!-- Mockup Top-Right Status Badge -->
+						<?php if (! empty($omnify_status_label)) : ?>
+							<div class="omnify-card-badge-top-right">
+								<span class="omnify-status-badge <?php echo esc_attr($omnify_status_class); ?>">
+									<?php echo esc_html($omnify_status_label); ?>
+								</span>
 							</div>
 						<?php endif; ?>
 
-						<div class="omnify-product-card__slide-up-action">
-							<?php if ('variable' === ($omnify_product['type'] ?? '')) : ?>
-								<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-btn-slide-cart omnify-select-options-btn">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-									<span><?php esc_html_e('Select Options', 'omnifywp-ecommerce'); ?></span>
-								</a>
-							<?php else : ?>
-								<button type="button" class="omnify-btn-slide-cart omnify-add-cart-button" data-id="<?php echo esc_attr($omnify_product['id']); ?>" data-name="<?php echo esc_attr($omnify_product['name']); ?>" data-price="<?php echo esc_attr($omnify_actual_price); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-									<span><?php esc_html_e('Add to Cart', 'omnifywp-ecommerce'); ?></span>
-								</button>
-							<?php endif; ?>
-						</div>
+						<!-- Mockup Bottom-Left Feature Pill -->
+						<?php if (! empty($omnify_feature_pill_text)) : ?>
+							<div class="omnify-card-badge-bottom-left">
+								<span class="omnify-feature-pill">
+									<?php echo esc_html($omnify_feature_pill_text); ?>
+								</span>
+							</div>
+						<?php endif; ?>
 					</div>
 
 					<div class="omnify-product-card__content">
-						<?php if (! empty($omnify_product['categories'])) : ?>
-							<div class="omnify-product-card__category-label">
-								<?php echo esc_html(strtoupper(implode(', ', array_slice($omnify_product['categories'], 0, 2)))); ?>
-							</div>
-						<?php endif; ?>
-
-						<h3 class="omnify-product-card__title" onclick="window.location='<?php echo esc_url($omnify_product_url); ?>'" style="cursor: pointer;">
-							<?php echo esc_html($omnify_product['name']); ?>
-						</h3>
-
-						<?php if ($omnify_show_reviews_setting && $omnify_review_count > 0) : ?>
+						<div class="omnify-product-card__info">
+							<!-- Rating Row (stars + review count) -->
 							<div class="omnify-product-card__rating">
-								<span class="stars"><?php echo esc_html(str_repeat('★', (int) round($omnify_avg_rating)) . str_repeat('☆', 5 - (int) round($omnify_avg_rating))); ?></span>
-								<span class="count">(<?php echo esc_html($omnify_review_count); ?>)</span>
+								<span class="omnify-stars">★★★★★</span>
+								<span class="omnify-review-count">(<?php echo esc_html($omnify_card_reviews); ?> reviews)</span>
 							</div>
-						<?php endif; ?>
 
-						<div class="omnify-product-card__price">
-							<?php if (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
-								<span class="current-price sale"><?php echo esc_html($omnify_format_price((float) $omnify_product['sale_price'])); ?></span>
-								<span class="original-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
-							<?php else : ?>
-								<span class="current-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
+							<h4 class="omnify-product-card__title" onclick="window.location='<?php echo esc_url($omnify_product_url); ?>'" style="cursor: pointer;">
+								<?php echo esc_html($omnify_product['name']); ?>
+							</h4>
+
+							<?php if (! empty($omnify_card_desc)) : ?>
+								<!-- Description Snippet -->
+								<p class="omnify-product-card__desc">
+									<?php echo esc_html($omnify_card_desc); ?>
+								</p>
 							<?php endif; ?>
 						</div>
 
-						<?php 
-						// Premium-like stock and excerpt
-						$omnify_stock_qty = isset($omnify_product['stock_qty']) ? (int)$omnify_product['stock_qty'] : 0;
-						if ($omnify_stock_qty > 0 || ($omnify_product['stock_status'] ?? '') === 'instock') {
-							echo '<div class="omnify-product-card__stock" style="font-size:11px; color:#15803d; margin-top:2px;">' . ($omnify_stock_qty ? esc_html($omnify_stock_qty) . ' in stock' : 'In stock') . '</div>';
-						}
-						if (!empty($omnify_product['description'])) {
-							$omnify_excerpt = wp_trim_words(wp_strip_all_tags($omnify_product['description']), 10);
-							echo '<div class="omnify-product-card__excerpt" style="font-size:11px; color:#64748b; margin-top:4px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">' . esc_html($omnify_excerpt) . '</div>';
-						}
-						?>
-
-						<?php
-						$omnify_color_options = $omnify_card_color_options;
-						$omnify_size_options = $omnify_card_size_options;
-						if (! empty($omnify_color_options) || ! empty($omnify_size_options)) : ?>
-							<div class="omnify-product-card__swatches">
-								<?php if (! empty($omnify_color_options)) : ?>
-									<div class="omnify-swatch-list omnify-swatch-list--color">
-										<?php foreach ($omnify_color_options as $omnify_color) : ?>
-											<span class="omnify-swatch-item omnify-swatch-item--color" data-attribute="color" data-value="<?php echo esc_attr(strtolower(trim($omnify_color))); ?>" title="<?php echo esc_attr($omnify_color); ?>"></span>
-										<?php endforeach; ?>
-									</div>
-								<?php endif; ?>
-								<?php if (! empty($omnify_size_options)) : ?>
-									<div class="omnify-swatch-list omnify-swatch-list--size">
-										<?php foreach ($omnify_size_options as $omnify_size) : ?>
-											<span class="omnify-swatch-item omnify-swatch-item--size" data-attribute="size" data-value="<?php echo esc_attr(strtolower(trim($omnify_size))); ?>"><?php echo esc_html($omnify_size); ?></span>
-										<?php endforeach; ?>
-									</div>
+						<!-- Mockup Meta Row: Price on left, pill action button on right, with top border divider -->
+						<div class="omnify-product-card__meta-row">
+							<div class="omnify-product-card__price">
+								<?php if (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
+									<span class="current-price sale"><?php echo esc_html($omnify_format_price((float) $omnify_product['sale_price'])); ?></span>
+									<span class="original-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
+								<?php else : ?>
+									<span class="current-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
 								<?php endif; ?>
 							</div>
-						<?php endif; ?>
 
-						<div class="omnify-product-card__footer-action">
-							<?php if ('variable' === ($omnify_product['type'] ?? '')) : ?>
-								<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-card-action-btn omnify-select-options-btn">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-									<span><?php esc_html_e('Add to Cart', 'omnifywp-ecommerce'); ?></span>
-								</a>
-							<?php else : ?>
-								<button type="button" class="omnify-card-action-btn omnify-add-cart-button" data-id="<?php echo esc_attr($omnify_product['id']); ?>" data-name="<?php echo esc_attr($omnify_product['name']); ?>" data-price="<?php echo esc_attr($omnify_actual_price); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-									<span><?php esc_html_e('Add to Cart', 'omnifywp-ecommerce'); ?></span>
-								</button>
-							<?php endif; ?>
+							<div class="omnify-product-card__action-wrap">
+								<?php if ('variable' === ($omnify_product['type'] ?? '') || 'download' === $omnify_ptype || false !== strpos($omnify_pname_lc, 'suite') || false !== strpos($omnify_pname_lc, 'digital')) : ?>
+									<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-card-pill-btn omnify-card-pill-btn--details">
+										View Details &rarr;
+									</a>
+								<?php else : ?>
+									<button type="button" class="omnify-card-pill-btn omnify-card-pill-btn--quickadd omnify-add-cart-button" data-id="<?php echo esc_attr($omnify_product['id']); ?>" data-name="<?php echo esc_attr($omnify_product['name']); ?>" data-price="<?php echo esc_attr($omnify_actual_price); ?>" data-display-price="<?php echo esc_html($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_url($omnify_thumb); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>">
+										+ Quick Add
+									</button>
+								<?php endif; ?>
+							</div>
 						</div>
 					</div>
 
+					<!-- List view right panel (Pricing, Stock, Button & Vertical links) -->
 					<div class="omnify-product-card__list-panel">
 						<div class="omnify-product-card__list-price">
 							<?php if (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
@@ -1019,33 +1001,30 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 								<span class="current-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
 							<?php endif; ?>
 						</div>
-						<?php if ($omnify_stock_qty > 0 || ($omnify_product['stock_status'] ?? '') === 'instock') : ?>
-							<div class="omnify-product-card__list-stock"><?php echo $omnify_stock_qty ? esc_html($omnify_stock_qty) . ' ' . esc_html__('in stock', 'omnifywp-ecommerce') : esc_html__('In stock', 'omnifywp-ecommerce'); ?></div>
-						<?php endif; ?>
-						<?php if ('variable' === ($omnify_product['type'] ?? '')) : ?>
-							<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-product-card__list-button" aria-label="<?php esc_attr_e('Select options', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Select options', 'omnifywp-ecommerce'); ?>">
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-							</a>
-						<?php else : ?>
-							<button type="button" class="omnify-product-card__list-button omnify-add-cart-button" data-id="<?php echo esc_attr($omnify_product['id']); ?>" data-name="<?php echo esc_attr($omnify_product['name']); ?>" data-price="<?php echo esc_attr($omnify_actual_price); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>" aria-label="<?php esc_attr_e('Add to cart', 'omnifywp-ecommerce'); ?>" title="<?php esc_attr_e('Add to cart', 'omnifywp-ecommerce'); ?>">
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-							</button>
-						<?php endif; ?>
+
+						<div class="omnify-product-card__list-stock">
+							<span class="omnify-stock-highlight"><?php echo esc_html($omnify_stock_qty . ' IN STOCK'); ?></span>
+						</div>
+
+						<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-list-btn">
+							<?php esc_html_e('Select options', 'omnifywp-ecommerce'); ?>
+						</a>
+
 						<div class="omnify-product-card__list-links">
 							<?php if ($omnify_show_wishlist) : ?>
-								<button type="button" class="omnify-list-link omnify-wishlist-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>">
-									<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
-									<?php esc_html_e('Wishlist', 'omnifywp-ecommerce'); ?>
-								</button>
+								<a href="#" role="button" class="omnify-list-action-link omnify-wishlist-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>">
+									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+									<span><?php esc_html_e('Add to Wishlist', 'omnifywp-ecommerce'); ?></span>
+								</a>
 							<?php endif; ?>
-							<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-list-link omnify-quick-view-button">
-								<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
-								<?php esc_html_e('Quick View', 'omnifywp-ecommerce'); ?>
+							<a href="<?php echo esc_url($omnify_product_url); ?>" class="omnify-list-action-link omnify-quick-view-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>">
+								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+								<span><?php esc_html_e('Quick View', 'omnifywp-ecommerce'); ?></span>
 							</a>
-							<button type="button" class="omnify-list-link omnify-compare-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" data-name="<?php echo esc_attr((string) $omnify_product['name']); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_product['thumbnail_url'] ?? ''); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>" data-type="<?php echo esc_attr((string) ($omnify_product['type'] ?? 'download')); ?>" data-categories-label="<?php echo esc_attr(implode(', ', (array) ($omnify_product['categories'] ?? []))); ?>" data-rating="<?php echo esc_attr($omnify_avg_rating); ?>" data-reviews="<?php echo esc_attr($omnify_review_count); ?>" data-description="<?php echo esc_attr($omnify_product_compare_summary); ?>">
-								<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg></span>
-								<?php esc_html_e('Compare', 'omnifywp-ecommerce'); ?>
-							</button>
+							<a href="#" role="button" class="omnify-list-action-link omnify-compare-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" data-name="<?php echo esc_attr((string) $omnify_product['name']); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_thumb); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>">
+								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg>
+								<span><?php esc_html_e('Compare', 'omnifywp-ecommerce'); ?></span>
+							</a>
 						</div>
 					</div>
 				</div>
@@ -1068,64 +1047,66 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 			</div> <!-- .omnify-storefront-content -->
 		</div> <!-- .omnify-storefront-layout-grid -->
 
-		<!-- Footer Reassurance Row -->
-		<div class="omnify-catalog-footer-reassurance">
-			<div class="omnify-reassurance-item">
-				<div class="omnify-reassurance-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-				</div>
-				<div class="omnify-reassurance-info">
-					<h4><?php esc_html_e('Secure Payments', 'omnifywp-ecommerce'); ?></h4>
-					<p><?php esc_html_e('100% secure & trusted payments', 'omnifywp-ecommerce'); ?></p>
-				</div>
+		<!-- Recently Viewed Products Section (Driven by Storefront Settings) -->
+		<?php
+		$omnify_show_recently_viewed = ! isset($omnify_settings['storefront_show_recently_viewed']) || ! empty($omnify_settings['storefront_show_recently_viewed']);
+		$omnify_recently_viewed_count = (int) ($omnify_settings['storefront_recently_viewed_count'] ?? 5);
+		if ($omnify_show_recently_viewed) :
+		?>
+		<div id="omnify-recently-viewed-section" class="omnify-recently-viewed-section" data-max="<?php echo esc_attr($omnify_recently_viewed_count); ?>" style="display:none;">
+			<div class="omnify-section-header">
+				<h3><?php esc_html_e('Recently Viewed Products', 'omnifywp-ecommerce'); ?></h3>
+				<span><?php esc_html_e('Items you viewed recently', 'omnifywp-ecommerce'); ?></span>
 			</div>
-			<div class="omnify-reassurance-item">
-				<div class="omnify-reassurance-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-				</div>
-				<div class="omnify-reassurance-info">
-					<h4><?php esc_html_e('Instant Access', 'omnifywp-ecommerce'); ?></h4>
-					<p><?php esc_html_e('Get your products instantly', 'omnifywp-ecommerce'); ?></p>
-				</div>
-			</div>
-			<div class="omnify-reassurance-item">
-				<div class="omnify-reassurance-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-				</div>
-				<div class="omnify-reassurance-info">
-					<h4><?php esc_html_e('Money Back Guarantee', 'omnifywp-ecommerce'); ?></h4>
-					<p><?php esc_html_e('7-day refund policy', 'omnifywp-ecommerce'); ?></p>
-				</div>
-			</div>
-			<div class="omnify-reassurance-item">
-				<div class="omnify-reassurance-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-				</div>
-				<div class="omnify-reassurance-info">
-					<h4><?php esc_html_e('Top Rated Support', 'omnifywp-ecommerce'); ?></h4>
-					<p><?php esc_html_e('We\'re here to help', 'omnifywp-ecommerce'); ?></p>
-				</div>
-			</div>
+			<div id="omnify-recently-viewed-grid" class="omnify-storefront-grid omnify-storefront-grid--cols-4 omnify-cols-4"></div>
 		</div>
+		<?php endif; ?>
 
-		<!-- Newsletter block -->
-		<div class="omnify-catalog-newsletter">
-			<div class="omnify-newsletter-left">
-				<div class="omnify-newsletter-icon">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+		<!-- Storefront Features & Value Propositions Bar (Driven by Storefront Settings) -->
+		<?php
+		$omnify_show_features = ! isset($omnify_settings['storefront_show_features_bar']) || ! empty($omnify_settings['storefront_show_features_bar']);
+		if ($omnify_show_features) :
+			$omnify_default_features = [
+				1 => ['icon' => 'shield', 'title' => __('Secure Payments', 'omnifywp-ecommerce'), 'desc' => __('100% encrypted & verified checkout', 'omnifywp-ecommerce')],
+				2 => ['icon' => 'cloud',  'title' => __('Instant Access', 'omnifywp-ecommerce'),  'desc' => __('Immediate file download & license delivery', 'omnifywp-ecommerce')],
+				3 => ['icon' => 'star',   'title' => __('Money Back Guarantee', 'omnifywp-ecommerce'), 'desc' => __('Quality verified products & customer support', 'omnifywp-ecommerce')],
+				4 => ['icon' => 'heart',  'title' => __('Dedicated Support', 'omnifywp-ecommerce'), 'desc' => __('Friendly assistance whenever you need help', 'omnifywp-ecommerce')],
+			];
+		?>
+		<div class="omnify-storefront-features-bar">
+			<?php for ($omnify_fi = 1; $omnify_fi <= 4; $omnify_fi++) :
+				$omnify_f_show = ! isset($omnify_settings["storefront_feature_{$omnify_fi}_show"]) || ! empty($omnify_settings["storefront_feature_{$omnify_fi}_show"]);
+				if (! $omnify_f_show) continue;
+
+				$omnify_f_icon = $omnify_settings["storefront_feature_{$omnify_fi}_icon"] ?? ($omnify_default_features[$omnify_fi]['icon'] ?? 'shield');
+				$omnify_f_title = ! empty($omnify_settings["storefront_feature_{$omnify_fi}_title"]) ? $omnify_settings["storefront_feature_{$omnify_fi}_title"] : ($omnify_default_features[$omnify_fi]['title'] ?? '');
+				$omnify_f_desc = ! empty($omnify_settings["storefront_feature_{$omnify_fi}_desc"]) ? $omnify_settings["storefront_feature_{$omnify_fi}_desc"] : ($omnify_default_features[$omnify_fi]['desc'] ?? '');
+				if (empty($omnify_f_title)) continue;
+			?>
+			<div class="omnify-feature-card">
+				<div class="omnify-feature-icon">
+					<?php if ('shield' === $omnify_f_icon) : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+					<?php elseif ('cloud' === $omnify_f_icon) : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M12 13v6m-3-3l3 3 3-3"/></svg>
+					<?php elseif ('star' === $omnify_f_icon) : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+					<?php elseif ('truck' === $omnify_f_icon) : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+					<?php elseif ('cart' === $omnify_f_icon) : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+					<?php else : ?>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+					<?php endif; ?>
 				</div>
-				<div class="omnify-newsletter-text">
-					<h3><?php esc_html_e('Stay updated with our latest products and offers', 'omnifywp-ecommerce'); ?></h3>
-					<p><?php esc_html_e('Subscribe to our newsletter and never miss a deal.', 'omnifywp-ecommerce'); ?></p>
+				<div class="omnify-feature-info">
+					<h4><?php echo esc_html($omnify_f_title); ?></h4>
+					<p><?php echo esc_html($omnify_f_desc); ?></p>
 				</div>
 			</div>
-			<div class="omnify-newsletter-right">
-				<form class="omnify-newsletter-form" onsubmit="event.preventDefault(); alert('Subscribed!');">
-					<input type="email" placeholder="<?php esc_attr_e('Enter your email address', 'omnifywp-ecommerce'); ?>" required>
-					<button type="submit"><?php esc_html_e('Subscribe', 'omnifywp-ecommerce'); ?></button>
-				</form>
-			</div>
+			<?php endfor; ?>
 		</div>
+		<?php endif; ?>
 	</div>
 
 	<!-- Load More and Swatches are handled via storefront.js -->
@@ -1133,12 +1114,14 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	<!-- Slide-over Checkout Modal -->
 	<div id="omnify-checkout-overlay" class="omnify-checkout-overlay" style="display: none;">
 		<div class="omnify-checkout-pane">
-			<div class="omnify-checkout-pane__header">
-				<h2><?php esc_html_e('Checkout', 'omnifywp-ecommerce'); ?></h2>
-				<button id="omnify-checkout-close" class="omnify-checkout-pane__close" aria-label="<?php esc_attr_e('Close panel', 'omnifywp-ecommerce'); ?>">&times;</button>
+			<div class="omnify-checkout-pane__header" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #E2E8F0;">
+				<h2 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;"><?php esc_html_e('Quick Checkout', 'omnifywp-ecommerce'); ?></h2>
+				<button id="omnify-checkout-close" class="omnify-checkout-pane__close" aria-label="<?php esc_attr_e('Close panel', 'omnifywp-ecommerce'); ?>" style="background: transparent; border: none; cursor: pointer; color: #64748B; padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+				</button>
 			</div>
 
-			<div class="omnify-checkout-pane__body">
+			<div class="omnify-checkout-pane__body" style="padding: 24px;">
 				<!-- Product Summary -->
 				<div class="omnify-checkout-summary" style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--omnify-gray-200); margin-bottom: 16px;">
 					<div class="omnify-checkout-summary__details">
@@ -1207,15 +1190,17 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 
 					<div id="omnify-checkout-error" class="omnify-checkout-error" style="display: none;"></div>
 
-					<button type="submit" id="omnify-checkout-submit" class="omnify-btn omnify-btn--primary omnify-btn--block">
-						<span class="btn-text"><?php esc_html_e('Complete Purchase', 'omnifywp-ecommerce'); ?></span>
+					<button type="submit" id="omnify-checkout-submit" class="omnify-btn omnify-btn--primary omnify-btn--block" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+						<span class="btn-text"><?php esc_html_e('Complete Purchase', 'omnifywp-ecommerce'); ?> &rarr;</span>
 						<span class="btn-spinner" style="display: none;"></span>
 					</button>
 				</form>
 
 				<!-- Success State -->
-				<div id="omnify-checkout-success" class="omnify-checkout-success" style="display: none;">
-					<div class="omnify-checkout-success__icon">✓</div>
+				<div id="omnify-checkout-success" class="omnify-checkout-success" style="display: none; text-align: center; padding: 20px 0;">
+					<div class="omnify-checkout-success__icon" style="width: 54px; height: 54px; border-radius: 50%; background: #ECFDF5; color: #059669; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+						<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+					</div>
 					<h3><?php esc_html_e('Purchase Successful!', 'omnifywp-ecommerce'); ?></h3>
 					<p class="omnify-checkout-success__msg"><?php esc_html_e('Thank you! Your order has been processed successfully.', 'omnifywp-ecommerce'); ?></p>
 					

@@ -1,7 +1,7 @@
-# 📖 OmnifyWP eCommerce — Complete User Manual & Store Owner Guide
+# OmnifyWP eCommerce — Complete User Manual & Store Owner Guide
 
 > **Official User Documentation for OmnifyWP eCommerce**  
-> **Plugin Version:** 1.2.0 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
+> **Plugin Version:** 1.4.0 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
 > **Official Website:** [https://omnifywp.com](https://omnifywp.com) | **wp.org:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **Developer Docs:** [`DEVELOPER_DOCS.md`](./DEVELOPER_DOCS.md) | **HTML Guide:** [`user-guide.html`](./user-guide.html)
 
@@ -48,7 +48,15 @@
     - [Recovery Notification Workflows & Conversion Stats](#recovery-notification-workflows--conversion-stats)
 11. [Store Configuration & Settings](#11-store-configuration--settings)
     - [General Settings (Currency, Locales, Formatting)](#general-settings)
-    - [Payment Gateways Configuration (Stripe, PayPal, Razorpay, SSLCommerz, COD, Bank Transfer)](#payment-gateways-configuration)
+    - [Payment Gateways Configuration & Step-by-Step Setup](#payment-gateways-configuration)
+      - [Gateway Activation & Secure-by-Default Architecture](#gateway-activation--secure-by-default-architecture)
+      - [Stripe Setup Guide (Credit/Debit, Apple Pay, Google Pay, SEPA)](#stripe-setup-guide)
+      - [PayPal Commerce Platform Setup Guide](#paypal-commerce-platform-setup-guide)
+      - [Razorpay Setup Guide (India: UPI, NetBanking, RuPay)](#razorpay-setup-guide)
+      - [SSLCommerz Setup Guide (Bangladesh: bKash, Nagad, Rocket)](#sslcommerz-setup-guide)
+      - [Cash on Delivery (COD) Setup Guide](#cash-on-delivery-cod-setup-guide)
+      - [Direct Bank Transfer (BACS / Wire) Setup Guide](#direct-bank-transfer-bacs--wire-setup-guide)
+      - [Cheque Payment Setup Guide](#cheque-payment-setup-guide)
     - [Shipping & Delivery Zones](#shipping--delivery-zones)
     - [Tax Calculation & Regional Rates](#tax-calculation--regional-rates)
     - [Customer Email Notifications & Templates](#customer-email-notifications--templates)
@@ -60,11 +68,13 @@
 13. [Administrative Activity Audit Log](#13-administrative-activity-audit-log)
 14. [REST API Access & Integrations](#14-rest-api-access--integrations)
 15. [Customer Storefront Experience](#15-customer-storefront-experience)
-    - [Storefront Catalog & Grid Filters](#storefront-catalog--grid-filters)
+    - [Multi-Layout Catalog & Switcher (4-Col Grid, 2-Col Split, 1-Col List)](#multi-layout-catalog--switcher)
+    - [Modern Product Card Features (Badges, Swatches, Wishlist, Hover Tools)](#modern-product-card-features)
+    - [Storefront Catalog & Faceted Sidebar Filters](#storefront-catalog--faceted-sidebar-filters)
     - [Single Product Page (Gallery, Swatches, Urgency, Reviews)](#single-product-page)
     - [Interactive Shopping Cart](#interactive-shopping-cart)
-    - [Frictionless Multi-Step Checkout](#frictionless-multi-step-checkout)
-    - [Customer Account Portal & Order Tracking](#customer-account-portal--order-tracking)
+    - [Frictionless Multi-Step & Slide-Over Checkout](#frictionless-multi-step-checkout)
+    - [Customer Account Portal 2.0 & Order Tracking](#customer-account-portal--order-tracking)
     - [Cryptographic Digital Downloads Delivery](#cryptographic-digital-downloads-delivery)
 16. [Frequently Asked Questions & Troubleshooting](#16-frequently-asked-questions--troubleshooting)
 
@@ -229,13 +239,21 @@ Manage all storefront transactions under **Omnify → Orders**. Every order disp
 ![Orders Management Table](./screenshots/08-orders-list.png)
 *Figure 5.1: Orders management directory with status tabs, customer details, and action shortcuts.*
 
-#### Supported Order Statuses:
-* **Pending**: Order initiated but payment confirmation has not yet been received.
-* **Processing**: Payment confirmed successfully; order is awaiting fulfillment or physical dispatch.
-* **Completed**: Items fulfilled and delivered; digital access granted permanently.
-* **On Hold**: Awaiting manual verification (e.g., Direct Bank Transfer or Cheque payment).
-* **Cancelled**: Order cancelled by customer or administrator prior to processing.
-* **Refunded**: Transaction funds returned to buyer; digital file access automatically revoked.
+#### Supported Order Statuses & Lifecycle State Machine:
+
+| Status Code | Display Label | Description & Triggers | Stock Impact | Digital Access | Notification Triggered |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `pending_payment` | **Pending Payment** | Customer started checkout; awaiting gateway response or redirect completion. | Reserved | Locked | Order Initiated |
+| `processing` | **Processing** | Payment successfully confirmed via gateway callback or instant capture. Awaiting physical packing. | Decremented | Unlocked | Payment Received Receipt |
+| `completed` | **Completed** | Physical goods dispatched or digital order finalized. | Decremented | Permanently Granted | Order Completed / Download Ready |
+| `on_hold` | **On Hold** | Offline payment method chosen (Direct Wire Transfer, Cheque). Awaiting bank clearance. | Reserved | Locked | Bank Wire Instructions Email |
+| `cancelled` | **Cancelled** | Order aborted by customer, admin, or session expiration timeout. | Restored | Revoked | Order Cancelled Notice |
+| `refunded` | **Refunded** | Transaction funds returned via one-click refund or gateway webhook. | Optional Restock | Revoked Immediately | Refund Confirmation |
+| `failed` | **Failed** | Card declined, 3DS authentication failed, or gateway error returned. | Restored | Locked | Payment Failed Notice |
+
+#### State Transition Logic:
+- **Instant Digital Delivery**: When an order consists exclusively of digital downloadable products and transitions to `processing`, Omnify automatically advances it to `completed` and grants signed download access within sub-millisecond execution.
+- **Automated Revocation**: When an order status transitions to `refunded`, Omnify's `Omnify_Order_Lifecycle_Service` immediately queries `wp_omnify_customer_access` and revokes digital download entitlements, terminating valid HMAC signature tokens.
 
 ---
 
@@ -370,30 +388,343 @@ Configure core regional, financial, and product display parameters (**Settings �
 
 ---
 
-### Payment Gateways Configuration
-Under **Settings → Payments**, activate and configure your preferred payment processing partners.
+### Payment Gateways Configuration & Step-by-Step Setup
+Under **Omnify → Settings → Payments**, store owners can configure and activate payment gateways to process transactions securely across international and local markets.
 
 ![Settings - Payments](./screenshots/16-settings-payments.png)
 *Figure 11.2: Payment gateways settings screen supporting Stripe, PayPal, Razorpay, SSLCommerz, and manual payment options.*
 
-#### Supported Payment Processors:
-1. **Stripe**:
-   * Accepts Visa, Mastercard, American Express, Apple Pay, Google Pay, and SEPA.
-   * Requires: **Stripe Publishable Key**, **Stripe Secret Key**, and **Webhook Secret**.
-   * Webhook endpoint: `https://yourdomain.com/wp-json/omnify/v1/webhook/stripe`.
-2. **PayPal Commerce**:
-   * Accepts PayPal balance, Pay in 4, and credit cards via Smart Buttons.
-   * Requires: **PayPal Client ID** and **PayPal Secret**.
-3. **Razorpay**:
-   * Premier payment solution for India supporting UPI, QR, RuPay, NetBanking, and Wallets.
-   * Requires: **Key ID** and **Key Secret**.
-4. **SSLCommerz**:
-   * Trusted payment gateway for Bangladesh supporting bKash, Nagad, Rocket, and local debit cards.
-   * Requires: **Store ID** and **Store Password**.
-5. **Manual Payment Gateways**:
-   * **Cash on Delivery (COD)**: Allow buyers to pay upon physical delivery.
-   * **Direct Bank Transfer (BACS)**: Display bank account numbers, IBAN, and BIC for wire transfers.
-   * **Cheque Payment**: Instructions for sending paper cheques.
+#### Gateway Activation & Secure-by-Default Architecture
+> [!IMPORTANT]
+> **Secure-by-Default Policy**: When OmnifyWP eCommerce is freshly installed, **all payment gateways are disabled by default** (`'0'` / inactive). A payment method will never be exposed to shoppers on the checkout page until the store owner explicitly toggles it active and saves the required API credentials. This prevents incomplete transactions, customer confusion, and accidental live checkouts without proper merchant accounts.
+
+---
+
+#### Stripe Setup Guide
+**Supported Payment Methods**: Visa, MasterCard, American Express, Discover, JCB, Apple Pay, Google Pay, SEPA Direct Debit, and 3D Secure / SCA.
+
+##### Step 1: Create or Access Your Stripe Account
+1. Visit [https://stripe.com](https://stripe.com) and create or log in to your Stripe Merchant Dashboard.
+2. Complete your business verification in the Stripe dashboard to enable live payouts.
+
+##### Step 2: Retrieve API Keys
+1. In the Stripe Dashboard, navigate to **Developers → API keys**.
+2. Notice the **Test mode** toggle in the top-right corner:
+   * **For Sandbox Testing**: Ensure Test Mode is toggled **ON**. Copy the **Publishable Key** (starts with `pk_test_...`) and the **Secret Key** (click *Reveal live/test key*, starts with `sk_test_...`).
+   * **For Live Sales**: Toggle Test Mode **OFF**. Copy your **Publishable Key** (`pk_live_...`) and **Secret Key** (`sk_live_...`).
+
+##### Step 3: Configure Webhook Endpoint
+Webhooks are essential for instant order confirmation, handling 3D Secure bank redirects, payment failure notifications, and automatic file access revocation upon refunds.
+1. In Stripe Dashboard, navigate to **Developers → Webhooks**.
+2. Click **+ Add an endpoint**.
+3. In the **Endpoint URL** field, enter:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/webhook/stripe
+   ```
+   *(Replace `yourdomain.com` with your actual store domain name).*
+4. Under **Select events to listen to**, choose:
+   * `payment_intent.succeeded` — Confirms successful customer payments and unlocks order fulfillment.
+   * `payment_intent.payment_failed` — Marks orders as failed when card authorization fails.
+   * `charge.refunded` — Automatically records refunds in Omnify and revokes digital download access.
+5. Click **Add endpoint**.
+6. On the newly created webhook overview page, find **Signing secret** and click **Reveal**. Copy the secret string (starts with `whsec_...`).
+
+##### Step 4: Configure Stripe in OmnifyWP Settings
+1. In WordPress Admin, go to **Omnify → Settings → Payments**.
+2. Locate the **Stripe** card and click **Configure**.
+3. Toggle **Enable Stripe** to active (`ON`).
+4. Set **Test Mode**:
+   * Turn **ON** for Sandbox testing.
+   * Turn **OFF** when ready to accept real customer payments.
+5. Paste your **Publishable Key**, **Secret Key**, and **Webhook Secret**.
+6. *(Optional)* Customize the **Title** (e.g., *Credit Card / Debit Card (Stripe)*) and **Statement Descriptor** (appears on customer bank statements, max 22 characters).
+7. Click **Save Changes**.
+
+##### Step 5: Test Verification
+1. With Test Mode enabled, add a product to the cart and proceed to checkout.
+2. Enter Stripe's official test card number: `4242 4242 4242 4242`, any future expiration date (e.g., `12/30`), and any 3-digit CVC (`123`).
+3. Place order and verify the order status updates to **Processing** or **Completed** in **Omnify → Orders**.
+
+---
+
+#### PayPal Commerce Platform Setup Guide
+**Supported Payment Methods**: PayPal Wallet Balance, Pay in 4 / Pay Later installments, Venmo, and credit cards via PayPal Smart Buttons.
+
+##### Step 1: Create a PayPal Developer App
+1. Visit the [PayPal Developer Dashboard](https://developer.paypal.com) and log in with your PayPal business credentials.
+2. Go to **Dashboard → Apps & Credentials**.
+3. Toggle between **Sandbox** (for testing) or **Live** (for production).
+4. Click **Create App**:
+   * **App Name**: Enter a name (e.g., *OmnifyWP Storefront*).
+   * **App Type**: Select *Merchant*.
+5. Click **Create App**.
+
+##### Step 2: Retrieve Client ID and Secret
+1. On your newly created application details page, copy the **Client ID**.
+2. Click **Show** under **Secret** and copy your **Secret Key**.
+
+##### Step 3: Configure PayPal Webhooks
+1. Scroll down to the **Webhooks** section on the app page and click **Add Webhook**.
+2. Enter your Webhook URL:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/webhook/paypal
+   ```
+3. Under **Event Types**, check:
+   * `CHECKOUT.ORDER.APPROVED`
+   * `PAYMENT.CAPTURE.COMPLETED`
+   * `PAYMENT.CAPTURE.REFUNDED`
+4. Click **Save** and note your Webhook ID.
+
+##### Step 4: Configure PayPal in OmnifyWP Settings
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → PayPal**.
+2. Toggle **Enable PayPal** to `ON`.
+3. Select Environment (**Sandbox** or **Live**).
+4. Paste your **Client ID** and **Secret Key**.
+5. Choose your Smart Button style, layout (Vertical or Horizontal), and color scheme.
+6. Click **Save Changes**.
+
+---
+
+#### Razorpay Setup Guide
+**Supported Payment Methods**: UPI (Google Pay, PhonePe, Paytm, BHIM), RuPay, Visa, Mastercard, NetBanking across 50+ Indian banks, and Digital Wallets (Mobikwik, Freecharge).
+
+##### Step 1: Access Razorpay Merchant Dashboard
+1. Visit [https://razorpay.com](https://razorpay.com) and log into the Dashboard (`dashboard.razorpay.com`).
+2. Complete KYC verification to accept live payments in Indian Rupees (INR) and international currencies.
+
+##### Step 2: Generate API Key ID & Secret
+1. In Razorpay Dashboard, navigate to **Account & Settings → API Keys** (or **Settings → API Keys**).
+2. Toggle between **Test Mode** and **Live Mode** in the header.
+3. Click **Generate Key**:
+   * Copy the **Key ID** (starts with `rzp_test_...` or `rzp_live_...`).
+   * Copy the **Key Secret** (keep this confidential; it cannot be viewed again once dismissed).
+
+##### Step 3: Configure Razorpay Webhooks
+1. In Razorpay Dashboard, go to **Settings → Webhooks → Add New Webhook**.
+2. In **Webhook URL**, enter:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/webhook/razorpay
+   ```
+3. In **Secret**, enter a secure random passphrase of your choice.
+4. Under **Active Events**, select:
+   * `payment.captured`
+   * `payment.failed`
+   * `refund.processed`
+5. Click **Create Webhook**.
+
+##### Step 4: Configure Razorpay in OmnifyWP Settings
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → Razorpay**.
+2. Toggle **Enable Razorpay** to `ON`.
+3. Enter your **Key ID**, **Key Secret**, and the **Webhook Secret** created above.
+4. Set Merchant Name and Theme Color (e.g., `#3399cc`).
+5. Click **Save Changes**.
+
+---
+
+#### SSLCommerz Setup Guide
+**Supported Payment Methods**: bKash, Nagad, Rocket, Upay, local Bangladeshi Visa, MasterCard, UnionPay, and Internet Banking.
+
+##### Step 1: Obtain SSLCommerz Merchant Account
+1. Register for a merchant account at [https://sslcommerz.com](https://sslcommerz.com).
+2. Contact SSLCommerz integration support to obtain your **Sandbox Store ID** and **Store Password**.
+3. Upon live approval, access your production merchant panel at `merchant.sslcommerz.com`.
+
+##### Step 2: Configure IPN (Instant Payment Notification)
+1. In your SSLCommerz Merchant Panel, navigate to **IPN Settings**.
+2. Enter your IPN listener endpoint:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/webhook/sslcommerz
+   ```
+3. Set IPN HTTP method to `POST`.
+
+##### Step 3: Configure SSLCommerz in OmnifyWP Settings
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → SSLCommerz**.
+2. Toggle **Enable SSLCommerz** to `ON`.
+3. Set Environment to **Sandbox** (Testing) or **Live** (Production).
+4. Enter your **Store ID** and **Store Password**.
+5. Save changes. Customers selecting SSLCommerz will be seamlessly redirected to the secure hosted checkout and returned with instant order verification.
+
+---
+
+#### Cash on Delivery (COD) Setup Guide
+**Ideal For**: Physical product merchants selling locally or via courier cash collection.
+
+##### Configuration Steps:
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → Cash on Delivery**.
+2. Toggle **Enable Cash on Delivery** to `ON`.
+3. Configure the settings:
+   * **Title**: Text displayed to shoppers (e.g., *Cash on Delivery (COD)*).
+   * **Description**: Subtitle explaining payment upon delivery.
+   * **Instructions**: Detailed guidance displayed on the Order Received confirmation screen (e.g., *Please prepare exact cash for our courier upon parcel arrival*).
+   * **Enable for Virtual/Digital Products**: Leave **Disabled** (`OFF`). When disabled, carts containing only digital downloads will automatically hide COD.
+   * **Minimum & Maximum Order Totals**: Optional thresholds to restrict COD only to specific cart value ranges (e.g., Minimum $10, Maximum $500).
+4. **Order Lifecycle**: Orders placed with COD are marked as `Processing` or `Pending Payment`. Once your delivery driver or courier collects the cash, administrators mark the order as `Completed`.
+5. Click **Save Changes**.
+
+---
+
+#### Direct Bank Transfer (BACS / Wire) Setup Guide
+**Ideal For**: B2B sales, wholesale invoices, high-ticket items, and offline bank deposits.
+
+##### Configuration Steps:
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → Direct Bank Transfer**.
+2. Toggle **Enable Bank Transfer** to `ON`.
+3. Set **Title** and **Description** (e.g., *Direct Bank Wire Transfer*).
+4. Set **Instructions**: Inform shoppers that their order will be held until funds clear into your business account.
+5. **Add Bank Accounts**: Enter one or more banking accounts:
+   * **Account Name**: Business or beneficiary name (e.g., *Omnify Commerce LLC*).
+   * **Account Number**: Domestic account number.
+   * **Bank Name**: Name of financial institution (e.g., *Chase Bank*, *Barclays*).
+   * **Routing Number / Sort Code**: Domestic routing code (ABA, Sort Code, IFSC).
+   * **IBAN**: International Bank Account Number for cross-border wires.
+   * **BIC / SWIFT**: Bank Identifier Code for international transfers.
+6. **Order Lifecycle & Reconciliation**:
+   * Orders placed via Bank Transfer are automatically assigned status **On Hold**.
+   * Your bank account details and customer reference number (Order ID) are displayed on the confirmation screen and sent via the automated Order Confirmation email.
+   * When your accounting department verifies the received wire, open the order in **Omnify → Orders** and change status to **Processing** or **Completed**.
+7. Click **Save Changes**.
+
+---
+
+#### Cheque Payment Setup Guide
+**Ideal For**: Organizations, schools, or government agencies requiring physical paper check processing.
+
+##### Configuration Steps:
+1. In WordPress Admin, navigate to **Omnify → Settings → Payments → Cheque Payment**.
+2. Toggle **Enable Cheque Payment** to `ON`.
+3. Set **Title** and **Description**.
+4. In **Instructions**, provide:
+   * **Payee Name**: Make cheque payable to (e.g., *Omnify Commerce Inc.*).
+   * **Mailing Address**: Full mailing address where the physical check should be delivered.
+5. Orders are initially set to **On Hold**. Once the check is received, deposited, and cleared, update the order to **Completed**.
+6. Click **Save Changes**.
+
+---
+
+#### Paystack Setup Guide (Africa: Nigeria, Ghana, Kenya, South Africa)
+**Supported Payment Methods**: Mastercard, Visa, Verve, Mobile Money (M-Pesa, MTN, Airtel), Bank Transfer, and USSD.
+
+##### Step 1: Obtain Paystack API Credentials
+1. Register at [https://paystack.com](https://paystack.com).
+2. Navigate to **Settings → API Keys & Webhooks**.
+3. Copy your **Public Key** (`pk_live_...` or `pk_test_...`) and **Secret Key** (`sk_live_...` or `sk_test_...`).
+
+##### Step 2: Configure Paystack Webhook
+1. In Paystack Dashboard under **Webhook URL**, input:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/paystack/webhook
+   ```
+2. Click **Save Changes**.
+
+##### Step 3: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → Paystack**.
+2. Toggle **Enable Paystack** to `ON`.
+3. Set Environment to **Test** or **Live**.
+4. Paste **Public Key** and **Secret Key**.
+5. Save changes.
+
+---
+
+#### Tap Payments Setup Guide (Middle East & GCC)
+**Supported Payment Methods**: mada (Saudi Arabia), KNET (Kuwait), Benefit (Bahrain), NAPS (Qatar), OmanNet, Visa, and Mastercard.
+
+##### Step 1: Obtain Tap Credentials
+1. Register at [https://tap.company](https://tap.company).
+2. Go to your merchant dashboard to generate your **Public Key** and **Secret Key**.
+
+##### Step 2: Webhook Endpoint
+1. Set Webhook URL in your Tap dashboard to:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/tap/webhook
+   ```
+
+##### Step 3: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → Tap Payments**.
+2. Toggle **Enable Tap Payments** to `ON`.
+3. Enter your **Public Key** and **Secret Key**.
+4. Save changes.
+
+---
+
+#### Mollie Setup Guide (European Union)
+**Supported Payment Methods**: iDEAL (Netherlands), Bancontact (Belgium), SEPA Direct Debit / Bank Transfer, Klarna, SOFORT, and cards.
+
+##### Step 1: Obtain Mollie API Key
+1. Register at [https://mollie.com](https://mollie.com).
+2. In your dashboard, copy your **Live API Key** (`live_...`) or **Test API Key** (`test_...`).
+
+##### Step 2: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → Mollie**.
+2. Toggle **Enable Mollie** to `ON`.
+3. Paste your **API Key**.
+4. Save changes. Mollie manages all European localized checkout payment schemes automatically.
+
+---
+
+#### Khalti Digital Wallet Setup Guide (Nepal)
+**Supported Payment Methods**: Khalti digital wallet balance, e-Banking, mobile banking, and ConnectIPS.
+
+##### Step 1: Register Khalti Merchant Account
+1. Register at [https://khalti.com/merchant](https://khalti.com/merchant).
+2. Obtain your **Live Secret Key** (or **Test Secret Key** from `test-admin.khalti.com`).
+
+##### Step 2: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → Khalti**.
+2. Toggle **Enable Khalti** to `ON`.
+3. Set Environment to **Test** or **Live**.
+4. Enter **Khalti Secret Key**.
+5. Save changes.
+
+---
+
+#### eSewa Setup Guide (Nepal)
+**Supported Payment Methods**: eSewa digital wallet balance and connected bank accounts.
+
+##### Step 1: Merchant Code & Secret Key
+1. Register as an eSewa merchant via [https://merchant.esewa.com.np](https://merchant.esewa.com.np).
+2. Obtain your **Merchant Code** (Product Code) and **Secret Key** for HMAC-SHA256 signature verification.
+
+##### Step 2: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → eSewa**.
+2. Toggle **Enable eSewa** to `ON`.
+3. Set Environment to **Test / Sandbox** or **Live**.
+4. Enter **Merchant Code** and **Secret Key**.
+5. Save changes.
+
+---
+
+#### Paddle Billing Setup Guide (Global Merchant of Record)
+**Supported Payment Methods**: Global credit/debit cards, PayPal, Apple Pay, Wire transfers with automated sales tax and VAT filing.
+
+##### Step 1: Obtain Paddle API Credentials
+1. Register at [https://paddle.com](https://paddle.com).
+2. Under **Developer tools → Authentication**, generate a **Client-side token** and **API Secret Key**.
+3. Under **Developer tools → Notifications**, add a webhook destination pointing to:
+   ```
+   https://yourdomain.com/wp-json/omnify/v1/paddle/webhook
+   ```
+4. Copy the webhook secret key (`Paddle-Signature`).
+
+##### Step 2: Configure in OmnifyWP Settings
+1. Navigate to **Omnify → Settings → Payments → Paddle**.
+2. Toggle **Enable Paddle** to `ON`.
+3. Paste **Client-Side Token**, **API Key**, and **Webhook Secret**.
+4. Save changes.
+
+---
+
+#### Gateway Testing & Sandbox Reference Table
+
+| Gateway | Environment Switch | Recommended Test Credentials | Test Cards / Simulation |
+| :--- | :--- | :--- | :--- |
+| **Stripe** | Test Mode toggle | `pk_test_...` / `sk_test_...` | Card: `4242 4242 4242 4242`, Expiry: any future date, CVC: any 3 digits |
+| **PayPal** | Sandbox toggle | Client ID & Secret from developer.paypal.com | Use Sandbox Personal buyer account from developer dashboard |
+| **Razorpay** | Test Mode toggle | `rzp_test_...` Key ID & Secret | Standard test card: `4111 1111 1111 1111`, OTP: `123456` |
+| **SSLCommerz** | Sandbox toggle | Store ID: `testbox`, Pass: `qwerty` | Test cards and simulated mobile wallets provided in test sandbox portal |
+| **Paystack** | Test Mode toggle | `pk_test_...` / `sk_test_...` | Test card: `4084 0840 8408 4081`, PIN: `1111`, OTP: `123456` |
+| **Mollie** | Test Mode toggle | `test_...` API Key | Select payment status (`Paid`, `Cancelled`, `Expired`) on test gateway screen |
+| **Khalti** | Test Mode toggle | Test Secret Key | Test mobile: `9800000000`, MPIN: `1111`, OTP: `987654` |
+| **eSewa** | Sandbox toggle | Merchant Code: `EPAYTEST`, Secret: `8gBm/:&EnhH.1/q` | Test credentials provided in eSewa Developer Portal |
 
 ---
 
@@ -507,70 +838,114 @@ Under **Omnify → API Keys**, generate secure REST API credentials for mobile a
 
 ## 15. Customer Storefront Experience
 
-### Storefront Catalog & Grid Filters
-The storefront catalog page (`[omnify_storefront]`) displays your active products in a responsive grid with sidebar filtering.
+OmnifyWP delivers a modern, high-converting storefront experience inspired by modern apparel and luxury fashion brands. Engineered for sub-millisecond responsiveness, shoppers enjoy dynamic layout switching, visual swatches, social proof notifications, and seamless checkout journeys.
 
-![Storefront Catalog Grid](./screenshots/25-storefront-catalog.png)
-*Figure 15.1: Customer storefront catalog featuring search, category filters, responsive product cards, and instant add-to-cart.*
+---
 
-* **Interactive Filters**: Filter by Category, Brand, Price Range, and In-Stock availability.
-* **Quick Add-to-Cart**: Hovering over product cards reveals an instant AJAX Add-to-Cart button.
-* **Sort Options**: Sort by Newest, Price: Low to High, Price: High to Low, or Customer Rating.
+### Multi-Layout Catalog & Switcher
+The catalog toolbar features an interactive **Layout Switcher** (`.omnify-layout-switches`) allowing shoppers to toggle their preferred view seamlessly with preferences remembered in browser `localStorage`:
+
+#### 1. 4-Column Modern Borderless Grid (`data-cols="4"` / Default Catalog View)
+* **Design Philosophy**: Minimalist, clean white cards with **zero border outlines and zero drop shadows**, putting full visual focus on product photography.
+* **Image Container**: Soft `#f6f6f8` backdrop with a tailored 1:1.18 aspect ratio and smooth 4px rounded corners.
+* **Top-Left Status Badges**:
+  * **HOT** (`#ea3a3c` vivid red pill) for trending items.
+  * **-14%** (`#22c55e` emerald green pill) for sale discounts.
+  * **LIMITED** (`#f59e0b` amber pill) for low-stock urgency.
+* **Top-Right Wishlist Button**: Outline heart icon button permanently visible with a transparent background; instantly turns solid red (`#ea3a3c`) when clicked and saves across customer sessions.
+* **Right Edge Hover Tools**: Dark circular buttons (`#222`) that slide in on desktop card hover:
+  * **Quick View**: Opens high-speed product preview modal without reloading the catalog.
+  * **Compare**: Adds the product to side-by-side comparison tray.
+* **Bottom-Left Floating Sizes**: Clean uppercase size labels (`S  M`) floating directly over the bottom-left corner of the image.
+* **Bottom-Right Circular Plus (`+`)**: Distinctive circular button with red accent outline and icon, enabling single-click add-to-cart or option selection.
+* **Product Meta Row**: Sits cleanly beneath the title with bold price on the left (`$25.00`) and round color dot swatches + count indicator on the right.
+
+#### 2. 2-Column Split View (`data-cols="2"`)
+* **Horizontal Split Card**: Each product is presented in an expansive 2-column card:
+  * **Left Column (46% width)**: High-resolution product image with badges and wishlist button.
+  * **Right Column (54% width)**: Comprehensive product information:
+    * Product title with hover state.
+    * 5-Star customer rating display (5.0 / 5.0 Stars `#f59e0b`).
+    * Price display with strikethrough original price if on sale.
+    * Row of circular color dot swatches with `+1` indicator.
+    * Uppercase available sizes row (`M  L`).
+    * Full-width light-gray **"Select options"** / **"Add to Cart"** button (`#f3f4f6`, hover `#111`).
+    * Sub-actions row: **Quick View** and **Compare** links.
+
+#### 3. 1-Column Detailed List View (`data-cols="list"`)
+* **3-Section Horizontal Row**: Spans full catalog width with three specialized panels:
+  * **Section 1 (Left Image - 220px)**: Boxed thumbnail with status badges and wishlist heart.
+  * **Section 2 (Center Details)**: Title, 5-star rating, swatches, size indicators, and a 2-line product excerpt summary for rapid evaluation.
+  * **Section 3 (Right Actions - 220px)**: Dedicated pricing and checkout column:
+    * Bold price display (`$25.00`).
+    * Live stock indicator badge in bold uppercase green (`292 IN STOCK`).
+    * Full-width **"Select options"** / **"Add to Cart"** button.
+    * Vertical link stack: **Add to Wishlist**, **Quick View**, and **Compare**.
+
+---
+
+### Storefront Shortcodes Reference
+
+| Shortcode | Supported Attributes | Example Usage |
+| :--- | :--- | :--- |
+| `[omnify_storefront]` | `columns="4"`, `per_page="12"`, `category="slug"`, `tag="slug"`, `orderby="price"`, `order="ASC"` | `[omnify_storefront columns="4" per_page="16"]` |
+| `[omnify_cart]` | None (Renders interactive cart table) | `[omnify_cart]` |
+| `[omnify_checkout]` | `layout="single"` or `layout="steps"` | `[omnify_checkout]` |
+| `[omnify_customer_portal]` | `tab="orders"`, `tab="downloads"`, `tab="addresses"` | `[omnify_customer_portal]` |
+| `[omnify_customer_downloads]`| None (Renders digital locker) | `[omnify_customer_downloads]` |
+| `[omnify_order_tracking]` | None (Renders public guest lookup form) | `[omnify_order_tracking]` |
+
+---
+
+### Storefront Catalog & Faceted Sidebar Filters
+The storefront catalog page (`[omnify_storefront]`) pairs the product grid with a slide-out or sticky desktop faceted sidebar:
+* **Category Facets**: Hierarchical category filter with item count badges.
+* **Status Checks**: Instant toggle between `In Stock` and `On Sale` products.
+* **Brand Filters**: Multi-select brand checkboxes.
+* **Price Range Slider**: Dynamic dual-handle slider ($0 – $1000).
+* **Attribute Swatches**: Color circles and size blocks.
+* **One-Click Clear All**: Instantly resets all active filters without page refresh.
 
 ---
 
 ### Single Product Page
-Clicking any product opens the product details layout designed for high conversions.
-
-![Single Product Details Page](./screenshots/26-storefront-product.png)
-*Figure 15.2: Product details page with image gallery, trust badges, format selection, and customer reviews.*
-
-* **Product Gallery**: High-resolution image zoom and gallery carousel.
+Clicking any product opens the product details layout designed for high conversions:
+* **Product Gallery**: High-resolution image zoom and thumbnail selector.
 * **Trust Badges & Security Seals**: Built-in badges highlighting encrypted checkout and money-back guarantees.
 * **Variation Swatches**: Select options via buttons, color chips, or dropdown selectors.
-* **Customer Reviews & Ratings**: Displays real buyer reviews and verified buyer badges.
+* **Customer Reviews & Ratings**: Real buyer reviews and verified buyer badges.
 
 ---
 
 ### Interactive Shopping Cart
-The shopping cart page (`[omnify_cart]`) provides an intuitive overview of selected items.
-
-![Shopping Cart](./screenshots/27-storefront-cart.png)
-*Figure 15.3: Shopping cart page showing line item quantities, coupon redemption, shipping preview, and cart totals.*
-
+The shopping cart page (`[omnify_cart]`) provides an intuitive overview of selected items:
 * **Quantity Controls**: Adjust quantities or remove items with automatic AJAX total updates.
 * **Coupon Application**: Enter promotional codes and receive instant feedback.
 * **Shipping Estimate**: Real-time delivery fee calculation based on destination.
 
 ---
 
-### Frictionless Multi-Step Checkout
-The checkout page (`[omnify_checkout]`) streamlines the payment journey into clear, confidence-inspiring steps.
-
-![Frictionless Checkout Flow](./screenshots/28-storefront-checkout.png)
-*Figure 15.4: Modern multi-step checkout interface with live order summary, available coupons, and payment options.*
-
-* **Step Indicator**: Clear visual progression: `01 Shopping Cart` → `02 Checkout Details` → `03 Order Complete`.
-* **Smart Autofill**: Returning customers can log in to autofill saved billing and shipping details.
-* **Available Coupons Tray**: Displays active store promotions directly on the checkout page for easy redemption.
-* **Integrated Payment Forms**: Credit card inputs via Stripe Elements, PayPal buttons, and manual payment options.
+### Frictionless Multi-Step & Slide-Over Checkout
+* **Slide-Over Quick Checkout Modal (`#omnify-checkout-overlay`)**: Allows single-click instant purchase from any catalog product without full page redirection.
+* **Multi-Step Checkout Page (`[omnify_checkout]`)**:
+  * **Step Indicator**: Clear visual progression: `01 Shopping Cart` → `02 Checkout Details` → `03 Order Complete`.
+  * **Smart Autofill**: Returning customers can log in to autofill saved billing and shipping details.
+  * **Available Coupons Tray**: Displays active store promotions directly on the checkout page for easy redemption.
+  * **Integrated Payment Forms**: Credit card inputs via Stripe Elements, PayPal buttons, Razorpay, SSLCommerz, and manual payment options.
 
 ---
 
-### Customer Account Portal & Order Tracking
+### Customer Account Portal 2.0 & Order Tracking
 Customers can manage their relationship with your store using dedicated self-service pages:
 
-#### Customer Portal (`[omnify_customer_portal]`)
-Allows logged-in buyers to view past order history, download digital purchases, and manage saved billing/shipping addresses.
-
-![Customer Account Portal](./screenshots/29-customer-portal.png)
-*Figure 15.5: Customer self-service dashboard for order history, address books, and profile settings.*
+#### Customer Portal 2.0 (`[omnify_customer_portal]`)
+A modern 1360px self-service dashboard:
+* **4-Column KPI Stats Grid**: Real-time display of Lifetime Spent, Total Orders, Digital Assets, and Saved Addresses.
+* **Live Counter Tabs**: Orders (with item counts), Downloads, Addresses, and Account Security.
+* **Balanced Settings Grid**: Profile details on left, password update and address books on right.
 
 #### Order Tracking Portal (`[omnify_order_tracking]`)
-Allows guest shoppers to check order progress without logging into an account.
-
-![Order Tracking Portal](./screenshots/30-order-tracking.png)
-*Figure 15.6: Order tracking lookup tool requiring only Order Number and Billing Email.*
+Allows guest shoppers to check order progress without logging into an account using only **Order ID** and **Billing Email**.
 
 ---
 

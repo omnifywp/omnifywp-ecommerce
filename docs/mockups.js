@@ -35,7 +35,7 @@ const mockups = {
       <div class="mockup-wizard">
         <div class="wizard-stepper">
           <div class="step completed">
-            <span class="step-num">✓</span>
+            <span class="step-num">Done</span>
             <span class="step-title">Store Profile</span>
           </div>
           <div class="step-connector completed"></div>
@@ -169,21 +169,21 @@ const mockups = {
             </div>
             <div class="quick-action-list">
               <div class="qa-item">
-                <span class="qa-icon">📦</span>
+                <span class="qa-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
                 <div>
                   <div class="qa-title">+ Add New Product</div>
                   <div class="qa-desc">Publish digital, physical, or variable item</div>
                 </div>
               </div>
               <div class="qa-item">
-                <span class="qa-icon">🎟️</span>
+                <span class="qa-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg></span>
                 <div>
                   <div class="qa-title">Create Discount Coupon</div>
                   <div class="qa-desc">Percentage or fixed promotional code</div>
                 </div>
               </div>
               <div class="qa-item">
-                <span class="qa-icon">📊</span>
+                <span class="qa-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
                 <div>
                   <div class="qa-title">Export Accounting CSV</div>
                   <div class="qa-desc">Instant export for QuickBooks / Xero</div>
@@ -315,7 +315,7 @@ const mockups = {
               <div class="mockup-field">
                 <label>Attached Digital Files (HMAC-SHA256 Encrypted)</label>
                 <div class="file-locker-item">
-                  <span class="f-icon">📦</span>
+                  <span class="f-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
                   <div style="flex:1;">
                     <div style="font-weight:600; font-size:0.85rem;">omnistudio-pro-v1.2.zip</div>
                     <div style="font-size:0.75rem; color:var(--text-dim);">8.4 MB • SHA-256 Protected • 5 Download Limit</div>
@@ -323,7 +323,7 @@ const mockups = {
                   <span class="badge success">Active</span>
                 </div>
                 <div class="file-locker-item">
-                  <span class="f-icon">📄</span>
+                  <span class="f-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
                   <div style="flex:1;">
                     <div style="font-weight:600; font-size:0.85rem;">quickstart-and-licensing.pdf</div>
                     <div style="font-size:0.75rem; color:var(--text-dim);">1.2 MB • Token Expiration: 72 Hours</div>
@@ -431,17 +431,17 @@ const mockups = {
       <div class="mockup-content">
         <div class="mockup-kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
           <div class="kpi-box" style="text-align:center;">
-            <div style="font-size:2rem; margin-bottom:8px;">⚡</div>
+            <div style="font-size:1.5rem; margin-bottom:8px;"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
             <div style="font-weight:700;">OmnifyWP Core</div>
             <div style="font-size:0.75rem; color:var(--text-dim);">84 Products • Official</div>
           </div>
           <div class="kpi-box" style="text-align:center;">
-            <div style="font-size:2rem; margin-bottom:8px;">☁️</div>
+            <div style="font-size:1.5rem; margin-bottom:8px;"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
             <div style="font-weight:700;">CloudSync Labs</div>
             <div style="font-size:0.75rem; color:var(--text-dim);">26 Products • SaaS</div>
           </div>
           <div class="kpi-box" style="text-align:center;">
-            <div style="font-size:2rem; margin-bottom:8px;">🎨</div>
+            <div style="font-size:1.5rem; margin-bottom:8px;"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 9-6"/></svg></div>
             <div style="font-weight:700;">StudioPress Assets</div>
             <div style="font-size:0.75rem; color:var(--text-dim);">38 Products • Design</div>
           </div>
@@ -571,7 +571,7 @@ const mockups = {
         </div>
 
         <div class="risk-badge-banner">
-          <span style="font-size:1.2rem;">🛡️</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <div>
             <strong>Automated Fraud & Risk Assessment: Low Risk (Score: 98/100)</strong>
             <div style="font-size:0.75rem; color:var(--text-dim);">Passed CVC match, 3D-Secure authentication, and matching GeoIP country coordinates.</div>
@@ -605,7 +605,7 @@ const mockups = {
           <div>
             <h5 style="margin-top:0;">Cryptographic File Grants</h5>
             <div class="file-locker-item">
-              <span class="f-icon">🔒</span>
+              <span class="f-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
               <div style="flex:1;">
                 <div style="font-weight:600; font-size:0.85rem;">omnistudio-pro-v1.2.zip</div>
                 <div style="font-size:0.75rem; color:var(--text-dim);">Token active until Oct 10, 2026 (2/5 used)</div>
@@ -774,7 +774,7 @@ const mockups = {
         <div class="mockup-card-panel" style="margin-bottom:12px;">
           <div class="mockup-bar">
             <div>
-              <span style="color:#FBBF24;">★★★★★</span>
+              <span style="color:#FBBF24;">5.0 / 5.0 Stars</span>
               <strong style="margin-left:6px;">Sarah Connor</strong>
               <span class="badge success" style="margin-left:6px;">Verified Buyer</span>
             </div>
@@ -783,14 +783,14 @@ const mockups = {
           <p style="margin:8px 0; font-size:0.88rem; color:var(--text-main);">"Unbelievable speed. Replaced a bloated WooCommerce setup and our page load time dropped to 0.4s. The cryptographic file locker alone is worth the switch."</p>
           <div class="mockup-bar" style="font-size:0.75rem; color:var(--text-dim);">
             <span>Product: <b>OmniStudio Pro Theme</b></span>
-            <div><span class="btn-xs">Approved ✓</span> <span class="btn-xs danger">Trash</span></div>
+            <div><span class="btn-xs">Approved Done</span> <span class="btn-xs danger">Trash</span></div>
           </div>
         </div>
 
         <div class="mockup-card-panel">
           <div class="mockup-bar">
             <div>
-              <span style="color:#FBBF24;">★★★★★</span>
+              <span style="color:#FBBF24;">5.0 / 5.0 Stars</span>
               <strong style="margin-left:6px;">David H.</strong>
               <span class="badge success" style="margin-left:6px;">Verified Buyer</span>
             </div>
@@ -799,7 +799,7 @@ const mockups = {
           <p style="margin:8px 0; font-size:0.88rem; color:var(--text-main);">"The clean normalized database tables make running queries in our custom analytics script effortless. No messy wp_postmeta joins."</p>
           <div class="mockup-bar" style="font-size:0.75rem; color:var(--text-dim);">
             <span>Product: <b>CloudSync SaaS Extension</b></span>
-            <div><span class="btn-xs">Approved ✓</span> <span class="btn-xs danger">Trash</span></div>
+            <div><span class="btn-xs">Approved Done</span> <span class="btn-xs danger">Trash</span></div>
           </div>
         </div>
       </div>
@@ -848,7 +848,7 @@ const mockups = {
             <div style="flex:2; font-size:0.82rem;">CloudSync SaaS + Desk Mat</div>
             <div style="flex:1; font-weight:700;">$163.00</div>
             <div style="flex:1; font-size:0.8rem; color:var(--text-dim);">5h ago</div>
-            <div style="flex:1.2; text-align:right;"><span class="badge success">Recovered ✓</span></div>
+            <div style="flex:1.2; text-align:right;"><span class="badge success">Recovered Done</span></div>
           </div>
         </div>
       </div>
@@ -904,7 +904,7 @@ const mockups = {
       <div class="mockup-content">
         <div class="gateway-row">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="g-icon">💳</span>
+            <span class="g-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
             <div>
               <div style="font-weight:700;">Stripe Elements (Credit/Debit, Apple Pay, Google Pay)</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">Live Mode Active • Webhooks Verified (200 OK)</div>
@@ -918,7 +918,7 @@ const mockups = {
 
         <div class="gateway-row">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="g-icon">🅿️</span>
+            <span class="g-icon"><b>P</b></span>
             <div>
               <div style="font-weight:700;">PayPal Commerce Platform</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">Express Checkout & Pay in 4 Installments</div>
@@ -932,7 +932,7 @@ const mockups = {
 
         <div class="gateway-row">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="g-icon">⚡</span>
+            <span class="g-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <div>
               <div style="font-weight:700;">Razorpay (India)</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">UPI, NetBanking, RuPay Cards</div>
@@ -946,7 +946,7 @@ const mockups = {
 
         <div class="gateway-row">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="g-icon">🇧🇩</span>
+            <span class="g-icon"><b>SSL</b></span>
             <div>
               <div style="font-weight:700;">SSLCommerz (Bangladesh)</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">bKash, Nagad, Rocket & Cards</div>
@@ -960,7 +960,7 @@ const mockups = {
 
         <div class="gateway-row">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="g-icon">💵</span>
+            <span class="g-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg></span>
             <div>
               <div style="font-weight:700;">Cash on Delivery (COD) / Bank Wire</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">Offline payment verification workflow</div>
@@ -1137,25 +1137,25 @@ const mockups = {
             <div style="flex:1.5; font-weight:600;">Storefront</div>
             <div style="flex:1.5;"><code>/storefront/</code></div>
             <div style="flex:2;" class="font-mono">[omnify_storefront]</div>
-            <div style="flex:1; text-align:right;"><span class="badge success">Mapped ✓</span></div>
+            <div style="flex:1; text-align:right;"><span class="badge success">Mapped Done</span></div>
           </div>
           <div class="table-row">
             <div style="flex:1.5; font-weight:600;">Cart</div>
             <div style="flex:1.5;"><code>/cart/</code></div>
             <div style="flex:2;" class="font-mono">[omnify_cart]</div>
-            <div style="flex:1; text-align:right;"><span class="badge success">Mapped ✓</span></div>
+            <div style="flex:1; text-align:right;"><span class="badge success">Mapped Done</span></div>
           </div>
           <div class="table-row">
             <div style="flex:1.5; font-weight:600;">Checkout</div>
             <div style="flex:1.5;"><code>/checkout/</code></div>
             <div style="flex:2;" class="font-mono">[omnify_checkout]</div>
-            <div style="flex:1; text-align:right;"><span class="badge success">Mapped ✓</span></div>
+            <div style="flex:1; text-align:right;"><span class="badge success">Mapped Done</span></div>
           </div>
           <div class="table-row">
             <div style="flex:1.5; font-weight:600;">Customer Portal</div>
             <div style="flex:1.5;"><code>/customer-portal/</code></div>
             <div style="flex:2;" class="font-mono">[omnify_customer_portal]</div>
-            <div style="flex:1; text-align:right;"><span class="badge success">Mapped ✓</span></div>
+            <div style="flex:1; text-align:right;"><span class="badge success">Mapped Done</span></div>
           </div>
         </div>
       </div>
@@ -1170,7 +1170,7 @@ const mockups = {
     `
       <div class="mockup-content">
         <div class="risk-badge-banner" style="margin-bottom:16px;">
-          <span style="font-size:1.2rem;">✨</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <div>
             <strong>18 Normalized Relational Tables: 100% Operational & Verified</strong>
             <div style="font-size:0.75rem; color:var(--text-dim);">Indexes optimized, zero missing columns, schema migration v2026_09_24 up to date.</div>
@@ -1286,48 +1286,55 @@ const mockups = {
         <div class="storefront-grid-3">
           <div class="store-product-card">
             <div class="product-badge-sale">Sale -25%</div>
-            <div class="product-card-img">📦</div>
+            <div class="product-card-img">
+              <img src="../assets/storefront/images/product-digital-suite.jpg" alt="OmniStudio Creator Suite" loading="lazy">
+            </div>
             <div class="product-card-body">
-              <div class="product-cat-tag">WordPress Themes</div>
-              <h4 class="product-card-title">OmniStudio Pro Theme</h4>
-              <div class="product-stars">★★★★★ <span style="font-size:0.75rem; color:var(--text-dim);">(42 reviews)</span></div>
+              <div class="product-cat-tag">Digital Software</div>
+              <h4 class="product-card-title">OmniStudio Creator Suite</h4>
+              <div class="product-stars">5.0 / 5.0 Stars <span style="font-size:0.75rem; color:var(--text-dim);">(42 reviews)</span></div>
               <div class="product-price-row">
                 <span class="price-current">$59.00</span>
                 <s class="price-old">$79.00</s>
               </div>
-              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Add to Cart 🛒</span>
+              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Add to Cart</span>
             </div>
           </div>
 
           <div class="store-product-card">
-            <div class="product-card-img">☁️</div>
+            <div class="product-badge-sale" style="background:#0F172A;">Bestseller</div>
+            <div class="product-card-img">
+              <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Omnify Heavyweight Hoodie" loading="lazy">
+            </div>
             <div class="product-card-body">
-              <div class="product-cat-tag">SaaS Plugins</div>
-              <h4 class="product-card-title">CloudSync Extension</h4>
-              <div class="product-stars">★★★★★ <span style="font-size:0.75rem; color:var(--text-dim);">(28 reviews)</span></div>
+              <div class="product-cat-tag">Apparel & Merch</div>
+              <h4 class="product-card-title">Omnify Heavyweight Hoodie</h4>
+              <div class="product-stars">5.0 / 5.0 Stars <span style="font-size:0.75rem; color:var(--text-dim);">(28 reviews)</span></div>
               <div class="product-price-row">
-                <span class="price-current">$129.00</span>
+                <span class="price-current">$68.00</span>
               </div>
-              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Add to Cart 🛒</span>
+              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Select Options</span>
             </div>
           </div>
 
           <div class="store-product-card">
-            <div class="product-card-img">🎨</div>
+            <div class="product-card-img">
+              <img src="../assets/storefront/images/product-bundle-kit.jpg" alt="All-Access Hardware Bundle" loading="lazy">
+            </div>
             <div class="product-card-body">
-              <div class="product-cat-tag">Creator Merch</div>
-              <h4 class="product-card-title">Minimalist Desk Mat</h4>
-              <div class="product-stars">★★★★★ <span style="font-size:0.75rem; color:var(--text-dim);">(19 reviews)</span></div>
+              <div class="product-cat-tag">Product Bundles</div>
+              <h4 class="product-card-title">All-Access Hardware Bundle</h4>
+              <div class="product-stars">5.0 / 5.0 Stars <span style="font-size:0.75rem; color:var(--text-dim);">(19 reviews)</span></div>
               <div class="product-price-row">
-                <span class="price-current">$34.00</span>
+                <span class="price-current">$199.00</span>
               </div>
-              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Add to Cart 🛒</span>
+              <span class="btn-mockup btn-primary" style="width:100%; text-align:center;">Add to Cart</span>
             </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.1: Responsive catalog grid with sidebar category/brand filters and quick add-to-cart buttons.'
+    'Figure 15.1: Modern catalog grid with high-resolution imagery, verified reviews, sale pills, and quick add-to-cart buttons.'
   ),
 
   // Figure 15.2: Product Details Page
@@ -1338,45 +1345,60 @@ const mockups = {
       <div class="mockup-storefront">
         <div class="mockup-split-2">
           <div class="product-gallery-mock">
-            <div class="main-gallery-preview">⚡ OmniStudio Pro</div>
+            <div class="main-gallery-preview">
+              <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Omnify Heavyweight Hoodie" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+            </div>
             <div class="gallery-thumbs">
-              <span class="thumb active">⚡</span>
-              <span class="thumb">📱</span>
-              <span class="thumb">📊</span>
+              <span class="thumb active"><img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Black" style="width:100%;height:100%;object-fit:cover;"></span>
+              <span class="thumb"><img src="../assets/storefront/images/product-digital-suite.jpg" alt="Preview 2" style="width:100%;height:100%;object-fit:cover;"></span>
+              <span class="thumb"><img src="../assets/storefront/images/product-bundle-kit.jpg" alt="Preview 3" style="width:100%;height:100%;object-fit:cover;"></span>
             </div>
           </div>
 
           <div class="product-meta-mock">
-            <span class="badge success">Digital Download • Instant Delivery</span>
-            <h3 style="margin:8px 0 4px; font-size:1.35rem;">OmniStudio Pro Theme</h3>
-            <div class="product-stars">★★★★★ (42 verified reviews) • 342 sold</div>
+            <span class="badge success" style="width:fit-content;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              In Stock • Ships in 24h
+            </span>
+            <h3 style="margin:10px 0 6px; font-size:1.35rem; color:#0f172a;">Omnify Heavyweight Hoodie</h3>
+            <div class="product-stars">5.0 / 5.0 Stars <span style="color:var(--text-dim);">(42 verified reviews) • 342 sold</span></div>
             <div class="product-price-row" style="margin:12px 0;">
-              <span class="price-current" style="font-size:1.6rem;">$59.00</span>
-              <s class="price-old" style="font-size:1.1rem;">$79.00</s>
-              <span class="badge success">Save $20</span>
+              <span class="price-current" style="font-size:1.6rem; color:#0f172a;">$68.00</span>
+              <s class="price-old" style="font-size:1.1rem;">$85.00</s>
+              <span class="badge success">Save $17</span>
             </div>
-            <div style="font-size:0.88rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">
-              Ultra-fast Full Site Editing theme built for eCommerce. 100% block-based, sub-millisecond query performance, and built-in conversion features.
+            <div style="font-size:0.88rem; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
+              Engineered with 450 GSM French terry cotton, double-lined hood, and reinforced flatlock stitching for premium all-day comfort.
             </div>
 
             <div style="margin-bottom:14px;">
-              <label style="font-size:0.8rem; font-weight:700;">Select License Tier:</label>
-              <div style="display:flex; gap:8px; margin-top:4px;">
-                <span class="mockup-pill active">Single Site ($59)</span>
-                <span class="mockup-pill">5 Sites ($129)</span>
-                <span class="mockup-pill">Unlimited Agency ($249)</span>
+              <label style="font-size:0.8rem; font-weight:700; color:#334155;">Select Color:</label>
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <span class="mockup-pill active" style="font-weight:600;">Onyx Black</span>
+                <span class="mockup-pill">Heather Gray</span>
+                <span class="mockup-pill">Forest Green</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:18px;">
+              <label style="font-size:0.8rem; font-weight:700; color:#334155;">Select Size:</label>
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <span class="mockup-pill">S</span>
+                <span class="mockup-pill active" style="font-weight:600;">M</span>
+                <span class="mockup-pill">L</span>
+                <span class="mockup-pill">XL</span>
               </div>
             </div>
 
             <div style="display:flex; gap:10px;">
-              <span class="btn-mockup btn-primary" style="flex:1; text-align:center;">Add to Cart 🛒</span>
-              <span class="btn-mockup btn-outline" style="flex:1; text-align:center;">Buy Now (Instant Checkout)</span>
+              <span class="btn-mockup btn-primary" style="flex:1; text-align:center;">Add to Cart</span>
+              <span class="btn-mockup btn-outline" style="flex:1; text-align:center;">Instant Checkout</span>
             </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.2: Product details layout featuring gallery zoom, format selection swatches, and verified reviews.'
+    'Figure 15.2: Product details layout featuring gallery zoom, variation swatches, and verified reviews.'
   ),
 
   // Figure 15.3: Shopping Cart Page
@@ -1385,6 +1407,16 @@ const mockups = {
     'Shopping Cart',
     `
       <div class="mockup-storefront">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem;">
+          <div style="display:flex; align-items:center; gap:8px; color:#0f172a; font-weight:600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18794E" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span>You've unlocked <strong>Free Expedited Shipping</strong>!</span>
+          </div>
+          <div style="width:120px; height:6px; background:#e2e8f0; border-radius:9999px; overflow:hidden;">
+            <div style="width:100%; height:100%; background:#18794E;"></div>
+          </div>
+        </div>
+
         <div class="mockup-split-2">
           <div>
             <div class="mockup-data-table">
@@ -1395,13 +1427,16 @@ const mockups = {
                 <div style="flex:1; text-align:right;">Subtotal</div>
               </div>
               <div class="table-row">
-                <div style="flex:3;">
-                  <div style="font-weight:700;">OmniStudio Pro Theme</div>
-                  <div style="font-size:0.75rem; color:var(--text-dim);">Single Site License</div>
+                <div style="flex:3; display:flex; gap:10px; align-items:center;">
+                  <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Hoodie" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border-subtle);">
+                  <div>
+                    <div style="font-weight:700;">Omnify Heavyweight Hoodie</div>
+                    <div style="font-size:0.75rem; color:var(--text-dim);">Size: M • Onyx Black</div>
+                  </div>
                 </div>
-                <div style="flex:1;">$59.00</div>
-                <div style="flex:1.2;"><span class="qty-stepper">[-] 1 [+]</span></div>
-                <div style="flex:1; text-align:right; font-weight:700;">$59.00</div>
+                <div style="flex:1;">$68.00</div>
+                <div style="flex:1.2;"><span class="qty-stepper">− 1 +</span></div>
+                <div style="flex:1; text-align:right; font-weight:700;">$68.00</div>
               </div>
             </div>
 
@@ -1412,62 +1447,71 @@ const mockups = {
           </div>
 
           <div class="mockup-card-panel">
-            <h5 style="margin-top:0;">Cart Totals</h5>
+            <h5 style="margin-top:0;">Order Summary</h5>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
               <span>Subtotal:</span>
-              <b>$59.00</b>
+              <b>$68.00</b>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem; color:var(--brand-emerald);">
               <span>Coupon (SUMMER20):</span>
-              <b>-$11.80</b>
+              <b>-$13.60</b>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
-              <span>Estimated Tax:</span>
-              <b>$0.00</b>
+              <span>Shipping:</span>
+              <span style="color:var(--brand-emerald); font-weight:600;">Free</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:10px; margin-top:8px; font-size:1.15rem; font-weight:800; color:var(--brand-emerald);">
               <span>Total:</span>
-              <span>$47.20</span>
+              <span>$54.40</span>
             </div>
             <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:14px;">Proceed to Checkout →</span>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.3: Interactive cart page with quantity updates, coupon redemption box, and shipping preview.'
+    'Figure 15.3: Interactive cart page with real-time shipping threshold meter, quantity controls, and coupon redemption.'
   ),
 
   // Figure 15.4: Conversion-Optimized Checkout
   storefront_checkout: wrapWindow(
     'https://omnifywp.com/checkout/',
-    'Secure 1-Page Checkout',
+    'Secure Checkout',
     `
       <div class="mockup-storefront">
         <div class="mockup-split-2">
           <div>
-            <h4 style="margin-top:0;">1. Contact & Customer Details</h4>
+            <h4 style="margin-top:0; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#18794E; color:#fff; font-size:0.75rem;">1</span>
+              Contact Information
+            </h4>
             <div class="mockup-field">
-              <label>Email Address for Delivery</label>
+              <label>Email Address</label>
               <div class="mockup-input-text">sarah@cyberdyne.org</div>
             </div>
 
-            <h4 style="margin:20px 0 10px;">2. Payment Method</h4>
-            <div style="border:1px solid var(--border-accent); border-radius:8px; padding:12px; margin-bottom:12px; background:var(--bg-subtle);">
-              <div style="display:flex; align-items:center; justify-content:space-between;">
-                <b>● Credit / Debit Card (Stripe)</b>
-                <span>🔒 256-Bit SSL</span>
+            <h4 style="margin:20px 0 10px; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#18794E; color:#fff; font-size:0.75rem;">2</span>
+              Payment Details
+            </h4>
+            <div style="border:1px solid var(--border-accent); border-radius:8px; padding:14px; margin-bottom:12px; background:var(--bg-subtle);">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <b style="font-size:0.9rem;">Credit or Debit Card</b>
+                <span style="font-size:0.75rem; color:#64748b; display:inline-flex; align-items:center; gap:4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  256-Bit TLS Encrypted
+                </span>
               </div>
-              <div class="mockup-field" style="margin-top:10px;">
+              <div class="mockup-field">
                 <label>Card Number</label>
                 <div class="mockup-input-text font-mono">•••• •••• •••• 4242</div>
               </div>
               <div style="display:flex; gap:8px;">
                 <div class="mockup-field" style="flex:1;">
-                  <label>Expiry</label>
+                  <label>Expiry Date</label>
                   <div class="mockup-input-text font-mono">12/28</div>
                 </div>
                 <div class="mockup-field" style="flex:1;">
-                  <label>CVC</label>
+                  <label>Security Code (CVC)</label>
                   <div class="mockup-input-text font-mono">•••</div>
                 </div>
               </div>
@@ -1477,75 +1521,113 @@ const mockups = {
           <div class="mockup-card-panel">
             <h5 style="margin-top:0;">Order Summary</h5>
             <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:6px;">
-              <span>OmniStudio Pro Theme (x1)</span>
-              <b>$59.00</b>
+              <span>Omnify Heavyweight Hoodie (x1)</span>
+              <b>$68.00</b>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:0.88rem; color:var(--brand-emerald); margin-bottom:6px;">
               <span>Discount (SUMMER20):</span>
-              <b>-$11.80</b>
+              <b>-$13.60</b>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:6px;">
+              <span>Shipping:</span>
+              <span style="color:var(--brand-emerald); font-weight:600;">Free</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:10px; font-size:1.15rem; font-weight:800; color:var(--brand-emerald); margin-top:8px;">
               <span>Order Total:</span>
-              <span>$47.20</span>
+              <span>$54.40</span>
             </div>
-            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:16px; font-size:1rem; padding:12px;">Complete Purchase ($47.20) 🔒</span>
+            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:16px; font-size:0.95rem; padding:12px; font-weight:600;">Complete Order ($54.40)</span>
+            <div style="text-align:center; font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Guaranteed Safe & Secure Checkout
+            </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.4: Modern multi-step checkout with live order summary, available promo codes, and payment inputs.'
+    'Figure 15.4: Conversion-optimized single page checkout with inline validation and security trust signals.'
   ),
 
   // Figure 15.5: Customer Portal & Download Locker
+  // Figure 15.5: Customer Portal 2.0 & Download Locker
   customer_portal: wrapWindow(
     'https://omnifywp.com/customer-portal/',
-    'Customer Portal',
+    'Customer Portal 2.0 (SupportHub Modern Theme)',
     `
-      <div class="mockup-storefront">
-        <div class="mockup-bar" style="margin-bottom:14px;">
+      <div class="mockup-storefront" style="background:#f8fafc;padding:18px;border-radius:12px;">
+        <div class="mockup-bar" style="margin-bottom:16px;background:#ffffff;padding:16px 20px;border-radius:12px;border:1px solid var(--border-subtle);box-shadow:0 1px 3px rgba(0,0,0,0.02);">
           <div>
-            <h4 style="margin:0;">Welcome, Sarah Connor</h4>
-            <span style="font-size:0.8rem; color:var(--text-dim);">Member since Oct 2026 • 4 Orders Placed</span>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+              <h4 style="margin:0;font-size:1.1rem;color:#0f172a;">Welcome back, Sarah Connor</h4>
+              <span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;font-size:0.72rem;padding:2px 10px;border-radius:9999px;font-weight:700;">Active Account</span>
+            </div>
+            <span style="font-size:0.8rem; color:var(--text-dim);">Member since Oct 2026 &bull; Customer ID #OMN-CUST-8821</span>
           </div>
-          <span class="btn-mockup btn-outline">Log Out</span>
+          <span class="btn-mockup btn-outline" style="border-radius:8px;font-size:0.8rem;padding:6px 14px;border-color:#e2e8f0;color:#64748b;">Sign Out</span>
         </div>
 
+        <!-- 4-Column KPI Stats Grid -->
+        <div class="portal-kpi-grid">
+          <div class="portal-kpi-card">
+            <div class="portal-kpi-label">Lifetime Spent</div>
+            <div class="portal-kpi-value">$3,840.50</div>
+            <div class="portal-kpi-sub">4 completed orders</div>
+          </div>
+          <div class="portal-kpi-card">
+            <div class="portal-kpi-label">Total Orders</div>
+            <div class="portal-kpi-value">4</div>
+            <div class="portal-kpi-sub">0 pending dispatch</div>
+          </div>
+          <div class="portal-kpi-card">
+            <div class="portal-kpi-label">Digital Assets</div>
+            <div class="portal-kpi-value">2</div>
+            <div class="portal-kpi-sub">Instant secure access</div>
+          </div>
+          <div class="portal-kpi-card">
+            <div class="portal-kpi-label">Saved Addresses</div>
+            <div class="portal-kpi-value">2</div>
+            <div class="portal-kpi-sub">1 default shipping</div>
+          </div>
+        </div>
+
+        <!-- Live Tab Navigation Bar -->
         <div class="mockup-tabs-bar" style="margin-bottom:16px;">
-          <span class="m-tab">My Orders (4)</span>
-          <span class="m-tab active">Digital Downloads Locker (2)</span>
-          <span class="m-tab">Saved Addresses</span>
-          <span class="m-tab">Account Security</span>
+          <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Orders <span class="m-pill">4</span></span>
+          <span class="m-tab active" style="background:#059669;color:#fff;border-color:#059669;border-radius:9999px;padding:6px 16px;">Digital Downloads <span class="m-pill" style="background:rgba(255,255,255,0.25);color:#fff;">2</span></span>
+          <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Saved Addresses</span>
+          <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Account Settings</span>
         </div>
 
-        <div class="mockup-data-table">
-          <div class="table-head">
+        <!-- Downloads Locker Data Table -->
+        <div class="mockup-data-table" style="background:#ffffff;border-radius:12px;border:1px solid var(--border-subtle);overflow:hidden;">
+          <div class="table-head" style="background:#f8fafc;padding:12px 18px;">
             <div style="flex:2.5;">Downloadable File Asset</div>
             <div style="flex:1.2;">Associated Order</div>
             <div style="flex:1.5;">Download Access</div>
             <div style="flex:1.2; text-align:right;">Action</div>
           </div>
-          <div class="table-row">
+          <div class="table-row" style="padding:14px 18px;">
             <div style="flex:2.5;">
-              <div style="font-weight:700;">omnistudio-pro-v1.2.zip</div>
-              <div style="font-size:0.75rem; color:var(--text-dim);">8.4 MB • Latest Version 1.2.0</div>
+              <div style="font-weight:700;color:#0f172a;">omnistudio-pro-v1.4.1.zip</div>
+              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">8.4 MB &bull; SHA-256 HMAC Protected &bull; Version 1.4.1</div>
             </div>
-            <div style="flex:1.2;" class="font-mono">#OMN-1042</div>
-            <div style="flex:1.5;"><span class="badge success">3 Remaining (2/5 used)</span></div>
-            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="padding:4px 10px; font-size:0.75rem;">Download 📥</span></div>
+            <div style="flex:1.2;" class="font-mono" style="color:#059669;font-weight:600;">#OMN-1042</div>
+            <div style="flex:1.5;"><span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">3 Remaining (2/5 used)</span></div>
+            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#059669;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
           </div>
-          <div class="table-row">
+          <div class="table-row" style="padding:14px 18px;">
             <div style="flex:2.5;">
-              <div style="font-weight:700;">quickstart-and-licensing.pdf</div>
-              <div style="font-size:0.75rem; color:var(--text-dim);">1.2 MB • User Handbook</div>
+              <div style="font-weight:700;color:#0f172a;">quickstart-and-licensing.pdf</div>
+              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">1.2 MB &bull; Comprehensive Storefront &amp; API Guide</div>
             </div>
-            <div style="flex:1.2;" class="font-mono">#OMN-1042</div>
-            <div style="flex:1.5;"><span class="badge success">Unlimited Access</span></div>
-            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="padding:4px 10px; font-size:0.75rem;">Download 📥</span></div>
+            <div style="flex:1.2;" class="font-mono" style="color:#059669;font-weight:600;">#OMN-1042</div>
+            <div style="flex:1.5;"><span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">Unlimited Access</span></div>
+            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#059669;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.5: Self-service Customer Portal for past orders, address management, and digital files.'
+    'Figure 15.5: Customer Portal 2.0 self-service hub with 4-column KPI analytics, live tab pills, and cryptographic download locker.'
   ),
 
   // Figure 15.6: Public Order Tracking Portal
@@ -1573,22 +1655,22 @@ const mockups = {
 
           <div class="wizard-stepper">
             <div class="step completed">
-              <span class="step-num">✓</span>
+              <span class="step-num">Done</span>
               <span class="step-title">Order Placed</span>
             </div>
             <div class="step-connector completed"></div>
             <div class="step completed">
-              <span class="step-num">✓</span>
+              <span class="step-num">Done</span>
               <span class="step-title">Payment Cleared</span>
             </div>
             <div class="step-connector completed"></div>
             <div class="step completed">
-              <span class="step-num">✓</span>
+              <span class="step-num">Done</span>
               <span class="step-title">Digital Locker Active</span>
             </div>
             <div class="step-connector completed"></div>
             <div class="step completed">
-              <span class="step-num">✓</span>
+              <span class="step-num">Done</span>
               <span class="step-title">Delivered</span>
             </div>
           </div>

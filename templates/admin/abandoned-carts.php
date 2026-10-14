@@ -37,6 +37,7 @@ $omnify_carts  = $omnify_carts ?? [];
 		</div>
 		<div class="omnify-header-row__actions">
 			<a class="omnify-button omnify-button--secondary" href="<?php echo esc_url(admin_url('admin.php?page=omnify-settings&section=checkout')); ?>">
+				<span class="dashicons dashicons-admin-generic" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; margin-right: 4px;"></span>
 				<?php esc_html_e('Recovery Settings', 'omnifywp-ecommerce'); ?>
 			</a>
 		</div>
@@ -44,9 +45,17 @@ $omnify_carts  = $omnify_carts ?? [];
 
 	<?php include __DIR__ . '/partials/nav.php'; ?>
 
-	<div class="omnify-subtabs">
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders')); ?>" class="omnify-subtab"><?php esc_html_e('🛒 Orders List', 'omnifywp-ecommerce'); ?></a>
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-abandoned-carts')); ?>" class="omnify-subtab is-active"><?php esc_html_e('⏳ Abandoned Carts', 'omnifywp-ecommerce'); ?></a>
+	<div class="omnify-subtabs-track">
+		<div class="omnify-subtabs">
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders')); ?>" class="omnify-subtab">
+				<span class="dashicons dashicons-cart" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: text-bottom; margin-right: 5px;"></span>
+				<?php esc_html_e('Orders List', 'omnifywp-ecommerce'); ?>
+			</a>
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-abandoned-carts')); ?>" class="omnify-subtab is-active">
+				<span class="dashicons dashicons-clock" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: text-bottom; margin-right: 5px;"></span>
+				<?php esc_html_e('Abandoned Carts', 'omnifywp-ecommerce'); ?>
+			</a>
+		</div>
 	</div>
 
 	<div class="omnify-dashboard-stats" style="grid-template-columns: repeat(5, minmax(140px, 1fr)); margin-bottom: 16px;">
@@ -96,12 +105,14 @@ $omnify_filter_status = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['
 				</select>
 			</div>
 			<div class="omnify-filter-actions">
-				<button type="submit" class="omnify-btn-apply-filters">
-					<span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
 				</button>
 
 				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-abandoned-carts')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
 			</div>
 		</div>

@@ -297,19 +297,258 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// Design tab switching logic
-	const designTabs = document.querySelectorAll('.omnify-settings-section-tab');
-	const designPanels = document.querySelectorAll('.omnify-modern-design-panel');
-	designTabs.forEach(tab => {
-		tab.addEventListener('click', function() {
-			designTabs.forEach(t => t.classList.remove('is-active'));
-			designPanels.forEach(p => p.style.display = 'none');
-			
-			this.classList.add('is-active');
-			const activeTab = this.dataset.tab;
-			const targetPanel = document.getElementById('omnify-design-panel-' + activeTab);
-			if (targetPanel) {
-				targetPanel.style.display = 'block';
+	const designTabs = Array.from(document.querySelectorAll('.omnify-settings-section-tab'));
+	const designPanels = Array.from(document.querySelectorAll('.omnify-modern-design-panel'));
+	if (designTabs.length > 0) {
+		designTabs.forEach(tab => {
+			tab.addEventListener('click', function(e) {
+				if (e) e.preventDefault();
+				const activeTab = this.dataset.tab;
+				if (!activeTab) return;
+
+				designTabs.forEach(t => t.classList.remove('is-active'));
+				designPanels.forEach(p => {
+					p.style.display = 'none';
+					p.classList.remove('is-active');
+				});
+				
+				this.classList.add('is-active');
+				const targetPanel = document.getElementById('omnify-design-panel-' + activeTab);
+				if (targetPanel) {
+					targetPanel.style.display = 'block';
+					targetPanel.classList.add('is-active');
+				}
+			});
+		});
+	}
+
+	// ══ PAYMENT GATEWAYS DIRECTORY & ACCORDION CONTROLLER ══════════════
+	function initPaymentGatewaysDirectory() {
+		const directory = document.querySelector('.omnify-pm-directory');
+		if (!directory) return;
+
+		const cards = Array.from(directory.querySelectorAll('.omnify-pm-card'));
+		const searchInput = document.getElementById('omnify-pm-search') || document.getElementById('omnify-pm-search-input');
+		const filterTabs = Array.from(directory.querySelectorAll('.omnify-pm-tab'));
+		const toggleAllBtn = document.getElementById('omnify-pm-expand-all');
+		const activeCounter = document.getElementById('omnify-active-pm-count') || document.getElementById('omnify-pm-active-count');
+
+		// 1. Recount Active Gateways
+		function updateActiveCount() {
+			let activeCount = 0;
+			cards.forEach(card => {
+				const yesRadio = card.querySelector('.omnify-pm-actions input[type="radio"][value="1"]') || card.querySelector('input[type="radio"][value="1"]');
+				if (yesRadio && yesRadio.checked) {
+					activeCount++;
+					card.classList.add('is-active-gateway', 'is-enabled');
+					const badge = card.querySelector('.omnify-pm-status-badge');
+					if (badge) {
+						badge.textContent = 'Active';
+						badge.className = 'omnify-pm-status-badge is-active';
+					}
+				} else {
+					card.classList.remove('is-active-gateway', 'is-enabled');
+					const badge = card.querySelector('.omnify-pm-status-badge');
+					if (badge) {
+						badge.textContent = 'Disabled';
+						badge.className = 'omnify-pm-status-badge is-disabled';
+					}
+				}
+			});
+
+			if (activeCounter) {
+				activeCounter.textContent = String(activeCount);
+			}
+
+			// Update tab counts
+			const globalCount = cards.filter(c => (c.dataset.category === 'global' || c.dataset.group === 'global')).length;
+			const regionalCount = cards.filter(c => (c.dataset.category === 'regional' || c.dataset.group === 'regional')).length;
+			const manualCount = cards.filter(c => (c.dataset.category === 'manual' || c.dataset.category === 'offline' || c.dataset.group === 'manual' || c.dataset.group === 'offline')).length;
+
+			const tabAllCount = directory.querySelector('.omnify-pm-tab[data-filter="all"] .omnify-pm-tab-count, .omnify-pm-tab[data-group="all"] .omnify-pm-tab-count');
+			if (tabAllCount) tabAllCount.textContent = String(cards.length);
+			const tabGlobalCount = directory.querySelector('.omnify-pm-tab[data-filter="global"] .omnify-pm-tab-count, .omnify-pm-tab[data-group="global"] .omnify-pm-tab-count');
+			if (tabGlobalCount) tabGlobalCount.textContent = String(globalCount);
+			const tabRegCount = directory.querySelector('.omnify-pm-tab[data-filter="regional"] .omnify-pm-tab-count, .omnify-pm-tab[data-group="regional"] .omnify-pm-tab-count');
+			if (tabRegCount) tabRegCount.textContent = String(regionalCount);
+			const tabManCount = directory.querySelector('.omnify-pm-tab[data-filter="manual"] .omnify-pm-tab-count, .omnify-pm-tab[data-group="offline"] .omnify-pm-tab-count, .omnify-pm-tab[data-group="manual"] .omnify-pm-tab-count');
+			if (tabManCount) tabManCount.textContent = String(manualCount);
+		}
+
+		// 2. Accordion Card Header / Configure Click
+		cards.forEach(card => {
+			const header = card.querySelector('.omnify-pm-header');
+			const configBtn = card.querySelector('.omnify-pm-configure-btn, .omnify-pm-collapse-btn');
+			const closeBtn = card.querySelector('.omnify-pm-drawer-close');
+
+			function toggleCard(e) {
+				// Don't toggle if clicking directly on the Yes/No radio toggle inside the header
+				if (e && (e.target.closest('.omnify-pm-actions .omnify-yes-no-group') || e.target.closest('.omnify-pm-actions input') || e.target.closest('.omnify-pm-toggle-wrap'))) {
+					return;
+				}
+				const isExpanded = card.classList.contains('is-expanded');
+				if (isExpanded) {
+					card.classList.remove('is-expanded');
+					if (configBtn) configBtn.setAttribute('aria-expanded', 'false');
+				} else {
+					card.classList.add('is-expanded');
+					if (configBtn) configBtn.setAttribute('aria-expanded', 'true');
+				}
+			}
+
+			if (header) {
+				header.addEventListener('click', toggleCard);
+			}
+			if (closeBtn) {
+				closeBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					card.classList.remove('is-expanded');
+					if (configBtn) configBtn.setAttribute('aria-expanded', 'false');
+				});
+			}
+
+			// Listen for Yes/No radio changes on this card
+			card.querySelectorAll('.omnify-pm-actions input[type="radio"], .omnify-pm-header input[type="radio"]').forEach(radio => {
+				radio.addEventListener('change', () => {
+					updateActiveCount();
+					if (radio.value === '1' && radio.checked) {
+						// Auto-expand on enable so user can review/set keys
+						card.classList.add('is-expanded');
+						if (configBtn) configBtn.setAttribute('aria-expanded', 'true');
+					}
+				});
+			});
+
+			// Listen for Environment Mode changes (Live vs Sandbox)
+			const modeSelect = card.querySelector('.omnify-mode-select, select[id$="_mode"]');
+			const modeBadge = card.querySelector('.omnify-pm-mode-badge');
+			if (modeSelect && modeBadge && !modeBadge.classList.contains('is-offline') && !modeBadge.classList.contains('mode-offline')) {
+				modeSelect.addEventListener('change', () => {
+					const isLive = modeSelect.value === 'live';
+					modeBadge.textContent = isLive ? 'Live' : 'Sandbox';
+					modeBadge.className = 'omnify-pm-mode-badge ' + (isLive ? 'is-live' : 'is-test');
+				});
 			}
 		});
-	});
+
+		// 3. Category Filter Tabs
+		filterTabs.forEach(tab => {
+			tab.addEventListener('click', () => {
+				filterTabs.forEach(t => t.classList.remove('is-active'));
+				tab.classList.add('is-active');
+
+				const filter = tab.dataset.filter || tab.dataset.group || 'all';
+				const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+				cards.forEach(card => {
+					const cat = card.dataset.category || card.dataset.group || '';
+					const text = card.textContent.toLowerCase();
+					const matchCat = (filter === 'all' || cat === filter || (filter === 'manual' && cat === 'offline') || (filter === 'offline' && cat === 'manual'));
+					const matchSearch = (!query || text.includes(query));
+
+					if (matchCat && matchSearch) {
+						card.style.display = '';
+					} else {
+						card.style.display = 'none';
+					}
+				});
+			});
+		});
+
+		// 4. Instant Search Box
+		if (searchInput) {
+			searchInput.addEventListener('input', () => {
+				const query = searchInput.value.toLowerCase().trim();
+				const activeTab = directory.querySelector('.omnify-pm-tab.is-active');
+				const filter = activeTab ? (activeTab.dataset.filter || activeTab.dataset.group || 'all') : 'all';
+
+				cards.forEach(card => {
+					const cat = card.dataset.category || card.dataset.group || '';
+					const text = card.textContent.toLowerCase();
+					const matchCat = (filter === 'all' || cat === filter || (filter === 'manual' && cat === 'offline') || (filter === 'offline' && cat === 'manual'));
+					const matchSearch = (!query || text.includes(query));
+
+					if (matchCat && matchSearch) {
+						card.style.display = '';
+					} else {
+						card.style.display = 'none';
+					}
+				});
+			});
+		}
+
+		// 5. Expand All / Collapse All Toggle
+		if (toggleAllBtn) {
+			let allOpen = false;
+			toggleAllBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				allOpen = !allOpen;
+				cards.forEach(card => {
+					if (card.style.display !== 'none') {
+						if (allOpen) {
+							card.classList.add('is-expanded');
+						} else {
+							card.classList.remove('is-expanded');
+						}
+					}
+				});
+				toggleAllBtn.textContent = allOpen ? 'Collapse All' : 'Expand All';
+			});
+		}
+
+		// 6. Copy Webhook URL Buttons
+		directory.addEventListener('click', (e) => {
+			const copyBtn = e.target.closest('.omnify-copy-btn');
+			if (copyBtn) {
+				e.preventDefault();
+				const textToCopy = copyBtn.dataset.copy || '';
+				if (textToCopy) {
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						navigator.clipboard.writeText(textToCopy).then(showCopied).catch(fallbackCopy);
+					} else {
+						fallbackCopy();
+					}
+
+					function fallbackCopy() {
+						const input = copyBtn.closest('.omnify-copy-url-group')?.querySelector('input');
+						if (input) {
+							input.select();
+							document.execCommand('copy');
+							showCopied();
+						}
+					}
+
+					function showCopied() {
+						const origText = copyBtn.innerHTML;
+						copyBtn.classList.add('is-copied');
+						copyBtn.innerHTML = '<span>✓ Copied!</span>';
+						setTimeout(() => {
+							copyBtn.classList.remove('is-copied');
+							copyBtn.innerHTML = origText;
+						}, 2000);
+					}
+				}
+			}
+
+			// 7. Password Eye Show/Hide Toggle
+			const pwToggle = e.target.closest('.omnify-pw-toggle-btn');
+			if (pwToggle) {
+				e.preventDefault();
+				const wrap = pwToggle.closest('.omnify-password-field-wrap');
+				const input = wrap ? wrap.querySelector('input') : null;
+				if (input) {
+					const isPw = input.type === 'password';
+					input.type = isPw ? 'text' : 'password';
+					pwToggle.innerHTML = isPw 
+						? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+						: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+				}
+			}
+		});
+
+		// Initial count
+		updateActiveCount();
+	}
+
+	initPaymentGatewaysDirectory();
 });

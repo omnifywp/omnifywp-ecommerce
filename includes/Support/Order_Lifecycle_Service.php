@@ -31,6 +31,17 @@ class Omnify_Order_Lifecycle_Service {
 
 	public function register(): void {
 		add_action('omnify_order_status_changed', [$this, 'on_order_status_changed'], 10, 3);
+		add_action('omnify_order_created', [$this, 'on_order_created'], 10, 2);
+	}
+
+	public function on_order_created(int $omnify_order_id, array $omnify_data): void {
+		$omnify_status = sanitize_key((string) ($omnify_data['status'] ?? 'pending'));
+		if ('completed' === $omnify_status) {
+			$omnify_order = $this->omnify_orders->find($omnify_order_id);
+			if ($omnify_order) {
+				$this->grant_order_digital_access($omnify_order);
+			}
+		}
 	}
 
 	public function on_order_status_changed(int $omnify_order_id, string $omnify_new_status, string $omnify_old_status): void {
@@ -116,11 +127,12 @@ class Omnify_Order_Lifecycle_Service {
 
 		// Prevent duplicate restocking for the same order
 		$omnify_restocked_key = '_omnify_restocked_' . $omnify_order_id;
-		if (get_transient($omnify_restocked_key)) {
+		if (get_option($omnify_restocked_key)) {
 			return;
 		}
-		set_transient($omnify_restocked_key, 1, 300);
+		update_option($omnify_restocked_key, '1', false);
 
+		$omnify_items_restocked = 0;
 		foreach ($omnify_order['items'] as $omnify_item) {
 			$omnify_product_id = absint($omnify_item['product_id'] ?? 0);
 			$omnify_qty = max(0, (int) ($omnify_item['quantity'] ?? 0) - (int) ($omnify_item['refunded_qty'] ?? 0));
@@ -158,10 +170,18 @@ class Omnify_Order_Lifecycle_Service {
 			$this->omnify_products->log_stock_change(
 				$omnify_product_id,
 				$omnify_variation_id,
-				'restock',
 				$omnify_qty,
 				$omnify_new_qty,
-				sprintf('%s (Order %s)', $omnify_reason, (string) ($omnify_order['order_number'] ?: '#' . $omnify_order['id']))
+				sprintf('%s (Order %s)', $omnify_reason, (string) ($omnify_order['order_number'] ?: '#' . $omnify_order['id'])),
+				null
+			);
+			$omnify_items_restocked++;
+		}
+
+		if ($omnify_items_restocked > 0) {
+			$this->omnify_orders->add_note(
+				$omnify_order_id,
+				sprintf(__('Restocked items back to inventory (%s).', 'omnifywp-ecommerce'), $omnify_reason)
 			);
 		}
 	}

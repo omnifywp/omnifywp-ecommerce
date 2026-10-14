@@ -56,7 +56,10 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 		<div class="omnify-header-row__title">
 			<h1><?php esc_html_e('Overview', 'omnifywp-ecommerce'); ?></h1>
 			<p><?php
-			// translators: %s: placeholder value. echo esc_html(sprintf(__('Welcome to %s.', 'omnifywp-ecommerce'), $settings['store_name'] ?? '')); ?></p>
+				$omnify_store_name = ! empty($omnify_settings['store_name']) ? $omnify_settings['store_name'] : get_bloginfo('name');
+				/* translators: %s: store name */
+				echo esc_html(sprintf(__('Welcome to %s store overview.', 'omnifywp-ecommerce'), $omnify_store_name));
+			?></p>
 		</div>
 		<div class="omnify-header-row__actions">
 			<a href="<?php echo esc_url(home_url('/')); ?>" target="_blank" class="omnify-button omnify-button--secondary">

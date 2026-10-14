@@ -66,7 +66,9 @@ class Omnify_Storefront_Controller {
 		add_filter('rank_math/opengraph/facebook/url', [$this, 'filter_seo_canonical']);
 		add_filter('rank_math/opengraph/facebook/image', [$this, 'filter_seo_image']);
 		add_filter('body_class', [$this, 'add_storefront_body_classes']);
-		add_action('wp_enqueue_scripts', [$this, 'maybe_enqueue_menu_mini_cart_assets']);
+		add_action('wp_enqueue_scripts', [$this, 'maybe_enqueue_omnify_assets'], 99999);
+		add_action('wp_head', [$this, 'output_theme_isolation_barrier_styles'], 999999);
+		add_action('wp_footer', [$this, 'output_theme_isolation_barrier_styles'], 999999);
 		add_filter('wp_nav_menu_items', [$this, 'append_mini_cart_to_menu'], 20, 2);
 		$this->register_product_sitemap();
 
@@ -219,11 +221,213 @@ class Omnify_Storefront_Controller {
 		exit;
 	}
 
-	public function maybe_enqueue_menu_mini_cart_assets(): void {
-		$omnify_settings = get_option('omnify_settings', []);
-		if (! empty($omnify_settings['mini_cart_menu_enabled'])) {
+	public function is_omnify_frontend_request(): bool {
+		if (is_admin()) {
+			return false;
+		}
+
+		if (isset($_GET['omnify_product'])) {
+			return true;
+		}
+
+		$post = get_post();
+		if (! $post) {
+			return false;
+		}
+
+		$content = (string) $post->post_content;
+		if (
+			has_shortcode($content, 'omnify_storefront') ||
+			has_shortcode($content, 'omnify_cart') ||
+			has_shortcode($content, 'omnify_checkout') ||
+			has_shortcode($content, 'omnify_customer_portal') ||
+			has_shortcode($content, 'omnify_customer_downloads')
+		) {
+			return true;
+		}
+
+		$settings = get_option('omnify_settings', []);
+		$settings = is_array($settings) ? $settings : [];
+		$current_id = (int) $post->ID;
+		$configured_ids = array_filter([
+			(int) ($settings['page_storefront'] ?? 0),
+			(int) ($settings['cart_page_id'] ?? 0),
+			(int) ($settings['checkout_page_id'] ?? 0),
+			(int) ($settings['portal_page_id'] ?? 0),
+		]);
+
+		return in_array($current_id, $configured_ids, true);
+	}
+
+	public function maybe_enqueue_omnify_assets(): void {
+		$settings = get_option('omnify_settings', []);
+		$settings = is_array($settings) ? $settings : [];
+		$mini_cart_enabled = ! empty($settings['mini_cart_menu_enabled']);
+
+		if ($this->is_omnify_frontend_request() || $mini_cart_enabled) {
 			$this->enqueue_assets();
 		}
+	}
+
+	public function maybe_enqueue_menu_mini_cart_assets(): void {
+		$this->maybe_enqueue_omnify_assets();
+	}
+
+	public function output_theme_isolation_barrier_styles(): void {
+		static $omnify_isolation_printed = false;
+		if ($omnify_isolation_printed) {
+			return;
+		}
+
+		if (! $this->is_omnify_frontend_request()) {
+			$settings = get_option('omnify_settings', []);
+			$settings = is_array($settings) ? $settings : [];
+			if (empty($settings['mini_cart_menu_enabled'])) {
+				return;
+			}
+		}
+
+		$omnify_isolation_printed = true;
+		echo '<style id="omnify-theme-isolation-barrier">' . "\n";
+		echo $this->get_theme_isolation_css();
+		echo "\n" . '</style>' . "\n";
+	}
+
+	public function get_theme_isolation_css(): string {
+		return "
+			/* ==========================================================================
+			   OMNIFY THEME ISOLATION & ANTI-OVERRIDE BARRIER
+			   Guarantees plugin frontend is 100% immune to all WordPress theme CSS
+			   ========================================================================== */
+
+			/* 1. Universal Box-Sizing & Layout Protection */
+			:is(html body, #page, #content, .site, .site-main, .entry-content, article) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart, .omnify-quickview-modal, .omnify-toast-container, .omnify-floating-cart-btn),
+			:is(html body, #page, #content, .site, .site-main, .entry-content, article) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart, .omnify-quickview-modal, .omnify-toast-container, .omnify-floating-cart-btn) *,
+			:is(html body, #page, #content, .site, .site-main, .entry-content, article) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart, .omnify-quickview-modal, .omnify-toast-container, .omnify-floating-cart-btn) *::before,
+			:is(html body, #page, #content, .site, .site-main, .entry-content, article) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart, .omnify-quickview-modal, .omnify-toast-container, .omnify-floating-cart-btn) *::after {
+				box-sizing: border-box !important;
+				-webkit-font-smoothing: antialiased !important;
+				-moz-osx-font-smoothing: grayscale !important;
+			}
+
+			/* 2. Neutralize Theme Button Poisoning */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) :where(button, input[type='button'], input[type='submit']) {
+				letter-spacing: normal !important;
+				text-transform: none !important;
+				text-shadow: none !important;
+				margin: 0 !important;
+			}
+
+			/* 3. Neutralize Theme Link Distortions */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) a:not(.omnify-link-underlined):not(#omnify-cart-clear) {
+				text-decoration: none !important;
+				border-bottom: none !important;
+				box-shadow: none !important;
+			}
+
+			/* 4. Neutralize Theme List Bullets & Spacing */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) :is(ul, ol) {
+				list-style: none !important;
+				margin: 0 !important;
+				padding: 0 !important;
+			}
+
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) li {
+				list-style: none !important;
+				margin: 0 !important;
+				padding: 0 !important;
+			}
+
+			/* 5. Neutralize Theme Heading & Paragraph Distortions */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) :is(h1, h2, h3, h4, h5, h6) {
+				font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+				text-transform: none !important;
+				letter-spacing: normal !important;
+			}
+
+			/* 6. Neutralize Theme Table Striping & Heavy Borders */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper) :is(table, thead, tbody, tr, th, td) {
+				border: none !important;
+				background: transparent !important;
+				box-shadow: none !important;
+			}
+
+			/* 7. Protect Stepper Inputs from Theme Padding & Squeezing */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page) input.omnify-cart-qty-input,
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page) input.omnify-checkout-qty-input {
+				padding: 0 !important;
+				margin: 0 !important;
+				width: 32px !important;
+				height: 26px !important;
+				min-height: 26px !important;
+				max-height: 26px !important;
+				border: none !important;
+				background: transparent !important;
+				text-align: center !important;
+				font-size: 13px !important;
+				font-weight: 600 !important;
+				color: #0F172A !important;
+				box-shadow: none !important;
+				outline: none !important;
+				appearance: textfield !important;
+				-moz-appearance: textfield !important;
+			}
+
+			/* 8. Protect Stepper Buttons from Theme Bloat */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page) :is(button.omnify-cart-qty-btn, button.omnify-checkout-qty-btn) {
+				width: 26px !important;
+				height: 26px !important;
+				min-width: 26px !important;
+				min-height: 26px !important;
+				max-width: 26px !important;
+				max-height: 26px !important;
+				padding: 0 !important;
+				margin: 0 !important;
+				border: none !important;
+				border-radius: 4px !important;
+				background: transparent !important;
+				color: #475569 !important;
+				font-size: 14px !important;
+				font-weight: 600 !important;
+				line-height: 1 !important;
+				display: inline-flex !important;
+				align-items: center !important;
+				justify-content: center !important;
+				cursor: pointer !important;
+				box-shadow: none !important;
+			}
+
+			/* 9. Protect SVG Icons from Theme Auto-Expansion */
+			:is(html body, #page, .entry-content, .site-main) :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper, .omnify-mini-cart) svg {
+				max-width: none !important;
+				vertical-align: middle !important;
+			}
+
+			/* 10. Neutralize Theme Page Titles, Headers & Sidebars on Dedicated Omnify Pages */
+			body:is(.omnify-checkout-active, .omnify-cart-active, .omnify-storefront-active, .omnify-portal-active, .omnify-checkout-page, .omnify-cart-page, .omnify-storefront-page, .omnify-portal-page) :is(.entry-title, .page-title, .wp-block-post-title, .tutor-page-title, .wp-block-post-featured-image) {
+				display: none !important;
+			}
+
+			body:is(.omnify-checkout-active, .omnify-cart-active, .omnify-storefront-active, .omnify-portal-active, .omnify-checkout-page, .omnify-cart-page, .omnify-storefront-page, .omnify-portal-page) :is(#secondary, .sidebar, .widget-area, aside.widget-area) {
+				display: none !important;
+			}
+
+			body:is(.omnify-checkout-active, .omnify-cart-active, .omnify-storefront-active, .omnify-portal-active, .omnify-checkout-page, .omnify-cart-page, .omnify-storefront-page, .omnify-portal-page) :is(#primary, .content-area, .site-main, .entry-content, main, article) {
+				width: 100% !important;
+				max-width: 100% !important;
+				float: none !important;
+				padding-left: 0 !important;
+				padding-right: 0 !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+			}
+
+			/* 11. Eliminate Theme Container Margin Stacking & Provide Clean Top Gap */
+			:is(.entry-content, .site-main, .content-area, .post-inner) > :is(.omnify-storefront-wrapper, .omnify-checkout-wrapper, .omnify-cart-page, .omnify-pdp-wrapper, .omnify-portal-wrapper) {
+				margin-top: 36px !important;
+				margin-bottom: 40px !important;
+			}
+		";
 	}
 
 	public function add_storefront_body_classes(array $omnify_classes): array {
@@ -596,19 +800,27 @@ class Omnify_Storefront_Controller {
 	}
 
 	public function enqueue_assets(): void {
+		$omnify_settings = get_option('omnify_settings', []);
+		$omnify_settings = is_array($omnify_settings) ? $omnify_settings : [];
 		wp_enqueue_style('dashicons');
 
 		// Enqueue Stylesheet
+		$omnify_css_ver = file_exists(OMNIFY_PATH . 'assets/storefront/storefront.css') ? (string) filemtime(OMNIFY_PATH . 'assets/storefront/storefront.css') : OMNIFY_VERSION;
 		wp_enqueue_style(
 			'omnify-storefront-css',
 			OMNIFY_URL . 'assets/storefront/storefront.css',
 			[],
-			OMNIFY_VERSION
+			$omnify_css_ver
 		);
 
-		$omnify_settings = get_option('omnify_settings', []);
-		$omnify_primary_color = sanitize_hex_color($omnify_settings['design_primary_color'] ?? '#6366f1') ?: '#6366f1';
-		$omnify_hover_color   = sanitize_hex_color($omnify_settings['design_hover_color'] ?? '#4f46e5') ?: '#4f46e5';
+		$omnify_saved_primary = $omnify_settings['design_primary_color'] ?? '';
+		$omnify_primary_color = (! empty($omnify_saved_primary) && $omnify_saved_primary !== '#6366f1')
+			? (sanitize_hex_color($omnify_saved_primary) ?: '#0f766e')
+			: '#0f766e';
+		$omnify_saved_hover   = $omnify_settings['design_hover_color'] ?? '';
+		$omnify_hover_color   = (! empty($omnify_saved_hover) && $omnify_saved_hover !== '#4f46e5')
+			? (sanitize_hex_color($omnify_saved_hover) ?: '#115e59')
+			: '#115e59';
 		$omnify_radius        = intval($omnify_settings['design_border_radius'] ?? 8) . 'px';
 		$omnify_font          = preg_replace('/[^a-zA-Z0-9\s\'\",\-]/', '', $omnify_settings['design_font_family'] ?? "'Inter', system-ui, -apple-system, sans-serif");
 
@@ -655,11 +867,12 @@ class Omnify_Storefront_Controller {
 		wp_add_inline_style('omnify-storefront-css', $omnify_inline_css);
 
 		// Enqueue Script
+		$omnify_js_ver = file_exists(OMNIFY_PATH . 'assets/storefront/storefront.js') ? (string) filemtime(OMNIFY_PATH . 'assets/storefront/storefront.js') : OMNIFY_VERSION;
 		wp_enqueue_script(
 			'omnify-storefront-js',
 			OMNIFY_URL . 'assets/storefront/storefront.js',
 			[],
-			OMNIFY_VERSION,
+			$omnify_js_ver,
 			true
 		);
 
@@ -668,6 +881,16 @@ class Omnify_Storefront_Controller {
 			wp_enqueue_script(
 				'omnify-razorpay-checkout',
 				'https://checkout.razorpay.com/v1/checkout.js',
+				[],
+				OMNIFY_VERSION,
+				true
+			);
+		}
+
+		if (! empty($omnify_settings['paddle_enabled']) && ! empty($omnify_settings['paddle_checkout_enabled'])) {
+			wp_enqueue_script(
+				'omnify-paddle-checkout',
+				'https://cdn.paddle.com/paddle/v2/paddle.js',
 				[],
 				OMNIFY_VERSION,
 				true
@@ -769,6 +992,12 @@ class Omnify_Storefront_Controller {
 					'productCode'     => sanitize_text_field((string) ($omnify_settings['esewa_' . ('live' === ($omnify_settings['esewa_mode'] ?? 'test') ? 'live' : 'test') . '_product_code'] ?? '')),
 					'checkoutEnabled' => ! empty($omnify_settings['esewa_checkout_enabled']),
 				],
+				'paddle'      => [
+					'enabled'         => ! empty($omnify_settings['paddle_enabled']),
+					'mode'            => 'live' === ($omnify_settings['paddle_mode'] ?? 'sandbox') ? 'live' : 'sandbox',
+					'clientToken'     => sanitize_text_field((string) ($omnify_settings['paddle_' . ('live' === ($omnify_settings['paddle_mode'] ?? 'sandbox') ? 'live' : 'sandbox') . '_client_token'] ?? '')),
+					'checkoutEnabled' => ! empty($omnify_settings['paddle_checkout_enabled']),
+				],
 				'tracking'    => [
 					'ga4Enabled'  => ! empty($omnify_settings['tracking_ga4_enabled']),
 					'metaEnabled' => ! empty($omnify_settings['tracking_meta_enabled']),
@@ -780,11 +1009,28 @@ class Omnify_Storefront_Controller {
 					'freeShippingEnabled'  => ! empty($omnify_settings['cart_free_shipping_enabled']),
 					'freeShippingThreshold'=> floatval($omnify_settings['cart_free_shipping_threshold'] ?? 200.0),
 				],
+				'orderBump' => [
+					'enabled' => ! array_key_exists('order_bump_enabled', $omnify_settings) || ! empty($omnify_settings['order_bump_enabled']),
+					'title'   => sanitize_text_field((string) ($omnify_settings['order_bump_title'] ?? 'VIP Priority Processing & Extended Warranty')),
+					'desc'    => sanitize_textarea_field((string) ($omnify_settings['order_bump_desc'] ?? 'Skip the fulfillment queue with front-of-line priority dispatch plus 1-year accidental replacement guarantee.')),
+					'price'   => max(0.0, (float) ($omnify_settings['order_bump_price'] ?? 4.99)),
+				],
+				'orderBumpPrice' => max(0.0, (float) ($omnify_settings['order_bump_price'] ?? 4.99)),
 			]
 		);
 	}
 
 	private function page_url_for_shortcode(string $omnify_shortcode, string $omnify_fallback_path): string {
+		if ('[omnify_cart]' === $omnify_shortcode && function_exists('omnify_get_cart_url')) {
+			return omnify_get_cart_url();
+		}
+		if ('[omnify_checkout]' === $omnify_shortcode && function_exists('omnify_get_checkout_url')) {
+			return omnify_get_checkout_url();
+		}
+		if ('[omnify_storefront]' === $omnify_shortcode && function_exists('omnify_get_storefront_url')) {
+			return omnify_get_storefront_url();
+		}
+
 		$omnify_pages = get_posts([
 			'post_type'   => 'page',
 			's'           => $omnify_shortcode,
@@ -799,6 +1045,7 @@ class Omnify_Storefront_Controller {
 	}
 
 	private function currency_symbol(string $omnify_currency): string {
+		$omnify_currency = strtoupper($omnify_currency);
 		$omnify_symbols = [
 			'USD' => '$',
 			'EUR' => '€',
@@ -808,11 +1055,22 @@ class Omnify_Storefront_Controller {
 			'AUD' => 'A$',
 			'BDT' => '৳',
 			'INR' => '₹',
+			'NPR' => 'रू',
+			'PKR' => '₨',
 			'BRL' => 'R$',
 			'CNY' => '¥',
+			'AED' => 'د.إ',
+			'SAR' => 'ر.س',
+			'SGD' => 'S$',
+			'MYR' => 'RM',
+			'NGN' => '₦',
+			'NZD' => 'NZ$',
+			'CHF' => 'Fr',
+			'MXN' => '$',
+			'ZAR' => 'R',
 		];
 
-		return $omnify_symbols[strtoupper($omnify_currency)] ?? strtoupper($omnify_currency);
+		return $omnify_symbols[$omnify_currency] ?? $omnify_currency;
 	}
 
 	private function format_store_price(float $omnify_amount, array $omnify_settings): string {
@@ -1011,6 +1269,9 @@ class Omnify_Storefront_Controller {
 		$omnify_tax_rate = (float) ($omnify_settings['tax_rate'] ?? 0.0);
 		$omnify_tax_label = sanitize_text_field((string) ($omnify_settings['tax_label'] ?? 'Tax'));
 		$omnify_format_price = fn(float $omnify_amount): string => $this->format_store_price($omnify_amount, $omnify_settings);
+		$omnify_cart_url = $this->page_url_for_shortcode('[omnify_cart]', '/cart/');
+		$omnify_checkout_url = $this->page_url_for_shortcode('[omnify_checkout]', '/checkout/');
+		$omnify_storefront_url = $this->page_url_for_shortcode('[omnify_storefront]', '/storefront/');
 
 		$omnify_is_cart_checkout = isset($_GET['cart']) && '1' === sanitize_text_field(wp_unslash((string) $_GET['cart']));
 		$omnify_cart_items = [];
@@ -1116,6 +1377,36 @@ class Omnify_Storefront_Controller {
 				}
 				if (! $omnify_default_address && ! empty($omnify_addresses)) {
 					$omnify_default_address = $omnify_addresses[0];
+				}
+			}
+		}
+
+		$omnify_is_redirect_success = (isset($_GET['omnify_stripe']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_stripe'])))
+			|| (isset($_GET['omnify_paypal']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paypal'])))
+			|| (isset($_GET['omnify_alipay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_alipay'])))
+			|| (isset($_GET['omnify_wechat']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_wechat'])))
+			|| (isset($_GET['omnify_sslcommerz']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_sslcommerz'])))
+			|| (isset($_GET['omnify_paystack']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paystack'])))
+			|| (isset($_GET['omnify_tap']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_tap'])))
+			|| (isset($_GET['omnify_mollie']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_mollie'])))
+			|| (isset($_GET['omnify_khalti']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_khalti'])))
+			|| (isset($_GET['omnify_esewa']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_esewa'])))
+			|| (isset($_GET['omnify_paddle']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paddle'])));
+
+		$omnify_redirect_order_id = isset($_GET['order_id']) ? absint(wp_unslash($_GET['order_id'])) : 0;
+		$omnify_success_order = $omnify_redirect_order_id ? $this->omnify_orders->find($omnify_redirect_order_id) : null;
+		$omnify_success_files = [];
+		if ($omnify_is_redirect_success && $omnify_success_order) {
+			foreach ((array) ($omnify_success_order['items'] ?? []) as $omnify_ord_item) {
+				$omnify_item_files = $this->omnify_files->for_product((int) $omnify_ord_item['product_id']);
+				$omnify_order_cust_id = (int) ($omnify_success_order['customer_id'] ?? 0);
+				foreach ($omnify_item_files as $omnify_f) {
+					$omnify_signed_url = $this->omnify_signed_urls->create((int) $omnify_f['id'], 3600 * 24 * 7, $omnify_order_cust_id);
+					$omnify_success_files[] = [
+						'file_name'    => $omnify_f['file_name'],
+						'file_size'    => size_format((int) $omnify_f['file_size']),
+						'download_url' => $omnify_signed_url,
+					];
 				}
 			}
 		}
@@ -1732,8 +2023,9 @@ class Omnify_Storefront_Controller {
 						<label style="font-size:13px; font-weight:600; color:#334155;"><?php esc_html_e('Email Address', 'omnifywp-ecommerce'); ?></label>
 						<input type="email" name="order_email" value="<?php echo esc_attr($omnify_order_email); ?>" placeholder="e.g. you@example.com" required style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;" />
 					</div>
-					<button type="submit" class="omnify-btn omnify-btn--primary" style="background:#0f172a; color:#fff; border:none; padding:12px 20px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; margin-top:6px;">
-						<?php esc_html_e('Track Order', 'omnifywp-ecommerce'); ?>
+					<button type="submit" class="omnify-btn omnify-btn--primary omnify-track-submit-btn" style="background:#0f766e; color:#fff; border:none; min-height:44px; padding:0 28px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; margin-top:6px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+						<span class="dashicons dashicons-search" style="font-size:16px; width:16px; height:16px; line-height:1; vertical-align:middle;"></span>
+						<span><?php esc_html_e('Track Order', 'omnifywp-ecommerce'); ?></span>
 					</button>
 				</form>
 			</div>

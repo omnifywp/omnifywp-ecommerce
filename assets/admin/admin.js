@@ -254,6 +254,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		document.body.classList.add('omnify-admin-page-active');
 	}
 
+	// Remove preload guard after initial paint to prevent any transition shake/jitter on open
+	requestAnimationFrame(function() {
+		setTimeout(function() {
+			document.body.classList.remove('omnify-preload');
+		}, 60);
+	});
+
 	function initAdminCancelButtons() {
 		const settingsForms = document.querySelectorAll('.omnify-settings-content form');
 		settingsForms.forEach(form => {
@@ -355,6 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 
 		document.addEventListener('click', event => {
+			// Never intercept tabs, subtabs, or pagination/filter pills
+			if (event.target.closest('.omnify-tabs-wrapper, .omnify-subtabs, .omnify-subtab, .omnify-tab, .omnify-settings-subtabs, .omnify-settings-subtab, .omnify-modern-sub-nav, .omnify-analytics-subtabs, .omnify-analytics-subtab, .omnify-pdp-tabs-wrapper, .omnify-portal-tabs')) {
+				return;
+			}
+
 			const submitter = event.target.closest('button[type="submit"], input[type="submit"]');
 			if (submitter) {
 				return;
@@ -1837,29 +1849,65 @@ document.addEventListener('DOMContentLoaded', function() {
 			});
 		}
 
+		function activateAnalyticsTab(targetTab) {
+			const targetSec = targetTab.getAttribute('data-analytics-tab') || targetTab.getAttribute('data-section') || 'overview';
+
+			// Update tabs active state
+			analyticsTabs.forEach((t) => {
+				const isCurrent = t === targetTab;
+				t.classList.toggle('is-active', isCurrent);
+				t.classList.toggle('active', isCurrent);
+				t.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+			});
+
+			// Filter sections
+			analyticsSections.forEach((sec) => {
+				const secValues = (sec.getAttribute('data-analytics-section') || '')
+					.split(/[,\s]+/)
+					.filter(Boolean);
+
+				const isMatch = targetSec === 'all' || secValues.includes(targetSec);
+				if (isMatch) {
+					sec.removeAttribute('hidden');
+					sec.style.display = '';
+				} else {
+					sec.setAttribute('hidden', '');
+					sec.style.display = 'none';
+				}
+			});
+
+			// Hide parent grids if all their cards are hidden
+			analyticsGrids.forEach((grid) => {
+				const childSections = Array.from(grid.querySelectorAll('[data-analytics-section]'));
+				if (childSections.length > 0) {
+					const hasVisible = childSections.some((sec) => !sec.hasAttribute('hidden') && sec.style.display !== 'none');
+					if (hasVisible) {
+						grid.removeAttribute('hidden');
+						grid.style.display = '';
+					} else {
+						grid.setAttribute('hidden', '');
+						grid.style.display = 'none';
+					}
+				}
+			});
+
+			resizeAnalyticsCharts();
+		}
+
 		analyticsTabs.forEach((tab) => {
 			tab.addEventListener('click', (e) => {
 				e.preventDefault();
-				const targetSec = tab.getAttribute('data-section');
-				analyticsTabs.forEach((t) => t.classList.remove('active'));
-				tab.classList.add('active');
-
-				analyticsSections.forEach((sec) => {
-					if (sec.getAttribute('data-analytics-section') === targetSec) {
-						sec.style.display = 'block';
-						analyticsGrids.forEach(g => {
-							if (sec.contains(g)) g.style.display = '';
-						});
-					} else {
-						sec.style.display = 'none';
-					}
-				});
-
-				resizeAnalyticsCharts();
+				activateAnalyticsTab(tab);
 			});
 		});
 
 		window.addEventListener('resize', resizeAnalyticsCharts);
+
+		// Initialize active tab on page load
+		const initialActiveTab = analyticsTabs.find((t) => t.classList.contains('is-active') || t.classList.contains('active')) || analyticsTabs[0];
+		if (initialActiveTab) {
+			activateAnalyticsTab(initialActiveTab);
+		}
 
 		// Render Fallback Text Charts helper
 		function renderAnalyticsFallback(canvasId, fallbackData) {

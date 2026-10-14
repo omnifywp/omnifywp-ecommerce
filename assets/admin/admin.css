@@ -4,33 +4,66 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap');
 
+/* Prevent horizontal layout shifts / scrollbar pop-in jitter across all pages */
+html.wp-toolbar {
+	scrollbar-gutter: stable !important;
+	overflow-y: scroll !important;
+}
+
+/* Prevent CSS transitions from firing on page open (eliminates initial shift/shake) */
+body.omnify-preload *,
+body.omnify-preload *::before,
+body.omnify-preload *::after {
+	-webkit-transition: none !important;
+	-moz-transition: none !important;
+	-o-transition: none !important;
+	transition: none !important;
+	animation-duration: 0s !important;
+}
+
 :root {
-	/* Unified Omnify Design System (seamless with storefront) */
-	--omnify-primary: #6366f1;
-	--omnify-primary-hover: #4f46e5;
-	--omnify-primary-light: #e0e7ff;
-	--omnify-primary-glow: rgba(99, 102, 241, 0.12);
+	/* Unified SupportHub Design System Tokens */
+	--omnify-primary: #059669;
+	--omnify-primary-hover: #047857;
+	--omnify-primary-light: #ecfdf5;
+	--omnify-primary-border: #a7f3d0;
+	--omnify-primary-glow: rgba(5, 150, 105, 0.18);
+
+	--omnify-page-accent: #059669;
+	--omnify-page-accent-dark: #047857;
+	--omnify-page-accent-soft: #ecfdf5;
+	--omnify-page-border: #e2e8f0;
+	--omnify-page-border-strong: #cbd5e1;
+	--omnify-page-text: #0f172a;
+	--omnify-page-muted: #64748b;
+	--omnify-page-surface: #ffffff;
+	--omnify-page-bg: #f8fafc;
 
 	--omnify-success: #10b981;
-	--omnify-success-light: #d1fae5;
+	--omnify-success-light: #f0fdf4;
+	--omnify-success-border: #bbf7d0;
 	--omnify-danger: #ef4444;
-	--omnify-danger-light: #fee2e2;
+	--omnify-danger-light: #fef2f2;
 	--omnify-danger-bg: #fef2f2;
+	--omnify-danger-border: #fecaca;
 
 	--omnify-warning: #f59e0b;
-	--omnify-warning-light: #fef3c7;
-	--omnify-warning-bg: #fefce8;
+	--omnify-warning-light: #fffbeb;
+	--omnify-warning-bg: #fffbeb;
+	--omnify-warning-border: #fde68a;
 
 	--omnify-amber: #f59e0b;
-	--omnify-amber-light: #fef3c7;
+	--omnify-amber-light: #fffbeb;
 
-	--omnify-blue: #3b82f6;
-	--omnify-blue-light: #dbeafe;
+	--omnify-blue: #2563eb;
+	--omnify-blue-light: #eff6ff;
+	--omnify-blue-border: #bfdbfe;
 
 	--omnify-dark: #0f172a;
-	--omnify-text: #1e293b;
+	--omnify-text: #334155;
 	--omnify-muted: #64748b;
 
+	--omnify-gray-900: #0f172a;
 	--omnify-gray-800: #1e293b;
 	--omnify-gray-700: #334155;
 	--omnify-gray-600: #475569;
@@ -44,25 +77,32 @@
 	--omnify-white: #ffffff;
 	--omnify-bg: #f8fafc;
 
-	/* Radius & Shadows */
-	--omnify-radius-sm: 6px;
-	--omnify-radius: 10px;
+	/* SupportHub Radii & Shadows */
+	--omnify-radius-xs: 6px;
+	--omnify-radius-sm: 8px;
+	--omnify-radius-input: 12px;
+	--omnify-radius: 12px;
+	--omnify-radius-card: 16px;
 	--omnify-radius-lg: 16px;
 	--omnify-radius-xl: 20px;
+	--omnify-radius-pill: 9999px;
 
-	--omnify-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-	--omnify-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-	--omnify-card-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
-	--omnify-modal-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+	--omnify-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+	--omnify-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+	--omnify-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+	--omnify-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+	--omnify-card-hover-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.06);
+	--omnify-modal-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
 
 	/* Transitions */
-	--omnify-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	--omnify-transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 
-	/* Deprecated / legacy aliases for minimal breakage */
+	/* Backward Compatibility */
 	--omnify-green: var(--omnify-success);
 	--omnify-green-hover: #059669;
 	--omnify-green-light: var(--omnify-success-light);
 }
+
 
 /* Scoped Box-Sizing Reset */
 .omnify-admin-wrapper,
@@ -331,11 +371,12 @@
 .omnify-admin-wrapper {
 	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	color: var(--omnify-text);
-	margin: 20px 20px 40px 0;
-	max-width: min(1760px, calc(100vw - 200px));
+	margin: 20px auto 60px !important;
+	max-width: 1520px !important;
 	font-size: 14px;
 	line-height: 1.5;
 	background: transparent;
+	box-sizing: border-box !important;
 }
 
 /* Seamless Admin Header & Sections */
@@ -3307,8 +3348,7 @@ select.omnify-searchable-select {
 
 /* ── Settings Page Refresh ───────────────────────── */
 .omnify-settings-page {
-	max-width: min(1720px, calc(100vw - 210px));
-	padding-bottom: 64px;
+	width: 100%;
 }
 
 .omnify-settings-page .omnify-settings-layout {
@@ -4719,9 +4759,10 @@ body[class*="omnify"] #wpcontent {
 }
 
 .omnify-admin-wrapper {
-	max-width: min(1760px, calc(100vw - 220px)) !important;
-	margin: 24px 24px 48px 0 !important;
+	max-width: 1520px !important;
+	margin: 20px auto 60px !important;
 	color: var(--omnify-suite-text) !important;
+	box-sizing: border-box !important;
 }
 
 .omnify-header-row {
@@ -4765,29 +4806,36 @@ body[class*="omnify"] #wpcontent {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	min-height: 40px !important;
-	padding: 0 10px !important;
+	min-height: 36px !important;
+	padding: 0 14px !important;
 	border: 0 !important;
-	border-radius: 12px !important;
+	border-radius: 9px !important;
 	background: transparent !important;
-	color: var(--omnify-suite-muted) !important;
-	font-size: 14px !important;
-	font-weight: 600 !important;
+	color: var(--omnify-suite-muted, #64748b) !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
 	text-decoration: none !important;
 	box-shadow: none !important;
 	white-space: nowrap !important;
+	transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .omnify-tabs-wrapper a:hover,
 .omnify-tabs-wrapper a:focus,
-.omnify-tabs-wrapper a.active,
 .omnify-tabs-wrapper .omnify-tab:hover,
-.omnify-tabs-wrapper .omnify-tab:focus,
+.omnify-tabs-wrapper .omnify-tab:focus {
+	background: #f1f5f9 !important;
+	color: #0f172a !important;
+}
+
+.omnify-tabs-wrapper a.active,
+.omnify-tabs-wrapper a.is-active,
 .omnify-tabs-wrapper .omnify-tab.active,
 .omnify-tabs-wrapper .omnify-tab.is-active {
-	background: var(--omnify-suite-primary) !important;
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
 	color: #ffffff !important;
-	box-shadow: none !important;
+	font-weight: 600 !important;
+	box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.35) !important;
 }
 
 .omnify-card,
@@ -5410,13 +5458,13 @@ body[class*="omnify"] #wpcontent {
 	}
 }
 
-/* ── Redesigned Collapsible Listing Filter Bar ────────────────── */
+/* ── Redesigned Modern Slick Listing Filter Bar ────────────────── */
 .omnify-filter-card {
 	background: #ffffff !important;
 	border: 1px solid #e2e8f0 !important;
-	border-radius: 16px !important;
-	padding: 16px !important;
-	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02) !important;
+	border-radius: 14px !important;
+	padding: 14px 18px !important;
+	box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 6px -2px rgba(15, 23, 42, 0.02) !important;
 	margin-bottom: 20px !important;
 	width: 100% !important;
 	box-sizing: border-box !important;
@@ -5426,25 +5474,26 @@ body[class*="omnify"] #wpcontent {
 	display: flex !important;
 	flex-wrap: wrap !important;
 	align-items: flex-end !important;
-	gap: 16px !important;
+	gap: 12px 14px !important;
 	width: 100% !important;
 }
 
 .omnify-filter-group {
 	display: flex !important;
 	flex-direction: column !important;
-	width: 180px !important;
-	flex: 0 0 180px !important;
+	flex: 1 1 140px !important;
+	min-width: 135px !important;
+	max-width: 220px !important;
 	box-sizing: border-box !important;
 }
 
 .omnify-filter-group label {
-	font-size: 10px !important;
-	font-weight: 500 !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
 	color: #64748b !important;
 	text-transform: uppercase !important;
-	letter-spacing: 0.08em !important;
-	margin-bottom: 4px !important;
+	letter-spacing: 0.05em !important;
+	margin-bottom: 5px !important;
 	line-height: 1.2 !important;
 	display: block !important;
 }
@@ -5453,93 +5502,156 @@ body[class*="omnify"] #wpcontent {
 .omnify-filter-group input[type="date"],
 .omnify-filter-group input[type="number"],
 .omnify-filter-group select {
-	height: 34px !important;
-	min-height: 34px !important;
-	border: 1px solid #cbd5e1 !important;
-	border-radius: 12px !important;
-	padding: 6px 12px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	padding: 0 12px !important;
 	font-size: 13px !important;
-	background: #ffffff !important;
-	color: #1e293b !important;
+	font-weight: 500 !important;
+	background-color: #f8fafc !important;
+	color: #0f172a !important;
 	box-sizing: border-box !important;
 	width: 100% !important;
-	transition: border-color 0.2s, box-shadow 0.2s !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+}
+
+/* Custom SVG dropdown chevron for filter selects */
+.omnify-filter-group select {
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	padding-right: 32px !important;
+	background-color: #f8fafc !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 10px center !important;
+	background-size: 13px 13px !important;
+	cursor: pointer !important;
+}
+
+.omnify-filter-group input:hover,
+.omnify-filter-group select:hover {
+	background-color: #ffffff !important;
+	border-color: #cbd5e1 !important;
 }
 
 .omnify-filter-group input:focus,
 .omnify-filter-group select:focus {
-	border-color: #1f6f68 !important;
-	box-shadow: 0 0 0 3px rgba(31, 111, 104, 0.12) !important;
+	background-color: #ffffff !important;
+	border-color: #059669 !important;
+	box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
 	outline: none !important;
 }
 
 .omnify-filter-actions {
 	display: flex !important;
 	align-items: center !important;
-	gap: 10px !important;
+	gap: 8px !important;
 	margin-left: auto !important;
 	flex-shrink: 0 !important;
+	align-self: flex-end !important;
+	padding-bottom: 1px !important;
 }
 
-/* Custom rounded icon buttons for filters */
-.omnify-btn-apply-filters,
-.omnify-btn-clear-filters {
-	background: #1f6f68 !important; /* Forest green/teal */
+/* Modern sleek buttons for filters */
+.omnify-btn-apply-filters {
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
 	color: #ffffff !important;
-	border: none !important;
-	padding: 0 !important;
-	width: 34px !important;
-	height: 34px !important;
-	min-width: 34px !important;
-	max-width: 34px !important;
-	min-height: 34px !important;
-	max-height: 34px !important;
+	border: 1px solid transparent !important;
+	padding: 0 14px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
 	cursor: pointer !important;
-	transition: background-color 0.2s !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	box-sizing: border-box !important;
-	border-radius: 999px !important;
-	border-top-left-radius: 999px !important;
-	border-bottom-left-radius: 999px !important;
-	border-top-right-radius: 999px !important;
-	border-bottom-right-radius: 999px !important;
+	gap: 6px !important;
+	box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 	text-decoration: none !important;
-	flex: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
 }
 
 .omnify-btn-apply-filters:hover {
-	background: #154d48 !important;
+	background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+	box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+	transform: translateY(-1px) !important;
+	color: #ffffff !important;
+}
+
+.omnify-btn-apply-filters:active {
+	transform: translateY(0) !important;
+	box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25) !important;
 }
 
 .omnify-btn-clear-filters {
-	background: #ef4444 !important;
-}
-
-.omnify-btn-clear-filters:hover {
-	background: #dc2626 !important;
-}
-
-.omnify-btn-more-filters {
-	background: #ffffff !important;
-	color: #1e293b !important;
-	border: 1px solid #cbd5e1 !important;
-	border-radius: 999px !important;
-	padding: 0 18px !important;
+	background: #f8fafc !important;
+	color: #64748b !important;
+	border: 1px solid #e2e8f0 !important;
+	padding: 0 12px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
 	font-size: 13px !important;
 	font-weight: 500 !important;
-	height: 34px !important;
 	cursor: pointer !important;
-	transition: background-color 0.2s, border-color 0.2s !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
+	gap: 6px !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	text-decoration: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
+}
+
+.omnify-btn-clear-filters:hover {
+	background: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+	transform: translateY(-1px) !important;
+}
+
+.omnify-btn-clear-filters:active {
+	transform: translateY(0) !important;
+}
+
+.omnify-btn-label {
+	display: inline-block !important;
+	line-height: 1 !important;
+}
+
+.omnify-btn-more-filters {
+	background: #f8fafc !important;
+	color: #334155 !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	padding: 0 16px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	cursor: pointer !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 6px !important;
 }
 
 .omnify-btn-more-filters:hover {
-	background: #f8fafc !important;
-	border-color: #94a3b8 !important;
+	background: #ffffff !important;
+	border-color: #cbd5e1 !important;
+	color: #0f172a !important;
 }
 
 /* Collapsible drawer using CSS Grid transition */
@@ -7524,15 +7636,6 @@ body[class*="omnify"] #wpcontent {
 	color: #1f2937 !important;
 }
 
-.omnify-settings-page .omnify-header-row {
-	max-width: 1180px !important;
-	margin-bottom: 18px !important;
-}
-
-.omnify-settings-page .omnify-nav {
-	max-width: 1180px !important;
-	margin-bottom: 20px !important;
-}
 
 .omnify-settings-page .omnify-settings-layout {
 	grid-template-columns: 240px minmax(0, 920px) !important;
@@ -7931,8 +8034,6 @@ body[class*="omnify"] #wpcontent {
 }
 
 /* Wider settings content with smaller inner tabs. */
-.omnify-settings-page .omnify-header-row,
-.omnify-settings-page .omnify-nav,
 .omnify-settings-page .omnify-settings-layout {
 	max-width: 1440px !important;
 }
@@ -8966,8 +9067,8 @@ body.omnify-admin-page-active #wpfooter {
 	--omnify-settings-shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.045);
 	--omnify-settings-radius: 8px;
 	width: auto !important;
-	max-width: none !important;
-	margin: 22px 24px 64px 0 !important;
+	max-width: 1520px !important;
+	margin: 22px auto 64px !important;
 	color: var(--omnify-settings-ink);
 }
 
@@ -8982,30 +9083,7 @@ body.omnify-admin-page-active #wpfooter {
 	box-sizing: border-box;
 }
 
-.omnify-settings-page .omnify-header-row {
-	margin: 0 0 18px !important;
-	padding: 0 0 20px !important;
-	border-bottom: 1px solid var(--omnify-settings-border);
-	background: transparent !important;
-	box-shadow: none !important;
-}
-
-.omnify-settings-page .omnify-header-row h1 {
-	margin: 0 0 7px !important;
-	color: var(--omnify-settings-ink) !important;
-	font-size: 25px !important;
-	font-weight: 760 !important;
-	line-height: 1.16 !important;
-	letter-spacing: 0 !important;
-}
-
-.omnify-settings-page .omnify-header-row p {
-	max-width: 620px;
-	margin: 0 !important;
-	color: var(--omnify-settings-muted) !important;
-	font-size: 14px !important;
-	line-height: 1.5 !important;
-}
+/* Settings page header uses universal header styles */
 
 /* Settings page tabs removed to inherit unified layout styles */
 
@@ -11037,9 +11115,9 @@ body.omnify-admin-page-active #wpfooter {
 }
 
 .omnify-settings-page .omnify-modern-top-tab.is-active {
-	background: #f0fdf4 !important;
-	color: #136c5f !important;
-	box-shadow: inset 0 -2px 0 #136c5f !important;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	box-shadow: inset 0 -2px 0 #059669 !important;
 	border-radius: 8px 8px 0 0 !important;
 }
 
@@ -11070,7 +11148,7 @@ body.omnify-admin-page-active #wpfooter {
 	align-items: center !important;
 	gap: 10px !important;
 	padding: 12px 16px !important;
-	border-radius: 10px !important;
+	border-radius: 12px !important;
 	color: #64748b !important;
 	font-size: 13.5px !important;
 	font-weight: 600 !important;
@@ -11085,19 +11163,22 @@ body.omnify-admin-page-active #wpfooter {
 }
 
 .omnify-settings-page .omnify-modern-sub-tab.is-active {
-	background: #f0fdf4 !important;
-	color: #136c5f !important;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	font-weight: 700 !important;
+	border: 1px solid #a7f3d0 !important;
 }
 
 /* Need Help box */
 .omnify-settings-page .omnify-modern-help-card {
-	background: #f8fafc !important;
+	background: #ffffff !important;
 	border: 1px solid #e2e8f0 !important;
 	border-radius: 16px !important;
 	padding: 24px !important;
 	display: flex !important;
 	flex-direction: column !important;
 	gap: 12px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
 }
 
 .omnify-settings-page .omnify-modern-help-header {
@@ -11105,7 +11186,7 @@ body.omnify-admin-page-active #wpfooter {
 	align-items: center !important;
 	gap: 10px !important;
 	font-size: 15px !important;
-	font-weight: 500 !important;
+	font-weight: 700 !important;
 	color: #0f172a !important;
 }
 
@@ -11118,8 +11199,8 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-settings-page .omnify-modern-help-card a {
 	font-size: 13.5px !important;
-	font-weight: 600 !important;
-	color: #136c5f !important;
+	font-weight: 700 !important;
+	color: #059669 !important;
 	text-decoration: none !important;
 	display: inline-flex !important;
 	align-items: center !important;
@@ -11128,6 +11209,7 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-settings-page .omnify-modern-help-card a:hover {
 	text-decoration: underline !important;
+	color: #047857 !important;
 }
 
 /* Settings main Content Card */
@@ -11224,8 +11306,8 @@ body.omnify-admin-page-active #wpfooter {
 .omnify-settings-page .omnify-modern-form-group input:focus,
 .omnify-settings-page .omnify-modern-form-group select:focus,
 .omnify-settings-page .omnify-modern-form-group textarea:focus {
-	border-color: #136c5f !important;
-	box-shadow: 0 0 0 4px rgba(19, 108, 95, 0.1) !important;
+	border-color: #10b981 !important;
+	box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
 	outline: none !important;
 }
 
@@ -11241,7 +11323,7 @@ body.omnify-admin-page-active #wpfooter {
 	display: inline-flex !important;
 	background: #f1f5f9 !important;
 	border: 1px solid var(--omnify-gray-200) !important;
-	border-radius: 8px !important;
+	border-radius: 9999px !important;
 	padding: 3px !important;
 	max-width: fit-content !important;
 	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02) !important;
@@ -11269,7 +11351,7 @@ body.omnify-admin-page-active #wpfooter {
 	font-size: 13px !important;
 	font-weight: 600 !important;
 	color: var(--omnify-gray-500) !important;
-	border-radius: 6px !important;
+	border-radius: 9999px !important;
 	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	background: transparent !important;
 }
@@ -11281,8 +11363,8 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-settings-page .omnify-yes-no-btn input[type="radio"]:checked + span {
 	background: #ffffff !important;
-	color: var(--omnify-page-accent) !important;
-	font-weight: 500 !important;
+	color: #059669 !important;
+	font-weight: 700 !important;
 	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
 
@@ -11322,24 +11404,26 @@ body.omnify-admin-page-active #wpfooter {
 	align-items: center !important;
 	justify-content: center !important;
 	gap: 8px !important;
-	padding: 12px 24px !important;
-	border-radius: 8px !important;
-	font-size: 14px !important;
-	font-weight: 600 !important;
+	padding: 10px 22px !important;
+	border-radius: 9999px !important;
+	font-size: 13.5px !important;
+	font-weight: 700 !important;
 	cursor: pointer !important;
 	transition: all 0.2s ease !important;
 	text-decoration: none !important;
 }
 
 .omnify-settings-page .omnify-modern-btn-primary {
-	background: #136c5f !important;
+	background: #059669 !important;
 	color: #ffffff !important;
 	border: none !important;
+	box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25) !important;
 }
 
 .omnify-settings-page .omnify-modern-btn-primary:hover {
-	background: #0f5248 !important;
-	box-shadow: 0 4px 12px rgba(19, 108, 95, 0.2) !important;
+	background: #047857 !important;
+	box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+	transform: translateY(-1px) !important;
 }
 
 .omnify-settings-page .omnify-modern-btn-secondary {
@@ -11374,7 +11458,7 @@ body.omnify-admin-page-active #wpfooter {
 	gap: 8px !important;
 	min-height: 38px !important;
 	padding: 8px 18px !important;
-	border-radius: 8px !important;
+	border-radius: 9999px !important;
 	font-size: 13px !important;
 	font-weight: 600 !important;
 	line-height: 1 !important;
@@ -11409,8 +11493,6 @@ body.omnify-admin-page-active #wpfooter {
 	vertical-align: middle !important;
 }
 
-/* Legacy global tabs block removed to inherit unified layout styles */
-
 /* Modern Inner Page Sub-Tabs */
 .omnify-settings-subtabs {
 	display: inline-flex !important;
@@ -11442,17 +11524,10 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-settings-subtab.is-active,
 .omnify-settings-subtab.active {
-	color: #0d9488 !important;
-	border-bottom: 2.5px solid #0d9488 !important;
-	font-weight: 600 !important;
+	color: #059669 !important;
+	border-bottom: 2.5px solid #059669 !important;
+	font-weight: 700 !important;
 	background: transparent !important;
-}
-
-/* Layout padding and header gear icon centering overrides */
-.omnify-admin-wrapper {
-	padding-left: 24px !important;
-	padding-right: 24px !important;
-	margin-top: 24px !important;
 }
 
 .omnify-settings-page .omnify-modern-header-logo span.dashicons {
@@ -11473,143 +11548,241 @@ body.omnify-admin-page-active #wpfooter {
 
 /* Analytics dashboard refresh */
 .omnify-admin-wrapper.omnify-analytics-page {
-	--omnify-analytics-accent: #14776c;
-	--omnify-analytics-accent-dark: #0f5f57;
-	--omnify-analytics-accent-soft: #e6f5f2;
-	--omnify-analytics-border: #dbe5ec;
+	--omnify-analytics-accent: #059669;
+	--omnify-analytics-accent-dark: #047857;
+	--omnify-analytics-accent-soft: #ecfdf5;
+	--omnify-analytics-border: #e2e8f0;
 	--omnify-analytics-muted: #64748b;
 	--omnify-analytics-text: #0f172a;
 	--omnify-analytics-surface: #ffffff;
-	--omnify-analytics-page: #f3f7f9;
-	background: var(--omnify-analytics-page) !important;
-	padding: 28px 28px 72px !important;
+	--omnify-analytics-page: #f8fafc;
 	color: var(--omnify-analytics-text) !important;
-	max-width: none !important;
+	box-sizing: border-box !important;
 }
 
-.omnify-analytics-page .omnify-header-row {
-	margin: 0 0 24px !important;
-	padding: 12px 0 24px !important;
-	border-bottom: 1px solid var(--omnify-analytics-border);
-}
+/* Analytics page header uses universal header styles */
 
-.omnify-analytics-page .omnify-header-row h1 {
-	font-size: 28px !important;
-	line-height: 1.15 !important;
-	color: var(--omnify-analytics-text) !important;
-}
-
-.omnify-analytics-page .omnify-header-row p {
-	font-size: 14px !important;
-	color: var(--omnify-analytics-muted) !important;
-}
-
-.omnify-analytics-page .omnify-button--primary,
-.omnify-analytics-page .omnify-btn-apply-filters {
-	background: var(--omnify-analytics-accent) !important;
-	border-color: var(--omnify-analytics-accent) !important;
+.omnify-analytics-page .omnify-button--primary {
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+	border: 1px solid transparent !important;
+	border-radius: 10px !important;
 	color: #ffffff !important;
-	box-shadow: 0 12px 24px rgba(20, 119, 108, 0.18) !important;
+	font-weight: 600 !important;
+	box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.omnify-analytics-page .omnify-button--primary:hover,
-.omnify-analytics-page .omnify-btn-apply-filters:hover {
-	background: var(--omnify-analytics-accent-dark) !important;
-	border-color: var(--omnify-analytics-accent-dark) !important;
+.omnify-analytics-page .omnify-button--primary:hover {
+	background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+	box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+	transform: translateY(-1px) !important;
 }
 
 /* Analytics page inherits unified top tabs */
 
 .omnify-analytics-page .omnify-filter-card {
-	background: var(--omnify-analytics-surface) !important;
-	border: 1px solid var(--omnify-analytics-border) !important;
-	border-radius: 8px !important;
-	padding: 16px !important;
-	margin: 0 0 14px !important;
-	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05) !important;
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 14px !important;
+	padding: 14px 18px !important;
+	margin: 0 0 20px !important;
+	box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 6px -2px rgba(15, 23, 42, 0.02) !important;
 }
 
 .omnify-analytics-page .omnify-filter-row {
-	display: grid !important;
-	grid-template-columns: repeat(6, minmax(135px, 1fr)) auto !important;
-	gap: 14px !important;
-	align-items: end !important;
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 12px 14px !important;
+	align-items: flex-end !important;
+	width: 100% !important;
+}
+
+.omnify-analytics-page .omnify-filter-group {
+	flex: 1 1 140px !important;
+	min-width: 135px !important;
+	max-width: 220px !important;
+	box-sizing: border-box !important;
 }
 
 .omnify-analytics-page .omnify-filter-group label {
 	display: block !important;
-	margin: 0 0 7px !important;
-	color: #223044 !important;
-	font-size: 12px !important;
-	font-weight: 500 !important;
+	margin: 0 0 5px !important;
+	color: #64748b !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.05em !important;
+	line-height: 1.2 !important;
 }
 
 .omnify-analytics-page .omnify-filter-group select,
 .omnify-analytics-page .omnify-filter-group input[type="date"] {
-	min-height: 42px !important;
-	border: 1px solid var(--omnify-analytics-border) !important;
-	border-radius: 6px !important;
+	min-height: 38px !important;
+	height: 38px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	background-color: #f8fafc !important;
+	color: #0f172a !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	padding: 0 12px !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+}
+
+.omnify-analytics-page .omnify-filter-group select {
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	padding-right: 32px !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 10px center !important;
+	background-size: 13px 13px !important;
+	cursor: pointer !important;
+}
+
+.omnify-analytics-page .omnify-filter-group select:hover,
+.omnify-analytics-page .omnify-filter-group input[type="date"]:hover {
 	background-color: #ffffff !important;
-	color: var(--omnify-analytics-text) !important;
+	border-color: #cbd5e1 !important;
+}
+
+.omnify-analytics-page .omnify-filter-group select:focus,
+.omnify-analytics-page .omnify-filter-group input[type="date"]:focus {
+	background-color: #ffffff !important;
+	border-color: #059669 !important;
+	box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+	outline: none !important;
 }
 
 .omnify-analytics-page .omnify-filter-actions {
 	display: flex !important;
+	align-items: center !important;
 	gap: 8px !important;
-	align-items: end !important;
+	margin-left: auto !important;
+	flex-shrink: 0 !important;
+	align-self: flex-end !important;
+	padding-bottom: 1px !important;
 }
 
-.omnify-analytics-page .omnify-btn-apply-filters,
-.omnify-analytics-page .omnify-btn-clear-filters {
-	width: 42px !important;
-	height: 42px !important;
-	border-radius: 6px !important;
+.omnify-analytics-page .omnify-btn-apply-filters {
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+	color: #ffffff !important;
+	border: 1px solid transparent !important;
+	padding: 0 14px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 6px !important;
+	box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	text-decoration: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
+}
+
+.omnify-analytics-page .omnify-btn-apply-filters:hover {
+	background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+	box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+	transform: translateY(-1px) !important;
+	color: #ffffff !important;
+}
+
+.omnify-analytics-page .omnify-btn-apply-filters:active {
+	transform: translateY(0) !important;
+	box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25) !important;
 }
 
 .omnify-analytics-page .omnify-btn-clear-filters {
-	background: #ffffff !important;
-	border: 1px solid #fecaca !important;
-	color: #ef4444 !important;
+	background: #f8fafc !important;
+	color: #64748b !important;
+	border: 1px solid #e2e8f0 !important;
+	padding: 0 12px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 6px !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	text-decoration: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
+}
+
+.omnify-analytics-page .omnify-btn-clear-filters:hover {
+	background: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+	transform: translateY(-1px) !important;
+}
+
+.omnify-analytics-page .omnify-btn-clear-filters:active {
+	transform: translateY(0) !important;
 }
 
 .omnify-analytics-subtabs {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin: 0 0 18px;
-	padding: 6px;
-	width: fit-content;
-	max-width: 100%;
-	overflow-x: auto;
-	background: #ffffff;
-	border: 1px solid var(--omnify-analytics-border);
-	border-radius: 8px;
-	box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 4px !important;
+	margin: 0 0 20px !important;
+	padding: 4px !important;
+	width: fit-content !important;
+	max-width: 100% !important;
+	overflow-x: auto !important;
+	background: #f1f5f9 !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 9999px !important;
+	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02) !important;
 }
 
 .omnify-analytics-subtab {
-	appearance: none;
+	appearance: none !important;
 	border: 0 !important;
-	border-radius: 6px !important;
+	border-radius: 9999px !important;
 	background: transparent !important;
-	color: #526174 !important;
-	cursor: pointer;
-	font-size: 13px !important;
-	font-weight: 500 !important;
+	color: #64748b !important;
+	cursor: pointer !important;
+	font-size: 12.5px !important;
+	font-weight: 600 !important;
 	line-height: 1 !important;
-	padding: 10px 14px !important;
-	white-space: nowrap;
+	min-height: 32px !important;
+	padding: 0 16px !important;
+	white-space: nowrap !important;
 	box-shadow: none !important;
+	transition: all 0.15s ease !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 }
 
 .omnify-analytics-subtab:hover {
-	background: #f4f8fa !important;
-	color: var(--omnify-analytics-text) !important;
+	background: rgba(255, 255, 255, 0.6) !important;
+	color: #0f172a !important;
 }
 
 .omnify-analytics-subtab.is-active {
-	background: var(--omnify-analytics-accent) !important;
-	color: #ffffff !important;
+	background: #ffffff !important;
+	color: #059669 !important;
+	font-weight: 700 !important;
+	border-radius: 9999px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
 }
 
 .omnify-analytics-page [data-analytics-section][hidden],
@@ -11621,47 +11794,68 @@ body.omnify-admin-page-active #wpfooter {
 .omnify-analytics-page .omnify-dashboard-stats {
 	display: grid !important;
 	grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-	gap: 12px !important;
-	margin-bottom: 16px !important;
+	gap: 14px !important;
+	margin-bottom: 20px !important;
 }
 
 .omnify-analytics-page .omnify-dashboard-stat-card,
 .omnify-analytics-page .omnify-card {
 	background: #ffffff !important;
-	border: 1px solid var(--omnify-analytics-border) !important;
-	border-radius: 8px !important;
-	box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05) !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
+}
+
+.omnify-analytics-page .omnify-dashboard-stat-card:hover,
+.omnify-analytics-page .omnify-card:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.06) !important;
+	transform: translateY(-2px) !important;
 }
 
 .omnify-analytics-page .omnify-dashboard-stat-card {
-	min-height: 92px !important;
-	padding: 14px !important;
+	min-height: 96px !important;
+	padding: 16px 18px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 6px !important;
 }
 
 .omnify-analytics-page .omnify-dashboard-stat-card__label {
 	display: block !important;
 	color: #64748b !important;
-	font-size: 12px !important;
-	font-weight: 500 !important;
+	font-size: 11.5px !important;
+	font-weight: 700 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.05em !important;
+	margin: 0 !important;
 }
 
 .omnify-analytics-page .omnify-dashboard-stat-card__value {
-	color: var(--omnify-analytics-text) !important;
-	font-size: 24px !important;
-	font-weight: 600 !important;
+	color: #0f172a !important;
+	font-size: 26px !important;
+	font-weight: 800 !important;
+	line-height: 1.1 !important;
+	letter-spacing: -0.03em !important;
+	margin: 0 !important;
 }
 
 .omnify-analytics-page .omnify-trend {
-	background: #dcfce7 !important;
-	border-radius: 6px !important;
-	color: #047857 !important;
+	background: #f0fdf4 !important;
+	border: 1px solid #bbf7d0 !important;
+	border-radius: 9999px !important;
+	color: #15803d !important;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	padding: 2px 8px !important;
 }
 
 .omnify-analytics-page .omnify-charts-grid {
 	display: grid !important;
 	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 	gap: 16px !important;
-	margin-bottom: 16px !important;
+	margin-bottom: 20px !important;
 }
 
 .omnify-analytics-page .omnify-charts-grid > .omnify-card[data-analytics-section="overview"] {
@@ -11670,14 +11864,17 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-analytics-page .omnify-card__header {
 	background: #ffffff !important;
-	border-bottom: 1px solid #e7eef3 !important;
-	padding: 16px 18px !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+	border-top-left-radius: 16px !important;
+	border-top-right-radius: 16px !important;
+	padding: 18px 22px !important;
 }
 
 .omnify-analytics-page .omnify-card__header h3 {
-	color: var(--omnify-analytics-text) !important;
-	font-size: 14px !important;
-	font-weight: 600 !important;
+	color: #0f172a !important;
+	font-size: 15px !important;
+	font-weight: 800 !important;
+	letter-spacing: -0.02em !important;
 }
 
 .omnify-analytics-page canvas {
@@ -11801,7 +11998,11 @@ body.omnify-admin-page-active #wpfooter {
 		gap: 14px !important;
 	}
 
-	.omnify-analytics-page .omnify-filter-row,
+	.omnify-analytics-page .omnify-filter-row {
+		flex-direction: column !important;
+		align-items: stretch !important;
+	}
+
 	.omnify-analytics-page .omnify-dashboard-stats,
 	.omnify-analytics-page .omnify-charts-grid,
 	.omnify-analytics-page .omnify-bottom-cards-grid {
@@ -11832,113 +12033,260 @@ body.omnify-admin-page-active #wpfooter {
 	--omnify-page-danger: #dc2626;
 }
 
-/* Shared admin page layout refresh for dashboard, orders, products, customers, coupons, and tools */
-body[class*="_page_omnify"] .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page),
-body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) {
+/* Shared admin page layout refresh across all admin pages (Dashboard, Orders, Products, Customers, Coupons, Analytics, Settings, Tools) */
+body[class*="_page_omnify"] .omnify-admin-wrapper,
+body.toplevel_page_omnify .omnify-admin-wrapper {
 	background: var(--omnify-page-bg) !important;
 	color: var(--omnify-page-text) !important;
-	margin: 0 !important;
-	max-width: none !important;
+	margin: 20px auto 60px !important;
+	max-width: 1520px !important;
 	min-height: calc(100vh - 32px) !important;
-	padding: 28px 28px 72px !important;
+	padding: 28px 32px 72px !important;
+	box-sizing: border-box !important;
 }
 
 body[class*="_page_omnify"] #wpbody-content,
 body.toplevel_page_omnify #wpbody-content {
 	background: #eef4f7 !important;
+	box-sizing: border-box !important;
+	padding-right: 0 !important;
 }
 
-body[class*="_page_omnify"] .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) *,
-body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) * {
+body[class*="_page_omnify"] .omnify-admin-wrapper *,
+body.toplevel_page_omnify .omnify-admin-wrapper * {
 	letter-spacing: 0 !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row {
+/* ==========================================================================
+   Universal Admin Page Header Row (100% SupportHub Standard Layout)
+   ========================================================================== */
+.omnify-admin-wrapper .omnify-header-row {
 	display: flex !important;
-	align-items: flex-start !important;
+	align-items: center !important;
 	justify-content: space-between !important;
 	gap: 18px !important;
 	margin: 0 0 24px !important;
-	padding: 12px 0 24px !important;
-	border-bottom: 1px solid var(--omnify-page-border) !important;
+	padding: 4px 0 22px !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	max-width: 100% !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row h1 {
+.omnify-admin-wrapper .omnify-header-row__title {
+	flex: 1 1 auto !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row h1,
+.omnify-admin-wrapper .omnify-header-row h2 {
+	margin: 0 0 4px 0 !important;
+	color: #0f172a !important;
+	font-size: 26px !important;
+	font-weight: 800 !important;
+	line-height: 1.2 !important;
+	letter-spacing: -0.025em !important;
+	font-family: inherit !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row p,
+.omnify-admin-wrapper .omnify-header-row__title p {
 	margin: 0 !important;
-	color: var(--omnify-page-text) !important;
-	font-size: 28px !important;
-	font-weight: 600 !important;
-	line-height: 1.15 !important;
-}
-
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row p,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row__title p {
-	margin: 8px 0 0 !important;
-	color: var(--omnify-page-muted) !important;
-	font-size: 14px !important;
+	color: #64748b !important;
+	font-size: 13.5px !important;
 	line-height: 1.5 !important;
+	font-weight: 400 !important;
+	max-width: none !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row__actions,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button-group {
+.omnify-admin-wrapper .omnify-header-row__actions,
+.omnify-admin-wrapper .omnify-button-group {
 	display: flex !important;
 	align-items: center !important;
 	flex-wrap: wrap !important;
 	gap: 10px !important;
+	flex-shrink: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row__actions .omnify-button,
+.omnify-admin-wrapper .omnify-header-row__actions .button,
+.omnify-admin-wrapper .omnify-header-row__actions a.omnify-button {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 6px !important;
+	height: 38px !important;
+	padding: 0 18px !important;
+	border-radius: 9999px !important;
+	font-size: 13.5px !important;
+	font-weight: 600 !important;
+	text-decoration: none !important;
+	transition: all 0.15s ease !important;
+	white-space: nowrap !important;
+	box-sizing: border-box !important;
+	line-height: 1 !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row__actions .omnify-button--primary {
+	background: #059669 !important;
+	border: 1px solid #059669 !important;
+	color: #ffffff !important;
+	box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2), 0 1px 2px rgba(5, 150, 105, 0.12) !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row__actions .omnify-button--primary:hover {
+	background: #047857 !important;
+	border-color: #047857 !important;
+	color: #ffffff !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row__actions .omnify-button--secondary {
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	color: #334155 !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.omnify-admin-wrapper .omnify-header-row__actions .omnify-button--secondary:hover {
+	background: #f8fafc !important;
+	border-color: #cbd5e1 !important;
+	color: #0f172a !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-track {
+	display: block !important;
+	width: 100% !important;
+	clear: both !important;
+	margin: 0 0 20px 0 !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper {
 	display: flex !important;
 	align-items: center !important;
 	flex-wrap: nowrap !important;
-	gap: 8px !important;
+	gap: 4px !important;
+	max-width: 100% !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
 	overflow-x: auto !important;
-	margin: 0 0 24px !important;
-	padding: 6px !important;
+	margin: 0 0 22px 0 !important;
+	padding: 6px 8px !important;
 	background: #ffffff !important;
-	border: 1px solid var(--omnify-page-border) !important;
-	border-radius: 12px !important;
-	box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03) !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 14px !important;
+	box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 6px -2px rgba(15, 23, 42, 0.02) !important;
+	clear: both !important;
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper::-webkit-scrollbar,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-subtabs::-webkit-scrollbar {
 	display: none !important;
+	height: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-nav-brand {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 9px !important;
+	padding: 4px 14px 4px 6px !important;
+	margin-right: 6px !important;
+	border-right: 1px solid #e2e8f0 !important;
+	text-decoration: none !important;
+	flex-shrink: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-nav-brand__icon {
+	width: 26px !important;
+	height: 26px !important;
+	border-radius: 8px !important;
+	background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+	box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+	object-fit: contain !important;
+	flex-shrink: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-nav-brand__text {
+	font-size: 14px !important;
+	font-weight: 800 !important;
+	color: #0f172a !important;
+	letter-spacing: -0.025em !important;
+	line-height: 1 !important;
+	white-space: nowrap !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-nav-brand__accent {
+	color: #059669 !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-nav-brand__badge {
+	font-size: 10px !important;
+	font-weight: 700 !important;
+	color: #059669 !important;
+	background: #ecfdf5 !important;
+	border: 1px solid #a7f3d0 !important;
+	padding: 1.5px 7px !important;
+	border-radius: 9999px !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.03em !important;
+	line-height: 1.2 !important;
+	white-space: nowrap !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper a,
 .omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab {
+	flex: 0 0 auto !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	gap: 6px !important;
 	min-height: 36px !important;
-	padding: 0 16px !important;
+	padding: 0 14px !important;
 	border: 0 !important;
-	border-radius: 8px !important;
+	border-radius: 9px !important;
 	background: transparent !important;
-	color: var(--omnify-gray-600) !important;
-	font-size: 14px !important;
-	font-weight: 600 !important;
+	color: #64748b !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
 	text-decoration: none !important;
 	white-space: nowrap !important;
 	box-shadow: none !important;
-	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	box-sizing: border-box !important;
+	text-align: center !important;
+	cursor: pointer !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper a:hover,
 .omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab:hover {
-	background: var(--omnify-gray-50) !important;
-	color: var(--omnify-gray-900) !important;
+	background: #f1f5f9 !important;
+	color: #0f172a !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper a.is-active,
 .omnify-admin-wrapper .omnify-tabs-wrapper a.active,
 .omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab.is-active,
 .omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab.active {
-	background: var(--omnify-page-accent-soft) !important;
-	color: var(--omnify-page-accent) !important;
-	font-weight: 500 !important;
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+	color: #ffffff !important;
+	font-weight: 600 !important;
+	box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.35) !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper a.is-active .dashicons,
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab.is-active .dashicons {
+	color: #ffffff !important;
+}
+
+.omnify-admin-wrapper .omnify-tabs-wrapper a *,
+.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab *,
+.omnify-admin-wrapper .omnify-subtabs a *,
+.omnify-admin-wrapper .omnify-subtab *,
+.omnify-admin-wrapper .omnify-settings-subtab *,
+.omnify-admin-wrapper .omnify-modern-sub-tab * {
+	pointer-events: none !important;
 }
 
 .omnify-admin-wrapper .omnify-tabs-wrapper .dashicons,
@@ -11947,21 +12295,29 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	margin-right: 0 !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-subtabs,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status-filters,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-subtabs {
+.omnify-admin-wrapper .omnify-subtabs-track {
+	display: block !important;
+	width: 100% !important;
+	clear: both !important;
+	margin: 0 0 20px 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-subtabs,
+.omnify-admin-wrapper .omnify-status-filters,
+.omnify-admin-wrapper .omnify-product-subtabs {
 	display: flex !important;
 	align-items: center !important;
 	gap: 4px !important;
 	width: fit-content !important;
 	max-width: 100% !important;
-	margin: 0 0 20px !important;
+	margin: 0 0 20px 0 !important;
 	padding: 4px !important;
 	overflow-x: auto !important;
 	background: #f1f5f9 !important;
-	border: 1px solid var(--omnify-gray-200) !important;
-	border-radius: 10px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 9999px !important;
 	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	clear: both !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-subtab,
@@ -11976,23 +12332,23 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	padding: 0 14px !important;
 	margin: 0 !important;
 	border: 0 !important;
-	border-radius: 7px !important;
+	border-radius: 9999px !important;
 	background: transparent !important;
-	color: var(--omnify-gray-600) !important;
-	font-size: 13px !important;
+	color: #64748b !important;
+	font-size: 12.5px !important;
 	font-weight: 600 !important;
 	text-decoration: none !important;
 	white-space: nowrap !important;
 	box-shadow: none !important;
-	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	transition: all 0.15s ease !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-subtab:hover,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status-filters a:hover,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status-filters .omnify-button:hover,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-subtab:hover {
-	background: rgba(255, 255, 255, 0.5) !important;
-	color: var(--omnify-gray-900) !important;
+	background: rgba(255, 255, 255, 0.6) !important;
+	color: #0f172a !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-subtab.is-active,
@@ -12000,27 +12356,27 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status-filters .omnify-button--primary,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-subtab.is-active {
 	background: #ffffff !important;
-	color: var(--omnify-page-accent) !important;
-	font-weight: 500 !important;
+	color: #059669 !important;
+	font-weight: 700 !important;
+	border-radius: 9999px !important;
 	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
 
+/* SupportHub Card Styling */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-admin-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-admin-panel,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-stat-card,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-kpi-card,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-editor-section-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-hero-card {
 	background: #ffffff !important;
-	border: 1px solid var(--omnify-page-border) !important;
-	border-radius: 8px !important;
-	box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05) !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card {
-	padding: 20px !important;
+	padding: 24px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card[style*="padding: 0"],
@@ -12034,9 +12390,11 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-editor-section-card__header,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .form-header {
 	margin: 0 !important;
-	padding: 16px 18px !important;
+	padding: 18px 22px !important;
 	background: #ffffff !important;
-	border-bottom: 1px solid #e7eef3 !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+	border-top-left-radius: 16px !important;
+	border-top-right-radius: 16px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card__header h2,
@@ -12045,107 +12403,156 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .form-header h2,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card > h2,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card h3 {
-	color: var(--omnify-page-text) !important;
-	font-size: 15px !important;
-	font-weight: 600 !important;
-	line-height: 1.35 !important;
+	color: #0f172a !important;
+	font-size: 16px !important;
+	font-weight: 800 !important;
+	line-height: 1.3 !important;
+	letter-spacing: -0.02em !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card__header p,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-editor-section-card__header p,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .description,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .help-text {
-	color: var(--omnify-page-muted) !important;
+	color: #64748b !important;
 	font-size: 13px !important;
 	line-height: 1.5 !important;
 }
 
+/* SupportHub Minimalist Stat Cards (.sh-stat-card) */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stats {
 	display: grid !important;
 	grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-	gap: 12px !important;
-	margin-bottom: 18px !important;
+	gap: 16px !important;
+	margin-bottom: 22px !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card {
-	min-height: 96px !important;
-	padding: 15px !important;
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-stat-card,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-kpi-card {
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
+	padding: 20px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 8px !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+	min-height: 104px !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card__label {
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card:hover,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-stat-card:hover,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-kpi-card:hover {
+	box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.06) !important;
+	transform: translateY(-2px) !important;
+	border-color: #cbd5e1 !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card__label,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-stat-card__label {
 	display: block !important;
+	font-size: 11.5px !important;
+	font-weight: 700 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.05em !important;
 	color: #64748b !important;
-	font-size: 12px !important;
-	font-weight: 500 !important;
+	margin: 0 !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card__value {
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stat-card__value,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-stat-card__value {
 	margin: 0 !important;
-	color: var(--omnify-page-text) !important;
-	font-size: 24px !important;
-	font-weight: 600 !important;
-	line-height: 1.15 !important;
+	color: #0f172a !important;
+	font-size: 28px !important;
+	font-weight: 800 !important;
+	line-height: 1.1 !important;
+	letter-spacing: -0.03em !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-trend,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-trend.positive {
 	display: inline-flex !important;
 	align-items: center !important;
-	border-radius: 6px !important;
-	background: #dcfce7 !important;
-	color: #047857 !important;
+	border-radius: 9999px !important;
+	background: #f0fdf4 !important;
+	color: #15803d !important;
+	border: 1px solid #bbf7d0 !important;
 	font-size: 11px !important;
-	font-weight: 600 !important;
-	padding: 3px 7px !important;
+	font-weight: 700 !important;
+	padding: 2px 8px !important;
+	letter-spacing: 0.02em !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-trend.negative {
-	background: #fee2e2 !important;
+	background: #fef2f2 !important;
 	color: #b91c1c !important;
+	border: 1px solid #fecaca !important;
 }
 
+/* SupportHub Filter Card & Controls */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-smart-filters {
 	background: #ffffff !important;
-	border: 1px solid var(--omnify-page-border) !important;
-	border-radius: 8px !important;
-	padding: 14px !important;
-	margin: 0 0 16px !important;
-	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05) !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
+	padding: 16px 20px !important;
+	margin: 0 0 20px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 	min-height: 0 !important;
 	height: auto !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-row,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-smart-filters,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-primary,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-secondary {
-	gap: 14px !important;
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-filter-primary),
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-filter-secondary) {
+	gap: 12px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-row {
-	display: grid !important;
-	grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)) !important;
-	align-items: end !important;
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: flex-end !important;
 	align-content: start !important;
+	gap: 12px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-field {
-	min-width: 0 !important;
+	flex: 1 1 140px !important;
+	min-width: 120px !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group--search,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group:first-child,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group:has(input[type="text"]) {
+	flex: 2.2 1 240px !important;
+	min-width: 200px !important;
+	max-width: 360px !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group--date,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group:has(input[type="date"]) {
+	flex: 0 1 140px !important;
+	min-width: 120px !important;
+	max-width: 155px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-group label,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-field label,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-form-group label:not(.omnify-toggle),
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) label:not(.omnify-toggle) {
-	color: #223044 !important;
+	color: #334155 !important;
 	font-size: 12px !important;
-	font-weight: 600 !important;
+	font-weight: 700 !important;
 	line-height: 1.25 !important;
-	margin-bottom: 7px !important;
+	margin-bottom: 6px !important;
+	text-transform: none !important;
 }
 
+/* SupportHub 12px Rounded Inputs */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="text"],
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="email"],
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="number"],
@@ -12153,53 +12560,87 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="url"],
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="date"],
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input[type="password"],
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select:not(.omnify-quick-status),
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) textarea,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-custom-select-input {
 	width: 100% !important;
-	min-height: 42px !important;
-	padding: 10px 14px !important;
-	border: 1px solid var(--omnify-page-border-strong) !important;
-	border-radius: 6px !important;
+	min-height: 38px !important;
+	height: 38px !important;
+	padding: 0 14px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 12px !important;
 	background-color: #ffffff !important;
-	color: var(--omnify-page-text) !important;
-	font-size: 14px !important;
+	color: #0f172a !important;
+	font-size: 13px !important;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	box-shadow: none !important;
 	box-sizing: border-box !important;
+	transition: all 0.15s ease !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select:not(.omnify-quick-status) {
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	padding-right: 32px !important;
+	background-color: #f8fafc !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 10px center !important;
+	background-size: 13px 13px !important;
+	cursor: pointer !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select:not(.omnify-quick-status):hover {
+	background-color: #ffffff !important;
+	border-color: #cbd5e1 !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) textarea {
 	min-height: 110px !important;
+	height: auto !important;
+	padding: 12px 14px !important;
 	resize: vertical !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) input:focus,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select:focus,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select:not(.omnify-quick-status):focus,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) textarea:focus,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-custom-select-input:focus {
-	border-color: var(--omnify-page-accent) !important;
-	box-shadow: 0 0 0 4px rgba(20, 119, 108, 0.1) !important;
+	border-color: #10b981 !important;
+	box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
 	outline: none !important;
+	background: #ffffff !important;
 }
 
+/* SupportHub Buttons (Pill & Rounded Full) */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .button:not(.wp-color-result):not(.wp-switch-editor) {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	gap: 8px !important;
-	min-height: 42px !important;
-	padding: 0 16px !important;
-	border: 1px solid var(--omnify-page-border-strong) !important;
-	border-radius: 6px !important;
+	gap: 6px !important;
+	min-height: 38px !important;
+	padding: 0 20px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 9999px !important;
 	background: #ffffff !important;
-	color: #244156 !important;
-	font-size: 14px !important;
-	font-weight: 600 !important;
+	color: #334155 !important;
+	font-size: 13px !important;
+	font-weight: 700 !important;
 	text-decoration: none !important;
-	box-shadow: none !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button:hover,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn:hover,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .button:not(.wp-color-result):not(.wp-switch-editor):hover {
+	background: #f8fafc !important;
+	border-color: #cbd5e1 !important;
+	color: #0f172a !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button--primary,
@@ -12207,10 +12648,10 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .button-primary,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) button[type="submit"].omnify-button,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-apply-filters {
-	background: var(--omnify-page-accent) !important;
-	border-color: var(--omnify-page-accent) !important;
+	background: #059669 !important;
+	border-color: #059669 !important;
 	color: #ffffff !important;
-	box-shadow: 0 12px 24px rgba(20, 119, 108, 0.18) !important;
+	box-shadow: 0 2px 8px rgba(5, 150, 105, 0.28) !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button--primary:hover,
@@ -12218,65 +12659,144 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .button-primary:hover,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) button[type="submit"].omnify-button:hover,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-apply-filters:hover {
-	background: var(--omnify-page-accent-dark) !important;
-	border-color: var(--omnify-page-accent-dark) !important;
+	background: #047857 !important;
+	border-color: #047857 !important;
+	box-shadow: 0 4px 14px rgba(5, 150, 105, 0.38) !important;
+	transform: translateY(-1px) !important;
+	color: #ffffff !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button--secondary,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn--secondary,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .button-secondary {
 	background: #ffffff !important;
-	color: #244156 !important;
+	color: #334155 !important;
+	border-color: #e2e8f0 !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button--danger,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn--danger,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-icon-btn--danger {
-	background: #fff7f7 !important;
+	background: #fef2f2 !important;
 	border-color: #fecaca !important;
-	color: var(--omnify-page-danger) !important;
+	color: #ef4444 !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-button--danger:hover,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn--danger:hover {
+	background: #ef4444 !important;
+	border-color: #ef4444 !important;
+	color: #ffffff !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-actions {
 	display: flex !important;
 	align-items: center !important;
 	justify-content: flex-end !important;
-	align-self: end !important;
-	justify-self: end !important;
+	align-self: flex-end !important;
+	margin-left: auto !important;
+	flex: 0 0 auto !important;
 	gap: 8px !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-apply-filters,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-clear-filters,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-icon-btn {
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-apply-filters {
+	background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+	color: #ffffff !important;
+	border: 1px solid transparent !important;
+	padding: 0 14px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	width: 42px !important;
-	height: 42px !important;
-	min-height: 42px !important;
-	padding: 0 !important;
-	border-radius: 6px !important;
+	gap: 6px !important;
+	box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 	text-decoration: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-apply-filters:hover {
+	background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+	box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+	transform: translateY(-1px) !important;
+	color: #ffffff !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-clear-filters {
-	background: #ffffff !important;
-	border: 1px solid #fecaca !important;
-	color: #ef4444 !important;
+	background: #f8fafc !important;
+	color: #64748b !important;
+	border: 1px solid #e2e8f0 !important;
+	padding: 0 12px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	min-width: 38px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 6px !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	text-decoration: none !important;
+	box-sizing: border-box !important;
+	flex: 0 0 auto !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-btn-clear-filters:hover {
+	background: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+	transform: translateY(-1px) !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-icon-btn {
 	background: #ffffff !important;
-	border: 1px solid var(--omnify-page-border) !important;
-	color: #526174 !important;
+	border: 1px solid #e2e8f0 !important;
+	color: #64748b !important;
 	box-shadow: none !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-icon-btn:hover {
-	background: var(--omnify-page-accent-soft) !important;
-	border-color: rgba(20, 119, 108, 0.22) !important;
-	color: var(--omnify-page-accent-dark) !important;
+	background: #ecfdf5 !important;
+	border-color: #a7f3d0 !important;
+	color: #059669 !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table .omnify-icon-btn {
+	width: 32px !important;
+	height: 32px !important;
+	min-height: 32px !important;
+	border-radius: 9999px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table-toolbar select {
+	width: auto !important;
+	min-height: 32px !important;
+	height: 32px !important;
+	padding: 0 24px 0 10px !important;
+	font-size: 12px !important;
+	border-radius: 8px !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table-toolbar .omnify-button--sm {
+	min-height: 32px !important;
+	height: 32px !important;
+	padding: 0 14px !important;
+	font-size: 12px !important;
+	border-radius: 9999px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table-toolbar {
@@ -12284,15 +12804,18 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	align-items: center !important;
 	justify-content: space-between !important;
 	gap: 12px !important;
-	padding: 14px 16px !important;
+	padding: 14px 18px !important;
 	background: #ffffff !important;
-	border-bottom: 1px solid #e7eef3 !important;
+	border-bottom: 1px solid #e2e8f0 !important;
 }
 
+/* SupportHub Table Styling (.sh-table) */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table-wrapper {
 	overflow-x: auto !important;
 	background: #ffffff !important;
-	border-radius: 8px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card > .omnify-table-wrapper,
@@ -12300,6 +12823,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-list-card .omnify-table-wrapper {
 	border: 0 !important;
 	border-radius: 0 !important;
+	box-shadow: none !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table {
@@ -12307,31 +12831,37 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	border-collapse: separate !important;
 	border-spacing: 0 !important;
 	background: #ffffff !important;
+	font-size: 13.5px !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table th {
 	background: #f8fafc !important;
-	border-bottom: 1px solid #e7eef3 !important;
+	border-bottom: 1px solid #e2e8f0 !important;
 	color: #64748b !important;
 	font-size: 11px !important;
-	font-weight: 600 !important;
+	font-weight: 700 !important;
 	line-height: 1.25 !important;
-	padding: 12px 14px !important;
+	padding: 12px 16px !important;
 	text-transform: uppercase !important;
+	letter-spacing: 0.06em !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table td {
 	background: #ffffff !important;
-	border-bottom: 1px solid #e7eef3 !important;
-	color: #1e293b !important;
-	font-size: 13px !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	color: #334155 !important;
+	font-size: 13.5px !important;
 	line-height: 1.45 !important;
-	padding: 13px 14px !important;
+	padding: 14px 16px !important;
 	vertical-align: middle !important;
 }
 
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table tr:last-child td {
+	border-bottom: none !important;
+}
+
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table tbody tr:hover td {
-	background: #fbfdfe !important;
+	background: #f8fafc !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-row-actions {
@@ -12341,6 +12871,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	gap: 8px !important;
 }
 
+/* SupportHub Badge Pills (.sh-badge) */
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-pill,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-code-pill,
@@ -12349,12 +12880,14 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	align-items: center !important;
 	gap: 5px !important;
 	min-height: 22px !important;
-	padding: 3px 8px !important;
+	padding: 3px 10px !important;
 	border: 1px solid transparent !important;
-	border-radius: 999px !important;
+	border-radius: 9999px !important;
 	font-size: 11px !important;
-	font-weight: 600 !important;
+	font-weight: 700 !important;
 	line-height: 1 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.04em !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-code-pill {
@@ -12366,24 +12899,146 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--active,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--completed,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--published {
-	background: #dcfce7 !important;
-	color: #047857 !important;
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--published,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--delivered {
+	background: #f0fdf4 !important;
+	color: #15803d !important;
+	border: 1px solid #bbf7d0 !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--processing,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--shipped,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--packed,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--ready_to_deliver,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--out_for_delivery {
+	background: #eff6ff !important;
+	color: #1d4ed8 !important;
+	border: 1px solid #bfdbfe !important;
+}
+
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--pending,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--pending_payment,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--draft {
-	background: #fef3c7 !important;
-	color: #92400e !important;
+	background: #fffbeb !important;
+	color: #b45309 !important;
+	border: 1px solid #fde68a !important;
+}
+
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--refunded,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--refund_requested,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--failed {
+	background: #fef2f2 !important;
+	color: #b91c1c !important;
+	border: 1px solid #fecaca !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--cancelled,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--failed,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--revoked,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--expired,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--inactive,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-status--trash {
-	background: #fee2e2 !important;
+	background: #f8fafc !important;
+	color: #475569 !important;
+	border: 1px solid #cbd5e1 !important;
+}
+
+/* Enhanced Quick Status Dropdown Pills in Table Rows */
+.omnify-admin-wrapper select.omnify-quick-status,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) select.omnify-quick-status {
+	display: inline-flex !important;
+	align-items: center !important;
+	width: auto !important;
+	min-width: 110px !important;
+	min-height: 28px !important;
+	height: 28px !important;
+	line-height: 26px !important;
+	padding: 0 24px 0 10px !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.01em !important;
+	text-transform: capitalize !important;
+	border-radius: 9999px !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	background-repeat: no-repeat !important;
+	background-position: right 8px center !important;
+	background-size: 10px !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	cursor: pointer !important;
+	transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-admin-wrapper select.omnify-quick-status--completed,
+.omnify-admin-wrapper select.omnify-quick-status--active,
+.omnify-admin-wrapper select.omnify-quick-status--delivered {
+	background-color: #ecfdf5 !important;
+	color: #047857 !important;
+	border: 1px solid #a7f3d0 !important;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23047857' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.omnify-admin-wrapper select.omnify-quick-status--completed:hover,
+.omnify-admin-wrapper select.omnify-quick-status--active:hover,
+.omnify-admin-wrapper select.omnify-quick-status--delivered:hover {
+	background-color: #d1fae5 !important;
+	border-color: #6ee7b7 !important;
+}
+
+.omnify-admin-wrapper select.omnify-quick-status--processing,
+.omnify-admin-wrapper select.omnify-quick-status--shipped,
+.omnify-admin-wrapper select.omnify-quick-status--packed,
+.omnify-admin-wrapper select.omnify-quick-status--ready_to_deliver,
+.omnify-admin-wrapper select.omnify-quick-status--out_for_delivery {
+	background-color: #eff6ff !important;
+	color: #1d4ed8 !important;
+	border: 1px solid #bfdbfe !important;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d4ed8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.omnify-admin-wrapper select.omnify-quick-status--processing:hover,
+.omnify-admin-wrapper select.omnify-quick-status--shipped:hover {
+	background-color: #dbeafe !important;
+	border-color: #93c5fd !important;
+}
+
+.omnify-admin-wrapper select.omnify-quick-status--pending,
+.omnify-admin-wrapper select.omnify-quick-status--pending_payment,
+.omnify-admin-wrapper select.omnify-quick-status--draft {
+	background-color: #fffbeb !important;
+	color: #b45309 !important;
+	border: 1px solid #fde68a !important;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b45309' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.omnify-admin-wrapper select.omnify-quick-status--pending:hover {
+	background-color: #fef3c7 !important;
+	border-color: #fcd34d !important;
+}
+
+.omnify-admin-wrapper select.omnify-quick-status--refunded,
+.omnify-admin-wrapper select.omnify-quick-status--refund_requested,
+.omnify-admin-wrapper select.omnify-quick-status--failed {
+	background-color: #fef2f2 !important;
 	color: #b91c1c !important;
+	border: 1px solid #fecaca !important;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b91c1c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.omnify-admin-wrapper select.omnify-quick-status--refunded:hover {
+	background-color: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+}
+
+.omnify-admin-wrapper select.omnify-quick-status--cancelled,
+.omnify-admin-wrapper select.omnify-quick-status--revoked,
+.omnify-admin-wrapper select.omnify-quick-status--expired,
+.omnify-admin-wrapper select.omnify-quick-status--inactive,
+.omnify-admin-wrapper select.omnify-quick-status--trash {
+	background-color: #f8fafc !important;
+	color: #475569 !important;
+	border: 1px solid #cbd5e1 !important;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.omnify-admin-wrapper select.omnify-quick-status--cancelled:hover {
+	background-color: #f1f5f9 !important;
+	border-color: #94a3b8 !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-active-filters,
@@ -12434,27 +13089,109 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-form-row,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-form-grid,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-detail-layout,
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-summary-grid {
+.omnify-admin-wrapper .omnify-dashboard-summary-grid {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 	gap: 16px !important;
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-summary-tile {
-	background: #fbfdfe !important;
-	border: 1px solid #e7eef3 !important;
-	border-radius: 8px !important;
-	padding: 14px !important;
+@media (max-width: 960px) {
+	.omnify-admin-wrapper .omnify-dashboard-summary-grid {
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+	}
 }
 
-.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-summary-tile .icon {
-	background: var(--omnify-page-accent-soft) !important;
-	color: var(--omnify-page-accent-dark) !important;
-	border-radius: 6px !important;
+@media (max-width: 600px) {
+	.omnify-admin-wrapper .omnify-dashboard-summary-grid {
+		grid-template-columns: 1fr !important;
+	}
+}
+
+.omnify-admin-wrapper .omnify-summary-tile {
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 14px !important;
+	padding: 16px 20px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 16px !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile .icon {
+	width: 44px !important;
+	height: 44px !important;
+	min-width: 44px !important;
+	min-height: 44px !important;
+	max-width: 44px !important;
+	max-height: 44px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex-shrink: 0 !important;
+	border-radius: 12px !important;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	border: 1px solid #a7f3d0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile .icon .dashicons {
+	font-size: 20px !important;
+	width: 20px !important;
+	height: 20px !important;
+	line-height: 20px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	color: #059669 !important;
+	margin: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile .content {
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: center !important;
+	min-width: 0 !important;
+	flex: 1 1 auto !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile .label {
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	color: #64748b !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.05em !important;
+	line-height: 1.3 !important;
+	margin: 0 0 3px 0 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+}
+
+.omnify-admin-wrapper .omnify-summary-tile .value {
+	font-size: 22px !important;
+	font-weight: 800 !important;
+	color: #0f172a !important;
+	line-height: 1.2 !important;
+	margin: 0 !important;
+	font-family: inherit !important;
 }
 
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-coupon-preview,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-hero {
-	background: #fbfdfe !important;
-	border-color: #e7eef3 !important;
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 16px !important;
 }
 
 @media (max-width: 1400px) {
@@ -12464,15 +13201,26 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 }
 
 @media (max-width: 960px) {
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) {
+	.omnify-admin-wrapper {
 		padding: 22px 18px 56px !important;
 	}
 
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-header-row {
+	.omnify-admin-wrapper .omnify-header-row {
 		flex-direction: column !important;
+		align-items: flex-start !important;
+		gap: 14px !important;
 	}
 
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-row,
+	.omnify-admin-wrapper .omnify-header-row__actions {
+		width: 100% !important;
+		justify-content: flex-start !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-row {
+		flex-direction: column !important;
+		align-items: stretch !important;
+	}
+
 	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stats,
 	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-layout-grid,
 	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-detail-layout {
@@ -12490,17 +13238,17 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 }
 
 @media (max-width: 782px) {
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) {
+	.omnify-admin-wrapper {
 		min-height: auto !important;
 		padding: 18px 14px 48px !important;
 	}
 
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-tabs-wrapper {
+	.omnify-admin-wrapper .omnify-tabs-wrapper {
 		padding: 6px !important;
 	}
 
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-tabs-wrapper a,
-	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-tabs-wrapper .omnify-tab {
+	.omnify-admin-wrapper .omnify-tabs-wrapper a,
+	.omnify-admin-wrapper .omnify-tabs-wrapper .omnify-tab {
 		min-height: 36px !important;
 		padding: 0 12px !important;
 		font-size: 13px !important;
@@ -12586,10 +13334,10 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 }
 
 .omnify-admin-wrapper .omnify-toggle input[type="checkbox"]:checked {
-	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='46' height='22' viewBox='0 0 46 22'><rect width='46' height='22' rx='11' fill='%23136c5f'/></svg>") !important;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='46' height='22' viewBox='0 0 46 22'><rect width='46' height='22' rx='11' fill='%232563eb'/></svg>") !important;
 	background-position: 2px center !important;
 	background-color: #ffffff !important;
-	border-color: #cbd5e1 !important;
+	border-color: #bfdbfe !important;
 }
 
 .omnify-admin-wrapper .omnify-toggle input[type="checkbox"]:checked::before {
@@ -12618,7 +13366,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 .omnify-admin-wrapper .omnify-toggle input[type="checkbox"]:focus,
 .omnify-admin-wrapper .omnify-toggle input[type="checkbox"]:focus-visible {
 	outline: none !important;
-	box-shadow: 0 0 0 3px rgba(19, 108, 95, 0.1) !important;
+	box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
 }
 
 /* Export Cards Redesign */
@@ -12672,4 +13420,634 @@ body.toplevel_page_omnify .omnify-admin-wrapper:not(.omnify-settings-page):not(.
 	color: #ffffff !important;
 	transform: scale(1.06) !important;
 }
+
+/* ==========================================================================
+   Big Screen & Ultrawide Display Optimizations (>= 1280px, >= 1400px, >= 1920px)
+   ========================================================================== */
+@media (min-width: 1280px) {
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table {
+		width: 100% !important;
+		table-layout: auto !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table th {
+		padding: 13px 16px !important;
+		font-size: 11.5px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table td {
+		padding: 14px 16px !important;
+		font-size: 13.5px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-dashboard-stats {
+		grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+		gap: 16px !important;
+	}
+}
+
+@media (min-width: 1400px) {
+	body[class*="_page_omnify"] .omnify-admin-wrapper,
+	body.toplevel_page_omnify .omnify-admin-wrapper {
+		max-width: 1560px !important;
+		margin: 24px auto 80px !important;
+		padding: 32px 36px 80px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-layout-grid,
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-detail-layout {
+		grid-template-columns: minmax(0, 1fr) 380px !important;
+		gap: 24px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-card {
+		padding: 22px 24px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-filter-card {
+		padding: 18px 20px !important;
+	}
+}
+
+@media (min-width: 1920px) {
+	body[class*="_page_omnify"] .omnify-admin-wrapper,
+	body.toplevel_page_omnify .omnify-admin-wrapper {
+		max-width: 1640px !important;
+		margin: 32px auto 96px !important;
+		padding: 36px 40px 88px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table th {
+		padding: 14px 18px !important;
+		font-size: 12px !important;
+	}
+
+	.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-table td {
+		padding: 15px 18px !important;
+		font-size: 14px !important;
+	}
+}
+
+/* ==========================================================================
+   Modern Payment Gateways & Directory UI/UX
+   ========================================================================== */
+.omnify-pm-directory {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	width: 100%;
+}
+
+.omnify-pm-hero {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	padding: 20px 24px;
+	margin-bottom: 8px;
+}
+
+.omnify-pm-hero-info {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.omnify-pm-hero-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	color: #0d9488;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+	flex-shrink: 0;
+}
+
+.omnify-pm-hero-title {
+	font-size: 18px;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0 0 4px 0;
+	letter-spacing: -0.01em;
+}
+
+.omnify-pm-hero-desc {
+	font-size: 13px;
+	color: #64748b;
+	margin: 0;
+	line-height: 1.45;
+}
+
+.omnify-pm-stats-cluster {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.omnify-pm-stat-chip {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 8px 14px;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.omnify-pm-stat-count {
+	font-size: 18px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.omnify-pm-stat-label {
+	font-size: 12px;
+	color: #64748b;
+	font-weight: 500;
+}
+
+.omnify-pm-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	padding: 4px 0 12px 0;
+	border-bottom: 1px solid #edf2f6;
+	margin-bottom: 8px;
+}
+
+.omnify-pm-filter-tabs {
+	display: inline-flex;
+	background: #f1f5f9;
+	border-radius: 10px;
+	padding: 3px;
+	gap: 2px;
+}
+
+.omnify-pm-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	border: none;
+	background: transparent;
+	font-size: 12.5px;
+	font-weight: 500;
+	color: #64748b;
+	padding: 7px 14px;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.omnify-pm-tab:hover {
+	color: #0f172a;
+}
+
+.omnify-pm-tab.is-active {
+	background: #ffffff;
+	color: #0f172a;
+	font-weight: 600;
+	box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.omnify-pm-tab-count {
+	font-size: 11px;
+	background: rgba(15, 23, 42, 0.06);
+	color: inherit;
+	padding: 1px 6px;
+	border-radius: 99px;
+}
+
+.omnify-pm-toolbar-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.omnify-pm-search-box {
+	position: relative;
+	width: 260px;
+}
+
+.omnify-pm-search-icon {
+	position: absolute;
+	left: 11px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #94a3b8;
+	pointer-events: none;
+}
+
+.omnify-pm-search-box input {
+	width: 100% !important;
+	padding: 8px 12px 8px 34px !important;
+	border-radius: 8px !important;
+	border: 1px solid #cbd5e1 !important;
+	font-size: 13px !important;
+	background: #ffffff !important;
+	color: #0f172a !important;
+}
+
+.omnify-pm-toggle-all-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #475569;
+	background: #f8fafc;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	padding: 7px 14px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.omnify-pm-toggle-all-btn:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+	border-color: #94a3b8;
+}
+
+/* Individual Gateway Cards */
+.omnify-pm-card {
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	background: #ffffff;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+	margin-bottom: 12px;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	overflow: hidden;
+}
+
+.omnify-pm-card.is-active-gateway {
+	border-color: #a7f3d0;
+	background: #ffffff;
+}
+
+.omnify-pm-card.is-expanded {
+	border-color: #cbd5e1;
+	box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07);
+}
+
+.omnify-pm-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	cursor: pointer;
+	user-select: none;
+	gap: 16px;
+	transition: background 0.15s ease;
+}
+
+.omnify-pm-header:hover {
+	background: #f8fafc;
+}
+
+.omnify-pm-brand {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+	flex: 1;
+}
+
+.omnify-pm-logo {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+	padding: 6px;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+.omnify-pm-logo svg {
+	width: auto;
+	height: auto;
+	max-width: 32px;
+	max-height: 32px;
+	display: block;
+}
+
+/* Brand Specific Avatars - clean borders & white backing for authentic logo presentation */
+.omnify-logo-stripe { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-paypal { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-razorpay { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-alipay { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-wechat { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-sslcommerz { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-paystack { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-tap { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-mollie { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-khalti { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-esewa { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-paddle { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-bank { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-cheque { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-cod { background: #ffffff; border-color: #e2e8f0; }
+.omnify-logo-custom { background: #ffffff; border-color: #e2e8f0; }
+
+.omnify-pm-meta {
+	min-width: 0;
+	flex: 1;
+}
+
+.omnify-pm-title-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.omnify-pm-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: #0f172a;
+	margin: 0;
+}
+
+.omnify-pm-desc {
+	font-size: 12.5px;
+	color: #64748b;
+	margin: 2px 0 0 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.omnify-pm-status-badge {
+	font-size: 10.5px;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.omnify-pm-status-badge.is-active {
+	background: #ecfdf5;
+	color: #059669;
+	border: 1px solid #a7f3d0;
+}
+
+.omnify-pm-status-badge.is-disabled {
+	background: #f1f5f9;
+	color: #64748b;
+	border: 1px solid #e2e8f0;
+}
+
+.omnify-pm-mode-badge {
+	font-size: 11px;
+	font-weight: 600;
+	padding: 2px 8px;
+	border-radius: 6px;
+}
+
+.omnify-pm-mode-badge.is-test,
+.omnify-pm-mode-badge.mode-test {
+	background: #fffbeb;
+	color: #d97706;
+	border: 1px solid #fde68a;
+}
+
+.omnify-pm-mode-badge.is-live,
+.omnify-pm-mode-badge.mode-live {
+	background: #eff6ff;
+	color: #2563eb;
+	border: 1px solid #bfdbfe;
+}
+
+.omnify-pm-mode-badge.is-offline,
+.omnify-pm-mode-badge.mode-offline {
+	background: #f1f5f9;
+	color: #475569;
+	border: 1px solid #cbd5e1;
+}
+
+.omnify-pm-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.omnify-pm-actions .omnify-pm-toggle-wrap {
+	display: inline-flex;
+	align-items: center;
+	margin: 0;
+}
+
+.omnify-pm-actions .omnify-modern-toggle-wrapper {
+	margin: 0;
+}
+
+.omnify-pm-actions .omnify-modern-toggle-wrapper .help-text {
+	display: none !important;
+}
+
+.omnify-pm-configure-btn,
+.omnify-pm-collapse-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 13px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #334155;
+	background: #ffffff;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.omnify-pm-configure-btn:hover,
+.omnify-pm-collapse-btn:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+	border-color: #94a3b8;
+}
+
+.omnify-pm-configure-btn .omnify-chevron,
+.omnify-pm-collapse-btn .omnify-chevron,
+.omnify-pm-collapse-btn svg {
+	width: 14px;
+	height: 14px;
+	transition: transform 0.2s ease;
+}
+
+.omnify-pm-card.is-expanded .omnify-pm-configure-btn .omnify-chevron,
+.omnify-pm-card.is-expanded .omnify-pm-collapse-btn .omnify-chevron,
+.omnify-pm-card.is-expanded .omnify-pm-collapse-btn svg {
+	transform: rotate(180deg);
+}
+
+.omnify-pm-body {
+	display: none;
+	padding: 24px 24px 20px 24px;
+	border-top: 1px solid #f1f5f9;
+	background: #f8fafc;
+	animation: omnifyPmDrawerFade 0.2s ease-in-out;
+}
+
+@keyframes omnifyPmDrawerFade {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.omnify-pm-card.is-expanded .omnify-pm-body {
+	display: block;
+}
+
+/* Password Toggle & Copy URL Wrappers */
+.omnify-password-field-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+
+.omnify-password-field-wrap input {
+	padding-right: 42px !important;
+}
+
+.omnify-pw-toggle-btn {
+	position: absolute;
+	right: 8px;
+	background: transparent;
+	border: none;
+	color: #94a3b8;
+	cursor: pointer;
+	padding: 6px;
+	border-radius: 6px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: color 0.15s ease;
+}
+
+.omnify-pw-toggle-btn:hover {
+	color: #0f172a;
+}
+
+.omnify-copy-url-group {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	width: 100%;
+}
+
+.omnify-copy-url-group input {
+	flex: 1;
+	background: #ffffff !important;
+	color: #475569 !important;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+	font-size: 12.5px !important;
+}
+
+.omnify-copy-btn {
+	padding: 10px 16px !important;
+	background: #0f172a !important;
+	color: #ffffff !important;
+	border: none !important;
+	border-radius: 8px !important;
+	font-size: 12.5px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	white-space: nowrap !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	transition: background 0.15s ease !important;
+}
+
+.omnify-copy-btn:hover {
+	background: #1e293b !important;
+}
+
+.omnify-copy-btn.is-copied {
+	background: #10b981 !important;
+}
+
+.omnify-pm-drawer-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid #e2e8f0;
+}
+
+.omnify-pm-drawer-close {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 16px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #475569;
+	background: #ffffff;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.omnify-pm-drawer-close:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+}
+
+.omnify-pm-guide-link {
+	font-size: 12.5px;
+	color: #0284c7;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 500;
+}
+
+.omnify-pm-guide-link:hover {
+	text-decoration: underline;
+	color: #0369a1;
+}
+
+@media (max-width: 860px) {
+	.omnify-pm-hero {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+	.omnify-pm-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.omnify-pm-search-box {
+		width: 100%;
+	}
+	.omnify-pm-header {
+		flex-wrap: wrap;
+	}
+}
+
 

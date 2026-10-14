@@ -63,6 +63,9 @@ class Omnify_Admin_Page {
 
 		// Admin menu custom icon styles
 		add_action('admin_head', [$this, 'admin_menu_icon_styles']);
+
+		// Admin body class to prevent layout shifts on page load
+		add_filter('admin_body_class', [$this, 'filter_admin_body_class']);
 	}
 
 	private function register_post_actions(): void {
@@ -476,6 +479,19 @@ class Omnify_Admin_Page {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Append Omnify layout classes to body tag early during PHP render.
+	 *
+	 * @param string $omnify_classes
+	 * @return string
+	 */
+	public function filter_admin_body_class(string $omnify_classes): string {
+		if ($this->is_omnify_screen()) {
+			$omnify_classes .= ' omnify-admin-page-active omnify-preload';
+		}
+		return $omnify_classes;
 	}
 
 	public function enqueue_assets(string $omnify_hook): void {
@@ -3233,7 +3249,7 @@ class Omnify_Admin_Page {
 			$omnify_section = 'general';
 		}
 		$omnify_is_storefront_section = in_array($omnify_section, ['design', 'filters'], true);
-		$omnify_storefront_columns = max(1, min(3, absint(wp_unslash($_POST['storefront_grid_columns'] ?? ($_POST['design_grid_columns'] ?? ($omnify_existing['storefront_grid_columns'] ?? ($omnify_existing['design_grid_columns'] ?? 3)))))));
+		$omnify_storefront_columns = max(1, min(4, absint(wp_unslash($_POST['storefront_grid_columns'] ?? ($_POST['design_grid_columns'] ?? ($omnify_existing['storefront_grid_columns'] ?? ($omnify_existing['design_grid_columns'] ?? 3)))))));
 
 		// Build payment_methods array from POST
 		$omnify_raw_payment_methods = $omnify_existing['payment_methods'] ?? $omnify_defaults['payment_methods'];
@@ -3437,6 +3453,20 @@ class Omnify_Admin_Page {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 			'esewa_live_secret_key'       => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['esewa_live_secret_key'] ?? '')) : ($omnify_existing['esewa_live_secret_key'] ?? ''),
 			'esewa_checkout_enabled'      => 'payments' === $omnify_section ? ! empty($_POST['esewa_checkout_enabled']) : ! empty($omnify_existing['esewa_checkout_enabled']),
+			// Paddle (Global Merchant of Record)
+			'paddle_enabled'              => 'payments' === $omnify_section ? ! empty($_POST['paddle_checkout_enabled']) : ! empty($omnify_existing['paddle_enabled']),
+			'paddle_mode'                 => 'payments' === $omnify_section ? sanitize_key(wp_unslash($_POST['paddle_mode'] ?? 'sandbox')) : ($omnify_existing['paddle_mode'] ?? 'sandbox'),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+			'paddle_sandbox_api_key'      => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['paddle_sandbox_api_key'] ?? '')) : ($omnify_existing['paddle_sandbox_api_key'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+			'paddle_sandbox_client_token' => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['paddle_sandbox_client_token'] ?? '')) : ($omnify_existing['paddle_sandbox_client_token'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+			'paddle_live_api_key'         => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['paddle_live_api_key'] ?? '')) : ($omnify_existing['paddle_live_api_key'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+			'paddle_live_client_token'    => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['paddle_live_client_token'] ?? '')) : ($omnify_existing['paddle_live_client_token'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+			'paddle_webhook_secret'       => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['paddle_webhook_secret'] ?? '')) : ($omnify_existing['paddle_webhook_secret'] ?? ''),
+			'paddle_checkout_enabled'     => 'payments' === $omnify_section ? ! empty($_POST['paddle_checkout_enabled']) : ! empty($omnify_existing['paddle_checkout_enabled']),
 			'tracking_ga4_enabled'        => 'marketing' === $omnify_section ? ! empty($_POST['tracking_ga4_enabled']) : ! empty($omnify_existing['tracking_ga4_enabled']),
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 			'tracking_ga4_measurement_id' => 'marketing' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['tracking_ga4_measurement_id'] ?? '')) : ($omnify_existing['tracking_ga4_measurement_id'] ?? ''),
@@ -3465,6 +3495,10 @@ class Omnify_Admin_Page {
 				'abandoned_cart_delay_minutes' => 'checkout' === $omnify_section ? max(5, absint(wp_unslash($_POST['abandoned_cart_delay_minutes'] ?? 60))) : ($omnify_existing['abandoned_cart_delay_minutes'] ?? 60),
 				'abandoned_cart_expire_days'  => 'checkout' === $omnify_section ? max(1, absint(wp_unslash($_POST['abandoned_cart_expire_days'] ?? 14))) : ($omnify_existing['abandoned_cart_expire_days'] ?? 14),
 				'abandoned_cart_max_reminders' => 'checkout' === $omnify_section ? max(1, absint(wp_unslash($_POST['abandoned_cart_max_reminders'] ?? 1))) : ($omnify_existing['abandoned_cart_max_reminders'] ?? 1),
+				'order_bump_enabled'          => 'checkout' === $omnify_section ? ! empty($_POST['order_bump_enabled']) : (! array_key_exists('order_bump_enabled', $omnify_existing) || ! empty($omnify_existing['order_bump_enabled'])),
+				'order_bump_title'            => 'checkout' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['order_bump_title'] ?? 'VIP Priority Processing & Extended Warranty')) : (string) ($omnify_existing['order_bump_title'] ?? 'VIP Priority Processing & Extended Warranty'),
+				'order_bump_desc'             => 'checkout' === $omnify_section ? sanitize_textarea_field(wp_unslash($_POST['order_bump_desc'] ?? 'Skip the fulfillment queue with front-of-line priority dispatch plus 1-year accidental replacement guarantee.')) : (string) ($omnify_existing['order_bump_desc'] ?? 'Skip the fulfillment queue with front-of-line priority dispatch plus 1-year accidental replacement guarantee.'),
+				'order_bump_price'            => 'checkout' === $omnify_section ? max(0.0, (float) wp_unslash($_POST['order_bump_price'] ?? 4.99)) : (float) ($omnify_existing['order_bump_price'] ?? 4.99),
 			'require_terms'               => 'checkout' === $omnify_section ? ! empty($_POST['require_terms']) : ! empty($omnify_existing['require_terms']),
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 			'terms_url'                   => esc_url_raw(wp_unslash($_POST['terms_url'] ?? ($omnify_existing['terms_url'] ?? ''))),
@@ -4487,7 +4521,7 @@ class Omnify_Admin_Page {
 		$omnify_payment_method = $omnify_order['payment_method'] ?? 'manual';
 		$omnify_transaction_id = $omnify_order['transaction_id'] ?? '';
 
-		$omnify_supported_gateways = ['card', 'paypal', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa'];
+		$omnify_supported_gateways = ['card', 'paypal', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'];
 		if (in_array($omnify_payment_method, $omnify_supported_gateways, true)) {
 			if (empty($omnify_transaction_id)) {
 				wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=refund_failed&err=' . urlencode(__('Live refund failed: No transaction ID associated with this order.', 'omnifywp-ecommerce'))));
@@ -4541,6 +4575,10 @@ class Omnify_Admin_Page {
 				case 'esewa':
 					$omnify_res = $this->omnify_payment_gateways->refund_esewa_payment($omnify_transaction_id, $omnify_total_refund, $omnify_order['currency'] ?? 'NPR');
 					$omnify_error_prefix = 'eSewa';
+					break;
+				case 'paddle':
+					$omnify_res = $this->omnify_payment_gateways->refund_paddle_payment($omnify_transaction_id, $omnify_total_refund, $omnify_order['currency'] ?? 'USD');
+					$omnify_error_prefix = 'Paddle';
 					break;
 			}
 

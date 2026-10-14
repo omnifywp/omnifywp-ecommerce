@@ -63,29 +63,37 @@ $omnify_date_to     = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($
 			<h1><?php esc_html_e('Activity Log', 'omnifywp-ecommerce'); ?></h1>
 			<p><?php esc_html_e('Audit trail of administrative actions performed on this store.', 'omnifywp-ecommerce'); ?></p>
 		</div>
+		<div class="omnify-header-row__actions">
+			<a href="<?php echo esc_url('https://omnifywp.com/doc/'); ?>" target="_blank" class="omnify-button omnify-button--secondary">
+				<span class="dashicons dashicons-book-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; margin-right: 4px;"></span>
+				<?php esc_html_e('Documentation', 'omnifywp-ecommerce'); ?>
+			</a>
+		</div>
 	</div>
 
 	<!-- Navigation Tabs -->
 	<?php $omnify_active_tab = 'activity'; ?>
 	<?php include __DIR__ . '/partials/nav.php'; ?>
 
-	<div class="omnify-subtabs">
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-export')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
-			<span class="dashicons dashicons-database-export" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
-			<?php esc_html_e('Import/Export', 'omnifywp-ecommerce'); ?>
-		</a>
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-api')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
-			<span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
-			<?php esc_html_e('API Keys', 'omnifywp-ecommerce'); ?>
-		</a>
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-activity')); ?>" class="omnify-subtab is-active" style="display: inline-flex; align-items: center; gap: 6px;">
-			<span class="dashicons dashicons-list-view" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
-			<?php esc_html_e('Activity Log', 'omnifywp-ecommerce'); ?>
-		</a>
-		<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-tools')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
-			<span class="dashicons dashicons-admin-tools" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
-			<?php esc_html_e('System Tools & Seeding', 'omnifywp-ecommerce'); ?>
-		</a>
+	<div class="omnify-subtabs-track">
+		<div class="omnify-subtabs">
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-export')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-database-export" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<?php esc_html_e('Import/Export', 'omnifywp-ecommerce'); ?>
+			</a>
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-api')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-admin-network" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<?php esc_html_e('API Keys', 'omnifywp-ecommerce'); ?>
+			</a>
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-activity')); ?>" class="omnify-subtab is-active" style="display: inline-flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-list-view" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<?php esc_html_e('Activity Log', 'omnifywp-ecommerce'); ?>
+			</a>
+			<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-tools')); ?>" class="omnify-subtab" style="display: inline-flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-admin-tools" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+				<?php esc_html_e('System Tools & Seeding', 'omnifywp-ecommerce'); ?>
+			</a>
+		</div>
 	</div>
 
 	<!-- Filters Card -->
@@ -133,10 +141,12 @@ $omnify_date_to     = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($
 
 			<div class="omnify-filter-actions">
 				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
 				</button>
 				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-activity')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
 			</div>
 		</div>

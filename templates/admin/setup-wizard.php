@@ -257,7 +257,9 @@ ksort($omnify_all_currencies);
 				<div class="omnify-payment-grid">
 					<!-- Stripe Card -->
 					<div class="omnify-payment-card <?php echo $omnify_stripe_enabled ? 'active' : ''; ?>">
-						<div class="payment-card-icon">💳</div>
+						<div class="payment-card-icon" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box;">
+							<svg width="34" height="20" viewBox="0 0 60 25" fill="#635bff"><path d="M59.64 14.28c0-5.83-2.88-10.22-8.47-10.22-5.63 0-8.99 4.39-8.99 10.18 0 6.87 4.05 10.18 9.77 10.18 2.8 0 4.9-.62 6.47-1.48v-4.52c-1.57.77-3.37 1.25-5.55 1.25-2.22 0-4.14-.8-4.39-3.23h11.13c.02-.38.03-1.63.03-2.16zm-12.18-2c0-2.31 1.4-3.32 3.69-3.32 2.22 0 3.53 1.01 3.53 3.32h-7.22zm-6.68 12.14V4.4h-5.28v19.98h5.28zm-2.65-21.72c1.72 0 2.88-1.2 2.88-2.7C41 1.2 39.84 0 38.13 0c-1.74 0-2.9 1.2-2.9 2.7 0 1.5 1.16 2.7 2.9 2.7zm-6.39 6.55v-4.85h-5.26V24.4h5.26V13.88c1.23-1.61 3.32-1.32 4-.97v-4.99c-.74-.32-2.87-.67-4 .83zm-11.45-8.8L15 4.38h-4.3V9.4H6.38v4.62H10.7v6.33c0 4.22 2.78 6.75 6.8 6.75 2.22 0 3.86-.43 4.79-.97v-4.57c-.88.38-5.99 1.83-5.99-2.92v-4.62h5.99V9.4h-5.99V5.1l3.99-.65zM5.38 8.16C2.39 8.16.8 9.61.8 12.21c0 4.54 6.23 3.81 6.23 5.76 0 .77-.67 1.02-1.61 1.02-1.42 0-3.25-.59-4.69-1.4v4.75c1.6.69 3.35 1.05 5.09 1.05 3.12 0 6.54-1.54 6.54-4.83 0-4.89-6.27-4.04-6.27-5.83 0-.64.54-.95 1.44-.95 1.25 0 2.84.44 4.1 1.15V8.16A9.45 9.45 0 0 0 5.38 8.16z"/></svg>
+						</div>
 						<div class="payment-card-info">
 							<h3><?php esc_html_e('Stripe Credit Cards', 'omnifywp-ecommerce'); ?></h3>
 							<p><?php esc_html_e('Accept major credit/debit cards globally.', 'omnifywp-ecommerce'); ?></p>
@@ -272,7 +274,9 @@ ksort($omnify_all_currencies);
 
 					<!-- PayPal Card -->
 					<div class="omnify-payment-card <?php echo $omnify_paypal_enabled ? 'active' : ''; ?>">
-						<div class="payment-card-icon">🅿️</div>
+						<div class="payment-card-icon" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box;">
+							<svg width="24" height="26" viewBox="0 0 100 115" fill="none"><path d="M79.2 32.3C77.4 46.1 67.5 54.4 53.6 54.4H39.8c-1.8 0-3.3 1.3-3.6 3.1L30.5 93c-.3 1.8 1.1 3.4 2.9 3.4h15.2c1.8 0 3.3-1.3 3.6-3.1l3.5-22.3c.3-1.8 1.8-3.1 3.6-3.1h5.8c18.5 0 31.7-10.7 34.1-29.3.9-6.8-.7-12.3-4.5-16.3z" fill="#0079C1"/><path d="M70.3 12.8C65.4 6.7 56.4 3.7 44.5 3.7H17.8c-2.4 0-4.5 1.8-4.8 4.2L.1 86.8c-.3 2.1 1.3 4 3.5 4h20.6l5.2-33.3c.3-2.4 2.4-4.2 4.8-4.2h13.8c18.5 0 31.7-10.7 34.1-29.3 1-7.8-.8-13.8-4.8-17.8l-7-3.4z" fill="#00457C"/><path d="M70.3 12.8c-4.9-6.1-13.9-9.1-25.8-9.1H17.8c-2.4 0-4.5 1.8-4.8 4.2L.1 86.8c-.3 2.1 1.3 4 3.5 4h20.6l5.2-33.3c.3-2.4 2.4-4.2 4.8-4.2h13.8c13.9 0 23.8-8.3 25.6-22.1 2.3-17.9-10.7-27.4-15.5-27.4z" fill="#002952" opacity=".2"/></svg>
+						</div>
 						<div class="payment-card-info">
 							<h3><?php esc_html_e('PayPal Express', 'omnifywp-ecommerce'); ?></h3>
 							<p><?php esc_html_e('Accept payments via PayPal accounts.', 'omnifywp-ecommerce'); ?></p>
@@ -287,7 +291,9 @@ ksort($omnify_all_currencies);
 
 					<!-- Bank Transfer -->
 					<div class="omnify-payment-card <?php echo $omnify_bacs_enabled ? 'active' : ''; ?>">
-						<div class="payment-card-icon">🏦</div>
+						<div class="payment-card-icon" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box;">
+							<svg width="26" height="26" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="16" fill="#0F766E"/><path d="M50 18L18 34v6h64v-6L50 18zm-24 26v26h8V44h-8zm16 0v26h8V44h-8zm16 0v26h8V44h-8zm16 0v26h8V44h-8zM14 74v8h72v-8H14z" fill="#FFFFFF"/></svg>
+						</div>
 						<div class="payment-card-info">
 							<h3><?php esc_html_e('Direct Bank Transfer', 'omnifywp-ecommerce'); ?></h3>
 							<p><?php esc_html_e('Accept wire transfers or manual bank deposits.', 'omnifywp-ecommerce'); ?></p>
@@ -302,7 +308,9 @@ ksort($omnify_all_currencies);
 
 					<!-- Cash on Delivery -->
 					<div class="omnify-payment-card <?php echo $omnify_cod_enabled ? 'active' : ''; ?>">
-						<div class="payment-card-icon">📦</div>
+						<div class="payment-card-icon" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box;">
+							<svg width="26" height="26" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="16" fill="#16A34A"/><rect x="14" y="28" width="72" height="44" rx="6" fill="#FFFFFF"/><circle cx="50" cy="50" r="12" fill="#16A34A"/><path d="M50 44v12M46 47h7a2 2 0 0 1 0 4h-6a2 2 0 0 0 0 4h7" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><circle cx="24" cy="50" r="3" fill="#16A34A"/><circle cx="76" cy="50" r="3" fill="#16A34A"/></svg>
+						</div>
 						<div class="payment-card-info">
 							<h3><?php esc_html_e('Cash on Delivery (COD)', 'omnifywp-ecommerce'); ?></h3>
 							<p><?php esc_html_e('Let customers pay on delivery or collection.', 'omnifywp-ecommerce'); ?></p>
