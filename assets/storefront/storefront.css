@@ -22640,3 +22640,305 @@ body .omnify-storefront-wrapper .omnify-storefront-grid:not(.omnify-storefront-g
 	box-sizing: border-box !important;
 }
 
+/* ==========================================================================
+   Interactive Flash Sale Announcement Ticker & Mockups
+   ========================================================================== */
+body .omnify-storefront-wrapper .omnify-flash-ticker,
+.omnify-storefront-wrapper .omnify-flash-ticker {
+	margin: 0 0 24px 0 !important;
+	padding: 10px 18px !important;
+	background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%) !important;
+	border-radius: 12px !important;
+	color: #ffffff !important;
+	box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25) !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-flash-ticker__inner {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	flex-wrap: wrap !important;
+	gap: 12px 16px !important;
+}
+
+.omnify-flash-ticker__badge {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	background: rgba(255, 255, 255, 0.2) !important;
+	border: 1px solid rgba(255, 255, 255, 0.35) !important;
+	padding: 4px 10px !important;
+	border-radius: 9999px !important;
+	font-size: 11px !important;
+	font-weight: 800 !important;
+	letter-spacing: 0.5px !important;
+	text-transform: uppercase !important;
+	color: #ffffff !important;
+}
+
+.ticker-pulse {
+	width: 7px !important;
+	height: 7px !important;
+	background-color: #22c55e !important;
+	border-radius: 50% !important;
+	display: inline-block !important;
+	box-shadow: 0 0 8px #22c55e !important;
+	animation: omnifyTickerPulse 1.5s infinite ease-in-out !important;
+}
+
+@keyframes omnifyTickerPulse {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.omnify-flash-ticker__message {
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #ffffff !important;
+	flex: 1 1 240px !important;
+}
+
+.omnify-flash-ticker__timer {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 5px !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	color: #ffffff !important;
+}
+
+.omnify-flash-ticker__timer .timer-label {
+	opacity: 0.9 !important;
+	margin-right: 2px !important;
+}
+
+.omnify-flash-ticker__timer .timer-unit {
+	background: rgba(0, 0, 0, 0.2) !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	padding: 3px 7px !important;
+	border-radius: 6px !important;
+	font-variant-numeric: tabular-nums !important;
+}
+
+.omnify-flash-ticker__timer .timer-unit strong {
+	font-size: 13px !important;
+	font-weight: 800 !important;
+	color: #ffffff !important;
+}
+
+.omnify-flash-ticker__timer .timer-sep {
+	opacity: 0.7 !important;
+	font-weight: 700 !important;
+}
+
+.omnify-coupon-code-pill {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	background: #ffffff !important;
+	color: #4f46e5 !important;
+	border: 1px dashed #6366f1 !important;
+	border-radius: 9999px !important;
+	padding: 4px 12px !important;
+	font-size: 12px !important;
+	font-weight: 700 !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+	outline: none !important;
+}
+
+.omnify-coupon-code-pill:hover {
+	transform: translateY(-1px) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+	background: #f8fafc !important;
+}
+
+.omnify-coupon-code-pill.is-copied {
+	background: #10b981 !important;
+	color: #ffffff !important;
+	border-color: #059669 !important;
+}
+
+.omnify-coupon-code-pill code {
+	background: #eef2ff !important;
+	color: #4f46e5 !important;
+	padding: 2px 6px !important;
+	border-radius: 4px !important;
+	font-family: inherit !important;
+	font-weight: 800 !important;
+}
+
+.omnify-coupon-code-pill.is-copied code {
+	background: rgba(255, 255, 255, 0.2) !important;
+	color: #ffffff !important;
+}
+
+.omnify-coupon-code-pill .copy-hint {
+	font-size: 11px !important;
+	opacity: 0.8 !important;
+}
+
+/* ==========================================================================
+   Interactive Quick Filter Pills Strip
+   ========================================================================== */
+body .omnify-storefront-wrapper .omnify-quick-filter-strip,
+.omnify-storefront-wrapper .omnify-quick-filter-strip {
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: wrap !important;
+	gap: 8px !important;
+	margin: 0 0 18px 0 !important;
+	padding: 2px 0 !important;
+}
+
+.omnify-quick-filter-pill {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 6px 14px !important;
+	border-radius: 9999px !important;
+	border: 1px solid #e2e8f0 !important;
+	background: #ffffff !important;
+	color: #475569 !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	outline: none !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	line-height: 1.2 !important;
+}
+
+.omnify-quick-filter-pill:hover {
+	border-color: #6366f1 !important;
+	color: #6366f1 !important;
+	background: #f5f3ff !important;
+}
+
+.omnify-quick-filter-pill.is-active {
+	background: #6366f1 !important;
+	border-color: #6366f1 !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+}
+
+.omnify-quick-filter-pill .pill-count {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	background: #f1f5f9 !important;
+	color: #475569 !important;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	border-radius: 9999px !important;
+	padding: 1px 6px !important;
+	min-width: 18px !important;
+}
+
+.omnify-quick-filter-pill.is-active .pill-count {
+	background: rgba(255, 255, 255, 0.25) !important;
+	color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Product Card Floating Hover Tools (Wishlist, Quick View, Compare)
+   ========================================================================== */
+body .omnify-storefront-wrapper .omnify-card-hover-tools,
+.omnify-storefront-wrapper .omnify-card-hover-tools {
+	position: absolute !important;
+	top: 10px !important;
+	right: 10px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 6px !important;
+	z-index: 10 !important;
+	opacity: 0 !important;
+	transform: translateX(8px) !important;
+	transition: all 0.22s ease-in-out !important;
+	pointer-events: none !important;
+}
+
+body .omnify-storefront-wrapper .omnify-product-card:hover .omnify-card-hover-tools,
+.omnify-storefront-wrapper .omnify-product-card:hover .omnify-card-hover-tools {
+	opacity: 1 !important;
+	transform: translateX(0) !important;
+	pointer-events: auto !important;
+}
+
+.omnify-hover-tool-btn {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 32px !important;
+	height: 32px !important;
+	min-width: 32px !important;
+	min-height: 32px !important;
+	padding: 0 !important;
+	border-radius: 50% !important;
+	border: 1px solid rgba(226, 232, 240, 0.9) !important;
+	background: rgba(255, 255, 255, 0.95) !important;
+	backdrop-filter: blur(4px) !important;
+	color: #475569 !important;
+	box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1) !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	outline: none !important;
+}
+
+.omnify-hover-tool-btn:hover {
+	background: #6366f1 !important;
+	border-color: #6366f1 !important;
+	color: #ffffff !important;
+	transform: scale(1.08) !important;
+}
+
+.omnify-hover-tool-btn.omnify-wishlist-button.is-wishlisted,
+.omnify-hover-tool-btn.omnify-wishlist-button.is-wishlisted:hover {
+	background: #fff1f2 !important;
+	border-color: #fecdd3 !important;
+	color: #ef4444 !important;
+}
+
+.omnify-hover-tool-btn.omnify-wishlist-button.is-wishlisted svg {
+	fill: #ef4444 !important;
+	stroke: #ef4444 !important;
+}
+
+/* ==========================================================================
+   Interactive Mock Color Swatches
+   ========================================================================== */
+body .omnify-storefront-wrapper .omnify-card-mock-swatches,
+.omnify-storefront-wrapper .omnify-card-mock-swatches {
+	display: flex !important;
+	align-items: center !important;
+	gap: 5px !important;
+	margin: 4px 0 6px 0 !important;
+}
+
+.omnify-swatch-dot {
+	display: inline-block !important;
+	width: 13px !important;
+	height: 13px !important;
+	border-radius: 50% !important;
+	border: 2px solid #ffffff !important;
+	box-shadow: 0 0 0 1px #cbd5e1 !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-swatch-dot:hover,
+.omnify-swatch-dot.is-active {
+	transform: scale(1.18) !important;
+	box-shadow: 0 0 0 2px #6366f1 !important;
+}
+
+/* ==========================================================================
+   Clean Card Description Display in Multi-Column Grids
+   ========================================================================== */
+body .omnify-storefront-wrapper .omnify-storefront-grid--cols-4 .omnify-product-card .omnify-product-card__desc,
+body .omnify-storefront-wrapper .omnify-storefront-grid.omnify-cols-4 .omnify-product-card .omnify-product-card__desc {
+	display: none !important;
+}

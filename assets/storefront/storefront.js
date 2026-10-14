@@ -5851,10 +5851,158 @@ function initDynamicCartLinks() {
 	});
 }
 
+function initFlashSaleCountdown() {
+	const hoursEl = document.getElementById('omnify-ticker-hours');
+	const minsEl  = document.getElementById('omnify-ticker-mins');
+	const secsEl  = document.getElementById('omnify-ticker-secs');
+	if (!hoursEl || !minsEl || !secsEl) return;
+
+	let targetTime = window.sessionStorage.getItem('omnify_flash_ticker_target');
+	if (!targetTime) {
+		targetTime = Date.now() + (7 * 3600 + 42 * 60 + 18) * 1000;
+		window.sessionStorage.setItem('omnify_flash_ticker_target', targetTime);
+	} else {
+		targetTime = parseInt(targetTime, 10);
+	}
+
+	function update() {
+		let diff = Math.max(0, Math.floor((targetTime - Date.now()) / 1000));
+		if (diff <= 0) {
+			targetTime = Date.now() + (8 * 3600) * 1000;
+			window.sessionStorage.setItem('omnify_flash_ticker_target', targetTime);
+			diff = 8 * 3600;
+		}
+		const h = Math.floor(diff / 3600);
+		const m = Math.floor((diff % 3600) / 60);
+		const s = diff % 60;
+
+		hoursEl.textContent = String(h).padStart(2, '0');
+		minsEl.textContent  = String(m).padStart(2, '0');
+		secsEl.textContent  = String(s).padStart(2, '0');
+	}
+	update();
+	setInterval(update, 1000);
+}
+
+function initCouponPillCopy() {
+	document.querySelectorAll('.omnify-coupon-code-pill').forEach(pill => {
+		pill.addEventListener('click', (e) => {
+			e.preventDefault();
+			const code = pill.dataset.code || 'FLASH30';
+			const hint = pill.querySelector('.copy-hint');
+			const copyText = () => {
+				if (hint) {
+					const prev = hint.textContent;
+					hint.textContent = 'Copied!';
+					pill.classList.add('is-copied');
+					setTimeout(() => {
+						hint.textContent = prev;
+						pill.classList.remove('is-copied');
+					}, 2000);
+				}
+			};
+
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(code).then(copyText).catch(() => {
+					copyText();
+				});
+			} else {
+				copyText();
+			}
+		});
+	});
+}
+
+function initQuickFilterPills() {
+	const pills = document.querySelectorAll('.omnify-quick-filter-pill');
+	if (!pills.length) return;
+
+	pills.forEach(pill => {
+		pill.addEventListener('click', (e) => {
+			e.preventDefault();
+			pills.forEach(p => p.classList.remove('is-active'));
+			pill.classList.add('is-active');
+
+			const filterType = pill.dataset.filterType || 'all';
+			const filterValue = pill.dataset.filterValue || '';
+
+			const catSelect = document.getElementById('omnify-category-filter');
+			const sidebarChecks = document.querySelectorAll('.omnify-sidebar-category-check');
+			const statusChecks = document.querySelectorAll('.omnify-filter-status-check');
+
+			if (filterType === 'all') {
+				if (catSelect) catSelect.value = '';
+				sidebarChecks.forEach(chk => { chk.checked = (chk.value === ''); });
+				statusChecks.forEach(chk => { chk.checked = false; });
+			} else if (filterType === 'category') {
+				if (catSelect) catSelect.value = filterValue;
+				sidebarChecks.forEach(chk => { chk.checked = (chk.value === filterValue); });
+				statusChecks.forEach(chk => { chk.checked = false; });
+			} else if (filterType === 'sale') {
+				if (catSelect) catSelect.value = '';
+				sidebarChecks.forEach(chk => { chk.checked = false; });
+				statusChecks.forEach(chk => { chk.checked = (chk.value === 'onsale'); });
+			} else if (filterType === 'hot') {
+				if (catSelect) catSelect.value = '';
+				sidebarChecks.forEach(chk => { chk.checked = false; });
+				statusChecks.forEach(chk => { chk.checked = false; });
+			} else if (filterType === 'new') {
+				if (catSelect) catSelect.value = '';
+				sidebarChecks.forEach(chk => { chk.checked = false; });
+				statusChecks.forEach(chk => { chk.checked = false; });
+			}
+
+			// Direct client-side card filtering
+			const grid = document.getElementById('omnify-storefront-grid');
+			if (grid) {
+				const cards = grid.querySelectorAll('.omnify-product-card');
+				let matchCount = 0;
+				cards.forEach(card => {
+					let show = true;
+					if (filterType === 'sale') {
+						show = card.dataset.onsale === '1' || !!card.querySelector('.current-price.sale');
+					} else if (filterType === 'hot') {
+						show = card.dataset.isHot === '1' || (card.textContent || '').includes('BESTSELLER') || (card.textContent || '').includes('HOT');
+					} else if (filterType === 'new') {
+						show = card.dataset.isNew === '1' || (card.textContent || '').includes('NEW');
+					} else if (filterType === 'category' && filterValue) {
+						const cats = (card.dataset.categories || '').split(/\s+/);
+						show = cats.includes(filterValue);
+					}
+					card.style.display = show ? 'flex' : 'none';
+					if (show) matchCount++;
+				});
+
+				const resCount = document.getElementById('omnify-storefront-results');
+				if (resCount) {
+					resCount.textContent = `${matchCount} products`;
+				}
+			}
+		});
+	});
+}
+
+function initCardMockSwatches() {
+	document.querySelectorAll('.omnify-card-mock-swatches').forEach(wrap => {
+		wrap.querySelectorAll('.omnify-swatch-dot').forEach(dot => {
+			dot.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				wrap.querySelectorAll('.omnify-swatch-dot').forEach(d => d.classList.remove('is-active'));
+				dot.classList.add('is-active');
+			});
+		});
+	});
+}
+
 omnifyRunOnReady(() => {
 	initProductSinglePage();
 	initPortalAddressesPage();
 	initStorefrontRecentlyViewed();
 	initDynamicCartLinks();
+	initFlashSaleCountdown();
+	initCouponPillCopy();
+	initQuickFilterPills();
+	initCardMockSwatches();
 });
 

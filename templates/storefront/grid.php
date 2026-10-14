@@ -342,52 +342,35 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	</div>
 	<?php endif; ?>
 
+	<!-- Interactive Flash Sale Announcement Ticker with Live Countdown & 1-Click Coupon -->
+	<div id="omnify-flash-ticker" class="omnify-flash-ticker">
+		<div class="omnify-flash-ticker__inner">
+			<div class="omnify-flash-ticker__badge">
+				<span class="ticker-pulse"></span>
+				<span><?php esc_html_e('FLASH SALE', 'omnifywp-ecommerce'); ?></span>
+			</div>
+			<div class="omnify-flash-ticker__message">
+				<span><?php esc_html_e('Special Offer: Save up to 30% on curated bundles & new releases.', 'omnifywp-ecommerce'); ?></span>
+			</div>
+			<div class="omnify-flash-ticker__timer">
+				<span class="timer-label"><?php esc_html_e('Ends in:', 'omnifywp-ecommerce'); ?></span>
+				<span class="timer-unit"><strong id="omnify-ticker-hours">07</strong>h</span>
+				<span class="timer-sep">:</span>
+				<span class="timer-unit"><strong id="omnify-ticker-mins">42</strong>m</span>
+				<span class="timer-sep">:</span>
+				<span class="timer-unit"><strong id="omnify-ticker-secs">18</strong>s</span>
+			</div>
+			<button type="button" class="omnify-coupon-code-pill" data-code="FLASH30" title="<?php esc_attr_e('Click to copy code', 'omnifywp-ecommerce'); ?>">
+				<span class="coupon-tag"><?php esc_html_e('CODE:', 'omnifywp-ecommerce'); ?></span>
+				<code>FLASH30</code>
+				<span class="copy-hint"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span>
+			</button>
+		</div>
+	</div>
 
-	<?php
-	// Dynamic filter options from global attributes + current products (user manageable)
-	$omnify_color_options = [];
-	$omnify_size_options = [];
-	$omnify_brand_options = [];
-	$omnify_global_attrs = get_option('omnify_global_attributes', []);
-	$omnify_attr_map = [];
-	if (is_array($omnify_global_attrs)) {
-		foreach ($omnify_global_attrs as $omnify_attr) {
-			$omnify_name_lower = strtolower($omnify_attr['name'] ?? '');
-			$omnify_opts = (array) ($omnify_attr['options'] ?? []);
-			if ($omnify_name_lower === 'color' || $omnify_name_lower === 'colour') {
-				$omnify_color_options = $omnify_opts;
-			} elseif ($omnify_name_lower === 'size') {
-				$omnify_size_options = $omnify_opts;
-			} elseif ($omnify_name_lower === 'brand' || $omnify_name_lower === 'brands') {
-				$omnify_brand_options = $omnify_opts;
-			}
-			$omnify_attr_map[$omnify_name_lower] = $omnify_opts;
-		}
-	}
-
-	// Collect unique values from current products for dynamic facets
-	foreach ($omnify_products as $omnify_p) {
-		if (!empty($omnify_p['attributes']) && is_array($omnify_p['attributes'])) {
-			foreach ($omnify_p['attributes'] as $omnify_pa) {
-				$omnify_n = strtolower($omnify_pa['name'] ?? '');
-				$omnify_vals = (array) ($omnify_pa['options'] ?? $omnify_pa['values'] ?? []);
-				if (!isset($omnify_attr_map[$omnify_n])) $omnify_attr_map[$omnify_n] = [];
-				$omnify_attr_map[$omnify_n] = array_unique(array_merge($omnify_attr_map[$omnify_n], $omnify_vals));
-			}
-		}
-	}
-	if (empty($omnify_color_options) && isset($omnify_attr_map['color'])) $omnify_color_options = $omnify_attr_map['color'];
-	if (empty($omnify_size_options) && isset($omnify_attr_map['size'])) $omnify_size_options = $omnify_attr_map['size'];
-	if (empty($omnify_brand_options) && isset($omnify_attr_map['brand'])) $omnify_brand_options = $omnify_attr_map['brand'];
-
-	// Fallbacks only if still empty (for empty catalogs)
-	if (empty($omnify_color_options)) $omnify_color_options = ['Black', 'White', 'Red', 'Blue'];
-	if (empty($omnify_size_options)) $omnify_size_options = ['S', 'M', 'L', 'XL'];
-	if (empty($omnify_brand_options)) $omnify_brand_options = [];
-	?>
 	<div class="omnify-storefront-shell">
 		<div class="omnify-storefront-layout-grid">
-			<!-- Left Column: Sidebar Filters -->
+			<!-- Left Column: Streamlined Sidebar Filters -->
 			<aside class="omnify-storefront-sidebar">
 				<!-- Categories Accordion -->
 				<div class="omnify-sidebar-widget active">
@@ -413,22 +396,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 									<span class="count">(<?php echo (int) $omnify_count; ?>)</span>
 								</label>
 							<?php endforeach; ?>
-						</div>
-					</div>
-				</div>
-
-				<!-- Color Accordion -->
-				<div class="omnify-sidebar-widget">
-					<h3 class="omnify-sidebar-widget-title">
-						<span><?php esc_html_e('Color', 'omnifywp-ecommerce'); ?></span>
-						<span class="arrow"></span>
-					</h3>
-					<div class="omnify-sidebar-widget-content">
-						<div class="omnify-sidebar-color-swatches">
-							<?php foreach ($omnify_color_options as $omnify_color) : ?>
-								<span class="omnify-filter-swatch color" data-attribute="color" data-value="<?php echo esc_attr(strtolower(trim($omnify_color))); ?>" style="background-color: <?php echo esc_attr(strtolower(trim($omnify_color))); ?>;" title="<?php echo esc_attr($omnify_color); ?>"></span>
-							<?php endforeach; ?>
-							<span class="swatch-count-more">+2</span>
 						</div>
 					</div>
 				</div>
@@ -469,55 +436,10 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					</div>
 				</div>
 
-				<!-- Size Accordion -->
-				<div class="omnify-sidebar-widget">
+				<!-- Availability & Status Accordion -->
+				<div class="omnify-sidebar-widget active">
 					<h3 class="omnify-sidebar-widget-title">
-						<span><?php esc_html_e('Size', 'omnifywp-ecommerce'); ?></span>
-						<span class="arrow"></span>
-					</h3>
-					<div class="omnify-sidebar-widget-content">
-						<div class="omnify-sidebar-size-swatches">
-							<?php foreach ($omnify_size_options as $omnify_size) : ?>
-								<span class="omnify-filter-swatch size" data-attribute="size" data-value="<?php echo esc_attr(strtolower(trim($omnify_size))); ?>" title="<?php echo esc_attr($omnify_size); ?>"><?php echo esc_html($omnify_size); ?></span>
-							<?php endforeach; ?>
-						</div>
-					</div>
-				</div>
-
-				<!-- Labels Accordion -->
-				<div class="omnify-sidebar-widget">
-					<h3 class="omnify-sidebar-widget-title">
-						<span><?php esc_html_e('Labels', 'omnifywp-ecommerce'); ?></span>
-						<span class="arrow"></span>
-					</h3>
-					<div class="omnify-sidebar-widget-content">
-						<div class="omnify-sidebar-labels-list">
-							<label class="omnify-sidebar-label-item">
-								<input type="checkbox" class="omnify-sidebar-label-check" value="hot">
-								<span class="checkbox-box"></span>
-								<span class="label-name"><?php esc_html_e('Hot', 'omnifywp-ecommerce'); ?></span>
-								<span class="count"><?php echo (int) $omnify_hot_count; ?></span>
-							</label>
-							<label class="omnify-sidebar-label-item">
-								<input type="checkbox" class="omnify-sidebar-label-check" value="new">
-								<span class="checkbox-box"></span>
-								<span class="label-name"><?php esc_html_e('New', 'omnifywp-ecommerce'); ?></span>
-								<span class="count"><?php echo (int) $omnify_new_count; ?></span>
-							</label>
-							<label class="omnify-sidebar-label-item">
-								<input type="checkbox" class="omnify-sidebar-label-check" value="sale">
-								<span class="checkbox-box"></span>
-								<span class="label-name"><?php esc_html_e('Sale', 'omnifywp-ecommerce'); ?></span>
-								<span class="count"><?php echo (int) $omnify_sale_count; ?></span>
-							</label>
-						</div>
-					</div>
-				</div>
-
-				<!-- Status Accordion -->
-				<div class="omnify-sidebar-widget">
-					<h3 class="omnify-sidebar-widget-title">
-						<span><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></span>
+						<span><?php esc_html_e('Availability', 'omnifywp-ecommerce'); ?></span>
 						<span class="arrow"></span>
 					</h3>
 					<div class="omnify-sidebar-widget-content">
@@ -530,12 +452,13 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 							<label class="omnify-sidebar-status-item">
 								<input type="checkbox" class="omnify-sidebar-status-check omnify-filter-status-check" value="onsale">
 								<span class="checkbox-box"></span>
-								<span class="label-name"><?php esc_html_e('On Sale', 'omnifywp-ecommerce'); ?></span>
+								<span class="label-name"><?php esc_html_e('On Sale / Discounted', 'omnifywp-ecommerce'); ?></span>
 							</label>
 						</div>
 					</div>
 				</div>
 
+				<?php if (! empty($omnify_brand_options)) : ?>
 				<!-- Brands Accordion -->
 				<div class="omnify-sidebar-widget">
 					<h3 class="omnify-sidebar-widget-title">
@@ -556,183 +479,146 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						</div>
 					</div>
 				</div>
+				<?php endif; ?>
 
 				<!-- Clear All Button -->
 				<div class="omnify-sidebar-footer">
 					<a href="#" class="omnify-sidebar-clear-all">
 						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-						<span><?php esc_html_e('Clear All', 'omnifywp-ecommerce'); ?></span>
+						<span><?php esc_html_e('Clear All Filters', 'omnifywp-ecommerce'); ?></span>
 					</a>
 				</div>
 			</aside>
 
 			<!-- Right Column: Products Content Area -->
 			<div class="omnify-storefront-content">
-		<?php if ($omnify_show_filters) : ?>
-
-			<!-- Storefront catalog toolbar -->
-			<div class="omnify-horizontal-filter-bar">
-				<div class="omnify-filter-left">
-					<button type="button" class="omnify-sidebar-toggle-btn">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-						<span><?php esc_html_e('Filters', 'omnifywp-ecommerce'); ?></span>
+				<!-- Interactive Quick Filter Pills Strip -->
+				<div class="omnify-quick-filter-strip" role="tablist" aria-label="<?php esc_attr_e('Quick filters', 'omnifywp-ecommerce'); ?>">
+					<button type="button" class="omnify-quick-filter-pill is-active" data-filter-type="all">
+						<span><?php esc_html_e('All Products', 'omnifywp-ecommerce'); ?></span>
+						<span class="pill-count"><?php echo count($omnify_products); ?></span>
 					</button>
-
-					<span id="omnify-storefront-results" class="omnify-filter-results-count">
-						<?php 
-						// translators: %d: placeholder value.
-						printf(esc_html__('%d products', 'omnifywp-ecommerce'), count($omnify_products)); ?>
-					</span>
+					<button type="button" class="omnify-quick-filter-pill" data-filter-type="sale">
+						<span class="pill-icon">⚡</span>
+						<span><?php esc_html_e('Flash Deals', 'omnifywp-ecommerce'); ?></span>
+						<?php if ($omnify_sale_count > 0) : ?>
+							<span class="pill-count"><?php echo (int) $omnify_sale_count; ?></span>
+						<?php endif; ?>
+					</button>
+					<button type="button" class="omnify-quick-filter-pill" data-filter-type="hot">
+						<span class="pill-icon">🔥</span>
+						<span><?php esc_html_e('Bestsellers', 'omnifywp-ecommerce'); ?></span>
+						<?php if ($omnify_hot_count > 0) : ?>
+							<span class="pill-count"><?php echo (int) $omnify_hot_count; ?></span>
+						<?php endif; ?>
+					</button>
+					<button type="button" class="omnify-quick-filter-pill" data-filter-type="new">
+						<span class="pill-icon">✨</span>
+						<span><?php esc_html_e('New In', 'omnifywp-ecommerce'); ?></span>
+						<?php if ($omnify_new_count > 0) : ?>
+							<span class="pill-count"><?php echo (int) $omnify_new_count; ?></span>
+						<?php endif; ?>
+					</button>
+					<?php 
+					// Display top categories as quick pills
+					$omnify_top_cats = array_slice($omnify_all_categories, 0, 4);
+					foreach ($omnify_top_cats as $omnify_top_cat) : 
+						$omnify_top_cat_slug = sanitize_title($omnify_top_cat);
+						$omnify_top_cat_count = $omnify_cat_counts[$omnify_top_cat_slug] ?? 0;
+					?>
+						<button type="button" class="omnify-quick-filter-pill" data-filter-type="category" data-filter-value="<?php echo esc_attr($omnify_top_cat_slug); ?>">
+							<span><?php echo esc_html($omnify_top_cat); ?></span>
+							<?php if ($omnify_top_cat_count > 0) : ?>
+								<span class="pill-count"><?php echo (int) $omnify_top_cat_count; ?></span>
+							<?php endif; ?>
+						</button>
+					<?php endforeach; ?>
 				</div>
 
-				<div class="omnify-filter-right">
-					<?php if ($omnify_show_search) : ?>
-						<form method="get" class="omnify-filter-search-box" onsubmit="return false;">
-							<svg class="omnify-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-							<input type="text" id="omnify-product-search" name="search" autocomplete="off" value="<?php echo esc_attr($omnify_current_filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search products...', 'omnifywp-ecommerce'); ?>" />
-						</form>
-					<?php endif; ?>
+				<?php if ($omnify_show_filters) : ?>
+				<!-- Storefront catalog toolbar -->
+				<div class="omnify-horizontal-filter-bar">
+					<div class="omnify-filter-left">
+						<button type="button" class="omnify-sidebar-toggle-btn">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+							<span><?php esc_html_e('Filters', 'omnifywp-ecommerce'); ?></span>
+						</button>
 
-					<!-- Sort Dropdown -->
-					<?php if ($omnify_show_sort) : ?>
-						<div class="omnify-sort-dropdown">
-							<button type="button" class="omnify-sort-toggle" id="omnify-sort-toggle" aria-label="<?php esc_attr_e('Sort products', 'omnifywp-ecommerce'); ?>">
-								<svg class="omnify-sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12"/><path d="M3 12h9"/><path d="M3 17h6"/><path d="M18 6v12"/><path d="m15 15 3 3 3-3"/></svg>
-								<span><?php esc_html_e('Latest', 'omnifywp-ecommerce'); ?></span>
-								<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+						<span id="omnify-storefront-results" class="omnify-filter-results-count">
+							<?php 
+							// translators: %d: placeholder value.
+							printf(esc_html__('%d products', 'omnifywp-ecommerce'), count($omnify_products)); ?>
+						</span>
+					</div>
+
+					<div class="omnify-filter-right">
+						<?php if ($omnify_show_search) : ?>
+							<form method="get" class="omnify-filter-search-box" onsubmit="return false;">
+								<svg class="omnify-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+								<input type="text" id="omnify-product-search" name="search" autocomplete="off" value="<?php echo esc_attr($omnify_current_filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search products...', 'omnifywp-ecommerce'); ?>" />
+							</form>
+						<?php endif; ?>
+
+						<!-- Sort Dropdown -->
+						<?php if ($omnify_show_sort) : ?>
+							<div class="omnify-sort-dropdown">
+								<button type="button" class="omnify-sort-toggle" id="omnify-sort-toggle" aria-label="<?php esc_attr_e('Sort products', 'omnifywp-ecommerce'); ?>">
+									<svg class="omnify-sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12"/><path d="M3 12h9"/><path d="M3 17h6"/><path d="M18 6v12"/><path d="m15 15 3 3 3-3"/></svg>
+									<span><?php esc_html_e('Latest', 'omnifywp-ecommerce'); ?></span>
+									<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+								</button>
+								<div class="omnify-sort-options" id="omnify-sort-options" style="display: none;">
+									<a href="#" data-sort="latest" class="is-active"><?php esc_html_e('Latest', 'omnifywp-ecommerce'); ?></a>
+									<a href="#" data-sort="price_asc"><?php esc_html_e('Price: low to high', 'omnifywp-ecommerce'); ?></a>
+									<a href="#" data-sort="price_desc"><?php esc_html_e('Price: high to low', 'omnifywp-ecommerce'); ?></a>
+									<a href="#" data-sort="name_asc"><?php esc_html_e('Name: A to Z', 'omnifywp-ecommerce'); ?></a>
+								</div>
+								<!-- Hidden select for form compatibility -->
+								<select id="omnify-sort-filter" style="display: none;">
+									<option value="latest" <?php selected($omnify_default_sort, 'latest'); ?>>Latest</option>
+									<option value="price_asc" <?php selected($omnify_default_sort, 'price_asc'); ?>>Price: low to high</option>
+									<option value="price_desc" <?php selected($omnify_default_sort, 'price_desc'); ?>>Price: high to low</option>
+									<option value="name_asc" <?php selected($omnify_default_sort, 'name_asc'); ?>>Name: A to Z</option>
+								</select>
+							</div>
+						<?php endif; ?>
+
+						<!-- Sleek Multi-Layout Switcher -->
+						<div class="omnify-layout-switches" role="toolbar" aria-label="<?php esc_attr_e('Catalog layout view', 'omnifywp-ecommerce'); ?>">
+							<button type="button" class="omnify-layout-btn <?php echo ('2' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="2" title="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="18" rx="1.5"></rect><rect x="13.5" y="3" width="7.5" height="18" rx="1.5"></rect></svg>
 							</button>
-							<div class="omnify-sort-options" id="omnify-sort-options" style="display: none;">
-								<a href="#" data-sort="latest" class="is-active"><?php esc_html_e('Latest', 'omnifywp-ecommerce'); ?></a>
-								<a href="#" data-sort="price_asc"><?php esc_html_e('Price: low to high', 'omnifywp-ecommerce'); ?></a>
-								<a href="#" data-sort="price_desc"><?php esc_html_e('Price: high to low', 'omnifywp-ecommerce'); ?></a>
-								<a href="#" data-sort="name_asc"><?php esc_html_e('Name: A to Z', 'omnifywp-ecommerce'); ?></a>
-							</div>
-							<!-- Hidden select for form compatibility -->
-							<select id="omnify-sort-filter" style="display: none;">
-								<option value="latest" <?php selected($omnify_default_sort, 'latest'); ?>>Latest</option>
-								<option value="price_asc" <?php selected($omnify_default_sort, 'price_asc'); ?>>Price: low to high</option>
-								<option value="price_desc" <?php selected($omnify_default_sort, 'price_desc'); ?>>Price: high to low</option>
-								<option value="name_asc" <?php selected($omnify_default_sort, 'name_asc'); ?>>Name: A to Z</option>
-							</select>
+							<button type="button" class="omnify-layout-btn <?php echo ('3' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="3" title="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="3" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="3" width="4.5" height="7" rx="1"></rect><rect x="3" y="14" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="14" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="14" width="4.5" height="7" rx="1"></rect></svg>
+							</button>
+							<button type="button" class="omnify-layout-btn <?php echo ('4' === (string) $omnify_catalog_layout || empty($omnify_catalog_layout)) ? 'is-active' : ''; ?>" data-cols="4" title="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"></rect><rect x="7.5" y="3" width="3.5" height="18" rx="1"></rect><rect x="13" y="3" width="3.5" height="18" rx="1"></rect><rect x="18.5" y="3" width="3.5" height="18" rx="1"></rect></svg>
+							</button>
+							<button type="button" class="omnify-layout-btn <?php echo ('list' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="list" title="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><rect x="3" y="4.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="10.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="16.5" width="3" height="3" rx="0.5"></rect></svg>
+							</button>
 						</div>
-					<?php endif; ?>
 
-					<!-- Sleek Multi-Layout Switcher -->
-					<div class="omnify-layout-switches" role="toolbar" aria-label="<?php esc_attr_e('Catalog layout view', 'omnifywp-ecommerce'); ?>">
-						<button type="button" class="omnify-layout-btn <?php echo ('2' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="2" title="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('2 Columns (Large)', 'omnifywp-ecommerce'); ?>">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="18" rx="1.5"></rect><rect x="13.5" y="3" width="7.5" height="18" rx="1.5"></rect></svg>
-						</button>
-						<button type="button" class="omnify-layout-btn <?php echo ('3' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="3" title="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('3 Columns (Standard)', 'omnifywp-ecommerce'); ?>">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="3" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="3" width="4.5" height="7" rx="1"></rect><rect x="3" y="14" width="4.5" height="7" rx="1"></rect><rect x="9.75" y="14" width="4.5" height="7" rx="1"></rect><rect x="16.5" y="14" width="4.5" height="7" rx="1"></rect></svg>
-						</button>
-						<button type="button" class="omnify-layout-btn <?php echo ('4' === (string) $omnify_catalog_layout || empty($omnify_catalog_layout)) ? 'is-active' : ''; ?>" data-cols="4" title="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('4 Columns (Dense)', 'omnifywp-ecommerce'); ?>">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"></rect><rect x="7.5" y="3" width="3.5" height="18" rx="1"></rect><rect x="13" y="3" width="3.5" height="18" rx="1"></rect><rect x="18.5" y="3" width="3.5" height="18" rx="1"></rect></svg>
-						</button>
-						<button type="button" class="omnify-layout-btn <?php echo ('list' === (string) $omnify_catalog_layout) ? 'is-active' : ''; ?>" data-cols="list" title="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Detailed List', 'omnifywp-ecommerce'); ?>">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><rect x="3" y="4.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="10.5" width="3" height="3" rx="0.5"></rect><rect x="3" y="16.5" width="3" height="3" rx="0.5"></rect></svg>
-						</button>
-					</div>
-
-					<!-- Cart Link -->
-					<div class="omnify-filter-cart-wrap">
-						<a href="<?php echo esc_url($omnify_cart_url ?? '#'); ?>" class="omnify-cart-link">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-							<span><?php esc_html_e('Cart', 'omnifywp-ecommerce'); ?></span>
-							<span id="omnify-cart-count">0</span>
-						</a>
-					</div>
-				</div>
-			</div>
-
-			<!-- Slide Down Dropdown Drawer for Options -->
-			<div class="omnify-filter-drawer" id="omnify-filter-drawer" style="max-height: 0; opacity: 0; overflow: hidden; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);">
-				<div class="omnify-filter-drawer-content">
-					<!-- Hidden select for compatibility -->
-					<select id="omnify-category-filter" style="display: none;">
-						<option value="" <?php selected($omnify_current_filters['category'] ?? '', ''); ?>>All Categories</option>
-						<?php foreach ($omnify_all_categories as $omnify_cat) : ?>
-							<?php $omnify_cat_option_slug = sanitize_title($omnify_cat); ?>
-							<option value="<?php echo esc_attr($omnify_cat_option_slug); ?>" <?php selected($omnify_current_filters['category'] ?? '', $omnify_cat_option_slug); ?>><?php echo esc_html($omnify_cat); ?></option>
-						<?php endforeach; ?>
-					</select>
-
-					<!-- Category Group -->
-					<div class="omnify-filter-group" data-group="category" style="display: none;">
-						<h4><?php esc_html_e('Filter by Category', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-options-grid categories">
-							<a href="#" class="omnify-filter-link is-active" data-value=""><?php esc_html_e('All Categories', 'omnifywp-ecommerce'); ?></a>
-							<?php foreach ($omnify_all_categories as $omnify_cat) : ?>
-								<?php $omnify_cat_option_slug = sanitize_title($omnify_cat); ?>
-								<a href="#" class="omnify-filter-link" data-value="<?php echo esc_attr($omnify_cat_option_slug); ?>"><?php echo esc_html($omnify_cat); ?></a>
-							<?php endforeach; ?>
-						</div>
-					</div>
-
-					<!-- Color Group -->
-					<div class="omnify-filter-group" data-group="color" style="display: none;">
-						<h4><?php esc_html_e('Filter by Color', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-options-swatches color">
-							<?php foreach ($omnify_color_options as $omnify_color) : ?>
-								<span class="omnify-filter-swatch color" data-attribute="color" data-value="<?php echo esc_attr(strtolower(trim($omnify_color))); ?>" style="background-color: <?php echo esc_attr(strtolower(trim($omnify_color))); ?>;" title="<?php echo esc_attr($omnify_color); ?>"></span>
-							<?php endforeach; ?>
-						</div>
-					</div>
-
-					<!-- Price Group -->
-					<div class="omnify-filter-group" data-group="price" style="display: none;">
-						<h4><?php esc_html_e('Filter by Price', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-price-slider-wrap" style="padding: 10px 0;">
-							<input type="range" class="omnify-filter-slider" id="omnify-top-price-slider" min="0" max="1000" value="1000" style="width: 100%; accent-color: var(--omnify-primary);">
-							<div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: #475569;">
-								<span>$0</span>
-								<span id="omnify-top-price-display">$1000</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Size Blocks Group -->
-					<div class="omnify-filter-group" data-group="size" style="display: none;">
-						<h4><?php esc_html_e('Filter by Size', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-options-swatches size">
-							<?php foreach ($omnify_size_options as $omnify_size) : ?>
-								<span class="omnify-filter-swatch size" data-attribute="size" data-value="<?php echo esc_attr(strtolower(trim($omnify_size))); ?>"><?php echo esc_html($omnify_size); ?></span>
-							<?php endforeach; ?>
-						</div>
-					</div>
-
-					<!-- Status Checks Group -->
-					<div class="omnify-filter-group" data-group="status" style="display: none;">
-						<h4><?php esc_html_e('Filter by Status', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-options-list">
-							<label class="omnify-filter-checkbox-label">
-								<input type="checkbox" class="omnify-checkbox omnify-filter-status-check" value="instock">
-								<span><?php esc_html_e('In stock', 'omnifywp-ecommerce'); ?></span>
-							</label>
-							<label class="omnify-filter-checkbox-label">
-								<input type="checkbox" class="omnify-checkbox omnify-filter-status-check" value="onsale">
-								<span><?php esc_html_e('On sale', 'omnifywp-ecommerce'); ?></span>
-							</label>
-						</div>
-					</div>
-
-					<!-- Brands Checkboxes Group -->
-					<div class="omnify-filter-group" data-group="brand" style="display: none;">
-						<h4><?php esc_html_e('Filter by Brand', 'omnifywp-ecommerce'); ?></h4>
-						<div class="omnify-filter-options-grid brands">
-							<?php $omnify_has_active_brand = ! empty($omnify_current_filters['filter_brand']) || ! empty($omnify_current_filters['attr_brand']); ?>
-							<a href="#" class="omnify-filter-link <?php echo $omnify_has_active_brand ? '' : 'is-active'; ?>" data-value=""><?php esc_html_e('All Brands', 'omnifywp-ecommerce'); ?></a>
-							<?php foreach ($omnify_brand_options as $omnify_brand) : 
-								$omnify_bval = strtolower(trim($omnify_brand));
-								$omnify_b_url = add_query_arg('filter_brand', $omnify_bval, $omnify_base_url);
-								$omnify_is_active = (isset($omnify_current_filters['filter_brand']) && $omnify_current_filters['filter_brand'] === $omnify_bval) || (isset($omnify_current_filters['attr_brand']) && $omnify_current_filters['attr_brand'] === $omnify_bval);
-							?>
-								<a href="<?php echo esc_url($omnify_b_url); ?>" class="omnify-filter-link <?php echo $omnify_is_active ? 'is-active' : ''; ?>" data-value="<?php echo esc_attr($omnify_bval); ?>"><?php echo esc_html($omnify_brand); ?></a>
-							<?php endforeach; ?>
+						<!-- Cart Link -->
+						<div class="omnify-filter-cart-wrap">
+							<a href="<?php echo esc_url($omnify_cart_url ?? '#'); ?>" class="omnify-cart-link">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+								<span><?php esc_html_e('Cart', 'omnifywp-ecommerce'); ?></span>
+								<span id="omnify-cart-count">0</span>
+							</a>
 						</div>
 					</div>
 				</div>
-			</div>
-		<?php endif; ?>
+
+				<!-- Hidden category select for JavaScript compatibility -->
+				<select id="omnify-category-filter" style="display: none;">
+					<option value="" <?php selected($omnify_current_filters['category'] ?? '', ''); ?>>All Categories</option>
+					<?php foreach ($omnify_all_categories as $omnify_cat) : ?>
+						<?php $omnify_cat_option_slug = sanitize_title($omnify_cat); ?>
+						<option value="<?php echo esc_attr($omnify_cat_option_slug); ?>" <?php selected($omnify_current_filters['category'] ?? '', $omnify_cat_option_slug); ?>><?php echo esc_html($omnify_cat); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<?php endif; ?>
 
 		<section class="omnify-storefront-products">
 
@@ -944,15 +830,39 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 								</span>
 							</div>
 						<?php endif; ?>
+
+						<!-- Floating Hover Quick Action Tools -->
+						<div class="omnify-card-hover-tools">
+							<?php if ($omnify_show_wishlist) : ?>
+								<button type="button" class="omnify-hover-tool-btn omnify-wishlist-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" title="<?php esc_attr_e('Add to Wishlist', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Add to Wishlist', 'omnifywp-ecommerce'); ?>">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+								</button>
+							<?php endif; ?>
+							<button type="button" class="omnify-hover-tool-btn omnify-quick-view-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" title="<?php esc_attr_e('Quick View', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Quick View', 'omnifywp-ecommerce'); ?>">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+							</button>
+							<button type="button" class="omnify-hover-tool-btn omnify-compare-button" data-product-id="<?php echo esc_attr((string) $omnify_product['id']); ?>" data-name="<?php echo esc_attr((string) $omnify_product['name']); ?>" data-display-price="<?php echo esc_attr($omnify_format_price($omnify_actual_price)); ?>" data-image="<?php echo esc_attr($omnify_thumb); ?>" data-url="<?php echo esc_url($omnify_product_url); ?>" title="<?php esc_attr_e('Compare', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Compare', 'omnifywp-ecommerce'); ?>">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg>
+							</button>
+						</div>
 					</div>
 
 					<div class="omnify-product-card__content">
 						<div class="omnify-product-card__info">
-							<!-- Rating Row (stars + review count) -->
+							<!-- Rating & Reviews Row -->
 							<div class="omnify-product-card__rating">
 								<span class="omnify-stars">★★★★★</span>
-								<span class="omnify-review-count">(<?php echo esc_html($omnify_card_reviews); ?> reviews)</span>
+								<span class="omnify-review-count">(<?php echo esc_html($omnify_card_reviews); ?>)</span>
 							</div>
+
+							<?php if ($omnify_is_wearable || 'physical' === $omnify_ptype || ! empty($omnify_card_color_options)) : ?>
+								<!-- Interactive Mock Color Swatches -->
+								<div class="omnify-card-mock-swatches">
+									<span class="omnify-swatch-dot is-active" style="background:#0F172A;" title="<?php esc_attr_e('Obsidian Black', 'omnifywp-ecommerce'); ?>"></span>
+									<span class="omnify-swatch-dot" style="background:#475569;" title="<?php esc_attr_e('Slate Gray', 'omnifywp-ecommerce'); ?>"></span>
+									<span class="omnify-swatch-dot" style="background:#18794E;" title="<?php esc_attr_e('Emerald Green', 'omnifywp-ecommerce'); ?>"></span>
+								</div>
+							<?php endif; ?>
 
 							<h4 class="omnify-product-card__title" onclick="window.location='<?php echo esc_url($omnify_product_url); ?>'" style="cursor: pointer;">
 								<?php echo esc_html($omnify_product['name']); ?>
@@ -1062,49 +972,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 		</div>
 		<?php endif; ?>
 
-		<!-- Storefront Features & Value Propositions Bar (Driven by Storefront Settings) -->
-		<?php
-		$omnify_show_features = ! isset($omnify_settings['storefront_show_features_bar']) || ! empty($omnify_settings['storefront_show_features_bar']);
-		if ($omnify_show_features) :
-			$omnify_default_features = [
-				1 => ['icon' => 'shield', 'title' => __('Secure Payments', 'omnifywp-ecommerce'), 'desc' => __('100% encrypted & verified checkout', 'omnifywp-ecommerce')],
-				2 => ['icon' => 'cloud',  'title' => __('Instant Access', 'omnifywp-ecommerce'),  'desc' => __('Immediate file download & license delivery', 'omnifywp-ecommerce')],
-				3 => ['icon' => 'star',   'title' => __('Money Back Guarantee', 'omnifywp-ecommerce'), 'desc' => __('Quality verified products & customer support', 'omnifywp-ecommerce')],
-				4 => ['icon' => 'heart',  'title' => __('Dedicated Support', 'omnifywp-ecommerce'), 'desc' => __('Friendly assistance whenever you need help', 'omnifywp-ecommerce')],
-			];
-		?>
-		<div class="omnify-storefront-features-bar">
-			<?php for ($omnify_fi = 1; $omnify_fi <= 4; $omnify_fi++) :
-				$omnify_f_show = ! isset($omnify_settings["storefront_feature_{$omnify_fi}_show"]) || ! empty($omnify_settings["storefront_feature_{$omnify_fi}_show"]);
-				if (! $omnify_f_show) continue;
-
-				$omnify_f_icon = $omnify_settings["storefront_feature_{$omnify_fi}_icon"] ?? ($omnify_default_features[$omnify_fi]['icon'] ?? 'shield');
-				$omnify_f_title = ! empty($omnify_settings["storefront_feature_{$omnify_fi}_title"]) ? $omnify_settings["storefront_feature_{$omnify_fi}_title"] : ($omnify_default_features[$omnify_fi]['title'] ?? '');
-				$omnify_f_desc = ! empty($omnify_settings["storefront_feature_{$omnify_fi}_desc"]) ? $omnify_settings["storefront_feature_{$omnify_fi}_desc"] : ($omnify_default_features[$omnify_fi]['desc'] ?? '');
-				if (empty($omnify_f_title)) continue;
-			?>
-			<div class="omnify-feature-card">
-				<div class="omnify-feature-icon">
-					<?php if ('shield' === $omnify_f_icon) : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-					<?php elseif ('cloud' === $omnify_f_icon) : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M12 13v6m-3-3l3 3 3-3"/></svg>
-					<?php elseif ('star' === $omnify_f_icon) : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-					<?php elseif ('truck' === $omnify_f_icon) : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-					<?php elseif ('cart' === $omnify_f_icon) : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-					<?php else : ?>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-					<?php endif; ?>
-				</div>
-				<div class="omnify-feature-info">
-					<h4><?php echo esc_html($omnify_f_title); ?></h4>
-					<p><?php echo esc_html($omnify_f_desc); ?></p>
-				</div>
-			</div>
-			<?php endfor; ?>
 		</div>
 		<?php endif; ?>
 	</div>

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "landingPage": "/wp-admin/admin.php?page=omnifywp-ecommerce",
+  "preferredVersions": {
+    "php": "8.2",
+    "wp": "latest"
+  },
+  "login": true,
+  "steps": [
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "https://github.com/omnifywp/omnifywp-ecommerce/archive/refs/heads/main.zip"
+      },
+      "options": {
+        "activate": true,
+        "targetFolderName": "omnifywp-ecommerce"
+      }
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "omnifywp-ecommerce/omnifywp-ecommerce.php"
+    }
+  ]
+}

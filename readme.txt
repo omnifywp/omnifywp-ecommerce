@@ -152,10 +152,15 @@ Yes. OmnifyWP provides clean, public endpoints under `/wp-json/omnify/v1/` to ac
 == Changelog ==
 
 = 1.4.0 =
+* Storefront Interactivity: Added dynamic Flash Sale announcement ticker with live session-persisted countdown timer and 1-click coupon code copy button (`FLASH30`) with instant clipboard feedback.
+* Storefront Interactivity: Added interactive Quick Filter Pills strip for instant 1-click client-side filtering by Flash Deals, Bestsellers, New In, and top categories with dynamic counter badges.
+* Storefront Mockup: Added floating card action toolbar on hover with Wishlist toggle, Quick View modal trigger, and Product Compare launcher.
+* Storefront Mockup: Added interactive color swatch selector dots on product cards with smooth active indicator states.
+* Storefront Layout: Streamlined home page and catalog by removing redundant bottom features bar, removing hidden duplicate filter drawers, and cleaning up sidebar filter widgets.
 * Storefront Design: Complete product card visual and layout overhaul across all catalog grid views (4-column dense, 3-column standard, 2-column large, and detailed list view).
 * Storefront UI: Implemented full-width responsive product image containers (`width: 100%`, `max-width: 100%`, `aspect-ratio: auto`, `object-fit: cover`) preventing image squishing, unexpected gaps, and aspect ratio distortion across third-party themes.
 * Storefront Layout: Unified card padding tailored per column density: 18px (2-column), 15px (3-column), and 12px (4-column).
-* Storefront Typography: Balanced title, price, description, and badge sizing with 2-line title clamps to prevent awkward text truncation on long product titles.
+* Storefront Typography: Balanced title, price, description, and badge sizing with 2-line title clamps to prevent awkward text truncation on long product titles. Cleaned description display in 4-column mode.
 * Storefront UI: Streamlined pill action buttons (`+ Quick Add` / `View Details`) with compact padding and font sizing (`min-height: 24px-28px`) ensuring clean alignment without wrapping in dense layouts.
 * Storefront Feature: Enhanced Recently Viewed Products grid (`#omnify-recently-viewed-grid`) with cookie persistence, auto-hiding when empty, and responsive 4-column layout matching the primary catalog styling.
 * Storefront Feature: Added 4-layout catalog switcher toolbar allowing buyers to switch between 2-column, 3-column, 4-column, and detailed list layouts on the fly.
