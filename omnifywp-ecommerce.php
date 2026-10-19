@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OmnifyWP eCommerce
  * Description: Complete eCommerce engine for simple, variable, bundled, physical, and digital products on WordPress.
- * Version: 1.4.0
+ * Version: 1.4.2
  * Requires at least: 6.5
  * Requires PHP: 8.2
  * Author: OmnifyWP
@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-define('OMNIFY_VERSION', '1.4.0');
+define('OMNIFY_VERSION', '1.4.2');
 define('OMNIFY_FILE', __FILE__);
 define('OMNIFY_PATH', plugin_dir_path(__FILE__));
 define('OMNIFY_URL', plugin_dir_url(__FILE__));
@@ -84,10 +84,12 @@ function omnify_coupon_csv_values(mixed $omnify_value): array {
  */
 function omnify_render_trend(float|int|string $omnify_trend): string {
 	$omnify_trend_val  = (float) $omnify_trend;
-	$omnify_trend_sign = $omnify_trend_val >= 0 ? '+' : '';
-	$omnify_bg         = $omnify_trend_val >= 0 ? '#d1fae5' : '#fee2e2';
-	$omnify_fg         = $omnify_trend_val >= 0 ? '#065f46' : '#991b1b';
-	return '<span class="omnify-trend" style="font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: 4px; background: ' . $omnify_bg . '; color: ' . $omnify_fg . '; display: inline-block; margin-left: 8px;">' . $omnify_trend_sign . number_format($omnify_trend_val, 1) . '%</span>';
+	$omnify_trend_sign = $omnify_trend_val > 0 ? '+' : '';
+	$omnify_class      = $omnify_trend_val > 0 ? 'omnify-trend--up' : ($omnify_trend_val < 0 ? 'omnify-trend--down' : 'omnify-trend--neutral');
+	$omnify_bg         = $omnify_trend_val > 0 ? '#ecfdf5' : ($omnify_trend_val < 0 ? '#fef2f2' : '#f1f5f9');
+	$omnify_fg         = $omnify_trend_val > 0 ? '#059669' : ($omnify_trend_val < 0 ? '#dc2626' : '#64748b');
+	$omnify_border     = $omnify_trend_val > 0 ? '#a7f3d0' : ($omnify_trend_val < 0 ? '#fecaca' : '#e2e8f0');
+	return '<span class="omnify-trend ' . $omnify_class . '" style="border: 1px solid ' . $omnify_border . '; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; background: ' . $omnify_bg . '; color: ' . $omnify_fg . '; display: inline-flex; align-items: center; gap: 2px;">' . $omnify_trend_sign . number_format($omnify_trend_val, 1) . '%</span>';
 }
 
 /**
@@ -245,5 +247,107 @@ function omnify_get_storefront_url(): string {
 
 	return (string) apply_filters('omnify_storefront_url', home_url('/storefront/'));
 }
+
+/**
+ * Retrieve a product by ID.
+ *
+ * @param int $product_id Product ID.
+ * @return array<string, mixed>|null Product data array or null if not found.
+ */
+function omnify_get_product(int $product_id): ?array {
+	if ($product_id <= 0) {
+		return null;
+	}
+	$schema = new \Omnify\eCommerce\Database\Omnify_Schema();
+	$repo   = new \Omnify\eCommerce\Repositories\Omnify_Product_Repository($schema);
+	$product = $repo->find($product_id);
+	return is_array($product) ? apply_filters('omnify_get_product', $product, $product_id) : null;
+}
+
+/**
+ * Retrieve an order by ID.
+ *
+ * @param int $order_id Order ID.
+ * @return array<string, mixed>|null Order data array or null if not found.
+ */
+function omnify_get_order(int $order_id): ?array {
+	if ($order_id <= 0) {
+		return null;
+	}
+	$schema = new \Omnify\eCommerce\Database\Omnify_Schema();
+	$repo   = new \Omnify\eCommerce\Repositories\Omnify_Order_Repository($schema);
+	$order  = $repo->find($order_id);
+	return is_array($order) ? apply_filters('omnify_get_order', $order, $order_id) : null;
+}
+
+/**
+ * Format a numeric amount according to store currency and design settings.
+ *
+ * @param float  $amount   Numeric price amount.
+ * @param string $currency Optional currency code. If empty, store default is used.
+ * @return string Formatted price string.
+ */
+function omnify_format_price(float $amount, string $currency = ''): string {
+	$settings = get_option('omnify_settings', []);
+	$settings = is_array($settings) ? $settings : [];
+
+	$currency = ! empty($currency) ? strtoupper($currency) : strtoupper((string) ($settings['default_currency'] ?? 'USD'));
+	$symbol   = class_exists('\Omnify\eCommerce\Support\Omnify_Locations') ? \Omnify\eCommerce\Support\Omnify_Locations::currency_symbol($currency) : '$';
+	$decimals = max(0, min(4, (int) ($settings['price_decimals'] ?? 2)));
+	$thou     = (string) ($settings['thousand_separator'] ?? ',');
+	$dec      = (string) ($settings['decimal_separator'] ?? '.');
+	$price    = number_format($amount, $decimals, $dec, $thou);
+
+	$formatted = 'after' === ($settings['currency_position'] ?? 'before')
+		? $price . ' ' . $symbol
+		: $symbol . $price;
+
+	return (string) apply_filters('omnify_format_price', $formatted, $amount, $settings);
+}
+
+/**
+ * Dynamically resolve the Customer Portal URL.
+ *
+ * @return string
+ */
+function omnify_get_customer_portal_url(): string {
+	$settings = get_option('omnify_settings', []);
+	$settings = is_array($settings) ? $settings : [];
+
+	$page_id = (int) ($settings['page_customer_portal'] ?? $settings['customer_portal_page_id'] ?? 0);
+	if ($page_id > 0) {
+		$permalink = get_permalink($page_id);
+		if ($permalink && ! is_wp_error($permalink)) {
+			return (string) apply_filters('omnify_customer_portal_url', $permalink);
+		}
+	}
+
+	$pages = get_posts([
+		'post_type'        => 'page',
+		's'                => '[omnify_portal]',
+		'post_status'      => 'publish',
+		'posts_per_page'   => 1,
+		'suppress_filters' => false,
+	]);
+	if (! empty($pages) && isset($pages[0]->ID)) {
+		$permalink = get_permalink($pages[0]->ID);
+		if ($permalink && ! is_wp_error($permalink)) {
+			return (string) apply_filters('omnify_customer_portal_url', $permalink);
+		}
+	}
+
+	foreach (['portal', 'customer-portal', 'my-account'] as $slug) {
+		$page = get_page_by_path($slug);
+		if ($page instanceof \WP_Post && 'publish' === $page->post_status) {
+			$permalink = get_permalink($page->ID);
+			if ($permalink && ! is_wp_error($permalink)) {
+				return (string) apply_filters('omnify_customer_portal_url', $permalink);
+			}
+		}
+	}
+
+	return (string) apply_filters('omnify_customer_portal_url', home_url('/portal/'));
+}
+
 
 

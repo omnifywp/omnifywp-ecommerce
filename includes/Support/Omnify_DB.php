@@ -40,7 +40,7 @@ class Omnify_DB {
 		// Do not invalidate cache for transaction boundary operations (START TRANSACTION, COMMIT, ROLLBACK)
 		$omnify_trimmed = strtoupper( trim( $omnify_query ) );
 		if ( ! preg_match( '/^(START\s+TRANSACTION|COMMIT|ROLLBACK|BEGIN|SAVEPOINT)/i', $omnify_trimmed ) ) {
-			self::bump_last_changed();
+			self::bump_tables_from_query( $omnify_query );
 		}
 
 		return $omnify_result;
@@ -48,25 +48,25 @@ class Omnify_DB {
 
 	public static function insert( \wpdb $omnify_wpdb, string $omnify_table, array $omnify_data, array|string|null $omnify_format = null ): int|false {
 		$omnify_result = call_user_func( [ $omnify_wpdb, 'insert' ], $omnify_table, $omnify_data, $omnify_format );
-		self::bump_last_changed();
+		self::bump_last_changed( $omnify_table );
 		return $omnify_result;
 	}
 
 	public static function replace( \wpdb $omnify_wpdb, string $omnify_table, array $omnify_data, array|string|null $omnify_format = null ): int|false {
 		$omnify_result = call_user_func( [ $omnify_wpdb, 'replace' ], $omnify_table, $omnify_data, $omnify_format );
-		self::bump_last_changed();
+		self::bump_last_changed( $omnify_table );
 		return $omnify_result;
 	}
 
 	public static function update( \wpdb $omnify_wpdb, string $omnify_table, array $omnify_data, array $omnify_where, array|string|null $omnify_format = null, array|string|null $omnify_where_format = null ): int|false {
 		$omnify_result = call_user_func( [ $omnify_wpdb, 'update' ], $omnify_table, $omnify_data, $omnify_where, $omnify_format, $omnify_where_format );
-		self::bump_last_changed();
+		self::bump_last_changed( $omnify_table );
 		return $omnify_result;
 	}
 
 	public static function delete( \wpdb $omnify_wpdb, string $omnify_table, array $omnify_where, array|string|null $omnify_where_format = null ): int|false {
 		$omnify_result = call_user_func( [ $omnify_wpdb, 'delete' ], $omnify_table, $omnify_where, $omnify_where_format );
-		self::bump_last_changed();
+		self::bump_last_changed( $omnify_table );
 		return $omnify_result;
 	}
 
@@ -92,20 +92,57 @@ class Omnify_DB {
 	}
 
 	private static function cache_key( string $omnify_method, array $omnify_args ): string {
-		return $omnify_method . '_' . md5( self::last_changed() . '|' . wp_json_encode( $omnify_args ) );
-	}
-
-	private static function last_changed(): string {
-		$omnify_last_changed = wp_cache_get( 'last_changed', self::CACHE_GROUP );
-		if ( false === $omnify_last_changed ) {
-			$omnify_last_changed = microtime();
-			wp_cache_set( 'last_changed', $omnify_last_changed, self::CACHE_GROUP );
+		$omnify_query  = isset( $omnify_args[0] ) && is_string( $omnify_args[0] ) ? $omnify_args[0] : '';
+		$omnify_tables = self::extract_tables( $omnify_query );
+		$omnify_stamps = [];
+		foreach ( $omnify_tables as $omnify_tbl ) {
+			$omnify_stamps[] = $omnify_tbl . ':' . self::last_changed( $omnify_tbl );
+		}
+		if ( empty( $omnify_stamps ) ) {
+			$omnify_stamps[] = 'global:' . self::last_changed();
 		}
 
-		return (string) $omnify_last_changed;
+		return $omnify_method . '_' . md5( implode( ';', $omnify_stamps ) . '|' . wp_json_encode( $omnify_args ) );
 	}
 
-	private static function bump_last_changed(): void {
-		wp_cache_set( 'last_changed', microtime(), self::CACHE_GROUP );
+	private static function extract_tables( string $omnify_query ): array {
+		if ( '' === $omnify_query ) {
+			return [];
+		}
+		preg_match_all( '/(?:FROM|JOIN|INTO|UPDATE)\s+[`]?([a-zA-Z0-9_]+)[`]?/i', $omnify_query, $omnify_matches );
+		if ( empty( $omnify_matches[1] ) ) {
+			return [];
+		}
+		return array_unique( array_map( 'strtolower', $omnify_matches[1] ) );
+	}
+
+	private static function bump_tables_from_query( string $omnify_query ): void {
+		$omnify_tables = self::extract_tables( $omnify_query );
+		if ( empty( $omnify_tables ) ) {
+			self::bump_last_changed();
+			return;
+		}
+		foreach ( $omnify_tables as $omnify_tbl ) {
+			self::bump_last_changed( $omnify_tbl );
+		}
+	}
+
+	private static function last_changed( string $omnify_table = '' ): string {
+		$omnify_key = '' !== $omnify_table ? 'last_changed_' . sanitize_key( $omnify_table ) : 'last_changed';
+		$omnify_val = wp_cache_get( $omnify_key, self::CACHE_GROUP );
+		if ( false === $omnify_val ) {
+			$omnify_val = microtime();
+			wp_cache_set( $omnify_key, $omnify_val, self::CACHE_GROUP );
+		}
+
+		return (string) $omnify_val;
+	}
+
+	private static function bump_last_changed( string $omnify_table = '' ): void {
+		$omnify_time = microtime();
+		if ( '' !== $omnify_table ) {
+			wp_cache_set( 'last_changed_' . sanitize_key( $omnify_table ), $omnify_time, self::CACHE_GROUP );
+		}
+		wp_cache_set( 'last_changed', $omnify_time, self::CACHE_GROUP );
 	}
 }

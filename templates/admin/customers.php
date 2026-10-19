@@ -33,6 +33,9 @@ $omnify_product_repo = $omnify_template_vars['omnify_product_repo'] ?? null;
 $omnify_products = $omnify_template_vars['omnify_products'] ?? null;
 $omnify_symbol = $omnify_template_vars['omnify_symbol'] ?? null;
 $omnify_timeline = $omnify_template_vars['omnify_timeline'] ?? null;
+$omnify_paged = (int) ($omnify_template_vars['omnify_paged'] ?? 1);
+$omnify_total_pages = (int) ($omnify_template_vars['omnify_total_pages'] ?? 1);
+$omnify_total_customers = (int) ($omnify_template_vars['omnify_total_customers'] ?? 0);
 
 
 /**
@@ -58,9 +61,11 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 				<p><?php esc_html_e('Create a customer account manually.', 'omnifywp-ecommerce'); ?></p>
 			<?php elseif ($omnify_action === 'edit' && $omnify_customer) : ?>
 				<h1><?php
-				// translators: %s: placeholder value. echo esc_html(sprintf(__('Customer Profile: %s', 'omnifywp-ecommerce'), $customer['name'] ?: $customer['email'])); ?></h1>
+				/* translators: %s: Customer Name */
+				echo esc_html(sprintf(__('Customer Profile: %s', 'omnifywp-ecommerce'), $omnify_customer['name'] ?: $omnify_customer['email'])); ?></h1>
 				<p><?php
-				// translators: %s: placeholder value. echo esc_html(sprintf(__('Manage details, notes, and product access for %s.', 'omnifywp-ecommerce'), $customer['email'])); ?></p>
+				/* translators: %s: Customer Email */
+				echo esc_html(sprintf(__('Manage details, notes, and product access for %s.', 'omnifywp-ecommerce'), $omnify_customer['email'])); ?></p>
 			<?php else : ?>
 				<h1><?php esc_html_e('Customers', 'omnifywp-ecommerce'); ?></h1>
 				<p><?php esc_html_e('Manage your store customers and their digital access keys.', 'omnifywp-ecommerce'); ?></p>
@@ -273,7 +278,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 							'type'    => 'note',
 							'content' => $omnify_n['note'],
 							'id'      => $omnify_n['id'],
-							'icon' => 'dashicons-location'
+							'icon'    => 'dashicons-location',
 						];
 					}
 					foreach ($omnify_activities as $omnify_act) {
@@ -283,7 +288,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 							'type'    => 'activity',
 							'content' => $omnify_act['description'],
 							'id'      => $omnify_act['id'],
-							'icon' => '⚡'
+							'icon'    => 'dashicons-update',
 						];
 					}
 
@@ -299,7 +304,13 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 						<div class="omnify-timeline">
 							<?php foreach ($omnify_timeline as $omnify_item) : ?>
 								<div class="omnify-timeline-item" style="border-bottom: 1px solid var(--omnify-gray-100); padding-bottom: 12px; margin-bottom: 4px;">
-									<span class="omnify-timeline-item__bullet"><?php echo esc_html($omnify_item['icon']); ?></span>
+									<span class="omnify-timeline-item__bullet">
+										<?php if (str_starts_with((string) $omnify_item['icon'], 'dashicons-')) : ?>
+											<span class="dashicons <?php echo esc_attr($omnify_item['icon']); ?>" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
+										<?php else : ?>
+											<?php echo esc_html($omnify_item['icon']); ?>
+										<?php endif; ?>
+									</span>
 									<div class="omnify-timeline-item__content">
 										<p style="margin: 0; font-size: 13px; color: var(--omnify-dark);">
 											<?php if ($omnify_item['type'] === 'note') : ?>
@@ -448,6 +459,12 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 				<select id="sort_by" name="sort">
 					<option value="created_desc" <?php selected($omnify_filter_sort, 'created_desc'); ?>><?php esc_html_e('Newest', 'omnifywp-ecommerce'); ?></option>
 					<option value="created_asc" <?php selected($omnify_filter_sort, 'created_asc'); ?>><?php esc_html_e('Oldest', 'omnifywp-ecommerce'); ?></option>
+					<option value="spent_desc" <?php selected($omnify_filter_sort, 'spent_desc'); ?>><?php esc_html_e('Highest Spent', 'omnifywp-ecommerce'); ?></option>
+					<option value="spent_asc" <?php selected($omnify_filter_sort, 'spent_asc'); ?>><?php esc_html_e('Lowest Spent', 'omnifywp-ecommerce'); ?></option>
+					<option value="orders_desc" <?php selected($omnify_filter_sort, 'orders_desc'); ?>><?php esc_html_e('Most Orders', 'omnifywp-ecommerce'); ?></option>
+					<option value="orders_asc" <?php selected($omnify_filter_sort, 'orders_asc'); ?>><?php esc_html_e('Fewest Orders', 'omnifywp-ecommerce'); ?></option>
+					<option value="name_asc" <?php selected($omnify_filter_sort, 'name_asc'); ?>><?php esc_html_e('Name (A-Z)', 'omnifywp-ecommerce'); ?></option>
+					<option value="name_desc" <?php selected($omnify_filter_sort, 'name_desc'); ?>><?php esc_html_e('Name (Z-A)', 'omnifywp-ecommerce'); ?></option>
 				</select>
 			</div>
 			<div class="omnify-filter-actions">
@@ -498,15 +515,18 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 	</div>
 	<?php endif; ?>
 
-	<div class="omnify-card">
+	<div class="omnify-card omnify-customers-list-card">
 
 			<?php if (empty($omnify_customers)) : ?>
-				<div class="omnify-empty-state">
-					<div class="omnify-empty-state__icon"><span class="dashicons dashicons-groups" style="font-size: 48px; width: 48px; height: 48px; color: var(--omnify-gray-400);"></span></div>
-					<h3><?php esc_html_e('Add your first customer', 'omnifywp-ecommerce'); ?></h3>
-					<p><?php esc_html_e('Create customer profiles to manage access keys and view download logs.', 'omnifywp-ecommerce'); ?></p>
-					<div style="margin-top: 20px;">
+				<div class="omnify-empty-state" style="padding: 48px 24px; text-align: center;">
+					<div class="omnify-empty-state__icon" style="width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+						<span class="dashicons dashicons-groups" style="font-size: 32px; width: 32px; height: 32px; color: #94a3b8;"></span>
+					</div>
+					<h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 8px;"><?php esc_html_e('Add your first customer', 'omnifywp-ecommerce'); ?></h3>
+					<p style="color: #64748b; font-size: 14px; margin: 0 0 20px;"><?php esc_html_e('Create customer profiles to manage access keys and view download logs.', 'omnifywp-ecommerce'); ?></p>
+					<div>
 						<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-customers&action=new')); ?>" class="omnify-button omnify-button--primary">
+							<span class="dashicons dashicons-plus" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle; margin-right: 4px;"></span>
 							<?php esc_html_e('Create Customer', 'omnifywp-ecommerce'); ?>
 						</a>
 					</div>
@@ -525,66 +545,88 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 									<option value="">Bulk actions</option>
 									<option value="trash">Move to Trash</option>
 									<option value="restore">Restore</option>
+									<?php if ('trash' === $omnify_status) : ?>
+										<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
+									<?php endif; ?>
 								</select>
 								<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm">Apply</button>
 							</div>
 						</div>
 						<div class="right">
-							<a href="#" class="omnify-button omnify-button--secondary omnify-button--sm">Export</a>
+							<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_export_customers'), 'omnify_export_customers')); ?>" class="omnify-button omnify-button--secondary omnify-button--sm" style="display:inline-flex; align-items:center; gap:6px;">
+								<span class="dashicons dashicons-download" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
+								<?php esc_html_e('Export', 'omnifywp-ecommerce'); ?>
+							</a>
 						</div>
 					</div>
 				<div class="omnify-table-wrapper">
 					<table class="omnify-table">
 						<thead>
 							<tr>
-								<th style="width:28px;"><input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" /></th>
-								<th><?php esc_html_e('Name', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 32px;"><input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" /></th>
+								<th style="min-width: 170px;"><?php esc_html_e('Customer', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Email Address', 'omnifywp-ecommerce'); ?></th>
-								<th><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
-								<th><?php esc_html_e('Orders', 'omnifywp-ecommerce'); ?></th>
-								<th><?php esc_html_e('Total Spent', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 110px;"><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 80px; text-align: center;"><?php esc_html_e('Orders', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 120px;"><?php esc_html_e('Total Spent', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Company', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Phone', 'omnifywp-ecommerce'); ?></th>
-								<th><?php esc_html_e('Country', 'omnifywp-ecommerce'); ?></th>
-								<th><?php esc_html_e('Joined Date', 'omnifywp-ecommerce'); ?></th>
-								<th style="text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 80px; text-align: center;"><?php esc_html_e('Country', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 120px;"><?php esc_html_e('Joined Date', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 90px; text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ($omnify_customers as $omnify_cust) : ?>
+							<?php foreach ($omnify_customers as $omnify_cust) : 
+								$omnify_cust_display = $omnify_cust['name'] ?: __('Guest Customer', 'omnifywp-ecommerce');
+								$omnify_c_initial = strtoupper(substr(trim((string)$omnify_cust_display), 0, 1));
+							?>
 								<tr>
 									<td><input type="checkbox" class="omnify-checkbox omnify-bulk-item" name="customer_ids[]" value="<?php echo esc_attr($omnify_cust['id']); ?>" /></td>
 									<td>
-										<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-customers&action=edit&id=' . $omnify_cust['id'])); ?>" style="font-weight: 600; text-decoration: none; color: var(--omnify-dark);">
-											<?php echo esc_html($omnify_cust['name'] ?: __('Guest Customer', 'omnifywp-ecommerce')); ?>
-										</a>
+										<div class="omnify-customer-cell">
+											<div class="omnify-customer-avatar"><?php echo esc_html($omnify_c_initial); ?></div>
+											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-customers&action=edit&id=' . $omnify_cust['id'])); ?>" class="omnify-customer-name">
+												<?php echo esc_html($omnify_cust_display); ?>
+											</a>
+										</div>
 									</td>
-									<td><?php echo esc_html($omnify_cust['email']); ?></td>
 									<td>
-										<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_cust['status']); ?>">
-											<?php echo esc_html($omnify_cust['status']); ?>
+										<span class="omnify-cust-email-text"><?php echo esc_html($omnify_cust['email']); ?></span>
+									</td>
+									<td>
+										<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_cust['status'] === 'active' ? 'published' : 'draft'); ?>">
+											<?php echo esc_html(strtoupper((string)$omnify_cust['status'])); ?>
 										</span>
 									</td>
-									<td><?php echo esc_html(number_format((int)($omnify_cust['order_count'] ?? 0))); ?></td>
-									<td><strong><?php echo esc_html($omnify_symbol . number_format((float)($omnify_cust['total_spent'] ?? 0), 2)); ?></strong></td>
-									<td><?php echo esc_html($omnify_cust['company'] ?: '-'); ?></td>
-									<td><?php echo esc_html($omnify_cust['phone'] ?: '-'); ?></td>
-									<td>
-										<span style="text-transform: uppercase;">
-											<?php echo esc_html($omnify_cust['country'] ?: '-'); ?>
-										</span>
+									<td style="text-align: center;">
+										<span class="omnify-customer-orders-pill"><?php echo esc_html(number_format((int)($omnify_cust['order_count'] ?? 0))); ?></span>
 									</td>
-									<td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($omnify_cust['created_at']))); ?></td>
+									<td>
+										<strong class="omnify-cust-spent"><?php echo esc_html($omnify_symbol . number_format((float)($omnify_cust['total_spent'] ?? 0), 2)); ?></strong>
+									</td>
+									<td><span class="omnify-cust-meta-text"><?php echo esc_html($omnify_cust['company'] ?: '—'); ?></span></td>
+									<td><span class="omnify-cust-meta-text"><?php echo esc_html($omnify_cust['phone'] ?: '—'); ?></span></td>
+									<td style="text-align: center;">
+										<?php if (!empty($omnify_cust['country'])) : ?>
+											<span class="omnify-country-pill"><?php echo esc_html(strtoupper((string)$omnify_cust['country'])); ?></span>
+										<?php else : ?>
+											<span class="omnify-muted-dash">&mdash;</span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<span class="omnify-order-date-text"><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($omnify_cust['created_at']))); ?></span>
+									</td>
 									<td style="text-align: right;">
 										<div class="omnify-row-actions">
 											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-customers&action=edit&id=' . $omnify_cust['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Manage / Edit', 'omnifywp-ecommerce'); ?>">
 												<span class="dashicons dashicons-edit" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
 											</a>
 											<?php if ($omnify_is_trashed): ?>
-												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_restore_customer&id=' . $omnify_cust['id']), 'omnify_restore_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn" title="Restore"><span class="dashicons dashicons-undo" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
-												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_customer&id=' . $omnify_cust['id']), 'omnify_delete_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="Delete permanently" onclick="return confirm('Permanently?');"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
+												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_restore_customer&id=' . $omnify_cust['id']), 'omnify_restore_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Restore', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-undo" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
+												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_customer&id=' . $omnify_cust['id']), 'omnify_delete_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Delete permanently', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Permanently delete customer?', 'omnifywp-ecommerce'); ?>');"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
 											<?php else: ?>
-												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_trash_customer&id=' . $omnify_cust['id']), 'omnify_trash_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="Move to trash" onclick="return confirm('Trash?');"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
+												<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_trash_customer&id=' . $omnify_cust['id']), 'omnify_trash_customer_' . $omnify_cust['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Move to trash', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Move customer to trash?', 'omnifywp-ecommerce'); ?>');"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span></a>
 											<?php endif; ?>
 										</div>
 									</td>
@@ -594,6 +636,34 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 					</table>
 				</div>
 				</form>
+				<?php if ($omnify_total_pages > 1) : ?>
+					<div class="tablenav" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--omnify-gray-200, #e2e8f0);">
+						<div class="tablenav-pages" style="display: flex; align-items: center; gap: 8px;">
+							<span class="displaying-num" style="font-size: 13px; color: #64748b;">
+								<?php
+								/* translators: %s: total customers count */
+								printf(esc_html(_n('%s customer', '%s customers', $omnify_total_customers, 'omnifywp-ecommerce')), number_format_i18n($omnify_total_customers));
+								?>
+							</span>
+							<span class="pagination-links" style="display: flex; gap: 4px; align-items: center;">
+								<?php
+								$omnify_current_url = remove_query_arg('paged');
+								if ($omnify_paged > 1) : ?>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('First page', 'omnifywp-ecommerce'); ?>">&laquo;</a>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged - 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Previous page', 'omnifywp-ecommerce'); ?>">&lsaquo;</a>
+								<?php endif; ?>
+								<span class="paging-input" style="font-size: 13px; margin: 0 4px;">
+									<span class="current-page"><?php echo esc_html((string) $omnify_paged); ?></span>
+									<span class="tablenav-paging-text"> <?php esc_html_e('of', 'omnifywp-ecommerce'); ?> <span class="total-pages"><?php echo esc_html((string) $omnify_total_pages); ?></span></span>
+								</span>
+								<?php if ($omnify_paged < $omnify_total_pages) : ?>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged + 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Next page', 'omnifywp-ecommerce'); ?>">&rsaquo;</a>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_total_pages, $omnify_current_url)); ?>" title="<?php esc_attr_e('Last page', 'omnifywp-ecommerce'); ?>">&raquo;</a>
+								<?php endif; ?>
+							</span>
+						</div>
+					</div>
+				<?php endif; ?>
 			<?php endif; ?>
 		</div>
 	<?php endif; ?>

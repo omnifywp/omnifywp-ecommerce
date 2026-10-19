@@ -1,6 +1,6 @@
 {
   "name": "omnify",
-  "version": "0.6.0",
+  "version": "1.4.2",
   "private": true,
   "scripts": {
     "build": "node build.js",

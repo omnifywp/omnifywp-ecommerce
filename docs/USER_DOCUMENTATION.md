@@ -1,7 +1,7 @@
 # OmnifyWP eCommerce — Complete User Manual & Store Owner Guide
 
 > **Official User Documentation for OmnifyWP eCommerce**  
-> **Plugin Version:** 1.4.0 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
+> **Plugin Version:** 1.4.2 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
 > **Official Website:** [https://omnifywp.com](https://omnifywp.com) | **wp.org:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **Developer Docs:** [`DEVELOPER_DOCS.md`](./DEVELOPER_DOCS.md) | **HTML Guide:** [`user-guide.html`](./user-guide.html)
 
@@ -68,11 +68,14 @@
 13. [Administrative Activity Audit Log](#13-administrative-activity-audit-log)
 14. [REST API Access & Integrations](#14-rest-api-access--integrations)
 15. [Customer Storefront Experience](#15-customer-storefront-experience)
-    - [Multi-Layout Catalog & Switcher (4-Col Grid, 2-Col Split, 1-Col List)](#multi-layout-catalog--switcher)
-    - [Modern Product Card Features (Badges, Swatches, Wishlist, Hover Tools)](#modern-product-card-features)
+    - [Multi-Layout Catalog & Switcher (4-Col Grid, 3-Col Standard, 2-Col Split, 1-Col List)](#multi-layout-catalog--switcher)
+    - [Flash Sale Ticker & 1-Click Coupon Code Copy](#flash-sale-ticker--1-click-coupon-code-copy)
+    - [Interactive Quick Filter Pills Strip](#interactive-quick-filter-pills-strip)
+    - [Modern Product Card Visual Architecture](#modern-product-card-visual-architecture)
+    - [Recently Viewed Products Engine & Cookie Storage](#recently-viewed-products-engine--cookie-storage)
     - [Storefront Catalog & Faceted Sidebar Filters](#storefront-catalog--faceted-sidebar-filters)
     - [Single Product Page (Gallery, Swatches, Urgency, Reviews)](#single-product-page)
-    - [Interactive Shopping Cart](#interactive-shopping-cart)
+    - [Interactive Shopping Cart & Free Shipping Progress Bar](#interactive-shopping-cart--free-shipping-progress-bar)
     - [Frictionless Multi-Step & Slide-Over Checkout](#frictionless-multi-step-checkout)
     - [Customer Account Portal 2.0 & Order Tracking](#customer-account-portal--order-tracking)
     - [Cryptographic Digital Downloads Delivery](#cryptographic-digital-downloads-delivery)
@@ -174,30 +177,31 @@ Navigate to **Omnify → Products** to inspect, search, and manage your entire p
 
 ---
 
-### Adding & Editing Products
-To create a new product, click **+ Add New Product** or edit an existing product to open the product editor.
+### Adding & Editing Products (4-Step Wizard & Live Preview)
+To create a new product, click **+ Add New Product** or edit an existing product to open the product editor wizard.
 
 ![Product Editor](./screenshots/03-product-editor.png)
-*Figure 4.2: Comprehensive product editor interface for pricing, stock management, dimensions, and digital file attachments.*
+*Figure 4.2: 4-Step Product Editor Wizard with live storefront preview modal and granular developer action hooks.*
 
-#### Essential Product Fields:
-1. **Product Name & Slug**: Enter a descriptive title and customize the SEO-friendly URL slug.
-2. **Product Description & Excerpt**: Full rich-text description for the product page and a concise summary for card previews.
-3. **Product Type**: Choose between:
-   * **Physical**: Tangible items requiring weight, dimensions, and shipping calculations.
-   * **Digital / Downloadable**: Software, eBooks, presets, or media requiring secured file attachments.
-   * **Variable**: Multi-variant products with options such as Size, Color, or Material.
-   * **Bundle**: Curated collections of multiple items sold as a package.
-4. **Pricing & Sale Rules**:
-   * **Regular Price**: Standard retail price.
-   * **Sale Price**: Optional promotional price with optional schedule dates.
-5. **Inventory & SKU**:
-   * **SKU**: Unique Stock Keeping Unit identifier.
-   * **Manage Stock**: Toggle inventory tracking on/off.
-   * **Stock Quantity**: Specify available warehouse units.
-   * **Allow Backorders**: Permit purchases when stock reaches zero.
-6. **Shipping Specifications**: Input physical package weight, length, width, and height.
-7. **Digital Locker Attachments**: For digital items, upload downloadable files, set maximum download counts, and define expiration intervals.
+#### 4-Step Wizard Workflow:
+1. **Step 1: General & Pricing**:
+   * **Product Name & Slug**: Enter a descriptive title and customize the SEO-friendly URL slug.
+   * **Product Type**: Choose between Physical, Digital / Downloadable Asset, Variable Merch, or Curated Bundle.
+   * **Pricing & Sale Rules**: Regular retail price, promotional sale price, and optional schedule dates.
+   * **Short & Full Description**: Rich HTML description and concise excerpt for card previews.
+2. **Step 2: Inventory & Stock Management**:
+   * **SKU (Stock Keeping Unit)**: Unique warehouse identifier.
+   * **Manage Stock**: Toggle inventory tracking on/off, specify available warehouse units, and configure backorder policies.
+   * **Shipping Dimensions**: Weight (kg/lbs), package length, width, and height for live carrier rates.
+3. **Step 3: Digital Files & Media Assets**:
+   * **HMAC-SHA256 File Locker**: Attach secured digital files with download limit counters and token expiration windows.
+   * **Product Gallery**: Upload primary hero image and multi-angle product thumbnail gallery.
+4. **Step 4: Attributes, Variations & SEO**:
+   * **Variation Matrix**: Configure color, size, and custom attribute axes with independent variation pricing and stock.
+   * **SEO Meta**: Meta title, description, and OpenGraph social preview tags.
+
+#### Live Product Preview Modal:
+Clicking the **Preview Product** button in the editor header opens a live, interactive modal displaying exactly how the product will look in the frontend storefront—including 3-column gallery, swatches, and tab panels—without having to save drafts or expose unpublished changes to public store visitors.
 
 ---
 
@@ -248,12 +252,15 @@ Manage all storefront transactions under **Omnify → Orders**. Every order disp
 | `completed` | **Completed** | Physical goods dispatched or digital order finalized. | Decremented | Permanently Granted | Order Completed / Download Ready |
 | `on_hold` | **On Hold** | Offline payment method chosen (Direct Wire Transfer, Cheque). Awaiting bank clearance. | Reserved | Locked | Bank Wire Instructions Email |
 | `cancelled` | **Cancelled** | Order aborted by customer, admin, or session expiration timeout. | Restored | Revoked | Order Cancelled Notice |
+| `partially_refunded` | **Partially Refunded** | Partial sum returned via admin or external gateway webhook; balance remains retained. | Optional Restock | Active for Remaining Items | Partial Refund Confirmation |
 | `refunded` | **Refunded** | Transaction funds returned via one-click refund or gateway webhook. | Optional Restock | Revoked Immediately | Refund Confirmation |
 | `failed` | **Failed** | Card declined, 3DS authentication failed, or gateway error returned. | Restored | Locked | Payment Failed Notice |
 
 #### State Transition Logic:
 - **Instant Digital Delivery**: When an order consists exclusively of digital downloadable products and transitions to `processing`, Omnify automatically advances it to `completed` and grants signed download access within sub-millisecond execution.
 - **Automated Revocation**: When an order status transitions to `refunded`, Omnify's `Omnify_Order_Lifecycle_Service` immediately queries `wp_omnify_customer_access` and revokes digital download entitlements, terminating valid HMAC signature tokens.
+- **Partially Refunded Orders**: When an order is partially refunded (either through the admin order detail screen or via Stripe/PayPal external webhooks), the order status updates to `partially_refunded`. The refunded sum is added to `refunded_amount`, audit notes log the reversal, and digital access is maintained for non-refunded items.
+- **Gateway Webhook Refund & Dispute Sync**: Native webhook listeners for Stripe (`charge.refunded`, `charge.dispute.created`) and PayPal (`PAYMENT.CAPTURE.REFUNDED`, `CUSTOMER.DISPUTE.CREATED`) automatically sync reversals and chargebacks without requiring manual merchant reconciliation.
 
 ---
 
@@ -363,10 +370,11 @@ Shopping cart abandonment is one of the biggest revenue leaks in online commerce
 *Figure 10.1: Abandoned cart recovery directory tracking shopper email, cart contents, subtotal, and recovery status.*
 
 ### How Abandoned Cart Tracking Works:
-1. **Dynamic Capture**: When a customer enters their contact email on the checkout page, Omnify securely captures the session cart contents and contact information.
+1. **Dynamic Multi-Item Capture**: When a customer enters their contact email on the checkout page, Omnify securely serializes the entire cart contents (all products, chosen variations, quantities, and pricing) along with customer metadata.
 2. **Abandonment Threshold**: If the checkout is not completed within 60 minutes, the session is marked as `Abandoned`.
-3. **Automated Recovery**: Omnify can dispatch scheduled recovery reminder emails containing direct one-click checkout restoration links.
-4. **Recovery Attribution**: When a customer returns via the link and completes payment, the status automatically switches to `Recovered`, crediting the recovery to your store reports.
+3. **Automated Recovery Emails**: Omnify dispatches scheduled recovery reminder emails containing direct, cryptographic one-click checkout restoration links.
+4. **Instant Basket Restoration**: When the shopper clicks the recovery link, their entire multi-item shopping basket is instantly restored in their session with previous selections intact.
+5. **Recovery Attribution**: When a customer returns via the link and completes payment, the status automatically switches to `Recovered`, crediting the recovery to your store reports.
 
 ---
 
@@ -759,12 +767,27 @@ Under **Settings → Email**, manage customer notifications and administrative a
 ![Settings - Emails](./screenshots/19-settings-emails.png)
 *Figure 11.5: Automated email management panel for customer receipts, order updates, and admin alerts.*
 
-#### Automated Store Emails:
-* **Customer Order Confirmation**: Dispatched immediately upon successful checkout with order receipt and download links.
-* **Order Processing & Dispatched**: Sent when an order is updated with tracking details.
-* **Order Refunded Notice**: Dispatched when an order is refunded.
-* **New Order Alert (Admin)**: Sends an instant summary to store managers when a new sale is made.
-* **Abandoned Cart Reminder**: Dispatched to re-engage customers who abandoned their carts.
+#### 16 Automated Store Email Triggers:
+OmnifyWP features 16 granular email triggers that keep shoppers and administrators informed throughout the entire transaction lifecycle:
+
+1. **Order Confirmation (Customer)**: Instant order receipt with line items, tax breakdown, and shipping details.
+2. **Admin New Order Notice**: Real-time sales alert dispatched to store managers with gross value and customer profile.
+3. **Payment Success**: Instant payment capture confirmation with gateway transaction ID.
+4. **Payment Failed**: Graceful notification prompting the customer to update card details or select an alternative gateway.
+5. **Order Status Changed**: Automatic update whenever an order transitions between lifecycle statuses.
+6. **Order Refund Issued**: Confirmation of partial or full refunds with credit method notes.
+7. **Order Cancelled**: Formal cancellation notification with automated inventory restock notice.
+8. **Digital Asset Download Key Ready**: Delivers cryptographic HMAC-SHA256 download links upon digital purchase.
+9. **Admin Low Stock Alert**: Threshold alert warning store managers when inventory drops below safety levels.
+10. **Admin Out of Stock Emergency**: Urgent alert when catalog SKU inventory hits zero.
+11. **Customer Account Welcome**: Onboarding email welcoming newly registered customer accounts.
+12. **Customer Password Reset**: Secure tokenized password recovery link.
+13. **Order Processing In-Warehouse**: Notification when the warehouse team begins packing physical items.
+14. **Tracking Code & Shipment Dispatched**: Delivery update featuring shipping carrier, tracking URL, and estimated delivery date.
+15. **Abandoned Cart Recovery (1 Hour)**: High-converting reminder email with 1-click checkout restoration link.
+16. **Post-Delivery Review Request**: Automated invitation inviting verified buyers to submit star ratings and testimonials.
+
+Each email template features customizable subject lines, editable HTML bodies, preview rendering modals, and support for dynamic template merge tags (e.g. `{customer_name}`, `{order_id}`, `{order_total}`, `{tracking_number}`).
 
 ---
 
@@ -791,152 +814,289 @@ Under **Settings → Pages**, review or remap the core store pages associated wi
 
 ## 12. System Tools, Demo Seeding & Maintenance
 
-Under **Omnify → Tools & Seeding**, store administrators can maintain database health, flush caches, or seed demo data for store previewing.
+Under **Omnify → Tools & Seeding** (`page=omnify-tools`), store administrators can monitor database health, seed realistic demo catalogs, perform granular cleanup operations, inspect server runtime limits, and manage CSV dataset imports and exports.
 
 ![System Tools & Seeding](./screenshots/21-tools.png)
-*Figure 12.1: System diagnostics, one-click demo data generation, and database optimization tools.*
+*Figure 12.1: System diagnostics, real-time database metric strip, demo data generator, and granular cleanup utilities.*
 
-### Available Tools:
-* **Generate Demo Data**: Instantly populates your store with realistic sample products, customers, orders, reviews, and categories for theme development and testing.
-* **Clear Demo Data**: Completely wipes all generated demo records while preserving real store transactions.
-* **Flush Transients & Caches**: Clears cached catalog queries, transients, and calculated price indices.
-* **Verify Database Tables**: Checks and repairs the 18 custom Omnify database tables to ensure structural integrity.
+### Database Diagnostics Overview Bar
+Located at the top of the System Tools dashboard, a live 4-card metric strip provides instant diagnostic visibility into custom database table health:
+* **Total Products**: Live count of active products stored in `omnify_products`.
+* **Total Orders**: Live count of completed, processing, and pending order records in `omnify_orders`.
+* **Total Customers**: Live count of registered customer CRM profiles in `omnify_customers`.
+* **Total Reviews**: Live count of verified customer product ratings and reviews in `omnify_reviews`.
+
+### Demo Data Generator
+Quickly populate a fresh store with realistic sample catalog records for theme development, client walkthroughs, and performance testing:
+* **Seeded Assets**: 50 products across simple, variable, and digital types, sample customer profiles, past orders with multiple statuses, customer reviews, and category hierarchies.
+* **Live Progress Engine**: Animated emerald progress bar providing step-by-step progress status during database insertion.
+* **Informational Safeguards**: Pre-flight checklist confirming that demo seeding will never overwrite existing store transactions.
+
+### Granular Database Cleanup Utilities
+Manage database record hygiene with specialized individual cleanup operations:
+* **Clean Products**: Removes generated catalog items, variations, attributes, and digital download file records.
+* **Clean Orders**: Removes test purchase records, order items, and associated address records.
+* **Clean Customers**: Wipes customer CRM profiles, billing records, and digital download access tokens.
+* **Clean Reviews**: Removes product ratings, customer feedback comments, and moderation logs.
+* **Clean Coupons**: Wipes promotional coupon codes, usage limits, and redemption statistics.
+* **Clean Activity Logs**: Purges administrative audit trail records to free database storage.
+* **Automated Daily Database Maintenance**: Runs a background cron job (`omnify_daily_database_cleanup`) that automatically purges abandoned carts older than 30 days, prunes expired session transients, cleans orphaned download tokens, and maintains database index efficiency without manual intervention.
+* **Danger Zone (Wipe All Store Data)**: High-visibility alert container allowing administrators to permanently reset the store to a clean state with confirmation safeguards.
+
+### Server Runtime & System Specifications
+The server inspection panel reports critical environment parameters:
+* **PHP Version**: Current PHP runtime (minimum required: 8.2+).
+* **MySQL / MariaDB Version**: Database server release and compatibility status.
+* **WordPress Core Version**: Active WordPress environment.
+* **Memory Limit**: Available PHP memory allocation (e.g., `256M` or `512M`).
+* **Max Execution Time**: PHP script execution timeout limit in seconds.
+* **Table Prefix**: Current WordPress database prefix for table verification.
+
+### Dataset Import & Export (`page=omnify-export`)
+* **One-Click CSV Exports**: Dedicated cards to export Products, Orders, and Customers into standardized, UTF-8 formatted CSV spreadsheets.
+* **Catalog CSV Import**: Drag-and-drop file upload container supporting custom column mapping overrides.
+* **CSV Header Specification Table**: In-app reference documenting required and optional columns (`product_name`, `slug`, `sku`, `price`, `sale_price`, `stock_quantity`, `product_type`, `description`, `images`, `download_file_url`).
 
 ---
 
 ## 13. Administrative Activity Audit Log
 
-Under **Omnify → Activity Log**, the plugin maintains an immutable audit trail of all administrative actions.
+Under **Omnify → Activity Log** (`page=omnify-activity`), the plugin maintains a searchable, filterable chronological audit trail of all administrative actions.
 
 ![Activity Audit Log](./screenshots/22-activity-log.png)
 *Figure 13.1: Administrative audit trail recording staff actions, status updates, and setting changes.*
 
-### Logged Events Include:
-* Product creation, price modifications, and inventory adjustments.
-* Order status updates and refund processing.
-* Coupon creations, modifications, and deletions.
-* Store setting alterations and gateway credential updates.
-* Recorded metadata includes staff username, timestamp, and IP address.
+### Filter & Search Toolbar
+* **Search Details**: Query log descriptions for specific product names, coupon codes, or order numbers.
+* **Actor Filter**: Filter actions by specific administrative staff members or automated system events.
+* **Category Filter**: Filter by entity type (`Orders`, `Products`, `Coupons`, `Settings`, `Customers`, `Reviews`).
+* **Date Range Picker**: Filter logs between specific **Date From** and **Date To** boundaries.
+* **Active Filter Chips**: Convenient pill bar displaying active criteria with one-click individual chip removal.
+
+### Semantic Category Badge System
+Events are tagged with high-visibility color-coded badges for rapid scanning:
+* **Orders**: Blue badge (`#1d4ed8` on `#eff6ff`)
+* **Products**: Amber badge (`#b45309` on `#fffbeb`)
+* **Coupons**: Violet badge (`#6d28d9` on `#f5f3ff`)
+* **Settings**: Slate badge (`#334155` on `#f8fafc`)
+* **Customers**: Emerald badge (`#047857` on `#ecfdf5`)
+* **Reviews**: Rose badge (`#be123c` on `#fff1f2`)
+
+### Recorded Audit Metadata
+* **Timestamp**: Formatted date and time matching the WordPress timezone configuration.
+* **Actor**: Staff display name, `@username`, and Gravatar image with avatar fallback.
+* **Action Identifier**: Monospaced action code (e.g., `product.updated`, `order.status_change`, `gateway.configured`).
+* **Details Description**: Plain-language description of changes made, previous values, and new settings.
+* **IP Address & Client**: Recorded remote IP with hover tooltip revealing the recorded HTTP User-Agent.
+
+### Log Clearance Danger Zone
+* An isolated danger zone card at the bottom of the audit log allows authorized administrators to clear audit trail records to reclaim database storage, protected by explicit confirmation prompts.
 
 ---
 
 ## 14. REST API Access & Integrations
 
-Under **Omnify → API Keys**, generate secure REST API credentials for mobile applications, third-party ERPs, CRM systems, and headless frontends.
+Under **Omnify → API Keys** (`page=omnify-api`), store administrators manage REST API access keys, outbound webhook event streaming, payment gateway health checks, and remote URL diagnostic tools.
 
 ![REST API Keys](./screenshots/23-api-keys.png)
-*Figure 14.1: REST API key management panel for headless commerce and external integrations.*
+*Figure 14.1: REST API keys, outbound webhooks, payment connectivity diagnostics, and URL checker panel.*
 
-### Generating API Credentials:
-1. Click **+ Add Key**.
-2. Provide a **Description** (e.g., *iOS Mobile App* or *Zapier Fulfillment Sync*).
-3. Select **Permissions**: `Read`, `Write`, or `Read/Write`.
-4. Click **Generate API Key** to receive your **Consumer Key** and **Consumer Secret**.
-5. All REST endpoints are available under the `/wp-json/omnify/v1/` route.
+### 1. REST API Keys (`section=keys`)
+Generate cryptographically strong API credentials for mobile applications, ERP synchronization, inventory management software, and headless frontends:
+* **Key Generation Form**: Specify a key description (e.g., *ERP Sync* or *iOS Mobile App*), select user ownership, and set permission levels (`Read`, `Write`, or `Read/Write`).
+* **Credentials Modal**: Displays the generated **Client Key (Consumer Key)** and **Client Secret (Consumer Secret)** with 1-click clipboard copy buttons. For security, secrets are never stored in plain text and cannot be retrieved after closing the notice.
+* **Active Credentials Table**: Lists all active API keys with description, user owner, consumer key last-4 identifier (`ck_...xxxx`), permission badge, creation date, last used timestamp, and a one-click **Revoke** action.
+
+### 2. Outbound Webhooks (`section=webhooks`)
+Stream real-time JSON payloads to external services (Zapier, Slack, Make, custom webhooks, ERP endpoints) whenever store events take place:
+* **Registration Form**: Define a webhook name, target payload delivery URL, and an optional secret key (auto-generated if left blank).
+* **Event Topic Subscriptions**: Checkbox selector to subscribe to specific store triggers:
+  * `order.created`: Fires immediately when a customer places an order.
+  * `order.status_changed`: Fires on payment confirmation, cancellation, or fulfillment.
+  * `order.completed`: Fires when order processing is completed.
+  * `order.refunded`: Fires when a refund is issued.
+  * `order.cancelled`: Fires on order cancellation.
+  * `customer.created`: Fires when a new customer account is registered.
+* **Cryptographic Verification**: Every outbound delivery includes an `X-Omnify-Signature` header computed via HMAC-SHA256 over the payload using the subscription's secret key.
+* **Active Subscriptions Table**: View endpoint URLs, subscribed topics, status badges, and test actions.
+* **Send Test Ping**: Dispatches a sample JSON payload to the remote URL and displays immediate HTTP response status without leaving the page.
+
+### 3. Payment Gateway Connectivity Diagnostics (`section=payments`)
+Validate live authentication credentials and connection health for active payment systems:
+* **Stripe Integration Card**: Reports active status, environment mode (`Live` vs `Test`), webhook secret configuration status, and provides an instant **Check Stripe Status** button that executes a live authenticated API ping and reports latency in milliseconds.
+* **PayPal Integration Card**: Reports active status, environment mode (`Live` vs `Sandbox`), OAuth client ID configuration status, and provides an instant **Check PayPal Status** button that validates token authentication and reports latency in milliseconds.
+
+### 4. Arbitrary URL Connection Checker (`section=checker`)
+A built-in network diagnostic utility to test connectivity and response latency from your WordPress server to any remote API endpoint:
+* **Remote URL Input**: Enter any target endpoint (e.g., `https://api.stripe.com`, `https://api.github.com`).
+* **Diagnostic Report**:
+  * **HTTP Status Code**: Visual response status (e.g., `200 OK`, `401 Unauthorized`, `500 Error`).
+  * **Roundtrip Latency**: Millisecond ping time rated as *Excellent (Fast)* (<250ms), *Average (Good)* (<600ms), or *Poor (Slow)* (>600ms).
+  * **Health Status**: High-visibility status pill (`Online`, `Status Alert`, `Offline`).
+  * **Filtered Response Headers**: Monospaced inspection window displaying server response headers (Content-Type, Server, Date, Cache-Control).
 
 ---
 
 ## 15. Customer Storefront Experience
 
-OmnifyWP delivers a modern, high-converting storefront experience inspired by modern apparel and luxury fashion brands. Engineered for sub-millisecond responsiveness, shoppers enjoy dynamic layout switching, visual swatches, social proof notifications, and seamless checkout journeys.
+OmnifyWP delivers a modern, high-converting storefront experience engineered for sub-millisecond responsiveness. Built with clean CSS architecture, full-width responsive imagery, dynamic layout switching, visual swatches, live countdown timers, and instant client-side filtering, shoppers enjoy a luxury brand shopping journey across all desktop and mobile devices.
 
 ---
 
 ### Multi-Layout Catalog & Switcher
-The catalog toolbar features an interactive **Layout Switcher** (`.omnify-layout-switches`) allowing shoppers to toggle their preferred view seamlessly with preferences remembered in browser `localStorage`:
+The storefront catalog toolbar features an interactive **Layout Switcher** (`.omnify-layout-switches`) allowing shoppers to toggle their preferred catalog display on the fly. The shopper's selection is stored in browser `localStorage` and automatically restored across browsing sessions:
 
-#### 1. 4-Column Modern Borderless Grid (`data-cols="4"` / Default Catalog View)
-* **Design Philosophy**: Minimalist, clean white cards with **zero border outlines and zero drop shadows**, putting full visual focus on product photography.
-* **Image Container**: Soft `#f6f6f8` backdrop with a tailored 1:1.18 aspect ratio and smooth 4px rounded corners.
+#### 1. 4-Column Modern Dense Grid (`data-cols="4"` / Default Catalog View)
+* **Design Philosophy**: High-density, catalog-rich layout designed for boutiques and multi-product stores to maximize product discovery without vertical scrolling fatigue.
+* **Full-Width Image Canvas**: Images use a responsive full-width container (`width: 100%`, `max-width: 100%`, `aspect-ratio: auto`, `object-fit: cover`) ensuring consistent heights and zero gap or squish issues across any active WordPress theme.
 * **Top-Left Status Badges**:
-  * **HOT** (`#ea3a3c` vivid red pill) for trending items.
-  * **-14%** (`#22c55e` emerald green pill) for sale discounts.
-  * **LIMITED** (`#f59e0b` amber pill) for low-stock urgency.
-* **Top-Right Wishlist Button**: Outline heart icon button permanently visible with a transparent background; instantly turns solid red (`#ea3a3c`) when clicked and saves across customer sessions.
-* **Right Edge Hover Tools**: Dark circular buttons (`#222`) that slide in on desktop card hover:
-  * **Quick View**: Opens high-speed product preview modal without reloading the catalog.
-  * **Compare**: Adds the product to side-by-side comparison tray.
-* **Bottom-Left Floating Sizes**: Clean uppercase size labels (`S  M`) floating directly over the bottom-left corner of the image.
-* **Bottom-Right Circular Plus (`+`)**: Distinctive circular button with red accent outline and icon, enabling single-click add-to-cart or option selection.
-* **Product Meta Row**: Sits cleanly beneath the title with bold price on the left (`$25.00`) and round color dot swatches + count indicator on the right.
+  * **BESTSELLER / HOT**: Vivid red badge for trending items.
+  * **SAVE %**: Emerald green badge for active discount promotions.
+  * **NEW**: Indigo badge highlighting recently added products.
+  * **IN STOCK**: Slate badge for real-time inventory confirmation.
+* **Top-Right Type Badge**: Clean indicator showing product format (`DIGITAL`, `PHYSICAL`, `BUNDLE`, `VARIABLE`).
+* **Clean Card Typography**: Product titles feature a strict 2-line clamp (`-webkit-line-clamp: 2`) preventing text clipping or jagged card heights. In dense 4-column view, secondary descriptions are automatically hidden to maintain visual balance.
+* **Compact Pill Action Buttons**: Streamlined action buttons (`+ Quick Add` and `View Details`) with `min-height: 24px-28px` ensuring clean alignment without wrapping.
 
-#### 2. 2-Column Split View (`data-cols="2"`)
-* **Horizontal Split Card**: Each product is presented in an expansive 2-column card:
-  * **Left Column (46% width)**: High-resolution product image with badges and wishlist button.
-  * **Right Column (54% width)**: Comprehensive product information:
-    * Product title with hover state.
-    * 5-Star customer rating display (5.0 / 5.0 Stars `#f59e0b`).
-    * Price display with strikethrough original price if on sale.
-    * Row of circular color dot swatches with `+1` indicator.
-    * Uppercase available sizes row (`M  L`).
-    * Full-width light-gray **"Select options"** / **"Add to Cart"** button (`#f3f4f6`, hover `#111`).
-    * Sub-actions row: **Quick View** and **Compare** links.
+#### 2. 3-Column Standard Grid (`data-cols="3"`)
+* **Balanced Catalog Mode**: Ideal for lifestyle products and digital goods requiring moderate visual presence.
+* **Card Padding**: Structured with 15px inner padding, visible 2-line description snippets, star rating indicator, and color swatch selector dots.
+* **Actions Row**: Features side-by-side pill action buttons with hover animations.
 
-#### 3. 1-Column Detailed List View (`data-cols="list"`)
+#### 3. 2-Column Split View (`data-cols="2"`)
+* **High-Impact Showcase**: Designed for premium items, luxury goods, and detailed digital bundles.
+* **Card Padding**: Expansive 18px inner padding with generous typography, full product excerpt descriptions, star ratings with numerical review counts, and complete attribute swatches.
+
+#### 4. 1-Column Detailed List View (`data-cols="list"`)
 * **3-Section Horizontal Row**: Spans full catalog width with three specialized panels:
-  * **Section 1 (Left Image - 220px)**: Boxed thumbnail with status badges and wishlist heart.
-  * **Section 2 (Center Details)**: Title, 5-star rating, swatches, size indicators, and a 2-line product excerpt summary for rapid evaluation.
-  * **Section 3 (Right Actions - 220px)**: Dedicated pricing and checkout column:
-    * Bold price display (`$25.00`).
-    * Live stock indicator badge in bold uppercase green (`292 IN STOCK`).
-    * Full-width **"Select options"** / **"Add to Cart"** button.
-    * Vertical link stack: **Add to Wishlist**, **Quick View**, and **Compare**.
+  * **Section 1 (Left Image - 200px)**: Boxed thumbnail with status badges, wishlist heart, and secondary hover image.
+  * **Section 2 (Center Details)**: Title, star ratings, swatches, size indicators, and a rich multi-line product excerpt summary.
+  * **Section 3 (Right Actions - 140px)**: Dedicated pricing and checkout column with bold current and original prices, live stock count, and full-width action button.
 
 ---
 
-### Storefront Shortcodes Reference
+### Flash Sale Ticker & 1-Click Coupon Code Copy
+Positioned prominently above the catalog shell, the **Flash Sale Announcement Ticker** (`#omnify-flash-ticker`) drives buyer urgency and conversion:
 
-| Shortcode | Supported Attributes | Example Usage |
-| :--- | :--- | :--- |
-| `[omnify_storefront]` | `columns="4"`, `per_page="12"`, `category="slug"`, `tag="slug"`, `orderby="price"`, `order="ASC"` | `[omnify_storefront columns="4" per_page="16"]` |
-| `[omnify_cart]` | None (Renders interactive cart table) | `[omnify_cart]` |
-| `[omnify_checkout]` | `layout="single"` or `layout="steps"` | `[omnify_checkout]` |
-| `[omnify_customer_portal]` | `tab="orders"`, `tab="downloads"`, `tab="addresses"` | `[omnify_customer_portal]` |
-| `[omnify_customer_downloads]`| None (Renders digital locker) | `[omnify_customer_downloads]` |
-| `[omnify_order_tracking]` | None (Renders public guest lookup form) | `[omnify_order_tracking]` |
+* **Live Real-Time Countdown Timer**:
+  * Displays hours, minutes, and seconds (`#omnify-ticker-hours`, `#omnify-ticker-mins`, `#omnify-ticker-secs`) counting down every second.
+  * Synchronized and persisted in browser `sessionStorage` (`omnify_flash_sale_end`), ensuring the timer does not reset when shoppers navigate between category filters or page views.
+  * Features an animated green status dot (`.ticker-pulse`) indicating active real-time promotional pricing.
+* **1-Click Coupon Code Pill**:
+  * Displays the active promotional coupon code (e.g., `FLASH30` for 30% off).
+  * Clicking the pill triggers the modern browser Clipboard API (`navigator.clipboard.writeText`), instantly copying the code to the shopper's clipboard.
+  * Provides instantaneous visual feedback by transitioning the pill into a green `"Copied!"` confirmation state for 2 seconds.
+
+---
+
+### Interactive Quick Filter Pills Strip
+The storefront features a horizontal **Quick Filter Pills Strip** (`.omnify-quick-filter-strip`) located directly above the products catalog:
+
+* **Instant 1-Click Filtering**: Shoppers can instantly filter products by clicking:
+  * **All Products**: Shows the full product catalog with total item counter badge.
+  * **Flash Deals**: Instantly filters the catalog to show only items currently on sale (`data-onsale="1"`).
+  * **Bestsellers**: Filters the catalog to highlight trending bestseller products (`data-is-hot="1"`).
+  * **New In**: Displays recently published items (`data-is-new="1"`).
+  * **Top Categories**: Automatically displays the store's top categories with individual live product counts.
+* **Zero Page Reloads**: Executes entirely client-side for sub-millisecond catalog updates.
+* **Dynamic Counter Recalculation**: Automatically updates the catalog result counter (`#omnify-storefront-results`) to reflect the number of matching items in real time.
+* **Sidebar Synchronization**: Automatically synchronizes state with the desktop filter sidebar and mobile filter controls.
+
+---
+
+### Modern Product Card Visual Architecture
+OmnifyWP product cards are engineered to look stunning and perform reliably across all WordPress themes (including Astra, Kadence, GeneratePress, and Block Themes):
+
+* **Responsive Full-Width Image Canvas**:
+  * Styled with authoritative CSS specificity (`width: 100% !important; max-width: 100% !important; aspect-ratio: auto !important; object-fit: cover !important;`).
+  * Eliminates thumbnail squishing, image clipping, and unexpected gaps caused by aggressive theme stylesheets.
+* **Floating Card Action Toolbar**:
+  * Slides in smoothly on desktop card hover with frosted-glass circular buttons:
+    * **Wishlist Heart Button** (`.omnify-wishlist-button`): Saves favorite items across browsing sessions with animated red heart feedback.
+    * **Quick View Eye Button** (`.omnify-quick-view-button`): Opens an instant product preview modal without reloading the catalog.
+    * **Compare Button** (`.omnify-compare-button`): Adds the product to the side-by-side comparison drawer.
+* **Interactive Color Swatches**:
+  * `.omnify-card-mock-swatches` displays circular swatch dots representing available product colors or variants.
+  * Shoppers can click swatch dots to toggle active ring indicators.
+* **Balanced Typography & 2-Line Clamps**:
+  * Card titles are strictly clamped to 2 lines (`-webkit-line-clamp: 2; overflow: hidden;`) to ensure uniform card heights across the entire row, even when product names vary in length.
+* **Streamlined Meta Row**:
+  * Features the bold active price on the left (with strike-through original price if on sale) and clean pill action buttons on the right.
+
+---
+
+### Recently Viewed Products Engine & Cookie Storage
+Positioned beneath the main catalog, the **Recently Viewed Products Section** (`#omnify-recently-viewed-grid`) re-engages shoppers with items they previously inspected:
+
+* **Automatic Tracking**: Whenever a shopper visits a product details page, the product ID is securely saved to a browser cookie (`omnify_recently_viewed`) with a 30-day expiration window.
+* **Smart Auto-Hiding**: If a shopper is visiting for the first time and has no viewing history, the section automatically hides itself completely from the DOM, leaving zero empty gaps.
+* **Unified 4-Column Layout**: Displays recently viewed items in a 4-column responsive grid that matches the primary catalog layout, complete with rating stars, prices, and quick-add buttons.
 
 ---
 
 ### Storefront Catalog & Faceted Sidebar Filters
-The storefront catalog page (`[omnify_storefront]`) pairs the product grid with a slide-out or sticky desktop faceted sidebar:
-* **Category Facets**: Hierarchical category filter with item count badges.
-* **Status Checks**: Instant toggle between `In Stock` and `On Sale` products.
-* **Brand Filters**: Multi-select brand checkboxes.
-* **Price Range Slider**: Dynamic dual-handle slider ($0 – $1000).
-* **Attribute Swatches**: Color circles and size blocks.
-* **One-Click Clear All**: Instantly resets all active filters without page refresh.
+The storefront catalog page (`[omnify_storefront]`) pairs the product grid with a streamlined, responsive faceted sidebar:
+
+* **Category Facets**: Hierarchical category filter checkboxes displaying real-time product counts for each taxonomy term.
+* **Price Range Slider**: Dynamic slider allowing shoppers to narrow down products between $0 and the store's maximum price.
+* **Stock & Sale Availability**: Toggles to view in-stock products or items with active promotional discounts.
+* **Brand Filters**: Multi-select brand checkboxes for stores with multi-vendor or multi-brand catalogs.
+* **Responsive Mobile Toggle**: On mobile and tablet screens, the sidebar collapses into a compact floating "Filters" button to keep the screen uncluttered.
+* **One-Click Clear All**: Instantly resets all active category, price, and status filters with a single click.
 
 ---
 
-### Single Product Page
-Clicking any product opens the product details layout designed for high conversions:
-* **Product Gallery**: High-resolution image zoom and thumbnail selector.
-* **Trust Badges & Security Seals**: Built-in badges highlighting encrypted checkout and money-back guarantees.
-* **Variation Swatches**: Select options via buttons, color chips, or dropdown selectors.
-* **Customer Reviews & Ratings**: Real buyer reviews and verified buyer badges.
+### Single Product Page (Elessi-Style 3-Column Architecture)
+Clicking any product opens the modern Elessi-inspired 3-column product details layout designed for maximum conversion:
+
+* **Column 1: Vertical Thumbnail & Hero Gallery**:
+  * Vertical thumbnail rail on left with high-resolution main viewport preview.
+  * Smooth image zoom, sale discount percentage pills, and multi-angle product photography switcher.
+* **Column 2: Product Core, Variation Swatches & Instant Actions**:
+  * **Status & SKU Bar**: Live in-stock badge with 24h dispatch guarantee and dynamic SKU indicator.
+  * **Verified Reviews**: 5-star summary with verified review counts and units sold.
+  * **Pricing & Savings Callout**: Bold active price in unified accent `#0f766e` with strike-through retail price and savings calculation badge.
+  * **Clickable Color & Size Swatches**: Circular color chips with active focus rings and pill size selectors that instantly update selected variant, SKU, and availability.
+  * **Quantity Stepper & Action CTAs**: Intuitive `-` and `+` quantity adjuster, primary **Add to Cart** button, and secondary **Instant Buy Now** button for 1-click checkout.
+* **Column 3: Elessi Trust Box & Live Order Bump Sidebar**:
+  * **Merchant Guarantee Badges**: Free Expedited Shipping over $50, 30-Day Hassle-Free Returns, and 256-Bit TLS Encrypted Checkout signals.
+  * **Interactive VIP Add-On Bump Box**: Pre-checkout bundled item checkbox (e.g. matching beanie or extended warranty) that adds complementary items directly to the purchase.
+* **Full-Width Information Tabs**:
+  * Clean tab navigation below product details: Description, Technical Specifications, Verified Customer Reviews, and Shipping & Care guidelines.
 
 ---
 
-### Interactive Shopping Cart
-The shopping cart page (`[omnify_cart]`) provides an intuitive overview of selected items:
-* **Quantity Controls**: Adjust quantities or remove items with automatic AJAX total updates.
-* **Coupon Application**: Enter promotional codes and receive instant feedback.
-* **Shipping Estimate**: Real-time delivery fee calculation based on destination.
+### Interactive Shopping Cart & Urgency Scarcity Engine
+The shopping cart (`[omnify_cart]`) and slide-out cart drawer provide an intuitive, high-speed overview of selected merchandise:
+
+* **Real-Time Scarcity Countdown Banner**:
+  * Urgency countdown timer (e.g. *Special offer ends in 14:48 - items reserved*) that ticks down every second to reduce cart abandonment.
+* **Dynamic Free Shipping Progress Meter**:
+  * Interactive meter (`#omnify-shipping-progress-wrapper`) tracking exact dollar distance to free shipping.
+  * Celebrates free shipping achievement with an animated green progress fill and unlocked banner.
+* **Select-All Checkbox & Item Management**:
+  * Bulk select/deselect checkbox for items, thumbnail preview with variation chips, and instant quantity steppers.
+* **Coupon Application Tray**:
+  * Prominent coupon input field with instant AJAX coupon validation and real-time total recalculation.
 
 ---
 
-### Frictionless Multi-Step & Slide-Over Checkout
-* **Slide-Over Quick Checkout Modal (`#omnify-checkout-overlay`)**: Allows single-click instant purchase from any catalog product without full page redirection.
-* **Multi-Step Checkout Page (`[omnify_checkout]`)**:
-  * **Step Indicator**: Clear visual progression: `01 Shopping Cart` → `02 Checkout Details` → `03 Order Complete`.
-  * **Smart Autofill**: Returning customers can log in to autofill saved billing and shipping details.
-  * **Available Coupons Tray**: Displays active store promotions directly on the checkout page for easy redemption.
-  * **Integrated Payment Forms**: Credit card inputs via Stripe Elements, PayPal buttons, Razorpay, SSLCommerz, and manual payment options.
+### Conversion-Optimized Checkout with Express Pay & 10+ Gateways
+The Omnify checkout experience (`[omnify_checkout]`) is built to eliminate checkout friction:
+
+* **Express 1-Click Checkout**:
+  * Native Apple Pay and Google Pay express buttons allowing mobile shoppers to complete purchases in seconds without typing billing addresses.
+* **10+ Branded Payment Gateways**:
+  * Interactive gateway selection cards featuring authentic gateway brand logos: Stripe, PayPal, Razorpay, Mollie, Square, Authorize.Net, Paystack, Flutterwave, SSLCommerz, Cash on Delivery, and Direct Bank Transfer.
+* **VIP Priority Order Bump**:
+  * One-click checkbox for VIP Priority Processing (+$4.99) that lets customers prioritize their order in warehouse fulfillment queues.
+* **Security & Trust Signals**:
+  * PCI-DSS Level 1 compliance badge, 256-bit SSL encryption indicator, and money-back guarantee seal directly beside the primary "Complete Order" button.
 
 ---
 
 ### Customer Account Portal 2.0 & Order Tracking
-Customers can manage their relationship with your store using dedicated self-service pages:
+Customers can manage their store accounts using dedicated self-service pages:
 
 #### Customer Portal 2.0 (`[omnify_customer_portal]`)
 A modern 1360px self-service dashboard:

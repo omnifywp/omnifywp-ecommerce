@@ -32,6 +32,43 @@ class Omnify_Product_File_Repository {
 	}
 
 	/**
+	 * Retrieve all files for multiple product IDs in a single query.
+	 *
+	 * @param array<int> $omnify_product_ids
+	 * @return array<int, array<int, array<string, mixed>>>
+	 */
+	public function all_for_products(array $omnify_product_ids): array {
+		$omnify_product_ids = array_values(array_filter(array_map('absint', $omnify_product_ids)));
+		if (empty($omnify_product_ids)) {
+			return [];
+		}
+
+		global $wpdb;
+		$omnify_placeholders = implode(',', array_fill(0, count($omnify_product_ids), '%d'));
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare("SELECT * FROM {$this->table()} WHERE product_id IN ({$omnify_placeholders}) ORDER BY updated_at DESC, id DESC", ...$omnify_product_ids),
+			ARRAY_A
+		);
+
+		$omnify_grouped = [];
+		foreach ($omnify_product_ids as $omnify_pid) {
+			$omnify_grouped[$omnify_pid] = [];
+		}
+
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_row) {
+				$omnify_hydrated = $this->hydrate($omnify_row);
+				$omnify_grouped[(int) $omnify_row['product_id']][] = $omnify_hydrated;
+			}
+		}
+
+		return $omnify_grouped;
+	}
+
+	/**
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function all(array $omnify_args = []): array {
@@ -52,10 +89,39 @@ class Omnify_Product_File_Repository {
 	}
 
 	/**
+	 * Count total product files matching filters.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_table = $this->table();
+		$omnify_where = ['1=1'];
+		$omnify_params = [];
+
+		if (! empty($omnify_args['product_id'])) {
+			$omnify_where[] = 'product_id = %d';
+			$omnify_params[] = absint($omnify_args['product_id']);
+		}
+
+		$omnify_where_sql = implode(' AND ', $omnify_where);
+		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_table} WHERE {$omnify_where_sql}";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
+	}
+
+	/**
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function active_for_product(int $omnify_product_id): array {
-		return $this->all_for_product($omnify_product_id);
+		$omnify_files = $this->all_for_product($omnify_product_id);
+
+		return array_values(array_filter($omnify_files, [$this, 'is_downloadable']));
 	}
 
 	public function find(int $omnify_id): ?array {
@@ -123,14 +189,50 @@ class Omnify_Product_File_Repository {
 	public function delete(int $omnify_id): bool {
 		global $wpdb;
 
+		$omnify_file = $this->find($omnify_id);
 		$omnify_deleted = false !== \Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table(), ['id' => $omnify_id]);
 		if ($omnify_deleted) {
+			if ($omnify_file && empty($omnify_file['attachment_id']) && ! empty($omnify_file['file_path'])) {
+				$omnify_file_path = (string) $omnify_file['file_path'];
+				$omnify_uploads   = wp_upload_dir();
+				$omnify_basedir   = realpath((string) ($omnify_uploads['basedir'] ?? ''));
+				$omnify_real_file = realpath($omnify_file_path);
+
+				$omnify_norm_file = ($omnify_real_file && function_exists('wp_normalize_path')) ? wp_normalize_path($omnify_real_file) : ($omnify_real_file ? str_replace('\\', '/', $omnify_real_file) : '');
+				$omnify_norm_base = ($omnify_basedir && function_exists('wp_normalize_path')) ? wp_normalize_path($omnify_basedir) : ($omnify_basedir ? str_replace('\\', '/', $omnify_basedir) : '');
+
+				// Safety checks: ensure it is a local file, exists within the WordPress uploads directory,
+				// and is not referenced by any other product file record.
+				if ($omnify_basedir && $omnify_real_file && '' !== $omnify_norm_base && 0 === stripos($omnify_norm_file, $omnify_norm_base) && file_exists($omnify_real_file) && is_file($omnify_real_file)) {
+					$omnify_still_referenced = (int) \Omnify\eCommerce\Support\Omnify_DB::get_var(
+						$wpdb,
+						// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$wpdb->prepare("SELECT COUNT(*) FROM {$this->table()} WHERE file_path = %s AND id != %d", $omnify_file_path, $omnify_id)
+					);
+
+					if (0 === $omnify_still_referenced) {
+						if (function_exists('wp_delete_file')) {
+							wp_delete_file($omnify_real_file);
+						} else {
+							@unlink($omnify_real_file);
+						}
+					}
+				}
+			}
+
 			do_action('omnify_product_file_deleted', $omnify_id);
 		}
 		return $omnify_deleted;
 	}
 
 	public function is_downloadable(array $omnify_file): bool {
+		if (! empty($omnify_file['expires_at'])) {
+			$omnify_expires_timestamp = strtotime((string) $omnify_file['expires_at'] . ' UTC');
+			if ($omnify_expires_timestamp && $omnify_expires_timestamp < time()) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -141,6 +243,11 @@ class Omnify_Product_File_Repository {
 		$omnify_row['file_size']     = (int) $omnify_row['file_size'];
 		$omnify_row['size_label']    = size_format((int) $omnify_row['file_size']);
 		$omnify_row['is_expired']    = false;
+
+		if (! empty($omnify_row['expires_at'])) {
+			$omnify_expires_timestamp = strtotime((string) $omnify_row['expires_at'] . ' UTC');
+			$omnify_row['is_expired'] = $omnify_expires_timestamp ? $omnify_expires_timestamp < time() : false;
+		}
 
 		return $omnify_row;
 	}

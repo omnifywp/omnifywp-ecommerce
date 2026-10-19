@@ -15,6 +15,7 @@ use Omnify\eCommerce\Settings\Omnify_Settings_Repository;
 
 class Omnify_Abandoned_Cart_Service {
 	private const CRON_HOOK = 'omnify_abandoned_cart_recovery';
+	private const CRON_PRUNE_HOOK = 'omnify_abandoned_cart_cleanup';
 
 	public function __construct(
 		private Omnify_Settings_Repository $omnify_settings,
@@ -24,6 +25,7 @@ class Omnify_Abandoned_Cart_Service {
 
 	public function register(): void {
 		add_action(self::CRON_HOOK, [$this, 'send_due_recoveries']);
+		add_action(self::CRON_PRUNE_HOOK, [$this, 'prune_stale_carts']);
 		add_action('template_redirect', [$this, 'maybe_handle_unsubscribe']);
 		$this->schedule();
 	}
@@ -45,15 +47,30 @@ class Omnify_Abandoned_Cart_Service {
 	}
 
 	public function schedule(): void {
+		if (false !== get_transient('omnify_cart_cron_checked')) {
+			return;
+		}
+
 		if (! wp_next_scheduled(self::CRON_HOOK)) {
 			wp_schedule_event(time() + (5 * MINUTE_IN_SECONDS), 'hourly', self::CRON_HOOK);
 		}
+
+		if (! wp_next_scheduled(self::CRON_PRUNE_HOOK)) {
+			wp_schedule_event(time() + (10 * MINUTE_IN_SECONDS), 'daily', self::CRON_PRUNE_HOOK);
+		}
+
+		set_transient('omnify_cart_cron_checked', 1, DAY_IN_SECONDS);
 	}
 
 	public function unschedule(): void {
+		delete_transient('omnify_cart_cron_checked');
 		$omnify_timestamp = wp_next_scheduled(self::CRON_HOOK);
 		if ($omnify_timestamp) {
 			wp_unschedule_event($omnify_timestamp, self::CRON_HOOK);
+		}
+		$omnify_prune_timestamp = wp_next_scheduled(self::CRON_PRUNE_HOOK);
+		if ($omnify_prune_timestamp) {
+			wp_unschedule_event($omnify_prune_timestamp, self::CRON_PRUNE_HOOK);
 		}
 	}
 
@@ -71,5 +88,11 @@ class Omnify_Abandoned_Cart_Service {
 				$this->omnify_carts->mark_sent((int) $omnify_cart['id']);
 			}
 		}
+	}
+
+	public function prune_stale_carts(): void {
+		$omnify_settings = $this->omnify_settings->all();
+		$omnify_retention_days = max(7, absint($omnify_settings['abandoned_cart_retention_days'] ?? 60));
+		$this->omnify_carts->prune_stale($omnify_retention_days);
 	}
 }

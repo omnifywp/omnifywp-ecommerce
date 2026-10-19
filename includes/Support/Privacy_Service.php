@@ -216,7 +216,91 @@ class Omnify_Privacy_Service {
 					[ 'name' => __( 'Title', 'omnifywp-ecommerce'), 'value' => $omnify_review['review_title'] ],
 					[ 'name' => __( 'Content', 'omnifywp-ecommerce'), 'value' => $omnify_review['review_content'] ],
 					[ 'name' => __( 'Status', 'omnifywp-ecommerce'), 'value' => $omnify_review['status'] ],
-					[ 'name' => __( 'Created At', 'omnifywp-ecommerce'), 'value' => $omnify_review['created_at'] ],
+				],
+			];
+		}
+
+		// 4. Export Download Activity
+		if ( $omnify_customer ) {
+			$omnify_downloads_table = $this->omnify_schema->table( 'downloads' );
+			$omnify_files_table     = $this->omnify_schema->table( 'product_files' );
+			$omnify_downloads = \Omnify\eCommerce\Support\Omnify_DB::get_results( $wpdb, $wpdb->prepare(
+				"SELECT d.*, f.file_name FROM {$omnify_downloads_table} d
+				 LEFT JOIN {$omnify_files_table} f ON d.file_id = f.id
+				 WHERE d.customer_id = %d
+				 ORDER BY d.downloaded_at DESC",
+				(int) $omnify_customer['id']
+			), ARRAY_A );
+
+			foreach ( is_array( $omnify_downloads ) ? $omnify_downloads : [] as $omnify_dl ) {
+				$omnify_data_to_export[] = [
+					'group_id'    => 'omnify-customer-downloads',
+					'group_label' => __( 'Omnify Customer Downloads', 'omnifywp-ecommerce' ),
+					'item_id'     => 'download-' . $omnify_dl['id'],
+					'data'        => [
+						[ 'name' => __( 'File Name', 'omnifywp-ecommerce' ), 'value' => $omnify_dl['file_name'] ?: sprintf( __( 'File #%d', 'omnifywp-ecommerce' ), $omnify_dl['file_id'] ) ],
+						[ 'name' => __( 'Status', 'omnifywp-ecommerce' ), 'value' => $omnify_dl['status'] ],
+						[ 'name' => __( 'IP Address', 'omnifywp-ecommerce' ), 'value' => $omnify_dl['ip_address'] ],
+						[ 'name' => __( 'Downloaded At', 'omnifywp-ecommerce' ), 'value' => $omnify_dl['downloaded_at'] ],
+					],
+				];
+			}
+		}
+
+		// 5. Export Wishlist Items
+		$omnify_user_id = $omnify_customer ? (int) ($omnify_customer['user_id'] ?? 0) : 0;
+		if ( ! $omnify_user_id ) {
+			$omnify_wp_user = get_user_by( 'email', $omnify_email_address );
+			if ( $omnify_wp_user ) {
+				$omnify_user_id = (int) $omnify_wp_user->ID;
+			}
+		}
+
+		if ( $omnify_user_id > 0 ) {
+			$omnify_wishlists_table = $this->omnify_schema->table( 'wishlists' );
+			$omnify_products_table  = $this->omnify_schema->table( 'products' );
+			$omnify_wishlists = \Omnify\eCommerce\Support\Omnify_DB::get_results( $wpdb, $wpdb->prepare(
+				"SELECT w.*, p.name as product_name FROM {$omnify_wishlists_table} w
+				 LEFT JOIN {$omnify_products_table} p ON w.product_id = p.id
+				 WHERE w.user_id = %d AND p.deleted_at IS NULL
+				 ORDER BY w.created_at DESC",
+				$omnify_user_id
+			), ARRAY_A );
+
+			foreach ( is_array( $omnify_wishlists ) ? $omnify_wishlists : [] as $omnify_wl ) {
+				$omnify_data_to_export[] = [
+					'group_id'    => 'omnify-customer-wishlists',
+					'group_label' => __( 'Omnify Customer Wishlist', 'omnifywp-ecommerce' ),
+					'item_id'     => 'wishlist-' . $omnify_wl['id'],
+					'data'        => [
+						[ 'name' => __( 'Product', 'omnifywp-ecommerce' ), 'value' => $omnify_wl['product_name'] ?: sprintf( __( 'Product #%d', 'omnifywp-ecommerce' ), $omnify_wl['product_id'] ) ],
+						[ 'name' => __( 'Added Date', 'omnifywp-ecommerce' ), 'value' => $omnify_wl['created_at'] ],
+					],
+				];
+			}
+		}
+
+		// 6. Export Stock Alert Subscriptions
+		$omnify_stock_table    = $this->omnify_schema->table( 'stock_subscribers' );
+		$omnify_products_table = $this->omnify_schema->table( 'products' );
+		$omnify_stock_subs     = \Omnify\eCommerce\Support\Omnify_DB::get_results( $wpdb, $wpdb->prepare(
+			"SELECT s.*, p.name as product_name FROM {$omnify_stock_table} s
+			 LEFT JOIN {$omnify_products_table} p ON s.product_id = p.id
+			 WHERE s.email = %s
+			 ORDER BY s.created_at DESC",
+			$omnify_email_address
+		), ARRAY_A );
+
+		foreach ( is_array( $omnify_stock_subs ) ? $omnify_stock_subs : [] as $omnify_sub ) {
+			$omnify_data_to_export[] = [
+				'group_id'    => 'omnify-stock-subscriptions',
+				'group_label' => __( 'Omnify Stock Alert Subscriptions', 'omnifywp-ecommerce' ),
+				'item_id'     => 'stock-sub-' . $omnify_sub['id'],
+				'data'        => [
+					[ 'name' => __( 'Product', 'omnifywp-ecommerce' ), 'value' => $omnify_sub['product_name'] ?: sprintf( __( 'Product #%d', 'omnifywp-ecommerce' ), $omnify_sub['product_id'] ) ],
+					[ 'name' => __( 'Status', 'omnifywp-ecommerce' ), 'value' => $omnify_sub['status'] ],
+					[ 'name' => __( 'Subscribed Date', 'omnifywp-ecommerce' ), 'value' => $omnify_sub['created_at'] ],
+					[ 'name' => __( 'Notified Date', 'omnifywp-ecommerce' ), 'value' => $omnify_sub['notified_at'] ?: __( 'Pending restock', 'omnifywp-ecommerce' ) ],
 				],
 			];
 		}
@@ -287,12 +371,14 @@ class Omnify_Privacy_Service {
 					'billing_first_name'  => __( 'Anonymized', 'omnifywp-ecommerce'),
 					'billing_last_name'   => __( 'Customer', 'omnifywp-ecommerce'),
 					'billing_phone'       => __( '[REDACTED]', 'omnifywp-ecommerce'),
+					'billing_company'     => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_address_1'   => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_address_2'   => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_city'        => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_state'       => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_postcode'    => __( '[REDACTED]', 'omnifywp-ecommerce'),
 					'billing_country'     => __( '[REDACTED]', 'omnifywp-ecommerce'),
+					'ip_address'          => '0.0.0.0',
 				];
 
 				foreach ( $omnify_orders as $omnify_order_id ) {
@@ -303,9 +389,32 @@ class Omnify_Privacy_Service {
 				$omnify_items_removed = true;
 			}
 
+			// Anonymize download history
+			$omnify_downloads_table = $this->omnify_schema->table( 'downloads' );
+			$omnify_download_count  = (int) \Omnify\eCommerce\Support\Omnify_DB::get_var( $wpdb, $wpdb->prepare(
+				'SELECT COUNT(*) FROM %i WHERE customer_id = %d',
+				$omnify_downloads_table,
+				$omnify_customer_id
+			) );
+			if ( $omnify_download_count > 0 ) {
+				\Omnify\eCommerce\Support\Omnify_DB::update(
+					$wpdb,
+					$omnify_downloads_table,
+					[
+						'customer_id' => null,
+						'ip_address'  => '0.0.0.0',
+						'user_agent'  => '[REDACTED]',
+					],
+					[ 'customer_id' => $omnify_customer_id ]
+				);
+				// translators: %d: placeholder value.
+				$omnify_messages[]    = sprintf( __( 'Anonymized IP and user agent in %d download logs.', 'omnifywp-ecommerce' ), $omnify_download_count );
+				$omnify_items_removed = true;
+			}
+
 			// Delete Customer profile
 			\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb,  $omnify_customers_table, [ 'id' => $omnify_customer_id ] );
-			$omnify_messages[]     = __( 'Deleted customer profile, notes, activity logs, and product access keys.', 'omnifywp-ecommerce');
+			$omnify_messages[]     = __( 'Deleted customer profile, notes, activity logs, download records, and product access keys.', 'omnifywp-ecommerce');
 			$omnify_items_removed = true;
 		}
 
@@ -337,6 +446,60 @@ class Omnify_Privacy_Service {
 		if ( $omnify_deleted_carts ) {
 			// translators: %d: placeholder value.
 			$omnify_messages[]     = sprintf( __( 'Deleted %d abandoned carts.', 'omnifywp-ecommerce'), (int) $omnify_deleted_carts );
+			$omnify_items_removed = true;
+		}
+
+		// Anonymize/Redact Email Logs
+		$omnify_email_logs_table = $this->omnify_schema->table( 'email_logs' );
+		$omnify_matching_logs = \Omnify\eCommerce\Support\Omnify_DB::get_col( $wpdb, $wpdb->prepare(
+			'SELECT id FROM %i WHERE recipient = %s',
+			$omnify_email_logs_table,
+			$omnify_email_address
+		) );
+		if ( ! empty( $omnify_matching_logs ) ) {
+			foreach ( $omnify_matching_logs as $omnify_log_id ) {
+				\Omnify\eCommerce\Support\Omnify_DB::update( $wpdb,
+					$omnify_email_logs_table,
+					[
+						'recipient'     => 'deleted@example.com',
+						'subject'       => __( '[Redacted for Privacy]', 'omnifywp-ecommerce' ),
+						'body'          => __( '[Personal data redacted per GDPR request]', 'omnifywp-ecommerce' ),
+						'headers'       => '[]',
+						'context'       => '[]',
+						'error_message' => null,
+					],
+					[ 'id' => $omnify_log_id ]
+				);
+			}
+			// translators: %d: placeholder value.
+			$omnify_messages[]    = sprintf( __( 'Redacted personal data in %d email logs.', 'omnifywp-ecommerce' ), count( $omnify_matching_logs ) );
+			$omnify_items_removed = true;
+		}
+
+		// Delete Wishlist Items
+		$omnify_erase_user_id = $omnify_customer ? (int) ($omnify_customer['user_id'] ?? 0) : 0;
+		if ( ! $omnify_erase_user_id ) {
+			$omnify_wp_user = get_user_by( 'email', $omnify_email_address );
+			if ( $omnify_wp_user ) {
+				$omnify_erase_user_id = (int) $omnify_wp_user->ID;
+			}
+		}
+		if ( $omnify_erase_user_id > 0 ) {
+			$omnify_wishlists_table = $this->omnify_schema->table( 'wishlists' );
+			$omnify_deleted_wishlists = \Omnify\eCommerce\Support\Omnify_DB::delete( $wpdb, $omnify_wishlists_table, [ 'user_id' => $omnify_erase_user_id ] );
+			if ( $omnify_deleted_wishlists ) {
+				// translators: %d: placeholder value.
+				$omnify_messages[]    = sprintf( __( 'Deleted %d wishlist items.', 'omnifywp-ecommerce' ), (int) $omnify_deleted_wishlists );
+				$omnify_items_removed = true;
+			}
+		}
+
+		// Delete Stock Alert Subscriptions
+		$omnify_stock_subs_table = $this->omnify_schema->table( 'stock_subscribers' );
+		$omnify_deleted_subs = \Omnify\eCommerce\Support\Omnify_DB::delete( $wpdb, $omnify_stock_subs_table, [ 'email' => $omnify_email_address ] );
+		if ( $omnify_deleted_subs ) {
+			// translators: %d: placeholder value.
+			$omnify_messages[]    = sprintf( __( 'Deleted %d back-in-stock subscriptions.', 'omnifywp-ecommerce' ), (int) $omnify_deleted_subs );
 			$omnify_items_removed = true;
 		}
 

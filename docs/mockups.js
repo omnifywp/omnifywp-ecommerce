@@ -269,66 +269,101 @@ const mockups = {
     'Figure 4.1: Product catalog listing with multi-parameter filtering, stock indicators, and quick action buttons.'
   ),
 
-  // Figure 4.2: Comprehensive Product Editor
+  // Figure 4.2: Comprehensive 4-Step Product Wizard & Live Preview
   product_editor: wrapWindow(
     'wp-admin/admin.php?page=omnify-products&action=edit&id=101',
-    'Product Editor',
+    'Product Editor Wizard',
     `
       <div class="mockup-content">
-        <div class="editor-header">
-          <input type="text" class="editor-title-input" value="OmniStudio Pro Theme" readonly />
-          <span class="btn-mockup btn-primary">Update Product</span>
+        <div class="editor-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
+          <input type="text" class="editor-title-input" value="Omnify Heavyweight French Terry Hoodie" readonly style="flex:1; font-size:1.1rem; font-weight:700; padding:8px 12px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-surface); color:var(--text-main);" />
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-mockup btn-outline" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-weight:600; font-size:0.82rem; border-color:#0f766e; color:#0f766e;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Product
+            </button>
+            <span class="btn-mockup btn-primary" style="background:#0f766e; color:#fff; padding:8px 16px; font-weight:600; font-size:0.82rem; border-radius:8px;">Update Product</span>
+          </div>
         </div>
 
-        <div class="editor-tabs">
-          <span class="e-tab active">General</span>
-          <span class="e-tab">Inventory</span>
-          <span class="e-tab">Digital Locker (2 Files)</span>
-          <span class="e-tab">Attributes & Variations</span>
-          <span class="e-tab">SEO & Social</span>
+        <!-- 4-Step Wizard Navigation Stepper -->
+        <div class="wizard-stepper" style="margin-bottom:20px; background:var(--bg-subtle); padding:12px 18px; border-radius:10px; border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between;">
+          <div class="step completed" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <span class="step-num" style="background:#0f766e; color:#fff; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">1</span>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; color:#0f766e;">Step 1</div>
+              <div style="font-size:0.72rem; color:var(--text-dim);">General &amp; Pricing</div>
+            </div>
+          </div>
+          <div class="step-connector completed" style="flex:1; height:2px; background:#0f766e; margin:0 10px;"></div>
+          <div class="step active" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <span class="step-num" style="background:#0f766e; color:#fff; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; box-shadow:0 0 0 3px rgba(15,118,110,0.2);">2</span>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; color:#0f766e;">Step 2</div>
+              <div style="font-size:0.72rem; color:var(--text-main); font-weight:600;">Inventory &amp; Stock</div>
+            </div>
+          </div>
+          <div class="step-connector" style="flex:1; height:2px; background:var(--border-subtle); margin:0 10px;"></div>
+          <div class="step" style="display:flex; align-items:center; gap:8px; opacity:0.7;">
+            <span class="step-num" style="background:var(--border-subtle); color:var(--text-dim); width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">3</span>
+            <div>
+              <div style="font-size:0.8rem; font-weight:600; color:var(--text-dim);">Step 3</div>
+              <div style="font-size:0.72rem; color:var(--text-dim);">Digital &amp; Media</div>
+            </div>
+          </div>
+          <div class="step-connector" style="flex:1; height:2px; background:var(--border-subtle); margin:0 10px;"></div>
+          <div class="step" style="display:flex; align-items:center; gap:8px; opacity:0.7;">
+            <span class="step-num" style="background:var(--border-subtle); color:var(--text-dim); width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">4</span>
+            <div>
+              <div style="font-size:0.8rem; font-weight:600; color:var(--text-dim);">Step 4</div>
+              <div style="font-size:0.72rem; color:var(--text-dim);">Variations &amp; SEO</div>
+            </div>
+          </div>
         </div>
 
-        <div class="editor-panel">
+        <div class="editor-panel" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:10px; padding:20px;">
           <div class="mockup-split-2">
             <div>
               <div class="mockup-field">
                 <label>Product Type</label>
-                <div class="mockup-input-select">Digital / Downloadable Asset</div>
+                <div class="mockup-input-select">Variable Physical Merch (Apparel)</div>
               </div>
               <div class="mockup-form-grid">
                 <div class="mockup-field">
                   <label>Regular Price ($)</label>
-                  <div class="mockup-input-text">79.00</div>
+                  <div class="mockup-input-text">85.00</div>
                 </div>
                 <div class="mockup-field">
                   <label>Sale Price ($)</label>
-                  <div class="mockup-input-text">59.00</div>
+                  <div class="mockup-input-text">68.00</div>
                 </div>
               </div>
               <div class="mockup-field">
                 <label>SKU (Stock Keeping Unit)</label>
-                <div class="mockup-input-text">OMN-THM-01</div>
+                <div class="mockup-input-text">OMN-HD-001</div>
+              </div>
+              <div class="mockup-field">
+                <label>Stock Status</label>
+                <div class="mockup-input-select">In Stock (145 units available across variations)</div>
               </div>
             </div>
 
             <div>
               <div class="mockup-field">
-                <label>Attached Digital Files (HMAC-SHA256 Encrypted)</label>
-                <div class="file-locker-item">
-                  <span class="f-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
-                  <div style="flex:1;">
-                    <div style="font-weight:600; font-size:0.85rem;">omnistudio-pro-v1.2.zip</div>
-                    <div style="font-size:0.75rem; color:var(--text-dim);">8.4 MB • SHA-256 Protected • 5 Download Limit</div>
-                  </div>
-                  <span class="badge success">Active</span>
+                <label>Developer Extensibility Hooks</label>
+                <div style="background:var(--bg-subtle); border:1px dashed #0f766e; border-radius:8px; padding:12px; font-size:0.75rem; font-family:var(--font-mono); color:#0f766e;">
+                  <div>// Wizard Step Action Hook</div>
+                  <div style="color:var(--text-main); font-weight:600; margin-top:2px;">do_action('omnify_after_product_editor_wizard_step_2', $product);</div>
+                  <div style="margin-top:8px;">// Filter Steps Programmatically</div>
+                  <div style="color:var(--text-main); font-weight:600; margin-top:2px;">apply_filters('omnify_product_editor_wizard_steps', $steps);</div>
                 </div>
-                <div class="file-locker-item">
-                  <span class="f-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                  <div style="flex:1;">
-                    <div style="font-weight:600; font-size:0.85rem;">quickstart-and-licensing.pdf</div>
-                    <div style="font-size:0.75rem; color:var(--text-dim);">1.2 MB • Token Expiration: 72 Hours</div>
-                  </div>
-                  <span class="badge success">Active</span>
+              </div>
+
+              <div class="mockup-field" style="margin-top:14px;">
+                <label>Live Product Preview Modal Available</label>
+                <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px; font-size:0.8rem; color:#0f766e; display:flex; align-items:center; gap:10px;">
+                  <svg width="20" height="20" fill="none" stroke="#0f766e" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span>Instant sandbox preview renders full storefront layout without saving draft to public visitors.</span>
                 </div>
               </div>
             </div>
@@ -336,7 +371,7 @@ const mockups = {
         </div>
       </div>
     `,
-    'Figure 4.2: Comprehensive product editor with pricing, stock rules, file lockers, and gallery controls.'
+    'Figure 4.2: Comprehensive 4-step product wizard with preview modal and granular developer action hooks.'
   ),
 
   // Figure 4.3: Product Categories
@@ -1166,39 +1201,75 @@ const mockups = {
   // Figure 12.1: System Tools & Diagnostics
   tools: wrapWindow(
     'wp-admin/admin.php?page=omnify-tools',
-    'System Tools & Maintenance',
+    'System Tools & Seeding',
     `
       <div class="mockup-content">
-        <div class="risk-badge-banner" style="margin-bottom:16px;">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <div>
-            <strong>18 Normalized Relational Tables: 100% Operational & Verified</strong>
-            <div style="font-size:0.75rem; color:var(--text-dim);">Indexes optimized, zero missing columns, schema migration v2026_09_24 up to date.</div>
+        <!-- Live 4-KPI Diagnostics Strip -->
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:16px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; text-align:center;">
+            <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:0.05em;">Total Products</div>
+            <div style="font-size:1.5rem; font-weight:700; color:#0f172a; margin-top:2px;">48</div>
+            <div style="font-size:0.7rem; color:#0f766e; font-weight:600;">Active in Catalog</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; text-align:center;">
+            <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:0.05em;">Total Orders</div>
+            <div style="font-size:1.5rem; font-weight:700; color:#0f172a; margin-top:2px;">124</div>
+            <div style="font-size:0.7rem; color:#0f766e; font-weight:600;">Store Transactions</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; text-align:center;">
+            <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:0.05em;">Total Customers</div>
+            <div style="font-size:1.5rem; font-weight:700; color:#0f172a; margin-top:2px;">89</div>
+            <div style="font-size:0.7rem; color:#0f766e; font-weight:600;">CRM Profiles</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; text-align:center;">
+            <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:0.05em;">Total Reviews</div>
+            <div style="font-size:1.5rem; font-weight:700; color:#0f172a; margin-top:2px;">36</div>
+            <div style="font-size:0.7rem; color:#0f766e; font-weight:600;">Verified Ratings</div>
           </div>
         </div>
 
         <div class="mockup-split-2">
-          <div class="mockup-card-panel">
-            <h5 style="margin-top:0;">Catalog & Demo Seeding</h5>
-            <p style="font-size:0.82rem; color:var(--text-dim);">Populate catalog with realistic sample products, variations, and test orders.</p>
-            <div style="display:flex; gap:8px;">
-              <span class="btn-mockup btn-primary">Seed 50 Products</span>
-              <span class="btn-mockup btn-outline danger">Clear Demo Data</span>
+          <!-- Demo Data Generator Card -->
+          <div class="mockup-card-panel" style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+              <div>
+                <h5 style="margin:0; font-size:1rem; color:#0f172a;">Demo Data Generator</h5>
+                <p style="font-size:0.8rem; color:#64748b; margin:4px 0 0;">Populate your catalog with 50 products, orders, and reviews.</p>
+              </div>
+              <span class="badge success" style="font-size:0.7rem;">Safe to Use</span>
             </div>
+            <div style="background:#f1f5f9; border-radius:999px; height:8px; overflow:hidden; margin:12px 0 6px;">
+              <div style="width:75%; height:100%; background:#0f766e; border-radius:999px;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#64748b; margin-bottom:14px;">
+              <span>Populating orders and customers...</span>
+              <strong style="color:#0f766e;">75%</strong>
+            </div>
+            <span class="btn-mockup btn-primary" style="width:100%; justify-content:center;">Generate Demo Catalog</span>
           </div>
 
-          <div class="mockup-card-panel">
-            <h5 style="margin-top:0;">Performance & Caching</h5>
-            <p style="font-size:0.82rem; color:var(--text-dim);">Purge product transients, cached pricing queries, and reload active gateways.</p>
-            <div style="display:flex; gap:8px;">
-              <span class="btn-mockup btn-outline">Flush Query Cache</span>
-              <span class="btn-mockup btn-outline">Repair Schema</span>
+          <!-- Granular Cleanup Utilities -->
+          <div class="mockup-card-panel" style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+            <h5 style="margin:0 0 10px; font-size:1rem; color:#0f172a;">Granular Store Cleanup</h5>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                <span style="font-size:0.8rem; font-weight:600; color:#334155;">Clean Product Catalog</span>
+                <span class="btn-xs" style="background:#ffffff; border:1px solid #cbd5e1; color:#334155;">Clean (48 items)</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                <span style="font-size:0.8rem; font-weight:600; color:#334155;">Clean Orders & Invoices</span>
+                <span class="btn-xs" style="background:#ffffff; border:1px solid #cbd5e1; color:#334155;">Clean (124 items)</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px;">
+                <span style="font-size:0.8rem; font-weight:600; color:#991b1b;">Wipe All Store Data</span>
+                <span class="btn-xs danger">Reset Store</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 12.1: System diagnostics, demo data seeding/cleanup, and database optimization tools.'
+    'Figure 12.1: Real-time database diagnostics strip, animated demo data seeding, and granular cleanup utilities.'
   ),
 
   // Figure 13.1: Activity Audit Log
@@ -1207,74 +1278,112 @@ const mockups = {
     'Activity Audit Log',
     `
       <div class="mockup-content">
+        <!-- Filter Toolbar -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:14px; align-items:center;">
+          <input type="text" placeholder="Search logs..." value="" style="padding:6px 10px; font-size:0.8rem; border:1px solid #cbd5e1; border-radius:6px; flex:1;" readonly />
+          <span style="font-size:0.8rem; padding:6px 10px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; color:#334155;">All Actors</span>
+          <span style="font-size:0.8rem; padding:6px 10px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; color:#334155;">Orders</span>
+          <span class="btn-xs btn-primary">Filter</span>
+          <span class="btn-xs" style="background:#ffffff; border:1px solid #cbd5e1; color:#64748b;">Reset</span>
+        </div>
+
         <div class="mockup-data-table">
           <div class="table-head">
-            <div style="flex:1;">Timestamp</div>
-            <div style="flex:1.2;">Actor / User</div>
-            <div style="flex:3;">Action Performed</div>
-            <div style="flex:1; text-align:right;">Severity</div>
+            <div style="flex:1.2;">Date / Time</div>
+            <div style="flex:1.2;">Actor</div>
+            <div style="flex:0.9;">Category</div>
+            <div style="flex:1.2;">Action</div>
+            <div style="flex:2.2;">Details</div>
+            <div style="flex:1; text-align:right;">IP Address</div>
           </div>
           <div class="table-row">
-            <div style="flex:1; font-size:0.8rem; color:var(--text-dim);">10:14:02 AM</div>
-            <div style="flex:1.2; font-weight:600;">admin (John)</div>
-            <div style="flex:3;">Updated regular price on product <code>OMN-THM-01</code> to $59.00</div>
-            <div style="flex:1; text-align:right;"><span class="badge info">Info</span></div>
+            <div style="flex:1.2; font-size:0.75rem; color:#64748b;">Oct 15, 2026 14:22</div>
+            <div style="flex:1.2; font-weight:600; color:#0f172a;">admin (@john)</div>
+            <div style="flex:0.9;"><span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.7rem; padding:2px 7px; border-radius:999px; font-weight:600;">ORDER</span></div>
+            <div style="flex:1.2;"><code style="background:#f1f5f9; padding:2px 5px; border-radius:4px; font-size:0.75rem;">order.completed</code></div>
+            <div style="flex:2.2; font-size:0.8rem; color:#334155;">Marked Order #1042 as completed and issued access.</div>
+            <div style="flex:1; text-align:right; font-size:0.75rem; font-family:monospace; color:#64748b;">192.168.1.1</div>
           </div>
           <div class="table-row">
-            <div style="flex:1; font-size:0.8rem; color:var(--text-dim);">09:42:15 AM</div>
-            <div style="flex:1.2; font-weight:600;">webhook (Stripe)</div>
-            <div style="flex:3;">Payment confirmed for Order #OMN-1042; granted digital locker token</div>
-            <div style="flex:1; text-align:right;"><span class="badge success">Success</span></div>
+            <div style="flex:1.2; font-size:0.75rem; color:#64748b;">Oct 15, 2026 13:05</div>
+            <div style="flex:1.2; font-weight:600; color:#0f172a;">editor (@sarah)</div>
+            <div style="flex:0.9;"><span style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-size:0.7rem; padding:2px 7px; border-radius:999px; font-weight:600;">PRODUCT</span></div>
+            <div style="flex:1.2;"><code style="background:#f1f5f9; padding:2px 5px; border-radius:4px; font-size:0.75rem;">product.update</code></div>
+            <div style="flex:2.2; font-size:0.8rem; color:#334155;">Updated price on Mastering WordPress to $49.00.</div>
+            <div style="flex:1; text-align:right; font-size:0.75rem; font-family:monospace; color:#64748b;">192.168.1.45</div>
           </div>
           <div class="table-row">
-            <div style="flex:1; font-size:0.8rem; color:var(--text-dim);">08:30:44 AM</div>
-            <div style="flex:1.2; font-weight:600;">sarah_manager</div>
-            <div style="flex:3;">Created coupon code <code>SUMMER20</code> with 20% discount</div>
-            <div style="flex:1; text-align:right;"><span class="badge info">Info</span></div>
+            <div style="flex:1.2; font-size:0.75rem; color:#64748b;">Oct 15, 2026 11:40</div>
+            <div style="flex:1.2; font-weight:600; color:#0f172a;">admin (@john)</div>
+            <div style="flex:0.9;"><span style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; font-size:0.7rem; padding:2px 7px; border-radius:999px; font-weight:600;">COUPON</span></div>
+            <div style="flex:1.2;"><code style="background:#f1f5f9; padding:2px 5px; border-radius:4px; font-size:0.75rem;">coupon.created</code></div>
+            <div style="flex:2.2; font-size:0.8rem; color:#334155;">Created discount coupon FLASH30 for 30% off.</div>
+            <div style="flex:1; text-align:right; font-size:0.75rem; font-family:monospace; color:#64748b;">192.168.1.1</div>
           </div>
         </div>
       </div>
     `,
-    'Figure 13.1: Chronological audit log showing user actions, setting changes, and timestamps.'
+    'Figure 13.1: Chronological audit log showing user actions, category badges, and IP metadata.'
   ),
 
-  // Figure 14.1: API Keys Management
+  // Figure 14.1: API Keys & Diagnostics Management
   api_keys: wrapWindow(
-    'wp-admin/admin.php?page=omnify-api-keys',
-    'REST API Keys',
+    'wp-admin/admin.php?page=omnify-api',
+    'REST API Keys & Diagnostics',
     `
       <div class="mockup-content">
-        <div class="mockup-toolbar">
-          <span style="font-weight:700;">Active Headless & Integrations Keys</span>
-          <span class="btn-mockup btn-primary">+ Generate API Key</span>
+        <!-- Subtabs Track -->
+        <div style="display:flex; gap:8px; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:14px; font-size:0.8rem;">
+          <span style="color:#64748b;">Import/Export</span>
+          <span style="font-weight:700; color:#0f766e; border-bottom:2px solid #0f766e; padding-bottom:8px;">API Keys</span>
+          <span style="color:#64748b;">Activity Log</span>
+          <span style="color:#64748b;">System Tools & Seeding</span>
         </div>
 
-        <div class="mockup-data-table">
-          <div class="table-head">
-            <div style="flex:2;">Key Description</div>
-            <div style="flex:1.2;">User</div>
-            <div style="flex:1;">Permissions</div>
-            <div style="flex:2;">Consumer Key Prefix</div>
-            <div style="flex:1; text-align:right;">Actions</div>
+        <div style="display:flex; gap:16px;">
+          <!-- Sidebar Nav -->
+          <div style="width:180px; flex-shrink:0; display:flex; flex-direction:column; gap:4px; font-size:0.8rem;">
+            <div style="padding:6px 10px; background:#ecfdf5; color:#047857; font-weight:600; border-radius:6px;">REST API Keys</div>
+            <div style="padding:6px 10px; color:#64748b;">Outbound Webhooks</div>
+            <div style="padding:6px 10px; color:#64748b;">Payment Status</div>
+            <div style="padding:6px 10px; color:#64748b;">URL Checker</div>
           </div>
-          <div class="table-row">
-            <div style="flex:2; font-weight:600;">Next.js Headless Front</div>
-            <div style="flex:1.2;">api_admin</div>
-            <div style="flex:1;"><span class="badge success">Read/Write</span></div>
-            <div style="flex:2;" class="font-mono">ck_live_99482f...</div>
-            <div style="flex:1; text-align:right;"><span class="btn-xs danger">Revoke</span></div>
-          </div>
-          <div class="table-row">
-            <div style="flex:2; font-weight:600;">iOS Mobile App Native</div>
-            <div style="flex:1.2;">mobile_service</div>
-            <div style="flex:1;"><span class="badge info">Read Only</span></div>
-            <div style="flex:2;" class="font-mono">ck_live_831b11...</div>
-            <div style="flex:1; text-align:right;"><span class="btn-xs danger">Revoke</span></div>
+
+          <!-- Main API Key List -->
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">Active API Credentials</span>
+              <span class="btn-xs btn-primary">+ Generate Key</span>
+            </div>
+
+            <div class="mockup-data-table">
+              <div class="table-head">
+                <div style="flex:1.5;">Description</div>
+                <div style="flex:1;">User</div>
+                <div style="flex:1.2;">Key Identifier</div>
+                <div style="flex:1;">Permissions</div>
+                <div style="flex:0.8; text-align:right;">Action</div>
+              </div>
+              <div class="table-row">
+                <div style="flex:1.5; font-weight:600; color:#0f172a;">ERP Sync Service</div>
+                <div style="flex:1; color:#334155;">admin</div>
+                <div style="flex:1.2;"><code style="font-size:0.75rem;">ck_...49b2</code></div>
+                <div style="flex:1;"><span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.7rem; padding:2px 6px; border-radius:999px; font-weight:600;">Read/Write</span></div>
+                <div style="flex:0.8; text-align:right;"><span class="btn-xs danger">Revoke</span></div>
+              </div>
+              <div class="table-row">
+                <div style="flex:1.5; font-weight:600; color:#0f172a;">Mobile Store App</div>
+                <div style="flex:1; color:#334155;">mobile_svc</div>
+                <div style="flex:1.2;"><code style="font-size:0.75rem;">ck_...88ac</code></div>
+                <div style="flex:1;"><span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:0.7rem; padding:2px 6px; border-radius:999px; font-weight:600;">Read-Only</span></div>
+                <div style="flex:0.8; text-align:right;"><span class="btn-xs danger">Revoke</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 14.1: REST API key management panel for headless commerce and external integrations.'
+    'Figure 14.1: REST API key manager, outbound webhooks, payment status diagnostics, and URL checker.'
   ),
 
   // Figure 15.1: Storefront Catalog Grid
@@ -1337,83 +1446,160 @@ const mockups = {
     'Figure 15.1: Modern catalog grid with high-resolution imagery, verified reviews, sale pills, and quick add-to-cart buttons.'
   ),
 
-  // Figure 15.2: Product Details Page
+  // Figure 15.2: Elessi-Style 3-Column Single Product Page
   storefront_product: wrapWindow(
-    'https://omnifywp.com/storefront/omnistudio-pro-theme/',
-    'Product Details Page',
+    'https://omnifywp.com/storefront/omnify-heavyweight-hoodie/',
+    'Elessi-Style 3-Column Single Product Page',
     `
-      <div class="mockup-storefront">
-        <div class="mockup-split-2">
-          <div class="product-gallery-mock">
-            <div class="main-gallery-preview">
-              <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Omnify Heavyweight Hoodie" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+      <div class="mockup-storefront" style="padding:16px;">
+        <div style="display:grid; grid-template-columns: 1.1fr 1.3fr 0.9fr; gap:20px; align-items:start;">
+          <!-- Column 1: Vertical Gallery & Thumbnails -->
+          <div class="product-gallery-mock" style="display:flex; gap:12px;">
+            <div class="gallery-thumbs" style="display:flex; flex-direction:column; gap:8px; width:64px;">
+              <span class="thumb active" style="width:64px; height:64px; border:2px solid #0f766e; border-radius:6px; overflow:hidden;"><img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Black" style="width:100%;height:100%;object-fit:cover;"></span>
+              <span class="thumb" style="width:64px; height:64px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden;"><img src="../assets/storefront/images/product-digital-suite.jpg" alt="Preview 2" style="width:100%;height:100%;object-fit:cover;"></span>
+              <span class="thumb" style="width:64px; height:64px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden;"><img src="../assets/storefront/images/product-bundle-kit.jpg" alt="Preview 3" style="width:100%;height:100%;object-fit:cover;"></span>
             </div>
-            <div class="gallery-thumbs">
-              <span class="thumb active"><img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Black" style="width:100%;height:100%;object-fit:cover;"></span>
-              <span class="thumb"><img src="../assets/storefront/images/product-digital-suite.jpg" alt="Preview 2" style="width:100%;height:100%;object-fit:cover;"></span>
-              <span class="thumb"><img src="../assets/storefront/images/product-bundle-kit.jpg" alt="Preview 3" style="width:100%;height:100%;object-fit:cover;"></span>
+            <div class="main-gallery-preview" style="flex:1; height:320px; border-radius:10px; overflow:hidden; position:relative; background:#f1f5f9;">
+              <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Omnify Heavyweight Hoodie" style="width:100%;height:100%;object-fit:cover;">
+              <span style="position:absolute; top:10px; left:10px; background:#0f766e; color:#fff; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:4px; text-transform:uppercase;">Sale -20%</span>
             </div>
           </div>
 
+          <!-- Column 2: Product Core Details, Swatches & CTA -->
           <div class="product-meta-mock">
-            <span class="badge success" style="width:fit-content;display:inline-flex;align-items:center;gap:6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              In Stock • Ships in 24h
-            </span>
-            <h3 style="margin:10px 0 6px; font-size:1.35rem; color:#0f172a;">Omnify Heavyweight Hoodie</h3>
-            <div class="product-stars">5.0 / 5.0 Stars <span style="color:var(--text-dim);">(42 verified reviews) • 342 sold</span></div>
-            <div class="product-price-row" style="margin:12px 0;">
-              <span class="price-current" style="font-size:1.6rem; color:#0f172a;">$68.00</span>
-              <s class="price-old" style="font-size:1.1rem;">$85.00</s>
-              <span class="badge success">Save $17</span>
-            </div>
-            <div style="font-size:0.88rem; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
-              Engineered with 450 GSM French terry cotton, double-lined hood, and reinforced flatlock stitching for premium all-day comfort.
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span class="badge success" style="background:#f0fdfa; color:#0f766e; border:1px solid #99f6e4; font-size:0.75rem; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                In Stock &bull; Dispatches in 24h
+              </span>
+              <span style="font-size:0.75rem; color:var(--text-dim);">SKU: <strong>OMN-HD-BLK-M</strong></span>
             </div>
 
+            <h3 style="margin:4px 0 8px; font-size:1.35rem; font-weight:800; color:#0f172a; line-height:1.3;">Omnify Heavyweight French Terry Hoodie</h3>
+            
+            <div class="product-stars" style="display:flex; align-items:center; gap:6px; font-size:0.82rem; margin-bottom:12px;">
+              <span style="color:#d97706; font-weight:700;">&#9733; 5.0 / 5.0</span>
+              <span style="color:var(--text-dim);">(42 verified reviews) &bull; 342 sold</span>
+            </div>
+
+            <div class="product-price-row" style="display:flex; align-items:baseline; gap:10px; margin-bottom:14px;">
+              <span class="price-current" style="font-size:1.75rem; font-weight:800; color:#0f766e;">$68.00</span>
+              <s class="price-old" style="font-size:1.05rem; color:#94a3b8;">$85.00</s>
+              <span class="badge success" style="background:#ecfdf5; color:#0f766e; font-size:0.75rem; padding:2px 8px; border-radius:6px; font-weight:700;">Save $17.00</span>
+            </div>
+
+            <!-- Color Swatches -->
             <div style="margin-bottom:14px;">
-              <label style="font-size:0.8rem; font-weight:700; color:#334155;">Select Color:</label>
-              <div style="display:flex; gap:8px; margin-top:6px;">
-                <span class="mockup-pill active" style="font-weight:600;">Onyx Black</span>
-                <span class="mockup-pill">Heather Gray</span>
-                <span class="mockup-pill">Forest Green</span>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
+                <span style="font-weight:700; color:#334155;">Color: <strong style="color:#0f766e;">Onyx Black</strong></span>
+                <span style="color:var(--text-dim);">3 Options</span>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <span class="swatch-btn active" style="width:28px; height:28px; border-radius:50%; background:#1e293b; border:2px solid #fff; outline:2px solid #0f766e; cursor:pointer;" title="Onyx Black"></span>
+                <span class="swatch-btn" style="width:28px; height:28px; border-radius:50%; background:#64748b; border:2px solid #fff; outline:1px solid #cbd5e1; cursor:pointer;" title="Heather Gray"></span>
+                <span class="swatch-btn" style="width:28px; height:28px; border-radius:50%; background:#0f766e; border:2px solid #fff; outline:1px solid #cbd5e1; cursor:pointer;" title="Teal Green"></span>
               </div>
             </div>
 
+            <!-- Size Pills -->
             <div style="margin-bottom:18px;">
-              <label style="font-size:0.8rem; font-weight:700; color:#334155;">Select Size:</label>
-              <div style="display:flex; gap:8px; margin-top:6px;">
-                <span class="mockup-pill">S</span>
-                <span class="mockup-pill active" style="font-weight:600;">M</span>
-                <span class="mockup-pill">L</span>
-                <span class="mockup-pill">XL</span>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
+                <span style="font-weight:700; color:#334155;">Size: <strong style="color:#0f766e;">M</strong></span>
+                <a href="#" style="color:#0f766e; font-size:0.75rem; text-decoration:none;">Size Guide</a>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <span class="mockup-pill" style="padding:6px 14px; border:1px solid var(--border-subtle); border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">S</span>
+                <span class="mockup-pill active" style="padding:6px 14px; border:2px solid #0f766e; background:#f0fdfa; color:#0f766e; border-radius:6px; font-size:0.8rem; font-weight:700; cursor:pointer;">M</span>
+                <span class="mockup-pill" style="padding:6px 14px; border:1px solid var(--border-subtle); border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">L</span>
+                <span class="mockup-pill" style="padding:6px 14px; border:1px solid var(--border-subtle); border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">XL</span>
               </div>
             </div>
 
-            <div style="display:flex; gap:10px;">
-              <span class="btn-mockup btn-primary" style="flex:1; text-align:center;">Add to Cart</span>
-              <span class="btn-mockup btn-outline" style="flex:1; text-align:center;">Instant Checkout</span>
+            <!-- Quantity & Actions -->
+            <div style="display:flex; gap:10px; margin-bottom:14px;">
+              <div style="display:flex; align-items:center; border:1px solid var(--border-subtle); border-radius:8px; overflow:hidden; background:var(--bg-surface);">
+                <button type="button" style="padding:8px 12px; border:none; background:transparent; font-weight:700; cursor:pointer;">-</button>
+                <span style="padding:8px 12px; font-weight:700; font-size:0.9rem;">1</span>
+                <button type="button" style="padding:8px 12px; border:none; background:transparent; font-weight:700; cursor:pointer;">+</button>
+              </div>
+              <span class="btn-mockup btn-primary" style="flex:2; text-align:center; background:#0f766e; color:#fff; font-weight:700; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.9rem;">Add to Cart</span>
+              <span class="btn-mockup btn-outline" style="flex:2; text-align:center; border:2px solid #0f766e; color:#0f766e; font-weight:700; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.9rem;">Instant Buy Now</span>
+            </div>
+          </div>
+
+          <!-- Column 3: Elessi Trust Box & Order Bump Sidebar -->
+          <div class="product-sidebar-mock" style="background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:10px; padding:16px;">
+            <h5 style="margin:0 0 12px; font-size:0.88rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">Customer Guarantee</h5>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem; color:var(--text-main);">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <span><strong>Free Expedited Shipping</strong> over $50</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span><strong>30-Day Hassle-Free Returns</strong></span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span><strong>256-Bit Encrypted Checkout</strong></span>
+              </div>
+            </div>
+
+            <!-- VIP Add-On Bump Box -->
+            <div style="margin-top:16px; padding:12px; background:#fff; border:1px dashed #0f766e; border-radius:8px;">
+              <div style="display:flex; align-items:flex-start; gap:8px;">
+                <input type="checkbox" checked style="accent-color:#0f766e; margin-top:3px;" />
+                <div>
+                  <div style="font-weight:700; font-size:0.8rem; color:#0f172a;">Add Heavyweight Beanie +$15</div>
+                  <div style="font-size:0.72rem; color:var(--text-dim); margin-top:2px;">Special matching bundled pricing ($10 savings).</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Single Product Tabs -->
+        <div style="margin-top:20px; border-top:1px solid var(--border-subtle); padding-top:16px;">
+          <div style="display:flex; gap:12px; border-bottom:1px solid var(--border-subtle); padding-bottom:8px; font-size:0.85rem; font-weight:700;">
+            <span style="color:#0f766e; border-bottom:2px solid #0f766e; padding-bottom:6px; cursor:pointer;">Description</span>
+            <span style="color:var(--text-dim); cursor:pointer;">Technical Specifications</span>
+            <span style="color:var(--text-dim); cursor:pointer;">Customer Reviews (42)</span>
+            <span style="color:var(--text-dim); cursor:pointer;">Shipping &amp; Care</span>
+          </div>
+          <p style="margin-top:12px; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+            Engineered with 450 GSM French terry cotton, double-lined hood, and reinforced flatlock stitching. The Omnify Heavyweight Hoodie sets a new standard for luxury streetwear essentials, offering thermal regulation and shape retention across hundreds of wash cycles.
+          </p>
+        </div>
       </div>
     `,
-    'Figure 15.2: Product details layout featuring gallery zoom, variation swatches, and verified reviews.'
+    'Figure 15.2: Elessi-style 3-column product details layout with vertical gallery, variation swatches, trust badges, and tab panels.'
   ),
 
   // Figure 15.3: Shopping Cart Page
+  // Figure 15.3: Enhanced Shopping Cart Page with Urgency & Shipping Meter
   storefront_cart: wrapWindow(
     'https://omnifywp.com/cart/',
-    'Shopping Cart',
+    'Interactive Shopping Cart',
     `
-      <div class="mockup-storefront">
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem;">
-          <div style="display:flex; align-items:center; gap:8px; color:#0f172a; font-weight:600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18794E" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            <span>You've unlocked <strong>Free Expedited Shipping</strong>!</span>
+      <div class="mockup-storefront" style="padding:16px;">
+        <!-- Scarcity Countdown Banner -->
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem; color:#92400e;">
+          <div style="display:flex; align-items:center; gap:8px; font-weight:600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Items reserved! Special bundle discount held for:</span>
           </div>
-          <div style="width:120px; height:6px; background:#e2e8f0; border-radius:9999px; overflow:hidden;">
-            <div style="width:100%; height:100%; background:#18794E;"></div>
+          <span style="font-family:var(--font-mono); font-weight:800; background:#fef3c7; padding:2px 8px; border-radius:6px; color:#b45309;">14:48</span>
+        </div>
+
+        <!-- Free Shipping Progress Meter -->
+        <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem;">
+          <div style="display:flex; align-items:center; gap:8px; color:#0f766e; font-weight:700;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span>Congratulations! You've unlocked <strong>Free Expedited Shipping</strong>!</span>
+          </div>
+          <div style="width:140px; height:8px; background:#ccfbf1; border-radius:9999px; overflow:hidden;">
+            <div style="width:100%; height:100%; background:#0f766e; border-radius:9999px;"></div>
           </div>
         </div>
 
@@ -1428,77 +1614,111 @@ const mockups = {
               </div>
               <div class="table-row">
                 <div style="flex:3; display:flex; gap:10px; align-items:center;">
-                  <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Hoodie" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border-subtle);">
+                  <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Hoodie" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border-subtle);">
                   <div>
-                    <div style="font-weight:700;">Omnify Heavyweight Hoodie</div>
-                    <div style="font-size:0.75rem; color:var(--text-dim);">Size: M • Onyx Black</div>
+                    <div style="font-weight:700; color:#0f172a;">Omnify Heavyweight Hoodie</div>
+                    <div style="font-size:0.75rem; color:var(--text-dim);">Color: Onyx Black &bull; Size: M</div>
                   </div>
                 </div>
-                <div style="flex:1;">$68.00</div>
-                <div style="flex:1.2;"><span class="qty-stepper">− 1 +</span></div>
-                <div style="flex:1; text-align:right; font-weight:700;">$68.00</div>
+                <div style="flex:1; font-weight:600;">$68.00</div>
+                <div style="flex:1.2;"><span class="qty-stepper" style="border:1px solid var(--border-subtle); padding:4px 10px; border-radius:6px; font-weight:700; cursor:pointer;">- 1 +</span></div>
+                <div style="flex:1; text-align:right; font-weight:800; color:#0f766e;">$68.00</div>
               </div>
             </div>
 
             <div style="display:flex; gap:8px; margin-top:14px;">
-              <div class="mockup-input-text" style="flex:1;">SUMMER20</div>
-              <span class="btn-mockup btn-outline">Apply Coupon</span>
+              <div class="mockup-input-text" style="flex:1; font-weight:600; color:#0f766e;">SUMMER20</div>
+              <span class="btn-mockup btn-outline" style="border-color:#0f766e; color:#0f766e; font-weight:700;">Apply Coupon</span>
             </div>
           </div>
 
-          <div class="mockup-card-panel">
-            <h5 style="margin-top:0;">Order Summary</h5>
+          <div class="mockup-card-panel" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:10px; padding:18px;">
+            <h5 style="margin-top:0; font-size:1rem; font-weight:800; color:#0f172a;">Order Summary</h5>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
               <span>Subtotal:</span>
               <b>$68.00</b>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem; color:var(--brand-emerald);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem; color:#0f766e; font-weight:600;">
               <span>Coupon (SUMMER20):</span>
               <b>-$13.60</b>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
               <span>Shipping:</span>
-              <span style="color:var(--brand-emerald); font-weight:600;">Free</span>
+              <span style="color:#0f766e; font-weight:700;">Free</span>
             </div>
-            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:10px; margin-top:8px; font-size:1.15rem; font-weight:800; color:var(--brand-emerald);">
+            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:12px; margin-top:8px; font-size:1.2rem; font-weight:800; color:#0f766e;">
               <span>Total:</span>
               <span>$54.40</span>
             </div>
-            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:14px;">Proceed to Checkout →</span>
+            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:16px; background:#0f766e; color:#fff; font-weight:700; padding:12px; border-radius:8px; font-size:0.95rem;">Proceed to Checkout &rarr;</span>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.3: Interactive cart page with real-time shipping threshold meter, quantity controls, and coupon redemption.'
+    'Figure 15.3: Interactive cart page featuring real-time scarcity countdown timer, shipping threshold meter, and instant coupon calculation.'
   ),
 
-  // Figure 15.4: Conversion-Optimized Checkout
+  // Figure 15.4: Conversion-Optimized Checkout with Express Pay & 10+ Gateways
   storefront_checkout: wrapWindow(
     'https://omnifywp.com/checkout/',
-    'Secure Checkout',
+    'Conversion-Optimized Checkout',
     `
-      <div class="mockup-storefront">
+      <div class="mockup-storefront" style="padding:16px;">
+        <!-- Express Checkout Buttons -->
+        <div style="background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:10px; padding:14px; margin-bottom:16px; text-align:center;">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--text-dim); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">Express 1-Click Checkout</div>
+          <div style="display:flex; gap:10px; justify-content:center;">
+            <button type="button" style="background:#000; color:#fff; border:none; padding:10px 24px; border-radius:8px; font-weight:700; font-size:0.88rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+              Apple Pay
+            </button>
+            <button type="button" style="background:#fff; color:#3c4043; border:1px solid #dadce0; padding:10px 24px; border-radius:8px; font-weight:700; font-size:0.88rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+              Google Pay
+            </button>
+          </div>
+          <div style="position:relative; margin:16px 0 6px; text-align:center;">
+            <div style="height:1px; background:var(--border-subtle);"></div>
+            <span style="position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--bg-subtle); padding:0 12px; font-size:0.75rem; color:var(--text-dim); text-transform:uppercase;">Or pay with traditional methods</span>
+          </div>
+        </div>
+
         <div class="mockup-split-2">
           <div>
             <h4 style="margin-top:0; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
-              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#18794E; color:#fff; font-size:0.75rem;">1</span>
-              Contact Information
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#0f766e; color:#fff; font-size:0.75rem; font-weight:700;">1</span>
+              Contact &amp; Shipping Address
             </h4>
             <div class="mockup-field">
               <label>Email Address</label>
               <div class="mockup-input-text">sarah@cyberdyne.org</div>
             </div>
+            <div class="mockup-field">
+              <label>Shipping Destination</label>
+              <div class="mockup-input-text">742 Evergreen Terrace, Springfield, OR 97477</div>
+            </div>
 
             <h4 style="margin:20px 0 10px; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
-              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#18794E; color:#fff; font-size:0.75rem;">2</span>
-              Payment Details
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#0f766e; color:#fff; font-size:0.75rem; font-weight:700;">2</span>
+              Payment Method (10+ Gateways Integrated)
             </h4>
-            <div style="border:1px solid var(--border-accent); border-radius:8px; padding:14px; margin-bottom:12px; background:var(--bg-subtle);">
+            
+            <!-- Gateway Cards Selector -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+              <div style="border:2px solid #0f766e; background:#f0fdfa; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="payment_method" checked style="accent-color:#0f766e;" />
+                <span style="font-weight:700; font-size:0.85rem; color:#0f766e;">Credit Card (Stripe)</span>
+              </div>
+              <div style="border:1px solid var(--border-subtle); background:var(--bg-surface); border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="payment_method" style="accent-color:#0f766e;" />
+                <span style="font-weight:600; font-size:0.85rem;">PayPal Express</span>
+              </div>
+            </div>
+
+            <div style="border:1px solid #99f6e4; border-radius:8px; padding:14px; margin-bottom:12px; background:#f0fdfa;">
               <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <b style="font-size:0.9rem;">Credit or Debit Card</b>
-                <span style="font-size:0.75rem; color:#64748b; display:inline-flex; align-items:center; gap:4px;">
+                <b style="font-size:0.9rem; color:#0f766e;">Card Details (256-Bit SSL Encrypted)</b>
+                <span style="font-size:0.75rem; color:#0f766e; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  256-Bit TLS Encrypted
+                  PCI-DSS Level 1 Compliant
                 </span>
               </div>
               <div class="mockup-field">
@@ -1518,34 +1738,46 @@ const mockups = {
             </div>
           </div>
 
-          <div class="mockup-card-panel">
-            <h5 style="margin-top:0;">Order Summary</h5>
+          <div class="mockup-card-panel" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:10px; padding:18px;">
+            <h5 style="margin-top:0; font-size:1rem; font-weight:800; color:#0f172a;">Order Summary</h5>
             <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:6px;">
               <span>Omnify Heavyweight Hoodie (x1)</span>
               <b>$68.00</b>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.88rem; color:var(--brand-emerald); margin-bottom:6px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.88rem; color:#0f766e; margin-bottom:6px; font-weight:600;">
               <span>Discount (SUMMER20):</span>
               <b>-$13.60</b>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:6px;">
               <span>Shipping:</span>
-              <span style="color:var(--brand-emerald); font-weight:600;">Free</span>
+              <span style="color:#0f766e; font-weight:700;">Free Expedited</span>
             </div>
-            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:10px; font-size:1.15rem; font-weight:800; color:var(--brand-emerald); margin-top:8px;">
+
+            <!-- VIP Priority Order Bump -->
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px; margin:12px 0;">
+              <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                <input type="checkbox" checked style="accent-color:#0f766e; margin-top:2px;" />
+                <div>
+                  <div style="font-weight:700; font-size:0.8rem; color:#92400e;">VIP Priority Order Processing (+$4.99)</div>
+                  <div style="font-size:0.72rem; color:#b45309;">Jump to the front of warehouse fulfillment queue.</div>
+                </div>
+              </label>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-subtle); padding-top:12px; font-size:1.2rem; font-weight:800; color:#0f766e; margin-top:8px;">
               <span>Order Total:</span>
-              <span>$54.40</span>
+              <span>$59.39</span>
             </div>
-            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:16px; font-size:0.95rem; padding:12px; font-weight:600;">Complete Order ($54.40)</span>
-            <div style="text-align:center; font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:4px;">
+            <span class="btn-mockup btn-primary" style="width:100%; text-align:center; margin-top:16px; font-size:0.95rem; padding:12px; font-weight:700; background:#0f766e; color:#fff; border-radius:8px;">Complete Order ($59.39)</span>
+            <div style="text-align:center; font-size:0.75rem; color:#64748b; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:4px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Guaranteed Safe & Secure Checkout
+              Guaranteed 256-Bit SSL Safe &amp; Secure Checkout
             </div>
           </div>
         </div>
       </div>
     `,
-    'Figure 15.4: Conversion-optimized single page checkout with inline validation and security trust signals.'
+    'Figure 15.4: Conversion-optimized checkout with Express 1-Click Pay, 10+ payment gateways, and VIP priority order bump.'
   ),
 
   // Figure 15.5: Customer Portal & Download Locker
@@ -1593,7 +1825,7 @@ const mockups = {
         <!-- Live Tab Navigation Bar -->
         <div class="mockup-tabs-bar" style="margin-bottom:16px;">
           <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Orders <span class="m-pill">4</span></span>
-          <span class="m-tab active" style="background:#059669;color:#fff;border-color:#059669;border-radius:9999px;padding:6px 16px;">Digital Downloads <span class="m-pill" style="background:rgba(255,255,255,0.25);color:#fff;">2</span></span>
+          <span class="m-tab active" style="background:#0f766e;color:#fff;border-color:#0f766e;border-radius:9999px;padding:6px 16px;">Digital Downloads <span class="m-pill" style="background:rgba(255,255,255,0.25);color:#fff;">2</span></span>
           <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Saved Addresses</span>
           <span class="m-tab" style="border-radius:9999px;padding:6px 16px;">Account Settings</span>
         </div>
@@ -1608,21 +1840,21 @@ const mockups = {
           </div>
           <div class="table-row" style="padding:14px 18px;">
             <div style="flex:2.5;">
-              <div style="font-weight:700;color:#0f172a;">omnistudio-pro-v1.4.1.zip</div>
-              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">8.4 MB &bull; SHA-256 HMAC Protected &bull; Version 1.4.1</div>
+              <div style="font-weight:700;color:#0f172a;">omnistudio-pro-v1.4.2.zip</div>
+              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">8.4 MB &bull; SHA-256 HMAC Protected &bull; Version 1.4.2</div>
             </div>
-            <div style="flex:1.2;" class="font-mono" style="color:#059669;font-weight:600;">#OMN-1042</div>
+            <div style="flex:1.2;" class="font-mono" style="color:#0f766e;font-weight:600;">#OMN-1042</div>
             <div style="flex:1.5;"><span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">3 Remaining (2/5 used)</span></div>
-            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#059669;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
+            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#0f766e;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
           </div>
           <div class="table-row" style="padding:14px 18px;">
             <div style="flex:2.5;">
               <div style="font-weight:700;color:#0f172a;">quickstart-and-licensing.pdf</div>
               <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">1.2 MB &bull; Comprehensive Storefront &amp; API Guide</div>
             </div>
-            <div style="flex:1.2;" class="font-mono" style="color:#059669;font-weight:600;">#OMN-1042</div>
+            <div style="flex:1.2;" class="font-mono" style="color:#0f766e;font-weight:600;">#OMN-1042</div>
             <div style="flex:1.5;"><span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">Unlimited Access</span></div>
-            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#059669;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
+            <div style="flex:1.2; text-align:right;"><span class="btn-mockup btn-primary" style="background:#0f766e;padding:6px 14px; font-size:0.78rem; border-radius:8px;font-weight:600;">Download</span></div>
           </div>
         </div>
       </div>

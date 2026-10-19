@@ -1,50 +1,63 @@
 
-			// Multistep Wizard Logic
-			(function() {
-				const initialStep = Math.max(1, Math.min(4, parseInt(new URLSearchParams(window.location.search).get('wizard_step') || '1', 10) || 1));
-				let currentStep = initialStep;
-				const totalSteps = 4;
+			function omnifyOnReady(fn) {
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', fn);
+	} else {
+		fn();
+	}
+}
 
-				const panels = document.querySelectorAll('.omnify-wizard-panel');
-				const steps = document.querySelectorAll('.omnify-wizard-step');
-				const prevBtn = document.getElementById('wizard-prev');
-				const nextBtn = document.getElementById('wizard-next');
-				const saveBtn = document.getElementById('wizard-save');
-				const progressBars = document.querySelectorAll('#omnify-wizard-progress, #omnify-wizard-progress-nav');
-				const stepText = document.getElementById('wizard-step-text');
+// Multistep Wizard Logic
+(function() {
+	omnifyOnReady(function() {
+		const panels = document.querySelectorAll('.omnify-wizard-panel');
+		const steps = document.querySelectorAll('.omnify-wizard-step');
+		if (!panels.length && !steps.length) {
+			return;
+		}
 
-				function updateWizard() {
-					panels.forEach(p => p.classList.remove('active'));
-					const activePanel = document.querySelector('.omnify-wizard-panel[data-panel="' + currentStep + '"]');
-					if (activePanel) activePanel.classList.add('active');
+		const initialStep = Math.max(1, Math.min(4, parseInt(new URLSearchParams(window.location.search).get('wizard_step') || '1', 10) || 1));
+		let currentStep = initialStep;
+		const totalSteps = 4;
 
-					steps.forEach((s, idx) => {
-						s.classList.remove('active', 'completed');
-						const stepNum = idx + 1;
-						if (stepNum < currentStep) s.classList.add('completed');
-						if (stepNum === currentStep) s.classList.add('active');
-					});
+		const prevBtn = document.getElementById('wizard-prev');
+		const nextBtn = document.getElementById('wizard-next');
+		const saveBtn = document.getElementById('wizard-save');
+		const progressBars = document.querySelectorAll('#omnify-wizard-progress, #omnify-wizard-progress-nav');
+		const stepText = document.getElementById('wizard-step-text');
 
-					const pct = Math.round((currentStep / totalSteps) * 100);
-					progressBars.forEach((progress) => {
-						progress.style.width = pct + '%';
-					});
-					if (stepText) stepText.textContent = currentStep + ' / ' + totalSteps;
+		function updateWizard() {
+			panels.forEach(p => p.classList.remove('active'));
+			const activePanel = document.querySelector('.omnify-wizard-panel[data-panel="' + currentStep + '"]');
+			if (activePanel) activePanel.classList.add('active');
 
-					prevBtn.disabled = currentStep === 1;
-					if (currentStep === totalSteps) {
-						nextBtn.style.setProperty('display', 'none', 'important');
-						saveBtn.style.setProperty('display', 'inline-flex', 'important');
-					} else {
-						nextBtn.style.setProperty('display', 'inline-flex', 'important');
-						saveBtn.style.setProperty('display', 'none', 'important');
-					}
-				}
+			steps.forEach((s, idx) => {
+				s.classList.remove('active', 'completed');
+				const stepNum = idx + 1;
+				if (stepNum < currentStep) s.classList.add('completed');
+				if (stepNum === currentStep) s.classList.add('active');
+			});
+
+			const pct = Math.round((currentStep / totalSteps) * 100);
+			progressBars.forEach((progress) => {
+				progress.style.width = pct + '%';
+			});
+			if (stepText) stepText.textContent = currentStep + ' / ' + totalSteps;
+
+			if (prevBtn) prevBtn.disabled = currentStep === 1;
+			if (currentStep === totalSteps) {
+				if (nextBtn) nextBtn.style.setProperty('display', 'none', 'important');
+				if (saveBtn) saveBtn.style.setProperty('display', 'inline-flex', 'important');
+			} else {
+				if (nextBtn) nextBtn.style.setProperty('display', 'inline-flex', 'important');
+				if (saveBtn) saveBtn.style.setProperty('display', 'none', 'important');
+			}
+		}
 
 				function initStepEditors(step) {
 					if (typeof tinymce === 'undefined') return;
 
-					if (step === 3) {
+					if (step === 2) {
 						document.querySelectorAll('.omnify-var-description-textarea').forEach(function(ta) {
 							if (!ta.id) {
 								ta.id = 'var-desc-' + Math.random().toString(36).substr(2, 9);
@@ -67,12 +80,35 @@
 						});
 					}
 
+					if (step === 3) {
+						const step3Textareas = [
+							'#trust_badge_text_simple'
+						];
+						step3Textareas.forEach(function(sel) {
+							const ta = document.querySelector(sel);
+							if (ta && !tinymce.get(ta.id)) {
+								tinymce.init({
+									selector: sel,
+									menubar: false,
+									branding: false,
+									plugins: 'lists link',
+									toolbar: 'bold italic underline | bullist numlist | link',
+									height: 100,
+									setup: function(editor) {
+										editor.on('change keyup', function() {
+											editor.save();
+										});
+									}
+								});
+							}
+						});
+					}
+
 					if (step === 4) {
 						const step4Textareas = [
 							'#refund_policy_text',
 							'#delivery_info',
-							'#return_info',
-							'#trust_badge_text_simple'
+							'#return_info'
 						];
 						step4Textareas.forEach(function(sel) {
 							const ta = document.querySelector(sel);
@@ -83,7 +119,7 @@
 									branding: false,
 									plugins: 'lists link',
 									toolbar: 'bold italic underline | bullist numlist | link',
-									height: 120,
+									height: 110,
 									setup: function(editor) {
 										editor.on('change keyup', function() {
 											editor.save();
@@ -217,11 +253,10 @@
 					// ensure initial
 					setTimeout(toggleProductFields, 50);
 				}
-			})();
-			
+			});
+		})();
 
-
-			document.addEventListener('DOMContentLoaded', function() {
+		omnifyOnReady(function() {
 				const typeSelect = document.getElementById('type');
 				const variationKindInput = document.getElementById('variation_product_kind');
 				const productKindInputs = document.querySelectorAll('input[name="product_kind"]');
@@ -232,6 +267,7 @@
 				const dimensionsRow = document.getElementById('omnify-dimensions-row');
 				const manageStock = document.getElementById('manage_stock');
 				const stockQtyGroup = document.getElementById('omnify-stock-qty-group');
+				const stockStatusGroup = document.getElementById('omnify-stock-status-group');
 				const preorderEnabled = document.getElementById('preorder_enabled');
 				const preorderFields = document.getElementById('omnify-preorder-fields');
 				const contentPanel = document.getElementById('omnify-content-panel');
@@ -260,19 +296,7 @@
 				}
 
 				function moveContentCardsIntoContentStep() {
-					if (!contentPanel) return;
-					const taxonomyRow = document.getElementById('omnify-taxonomy-row');
-					contentCards.forEach(function(card) {
-						if (card.id === 'omnify-product-categories-card' || card.id === 'omnify-product-brands-card' || card.id === 'omnify-product-tags-card') {
-							if (taxonomyRow && card.parentElement !== taxonomyRow) {
-								taxonomyRow.appendChild(card);
-							}
-						} else {
-							if (card.parentElement !== contentPanel) {
-								contentPanel.appendChild(card);
-							}
-						}
-					});
+					// Cards are now statically rendered in their dedicated panels in the template markup.
 				}
 
 				function toggleSwatchSettings() {
@@ -320,6 +344,10 @@
 					}
 					if (inventoryCard) inventoryCard.style.display = isPhysical ? 'block' : 'none';
 					if (dimensionsRow) dimensionsRow.style.display = isPhysical ? 'block' : 'none';
+					const inventoryLogsCard = document.getElementById('omnify-inventory-logs-card');
+					if (inventoryLogsCard) {
+						inventoryLogsCard.style.display = isPhysical ? 'block' : 'none';
+					}
 					if (variationsCard) variationsCard.style.display = updatedIsVariable ? 'block' : 'none';
 
 					// Storefront Trust Message Sync & Toggle
@@ -333,7 +361,6 @@
 					if (simpleTrustTitle) simpleTrustTitle.disabled = false;
 					if (simpleTrustText) simpleTrustText.disabled = false;
 
-					moveContentCardsIntoContentStep();
 					toggleSwatchSettings();
 				}
 
@@ -349,10 +376,15 @@
 				// Also re-apply when navigating to step 4 in wizard
 				const origUpdate = window.OmnifyWizard && window.OmnifyWizard.updateWizard || null;
 
-				if (manageStock && stockQtyGroup) {
-					manageStock.addEventListener('change', function() {
-						stockQtyGroup.style.display = manageStock.checked ? 'block' : 'none';
-					});
+				function updateStockTrackingFields() {
+					if (!manageStock) return;
+					if (stockQtyGroup) stockQtyGroup.style.display = manageStock.checked ? 'grid' : 'none';
+					if (stockStatusGroup) stockStatusGroup.style.display = manageStock.checked ? 'none' : 'block';
+				}
+
+				if (manageStock) {
+					manageStock.addEventListener('change', updateStockTrackingFields);
+					updateStockTrackingFields();
 				}
 				if (preorderEnabled && preorderFields) {
 					preorderEnabled.addEventListener('change', function() {
@@ -893,62 +925,71 @@
 			
 
 
-document.addEventListener('DOMContentLoaded', function() {
+omnifyOnReady(function() {
+	// ── Quick Edit Modal ──
 	const modal = document.getElementById('omnify-quick-edit-modal');
-	const form = document.getElementById('omnify-quick-edit-form');
-	const closeBtn = modal.querySelector('.omnify-modal-close');
-	const cancelBtn = document.getElementById('qe-cancel');
+	if (modal) {
+		const form = document.getElementById('omnify-quick-edit-form');
+		const closeBtn = modal.querySelector('.omnify-modal-close');
+		const cancelBtn = document.getElementById('qe-cancel');
 
-	document.querySelectorAll('.omnify-quick-edit').forEach(btn => {
-		btn.addEventListener('click', function(e) {
-			e.preventDefault();
-			const id = this.dataset.id;
-			document.getElementById('qe-id').value = id;
-			document.getElementById('qe-name').value = this.dataset.name || '';
-			document.getElementById('qe-price').value = this.dataset.price || '';
-			document.getElementById('qe-sale-price').value = this.dataset['sale-price'] || '';
-			document.getElementById('qe-status').value = this.dataset.status || 'draft';
-			document.getElementById('qe-sku').value = this.dataset.sku || '';
-			modal.style.display = 'block';
-		});
-	});
+		document.querySelectorAll('.omnify-quick-edit').forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.preventDefault();
+				const id = this.dataset.id;
+				const qeId = document.getElementById('qe-id');
+				const qeName = document.getElementById('qe-name');
+				const qePrice = document.getElementById('qe-price');
+				const qeSalePrice = document.getElementById('qe-sale-price');
+				const qeStatus = document.getElementById('qe-status');
+				const qeSku = document.getElementById('qe-sku');
 
-	function closeModal() {
-		modal.style.display = 'none';
-	}
-
-	closeBtn.addEventListener('click', closeModal);
-	cancelBtn.addEventListener('click', closeModal);
-	window.addEventListener('click', function(e) {
-		if (e.target === modal) closeModal();
-	});
-
-	// AJAX submit for quick edit
-	if (form) {
-		form.addEventListener('submit', function(e) {
-			e.preventDefault();
-			const formData = new FormData(form);
-
-			const actionUrl = form.getAttribute('action') || ((window.ajaxurl || '').replace('admin-ajax.php', 'admin-post.php'));
-
-			fetch(actionUrl, {
-				method: 'POST',
-				body: formData,
-				credentials: 'same-origin'
-			})
-			.then(response => {
-				if (response.redirected) {
-					closeModal();
-					window.location.href = response.url;
-				} else {
-					closeModal();
-					location.reload();
-				}
-			})
-			.catch(() => {
-				form.submit(); // fallback
+				if (qeId) qeId.value = id;
+				if (qeName) qeName.value = this.dataset.name || '';
+				if (qePrice) qePrice.value = this.dataset.price || '';
+				if (qeSalePrice) qeSalePrice.value = this.dataset['sale-price'] || '';
+				if (qeStatus) qeStatus.value = this.dataset.status || 'draft';
+				if (qeSku) qeSku.value = this.dataset.sku || '';
+				modal.style.display = 'block';
 			});
 		});
+
+		function closeModal() {
+			modal.style.display = 'none';
+		}
+
+		if (closeBtn) closeBtn.addEventListener('click', closeModal);
+		if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+		window.addEventListener('click', function(e) {
+			if (e.target === modal) closeModal();
+		});
+
+		// AJAX submit for quick edit
+		if (form) {
+			form.addEventListener('submit', function(e) {
+				e.preventDefault();
+				const formData = new FormData(form);
+				const actionUrl = form.getAttribute('action') || ((window.ajaxurl || '').replace('admin-ajax.php', 'admin-post.php'));
+
+				fetch(actionUrl, {
+					method: 'POST',
+					body: formData,
+					credentials: 'same-origin'
+				})
+				.then(response => {
+					if (response.redirected) {
+						closeModal();
+						window.location.href = response.url;
+					} else {
+						closeModal();
+						location.reload();
+					}
+				})
+				.catch(() => {
+					form.submit(); // fallback
+				});
+			});
+		}
 	}
 
 	// Bulk select all + count for modern toolbar
@@ -981,5 +1022,427 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 		items.forEach(i => i.addEventListener('change', updateCount));
 		updateCount();
+	}
+
+	// ── Real-time Price Savings Calculation ──
+	function updatePriceSavings() {
+		const priceInput = document.getElementById('price');
+		const salePriceInput = document.getElementById('sale_price');
+		const badgeWrap = document.getElementById('omnify-pricing-savings-badge');
+		if (!priceInput || !salePriceInput || !badgeWrap) return;
+
+		const regular = parseFloat(priceInput.value) || 0;
+		const sale = parseFloat(salePriceInput.value) || 0;
+		const textSpan = badgeWrap.querySelector('.js-savings-text');
+
+		if (regular > 0 && sale > 0 && sale < regular) {
+			const pct = Math.round(((regular - sale) / regular) * 100);
+			const diff = (regular - sale).toFixed(2);
+			if (textSpan) {
+				textSpan.textContent = (window.omnifyProductL10n?.savingsText || 'Discount') + ': ' + pct + '% off (Customer saves $' + diff + ')';
+			}
+			badgeWrap.style.display = 'inline-flex';
+			badgeWrap.style.alignItems = 'center';
+			badgeWrap.style.gap = '6px';
+		} else {
+			badgeWrap.style.display = 'none';
+		}
+	}
+
+	const priceEl = document.getElementById('price');
+	const salePriceEl = document.getElementById('sale_price');
+	if (priceEl) priceEl.addEventListener('input', updatePriceSavings);
+	if (salePriceEl) salePriceEl.addEventListener('input', updatePriceSavings);
+	updatePriceSavings();
+
+	// ── Real-time Launch Card Sync (Step 4) ──
+	function updateLaunchCard() {
+		const nameInput = document.getElementById('name');
+		const launchTitle = document.getElementById('omnify-launch-title-preview');
+		if (launchTitle) {
+			launchTitle.textContent = (nameInput && nameInput.value.trim()) || (window.omnifyProductL10n?.untitledProduct || 'Untitled Product');
+		}
+
+		const thumbImg = document.querySelector('#omnify-thumbnail-preview img');
+		const launchImg = document.getElementById('omnify-launch-thumb-img');
+		const launchPlaceholder = document.getElementById('omnify-launch-thumb-placeholder');
+		if (launchImg && launchPlaceholder) {
+			if (thumbImg && thumbImg.src) {
+				launchImg.src = thumbImg.src;
+				launchImg.style.display = '';
+				launchPlaceholder.style.display = 'none';
+			} else {
+				launchImg.style.display = 'none';
+				launchPlaceholder.style.display = '';
+			}
+		}
+
+		const launchPrice = document.getElementById('omnify-launch-price-preview');
+		if (launchPrice && priceEl) {
+			const reg = parseFloat(priceEl.value) || 0;
+			const sale = parseFloat(salePriceEl?.value) || 0;
+			const symbol = (window.omnifyProductL10n?.currencySymbol || '$');
+			if (sale > 0 && sale < reg) {
+				launchPrice.innerHTML = '<span style="text-decoration:line-through; color:var(--omnify-gray-400); font-weight:normal; margin-right:4px;">' + symbol + reg.toFixed(2) + '</span> ' + symbol + sale.toFixed(2);
+			} else {
+				launchPrice.textContent = symbol + reg.toFixed(2);
+			}
+		}
+
+		const kindChecked = document.querySelector('input[name="product_kind"]:checked');
+		const launchKind = document.getElementById('omnify-launch-kind-badge');
+		if (launchKind && kindChecked) {
+			launchKind.textContent = kindChecked.value;
+		}
+
+		const structChecked = document.querySelector('input[name="product_structure"]:checked');
+		const launchStruct = document.getElementById('omnify-launch-structure-badge');
+		if (launchStruct && structChecked) {
+			launchStruct.textContent = structChecked.value;
+		}
+	}
+
+	const launchNameInput = document.getElementById('name');
+	if (launchNameInput) launchNameInput.addEventListener('input', updateLaunchCard);
+	const stepItems = document.querySelectorAll('.omnify-wizard-step');
+	stepItems.forEach(s => s.addEventListener('click', updateLaunchCard));
+	const nextButton = document.getElementById('wizard-next');
+	if (nextButton) nextButton.addEventListener('click', updateLaunchCard);
+	updateLaunchCard();
+
+	// ── Storefront Product Preview Modal Controller ──
+	const previewModal = document.getElementById('omnify-product-preview-modal');
+	if (previewModal) {
+		const previewFrame = document.getElementById('omnify-preview-viewport-frame');
+		const closeButtons = previewModal.querySelectorAll('.js-omnify-preview-close');
+		const deviceButtons = previewModal.querySelectorAll('.omnify-preview-device-btn');
+		const externalLink = previewModal.querySelector('.js-omnify-preview-external-link');
+
+		function getFieldValue(id) {
+			const el = document.getElementById(id);
+			return el ? el.value.trim() : '';
+		}
+
+		function getEditorHtml(id) {
+			if (typeof tinymce !== 'undefined' && tinymce.get(id)) {
+				return tinymce.get(id).getContent();
+			}
+			const el = document.getElementById(id);
+			return el ? el.value : '';
+		}
+
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text;
+			return div.innerHTML;
+		}
+
+		function syncPreviewModalData(triggerBtn) {
+			// External URL from trigger button data attribute if available
+			if (triggerBtn && triggerBtn.getAttribute('data-preview-url') && externalLink) {
+				externalLink.href = triggerBtn.getAttribute('data-preview-url');
+			}
+
+			const nameInput = document.getElementById('name');
+			const priceInput = document.getElementById('price');
+			const salePriceInput = document.getElementById('sale_price');
+			const slugInput = document.getElementById('slug');
+			const skuInput = document.getElementById('sku');
+			const stockStatusInput = document.getElementById('stock_status');
+
+			// Only sync from form inputs if we are in editor mode (nameInput exists in DOM)
+			if (nameInput) {
+				const name = nameInput.value.trim() || (window.omnifyProductL10n?.untitledProduct || 'Product Title');
+				const slug = slugInput ? slugInput.value.trim() : '';
+				const price = priceInput ? (parseFloat(priceInput.value) || 0) : 0;
+				const salePrice = salePriceInput ? (parseFloat(salePriceInput.value) || 0) : 0;
+				const sku = skuInput ? (skuInput.value.trim() || 'OMNI-001') : 'OMNI-001';
+				const stockStatus = stockStatusInput ? (stockStatusInput.value || 'instock') : 'instock';
+				const shortDesc = getEditorHtml('short_description');
+				const fullDesc = getEditorHtml('description');
+				const trustTitle = getFieldValue('trust_badge_title_simple') || (window.omnifyProductL10n?.defaultTrustTitle || 'Secure Delivery');
+				const trustText = getFieldValue('trust_badge_text_simple') || (window.omnifyProductL10n?.defaultTrustText || 'Guaranteed safe delivery.');
+				const symbol = (window.omnifyProductL10n?.currencySymbol || '$');
+
+				const kindChecked = document.querySelector('input[name="product_kind"]:checked');
+				const kind = kindChecked ? kindChecked.value : 'digital';
+
+				// Update Titles
+				const titleEl = document.getElementById('js-preview-title');
+				const titleCrumb = document.querySelector('.js-preview-title-crumb');
+				if (titleEl) titleEl.textContent = name;
+				if (titleCrumb) titleCrumb.textContent = name;
+
+				// Update Category crumb
+				const catInput = document.getElementById('categories');
+				const catCrumb = document.querySelector('.js-preview-cat-crumb');
+				if (catCrumb && catInput) {
+					const firstCat = catInput.value.split(',')[0].trim();
+					catCrumb.textContent = firstCat || 'Products';
+				}
+
+				// Update Brand Tag
+				const brandsInput = document.getElementById('brands');
+				const brandEl = document.getElementById('js-preview-brand');
+				const brandWrap = document.getElementById('js-preview-brand-wrap');
+				if (brandEl) {
+					const firstBrand = brandsInput ? brandsInput.value.split(',')[0].trim() : '';
+					if (firstBrand) {
+						brandEl.textContent = firstBrand;
+						if (brandWrap) brandWrap.style.display = 'block';
+					} else {
+						if (brandWrap) brandWrap.style.display = 'none';
+					}
+				}
+
+				// Update Live Status Pill with Pulse Dot (Storefront style)
+				const statusPill = document.getElementById('js-preview-status-pill');
+				const statusText = document.getElementById('js-preview-status-text');
+				if (statusPill && statusText) {
+					if (stockStatus === 'outofstock') {
+						statusPill.className = 'omnify-pdp-status-pill is-outofstock';
+						statusText.textContent = 'Out of Stock';
+					} else if (stockStatus === 'onbackorder') {
+						statusPill.className = 'omnify-pdp-status-pill is-backorder';
+						statusText.textContent = 'On Backorder • Ships when available';
+					} else if (kind === 'digital') {
+						statusPill.className = 'omnify-pdp-status-pill is-digital';
+						statusText.textContent = 'Instant Download • 48-Hour Expiring Link';
+					} else {
+						statusPill.className = 'omnify-pdp-status-pill is-physical';
+						statusText.textContent = 'In Stock • Ships Worldwide';
+					}
+				}
+
+				// Update Pricing
+				const previewPriceEl = document.getElementById('js-preview-price');
+				const regPriceEl = document.getElementById('js-preview-regular-price');
+				const discountTag = document.getElementById('js-preview-discount-tag');
+
+				if (previewPriceEl) {
+					if (salePrice > 0 && salePrice < price) {
+						previewPriceEl.textContent = symbol + salePrice.toFixed(2);
+						if (regPriceEl) {
+							regPriceEl.textContent = symbol + price.toFixed(2);
+							regPriceEl.style.display = 'inline';
+						}
+						if (discountTag) {
+							const pct = Math.round(((price - salePrice) / price) * 100);
+							discountTag.textContent = '-' + pct + '%';
+							discountTag.style.display = 'inline-block';
+						}
+					} else {
+						previewPriceEl.textContent = symbol + price.toFixed(2);
+						if (regPriceEl) regPriceEl.style.display = 'none';
+						if (discountTag) discountTag.style.display = 'none';
+					}
+				}
+
+				// Update SKU
+				const skuEl = document.getElementById('js-preview-sku');
+				if (skuEl) skuEl.textContent = 'SKU: ' + sku;
+
+				// Update Short Description
+				const shortDescEl = document.getElementById('js-preview-short-desc');
+				if (shortDescEl) {
+					shortDescEl.innerHTML = shortDesc ? shortDesc : '<p style="color:var(--omnify-gray-400); font-style:italic;">No short description provided.</p>';
+				}
+
+				// Update Full Description
+				const fullDescEl = document.getElementById('js-preview-full-desc');
+				if (fullDescEl) {
+					fullDescEl.innerHTML = fullDesc ? fullDesc : '<p style="color:var(--omnify-gray-400); font-style:italic;">No description provided yet.</p>';
+				}
+
+				// Update Main Image & Gallery
+				const mainImg = document.getElementById('js-preview-main-img');
+				const mainPlaceholder = document.getElementById('js-preview-main-img-placeholder');
+				const thumbSource = document.querySelector('#omnify-thumbnail-preview img');
+				if (mainImg && mainPlaceholder) {
+					if (thumbSource && thumbSource.src) {
+						mainImg.src = thumbSource.src;
+						mainImg.style.display = 'block';
+						mainPlaceholder.style.display = 'none';
+					} else {
+						mainImg.style.display = 'none';
+						mainPlaceholder.style.display = 'flex';
+					}
+				}
+
+				// Gallery Thumbnails
+				const thumbRow = document.getElementById('js-preview-thumb-row');
+				if (thumbRow) {
+					thumbRow.innerHTML = '';
+					if (thumbSource && thumbSource.src) {
+						const fThumb = document.createElement('img');
+						fThumb.src = thumbSource.src;
+						fThumb.className = 'omnify-store-preview__thumb is-active';
+						fThumb.addEventListener('click', function() {
+							if (mainImg) { mainImg.src = fThumb.src; mainImg.style.display = 'block'; }
+							thumbRow.querySelectorAll('img').forEach(im => im.classList.remove('is-active'));
+							fThumb.classList.add('is-active');
+						});
+						thumbRow.appendChild(fThumb);
+					}
+					document.querySelectorAll('#omnify-gallery-preview-grid img').forEach(function(gImg) {
+						const gThumb = document.createElement('img');
+						gThumb.src = gImg.src;
+						gThumb.className = 'omnify-store-preview__thumb';
+						gThumb.addEventListener('click', function() {
+							if (mainImg) { mainImg.src = gThumb.src; mainImg.style.display = 'block'; }
+							thumbRow.querySelectorAll('img').forEach(im => im.classList.remove('is-active'));
+							gThumb.classList.add('is-active');
+						});
+						thumbRow.appendChild(gThumb);
+					});
+				}
+
+				// Update Trust Badge
+				const trustTitleEl = document.getElementById('js-preview-trust-title');
+				const trustTextEl = document.getElementById('js-preview-trust-text');
+				if (trustTitleEl) trustTitleEl.textContent = trustTitle;
+				if (trustTextEl) trustTextEl.textContent = trustText;
+
+				// Update Specifications
+				const specsTable = document.getElementById('js-preview-specs-table');
+				const specsBox = document.getElementById('js-preview-specs-box');
+				if (specsTable && specsBox) {
+					const specRows = document.querySelectorAll('#omnify-specs-container .omnify-spec-row');
+					const tbody = specsTable.querySelector('tbody') || specsTable;
+					tbody.innerHTML = '';
+					let validCount = 0;
+					specRows.forEach(function(row) {
+						const inputs = row.querySelectorAll('input[type="text"]');
+						const k = inputs[0] ? inputs[0].value.trim() : '';
+						const v = inputs[1] ? inputs[1].value.trim() : '';
+						if (k && v) {
+							validCount++;
+							const tr = document.createElement('tr');
+							tr.innerHTML = '<th style="text-align:left; padding:6px 10px; font-weight:600; color:var(--omnify-gray-700); border-bottom:1px solid #edf2f7; width:40%;">' + escapeHtml(k) + '</th><td style="padding:6px 10px; color:var(--omnify-gray-800); border-bottom:1px solid #edf2f7;">' + escapeHtml(v) + '</td>';
+							tbody.appendChild(tr);
+						}
+					});
+					const specsTabBtn = document.getElementById('js-preview-tab-specs-btn');
+					if (specsTabBtn) specsTabBtn.style.display = validCount > 0 ? '' : 'none';
+					if (specsBox) {
+						const specsTabActive = specsTabBtn && specsTabBtn.classList.contains('active');
+						specsBox.style.display = (validCount > 0 && specsTabActive) ? 'block' : 'none';
+					}
+				}
+
+				// Update Policies Tab Content
+				const policiesPane = document.getElementById('js-preview-policies-desc');
+				if (policiesPane) {
+					const refundPolicy = getEditorHtml('refund_policy_text') || getFieldValue('refund_policy_text');
+					const deliveryInfo = getEditorHtml('delivery_info') || getFieldValue('delivery_info');
+					const returnInfo = getEditorHtml('return_info') || getFieldValue('return_info');
+
+					let policyHtml = '';
+					if (deliveryInfo) {
+						policyHtml += '<div style="margin-bottom:16px;"><h4 style="margin:0 0 6px 0; font-size:14px; font-weight:700;">Shipping & Delivery</h4><div>' + deliveryInfo + '</div></div>';
+					}
+					if (refundPolicy) {
+						policyHtml += '<div style="margin-bottom:16px;"><h4 style="margin:0 0 6px 0; font-size:14px; font-weight:700;">Refund Policy</h4><div>' + refundPolicy + '</div></div>';
+					}
+					if (returnInfo) {
+						policyHtml += '<div style="margin-bottom:16px;"><h4 style="margin:0 0 6px 0; font-size:14px; font-weight:700;">Returns</h4><div>' + returnInfo + '</div></div>';
+					}
+					if (!policyHtml) {
+						policyHtml = '<p style="color:var(--omnify-gray-400); font-style:italic;">Standard store return and delivery policies apply to this product.</p>';
+					}
+					policiesPane.innerHTML = policyHtml;
+				}
+
+				// Update External Link dynamically from slug
+				if (externalLink && slug) {
+					const currentBase = (externalLink.getAttribute('data-base-url') || externalLink.getAttribute('href') || '').split('?')[0];
+					if (currentBase) {
+						if (!externalLink.getAttribute('data-base-url')) {
+							externalLink.setAttribute('data-base-url', currentBase);
+						}
+						externalLink.href = currentBase + (currentBase.includes('?') ? '&' : '?') + 'omnify_product=' + encodeURIComponent(slug);
+					}
+				}
+			}
+		}
+
+		function openPreviewModal(triggerBtn) {
+			syncPreviewModalData(triggerBtn);
+			previewModal.removeAttribute('hidden');
+			previewModal.style.display = 'flex';
+			previewModal.classList.add('is-open');
+			document.body.classList.add('omnify-modal-open');
+		}
+
+		function closePreviewModal() {
+			previewModal.classList.remove('is-open');
+			previewModal.setAttribute('hidden', '');
+			previewModal.style.display = 'none';
+			document.body.classList.remove('omnify-modal-open');
+		}
+
+		// Delegated click handler for preview buttons across the page
+		document.addEventListener('click', function(e) {
+			const btn = e.target.closest('.js-omnify-preview-product-btn');
+			if (btn) {
+				e.preventDefault();
+				openPreviewModal(btn);
+			}
+		});
+
+		// Close buttons inside modal
+		closeButtons.forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.preventDefault();
+				closePreviewModal();
+			});
+		});
+
+		// Backdrop click to close
+		previewModal.addEventListener('click', function(e) {
+			if (e.target === previewModal || e.target.classList.contains('js-omnify-preview-close') || e.target.classList.contains('omnify-preview-modal__backdrop')) {
+				e.preventDefault();
+				closePreviewModal();
+			}
+		});
+
+		// Close on Escape
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && previewModal.classList.contains('is-open')) {
+				closePreviewModal();
+			}
+		});
+
+		// Device Viewport switcher
+		deviceButtons.forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.preventDefault();
+				deviceButtons.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				const dev = btn.getAttribute('data-device') || 'desktop';
+				if (previewFrame) {
+					previewFrame.className = 'omnify-preview-viewport-frame is-' + dev;
+				}
+			});
+		});
+
+		// Description, Specifications and Policies Tab switching
+		const tabBtns = previewModal.querySelectorAll('.omnify-pdp-tab-btn, .omnify-store-preview__tab-nav-btn');
+		const fullDescPane = document.getElementById('js-preview-full-desc');
+		const specsPane = document.getElementById('js-preview-specs-box');
+		const policiesPane = document.getElementById('js-preview-policies-desc');
+
+		tabBtns.forEach(tabBtn => {
+			tabBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				tabBtns.forEach(b => b.classList.remove('active'));
+				tabBtn.classList.add('active');
+				const tabType = tabBtn.getAttribute('data-tab');
+
+				if (fullDescPane) fullDescPane.style.display = (tabType === 'desc') ? 'block' : 'none';
+				if (specsPane) specsPane.style.display = (tabType === 'specs') ? 'block' : 'none';
+				if (policiesPane) policiesPane.style.display = (tabType === 'policies') ? 'block' : 'none';
+			});
+		});
 	}
 });

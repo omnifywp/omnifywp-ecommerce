@@ -181,6 +181,24 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 												<strong><?php esc_html_e('SKU:', 'omnifywp-ecommerce'); ?></strong> <?php echo esc_html($omnify_prod['sku']); ?>
 											</div>
 										<?php endif; ?>
+
+										<?php
+										if (! empty($omnify_item['item_meta'])) {
+											$omnify_item_meta = is_string($omnify_item['item_meta']) ? json_decode($omnify_item['item_meta'], true) : $omnify_item['item_meta'];
+											if (is_array($omnify_item_meta)) {
+												$omnify_display_attrs = $omnify_item_meta['attributes'] ?? ($omnify_item_meta['selected_attributes'] ?? $omnify_item_meta);
+												if (is_array($omnify_display_attrs) && ! empty($omnify_display_attrs)) {
+													echo '<div style="font-size: 11px; color: var(--omnify-gray-600); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;">';
+													foreach ($omnify_display_attrs as $m_k => $m_v) {
+														if (is_scalar($m_v) && '' !== (string) $m_v) {
+															echo '<span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;"><strong>' . esc_html(ucfirst(str_replace('_', ' ', (string) $m_k))) . ':</strong> ' . esc_html((string) $m_v) . '</span>';
+														}
+													}
+													echo '</div>';
+												}
+											}
+										}
+										?>
 									</td>
 									<td style="text-align: right;"><?php echo esc_html($omnify_order_symbol . number_format($omnify_item['price'], 2)); ?></td>
 									<td style="text-align: center;"><?php echo esc_html($omnify_item['quantity']); ?></td>
@@ -352,7 +370,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 							<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: var(--omnify-gray-50); border: 1px solid var(--omnify-gray-200); border-radius: 6px; padding: 14px;">
 								<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; margin: 0;">
 									<input class="omnify-checkbox" type="checkbox" name="restock_items" value="1" checked />
-									<span>🔄 <?php esc_html_e('Restock refunded items in product catalog', 'omnifywp-ecommerce'); ?></span>
+									<span><span class="dashicons dashicons-update" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Restock refunded items in product catalog', 'omnifywp-ecommerce'); ?></span>
 								</label>
 
 								<?php 
@@ -370,7 +388,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 								if ($omnify_has_digital_items) : ?>
 									<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; margin: 0;">
 										<input class="omnify-checkbox" type="checkbox" name="revoke_access" value="1" checked />
-										<span>🚫 <?php esc_html_e('Revoke download access for refunded digital products', 'omnifywp-ecommerce'); ?></span>
+										<span><span class="dashicons dashicons-dismiss" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Revoke download access for refunded digital products', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 							</div>
@@ -407,7 +425,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 								<input type="hidden" name="action" value="omnify_mark_order_paid" />
 								<input type="hidden" name="order_id" value="<?php echo esc_attr((string) $omnify_order['id']); ?>" />
 								<button type="submit" class="omnify-button omnify-button--primary">
-									✓ <?php esc_html_e('Mark as Paid', 'omnifywp-ecommerce'); ?>
+									<span class="dashicons dashicons-yes" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Mark as Paid', 'omnifywp-ecommerce'); ?>
 								</button>
 							</form>
 						</div>
@@ -439,7 +457,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 							};
 							?>
 							<div class="omnify-timeline-item" style="border-bottom: 1px solid var(--omnify-gray-100); padding-bottom: 12px; margin-bottom: 12px;">
-								<div class="omnify-timeline-item__bullet">💬</div>
+								<div class="omnify-timeline-item__bullet"><span class="dashicons dashicons-testimonial" style="font-size:12px; width:12px; height:12px;"></span></div>
 								<div class="omnify-timeline-item__content">
 									<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
 										<span style="display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, <?php echo esc_attr($omnify_note_color); ?> 12%, white); color: <?php echo esc_attr($omnify_note_color); ?>; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em;">
@@ -533,7 +551,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 			}
 			?>
 			<div class="omnify-card" style="border: 1px solid <?php echo esc_attr($omnify_card_border); ?>; background-color: <?php echo esc_attr($omnify_card_bg); ?>;">
-				<h2>🛡️ <?php esc_html_e('Fraud & Risk Assessment', 'omnifywp-ecommerce'); ?></h2>
+				<h2><span class="dashicons dashicons-shield" style="font-size:18px; width:18px; height:18px; vertical-align:middle; margin-right:6px;"></span> <?php esc_html_e('Fraud & Risk Assessment', 'omnifywp-ecommerce'); ?></h2>
 				<div style="margin-top: 12px; font-size: 13px;">
 					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
 						<strong><?php esc_html_e('Status:', 'omnifywp-ecommerce'); ?></strong>
@@ -571,7 +589,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 							<input type="hidden" name="action" value="omnify_approve_order_risk" />
 							<input type="hidden" name="order_id" value="<?php echo esc_attr((string) $omnify_order['id']); ?>" />
 							<button type="submit" class="omnify-button omnify-button--primary omnify-button--full" style="justify-content: center; height: 36px; background-color: #2e7d32; border-color: #2e7d32; color: #fff;">
-								✓ <?php esc_html_e('Clear Flags & Approve', 'omnifywp-ecommerce'); ?>
+								<span class="dashicons dashicons-yes" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Clear Flags & Approve', 'omnifywp-ecommerce'); ?>
 							</button>
 						</form>
 					<?php endif; ?>
@@ -758,7 +776,7 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 							</div>
 
 							<button type="submit" class="omnify-button omnify-button--primary omnify-button--full">
-								📦 <?php esc_html_e('Mark as Fulfilled', 'omnifywp-ecommerce'); ?>
+								<span class="dashicons dashicons-archive" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Mark as Fulfilled', 'omnifywp-ecommerce'); ?>
 							</button>
 						</form>
 					<?php else : ?>
@@ -774,8 +792,18 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 						<div style="font-size: 13px; line-height: 1.6; color: var(--omnify-dark); background: var(--omnify-gray-100); border: 1px solid var(--omnify-gray-200); border-radius: 6px; padding: 12px;">
 							<div><strong><?php esc_html_e('Carrier:', 'omnifywp-ecommerce'); ?></strong> <?php echo esc_html($omnify_order['tracking_carrier'] ?: 'N/A'); ?></div>
 							<div style="margin-top: 4px;">
-								<strong><?php esc_html_e('Tracking Number:', 'omnifywp-ecommerce'); ?></strong><br />
+								<?php 
+								$omnify_deep_track_url = \Omnify\eCommerce\Support\Tracking_Helper::get_tracking_url(
+									(string) ($omnify_order['tracking_carrier'] ?? ''),
+									(string) ($omnify_order['tracking_number'] ?? '')
+								);
+								?>
 								<code style="display: inline-block; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-top: 4px;"><?php echo esc_html($omnify_order['tracking_number'] ?: 'N/A'); ?></code>
+								<?php if (! empty($omnify_order['tracking_number']) && ! empty($omnify_deep_track_url)) : ?>
+									<a href="<?php echo esc_url($omnify_deep_track_url); ?>" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-left: 6px; font-size: 12px; text-decoration: none; color: #008060; font-weight: 500;">
+										<?php esc_html_e('Track Shipment', 'omnifywp-ecommerce'); ?> &rarr;
+									</a>
+								<?php endif; ?>
 							</div>
 						</div>
 

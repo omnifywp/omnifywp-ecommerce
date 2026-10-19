@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	init('initPortalTabs', initPortalTabs);
 	init('initPortalAuthEnhancements', initPortalAuthEnhancements);
 	init('initPremiumCatalog', initPremiumCatalog);
+	init('initCrossTabSync', initCrossTabSync);
 });
 
 const OMNIFY_CART_KEY = 'omnify_cart_items';
@@ -340,7 +341,7 @@ function initWishlistButtons() {
 			button.setAttribute('aria-pressed', wishlisted ? 'true' : 'false');
 			const icon = button.querySelector('.omnify-wishlist-button__icon');
 			if (icon) {
-				icon.textContent = wishlisted ? '♥' : '♡';
+				icon.innerHTML = wishlisted ? '<span class="dashicons dashicons-heart"></span>' : '<span class="dashicons dashicons-heart" style="opacity:0.6;"></span>';
 			}
 			buttonText(button, wishlisted);
 		});
@@ -428,9 +429,13 @@ window.omnifyInitSearchableSelect = function(select) {
 	}
 
 	if (select.dataset.searchReady) return;
+	const isMultiple = select.multiple;
 
 	const wrapper = document.createElement('div');
 	wrapper.className = 'omnify-custom-select-wrapper';
+	if (isMultiple) {
+		wrapper.classList.add('omnify-custom-select-wrapper--multiple');
+	}
 	select.parentNode.insertBefore(wrapper, select);
 	wrapper.appendChild(select);
 
@@ -439,6 +444,13 @@ window.omnifyInitSearchableSelect = function(select) {
 	input.className = 'omnify-custom-select-input';
 	input.placeholder = select.getAttribute('placeholder') || select.dataset.placeholder || 'Select option...';
 	wrapper.appendChild(input);
+
+	const clearBtn = document.createElement('span');
+	clearBtn.className = 'omnify-custom-select-clear';
+	clearBtn.setAttribute('title', 'Deselect option');
+	clearBtn.setAttribute('aria-label', 'Deselect option');
+	clearBtn.innerHTML = '&times;';
+	wrapper.appendChild(clearBtn);
 
 	const dropdown = document.createElement('div');
 	dropdown.className = 'omnify-custom-select-dropdown';
@@ -454,19 +466,105 @@ window.omnifyInitSearchableSelect = function(select) {
 	customOpt.style.display = 'none';
 	dropdown.appendChild(customOpt);
 
+	function getDefaultOption() {
+		const emptyOpt = Array.from(select.options).find(o => o.value === '');
+		if (emptyOpt) return emptyOpt;
+		const starOpt = Array.from(select.options).find(o => o.value === '*');
+		if (starOpt) return starOpt;
+		return null;
+	}
+
+	function getDefaultValue() {
+		const defaultOpt = getDefaultOption();
+		return defaultOpt ? defaultOpt.value : '';
+	}
+
+	function hasSelection() {
+		if (isMultiple) {
+			return getSelectedOptions().length > 0;
+		}
+		if (select.selectedIndex === -1) {
+			return false;
+		}
+		const val = select.value;
+		return Boolean(val !== '' && val !== null && val !== undefined);
+	}
+
+	function deselect() {
+		if (isMultiple) {
+			Array.from(select.options).forEach(opt => {
+				opt.selected = false;
+			});
+		} else {
+			const emptyOpt = Array.from(select.options).find(o => o.value === '');
+			if (emptyOpt) {
+				select.value = '';
+				Array.from(select.options).forEach(o => {
+					o.selected = (o === emptyOpt);
+				});
+			} else {
+				select.selectedIndex = -1;
+				select.value = '';
+				Array.from(select.options).forEach(o => {
+					o.selected = false;
+				});
+			}
+		}
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		select.dispatchEvent(new Event('input', { bubbles: true }));
+		updateInputFromSelect();
+		rebuildOptions();
+		closeDropdown();
+	}
+
+	clearBtn.addEventListener('mousedown', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		deselect();
+	});
+	clearBtn.addEventListener('click', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+	});
+
 	function getSelectedOption() {
 		const val = select.value;
+		if (!val && !Array.from(select.options).some(o => o.value === '')) {
+			return null;
+		}
 		const option = Array.from(select.options).find(o => o.value === val);
-		return option || select.options[0];
+		return option || null;
+	}
+
+	function getSelectedOptions() {
+		return Array.from(select.options).filter(o => o.selected && o.value !== '');
 	}
 
 	function updateInputFromSelect() {
+		if (isMultiple) {
+			const selected = getSelectedOptions();
+			input.value = selected.length ? selected.map(opt => opt.textContent.trim()).join(', ') : '';
+			wrapper.classList.toggle('has-value', selected.length > 0);
+			return;
+		}
 		const opt = getSelectedOption();
 		input.value = opt ? opt.textContent.trim() : '';
+		wrapper.classList.toggle('has-value', hasSelection());
 	}
 
 	function rebuildOptions() {
 		dropdown.querySelectorAll('.omnify-custom-select-option:not(.omnify-custom-select-custom-val)').forEach(el => el.remove());
+
+		if (hasSelection()) {
+			const deselectDiv = document.createElement('div');
+			deselectDiv.className = 'omnify-custom-select-option omnify-custom-select-deselect';
+			deselectDiv.innerHTML = '<span class="omnify-deselect-cross">&times;</span> ' + (isMultiple ? 'Clear all selections' : 'Deselect option');
+			deselectDiv.addEventListener('mousedown', (e) => {
+				e.preventDefault();
+				deselect();
+			});
+			dropdown.insertBefore(deselectDiv, customOpt);
+		}
 
 		Array.from(select.options).forEach(opt => {
 			const optionDiv = document.createElement('div');
@@ -474,12 +572,33 @@ window.omnifyInitSearchableSelect = function(select) {
 			optionDiv.textContent = opt.textContent.trim();
 			optionDiv.dataset.value = opt.value;
 
-			if (opt.selected) {
+			const isOptSelected = isMultiple ? opt.selected : (select.value === opt.value);
+			if (isOptSelected) {
 				optionDiv.classList.add('selected');
 			}
 
 			optionDiv.addEventListener('mousedown', (e) => {
 				e.preventDefault();
+				if (isMultiple) {
+					opt.selected = !opt.selected;
+					select.dispatchEvent(new Event('change', { bubbles: true }));
+					select.dispatchEvent(new Event('input', { bubbles: true }));
+					rebuildOptions();
+					openDropdown();
+					input.focus();
+					return;
+				}
+				if (opt.value === 'OTHER') {
+					select.value = '';
+					input.value = '';
+					closeDropdown();
+					input.focus();
+					return;
+				}
+				if (select.value === opt.value) {
+					deselect();
+					return;
+				}
 				select.value = opt.value;
 				select.dispatchEvent(new Event('change', { bubbles: true }));
 				select.dispatchEvent(new Event('input', { bubbles: true }));
@@ -501,11 +620,50 @@ window.omnifyInitSearchableSelect = function(select) {
 	observer.observe(select, { childList: true });
 
 	function openDropdown() {
+		// Close any other open dropdowns first to prevent stacking conflicts
+		document.querySelectorAll('.omnify-custom-select-wrapper.open').forEach(w => {
+			if (w !== wrapper) {
+				const otherDropdown = w.querySelector('.omnify-custom-select-dropdown');
+				if (otherDropdown) otherDropdown.style.display = 'none';
+				w.classList.remove('open');
+				w.style.removeProperty('z-index');
+				const otherTr = w.closest('tr');
+				if (otherTr) {
+					otherTr.style.removeProperty('z-index');
+					otherTr.style.removeProperty('position');
+				}
+				const otherTd = w.closest('td');
+				if (otherTd) {
+					otherTd.style.removeProperty('z-index');
+					otherTd.style.removeProperty('position');
+				}
+			}
+		});
+
 		dropdown.style.display = 'block';
 		wrapper.classList.add('open');
+		wrapper.style.zIndex = '999999';
+
+		const tr = wrapper.closest('tr');
+		if (tr) {
+			tr.style.position = 'relative';
+			tr.style.zIndex = '99999';
+		}
+		const td = wrapper.closest('td');
+		if (td) {
+			td.style.position = 'relative';
+			td.style.zIndex = '99999';
+		}
+
 		dropdown.querySelectorAll('.omnify-custom-select-option').forEach(el => {
 			el.classList.remove('hidden');
-			if (el.dataset.value === select.value) {
+			if (el.classList.contains('omnify-custom-select-deselect')) {
+				return;
+			}
+			if (isMultiple) {
+				const option = Array.from(select.options).find(opt => opt.value === el.dataset.value);
+				el.classList.toggle('selected', Boolean(option && option.selected));
+			} else if (el.dataset.value === select.value) {
 				el.classList.add('selected');
 			} else {
 				el.classList.remove('selected');
@@ -517,6 +675,18 @@ window.omnifyInitSearchableSelect = function(select) {
 	function closeDropdown() {
 		dropdown.style.display = 'none';
 		wrapper.classList.remove('open');
+		wrapper.style.removeProperty('z-index');
+
+		const tr = wrapper.closest('tr');
+		if (tr) {
+			tr.style.removeProperty('z-index');
+			tr.style.removeProperty('position');
+		}
+		const td = wrapper.closest('td');
+		if (td) {
+			td.style.removeProperty('z-index');
+			td.style.removeProperty('position');
+		}
 	}
 
 	input.addEventListener('focus', () => {
@@ -527,8 +697,15 @@ window.omnifyInitSearchableSelect = function(select) {
 	input.addEventListener('blur', () => {
 		setTimeout(() => {
 			const query = input.value.trim();
-			const allowCustomState = false;
-			if (allowCustomState && query) {
+			const isCustomAllowed = Boolean(
+				select.classList.contains('omnify-state-select') ||
+				select.classList.contains('omnify-city-select') ||
+				select.classList.contains('omnify-postcode-select') ||
+				select.classList.contains('omnify-zip-select') ||
+				(select.name && (select.name.includes('state') || select.name.includes('city') || select.name.includes('postcode') || select.name.includes('zip'))) ||
+				(select.id && (select.id.includes('state') || select.id.includes('city') || select.id.includes('postcode') || select.id.includes('zip')))
+			);
+			if (isCustomAllowed && query) {
 				const exists = Array.from(select.options).some(o => o.textContent.trim().toLowerCase() === query.toLowerCase() || o.value.toLowerCase() === query.toLowerCase());
 				if (!exists) {
 					const opt = document.createElement('option');
@@ -578,6 +755,10 @@ window.omnifyInitSearchableSelect = function(select) {
 		let exactMatch = false;
 
 		dropdown.querySelectorAll('.omnify-custom-select-option:not(.omnify-custom-select-custom-val)').forEach(el => {
+			if (el.classList.contains('omnify-custom-select-deselect')) {
+				el.classList.remove('hidden');
+				return;
+			}
 			const text = el.textContent.toLowerCase();
 			if (text === queryLower) {
 				exactMatch = true;
@@ -590,9 +771,16 @@ window.omnifyInitSearchableSelect = function(select) {
 			}
 		});
 
-		const allowCustomState = false;
+		const isCustomAllowed = Boolean(
+			select.classList.contains('omnify-state-select') ||
+			select.classList.contains('omnify-city-select') ||
+			select.classList.contains('omnify-postcode-select') ||
+			select.classList.contains('omnify-zip-select') ||
+			(select.name && (select.name.includes('state') || select.name.includes('city') || select.name.includes('postcode') || select.name.includes('zip'))) ||
+			(select.id && (select.id.includes('state') || select.id.includes('city') || select.id.includes('postcode') || select.id.includes('zip')))
+		);
 
-		if (allowCustomState && query && !exactMatch) {
+		if (isCustomAllowed && query && !exactMatch) {
 			customOpt.textContent = `Use "${query}"`;
 			customOpt.style.display = 'block';
 			customOpt.classList.remove('hidden');
@@ -648,11 +836,41 @@ function setCartItems(items) {
 	document.dispatchEvent(new CustomEvent('omnify:cart-updated', { detail: { items } }));
 }
 
+function initCrossTabSync() {
+	window.addEventListener('storage', (e) => {
+		if (e.key === OMNIFY_CART_KEY) {
+			updateCartCount();
+			if (typeof renderMiniCarts === 'function') {
+				renderMiniCarts();
+			}
+			try {
+				const items = e.newValue ? JSON.parse(e.newValue) : [];
+				document.dispatchEvent(new CustomEvent('omnify:cart-updated', { detail: { items } }));
+			} catch (err) {}
+		} else if (e.key === OMNIFY_GUEST_WISHLIST_KEY) {
+			if (typeof renderWishlistButtons === 'function') renderWishlistButtons();
+			if (typeof renderWishlistCounters === 'function') renderWishlistCounters();
+		} else if (e.key === OMNIFY_COMPARE_KEY) {
+			if (typeof renderCompareButtons === 'function') renderCompareButtons();
+			if (typeof renderCompareCounters === 'function') renderCompareCounters();
+		}
+	});
+}
+
 function formatStoreMoney(amount) {
 	const store = window.omnifyStorefront || {};
-	const symbol = store.currencySymbol || store.currency || 'USD';
-	const value = Number(amount || 0).toFixed(2);
-	return store.currencyPosition === 'after' ? `${value} ${symbol}` : `${symbol}${value}`;
+	const symbol = store.currencySymbol || store.currency || '$';
+	const decimals = typeof store.priceDecimals === 'number' ? Math.max(0, Math.min(4, store.priceDecimals)) : 2;
+	const thou = typeof store.thousandSeparator === 'string' ? store.thousandSeparator : ',';
+	const dec = typeof store.decimalSeparator === 'string' ? store.decimalSeparator : '.';
+
+	const num = Number(amount || 0);
+	const fixed = Math.abs(num).toFixed(decimals);
+	const parts = fixed.split('.');
+	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thou);
+	const formattedNum = (num < 0 ? '-' : '') + (parts.length > 1 && decimals > 0 ? parts.join(dec) : parts[0]);
+
+	return store.currencyPosition === 'after' ? `${formattedNum} ${symbol}` : `${symbol}${formattedNum}`;
 }
 
 function escapeHtml(value) {
@@ -1036,6 +1254,8 @@ function initLocationSelects(root) {
 	const store = window.omnifyStorefront || {};
 	const countries = store.countries || {};
 	const statesByCountry = store.states || {};
+	const citiesByCountry = store.cities || {};
+	const postcodesByCountry = store.postcodes || {};
 
 	function makeOption(label, value, selectedValue) {
 		const opt = document.createElement('option');
@@ -1045,55 +1265,198 @@ function initLocationSelects(root) {
 		return opt;
 	}
 
-	function refreshState(countrySelect) {
-		const container = countrySelect.closest('.omnify-portal-form-row') || countrySelect.closest('.omnify-form-row') || countrySelect.closest('div');
-		let stateSelect = container ? container.querySelector('.omnify-state-select') : null;
-		if (!stateSelect) {
-			const form = countrySelect.closest('form') || document;
-			const id = countrySelect.id;
-			if (id === 'shipping_country') {
-				stateSelect = form.querySelector('#shipping_state');
-			} else if (id === 'billing_country') {
-				stateSelect = form.querySelector('#billing_state');
-			} else if (id === 'omnify-shipping-country') {
-				stateSelect = form.querySelector('#omnify-shipping-state');
-			} else if (id === 'omnify-billing-country') {
-				stateSelect = form.querySelector('#omnify-billing-state');
-			} else {
-				const section = countrySelect.closest('.omnify-portal-section-card') || countrySelect.closest('.omnify-card') || countrySelect.closest('fieldset');
-				if (section) {
-					stateSelect = section.querySelector('.omnify-state-select');
-				}
-			}
+	function findLinkedField(currentEl, type) {
+		const form = currentEl.closest('form') || currentEl.closest('.omnify-account-form-section') || currentEl.closest('.omnify-address-form-panel') || currentEl.closest('.omnify-checkout-form') || document;
+		const id = currentEl.id || '';
+		const name = currentEl.name || '';
+		const isModal = id.includes('modal_shipping') || (name.includes('shipping') && currentEl.closest('#omnify-address-form'));
+		const isOmnify = id.startsWith('omnify-');
+		const isBill = id.includes('billing') || name.includes('billing');
+
+		if (isModal) {
+			const target = form.querySelector(`#modal_shipping_${type}`) || form.querySelector(`[name="shipping_${type}"]`);
+			if (target) return target;
+		} else if (isOmnify) {
+			const target = form.querySelector(`#omnify-${isBill ? 'billing' : 'shipping'}-${type}`);
+			if (target) return target;
+		} else {
+			const target = form.querySelector(`#${isBill ? 'billing' : 'shipping'}_${type}`) || form.querySelector(`[name="${isBill ? 'billing' : 'shipping'}_${type}"]`);
+			if (target) return target;
 		}
+
+		// Fallback within section or container
+		const container = currentEl.closest('.omnify-account-form-section') || currentEl.closest('#omnify-billing-address-fields') || currentEl.closest('#omnify-manual-shipping-fields') || currentEl.closest('.omnify-portal-form-row') || form;
+		return container.querySelector(`.omnify-${type}-select`) || form.querySelector(`.omnify-${type}-select`);
+	}
+
+	function refreshState(countrySelect) {
+		const stateSelect = findLinkedField(countrySelect, 'state');
 		if (!stateSelect) return;
 
-		const country = countrySelect.value || '';
-		const selected = stateSelect.dataset.selected || stateSelect.value || '';
+		const country = (countrySelect.value || '').trim().toUpperCase();
+		const currentSelected = stateSelect.dataset.selected || stateSelect.value || '';
 		const states = country && statesByCountry[country] ? statesByCountry[country] : {};
+
 		stateSelect.innerHTML = '';
 
 		if (!country) {
-			stateSelect.appendChild(makeOption('Select country first', '', selected));
+			stateSelect.appendChild(makeOption('Select country first', '', currentSelected));
 			stateSelect.disabled = true;
 			stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
 			stateSelect.dispatchEvent(new Event('input', { bubbles: true }));
+			refreshCity(stateSelect);
 			return;
 		}
 
 		stateSelect.disabled = false;
-		stateSelect.appendChild(makeOption('Select state / province', '', selected));
+		stateSelect.appendChild(makeOption('Select state / province', '', currentSelected));
+
+		let matched = false;
 		Object.keys(states).forEach((code) => {
-			stateSelect.appendChild(makeOption(states[code], code, selected));
+			if (String(currentSelected).toUpperCase() === String(code).toUpperCase() || String(currentSelected).toLowerCase() === String(states[code]).toLowerCase()) {
+				matched = true;
+			}
+			stateSelect.appendChild(makeOption(states[code], code, currentSelected));
 		});
-		if (!Object.keys(states).length) {
-			stateSelect.appendChild(makeOption('Other / not listed', 'OTHER', selected));
+
+		if (currentSelected && !matched && currentSelected !== 'OTHER') {
+			stateSelect.appendChild(makeOption(currentSelected, currentSelected, currentSelected));
 		}
+
+		stateSelect.appendChild(makeOption('Other / not listed', 'OTHER', currentSelected));
+
+		if (currentSelected) {
+			stateSelect.value = currentSelected;
+		}
+
 		stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
 		stateSelect.dispatchEvent(new Event('input', { bubbles: true }));
+
+		refreshCity(stateSelect);
 	}
 
-	scope.querySelectorAll('#omnify-shipping-country, .omnify-country-select').forEach((select) => {
+	function refreshCity(stateSelect) {
+		const citySelect = findLinkedField(stateSelect, 'city');
+		if (!citySelect) return;
+
+		const countrySelect = findLinkedField(stateSelect, 'country');
+		const country = countrySelect ? (countrySelect.value || '').trim().toUpperCase() : '';
+		const state = (stateSelect.value || '').trim().toUpperCase();
+		const currentSelected = citySelect.dataset.selected || citySelect.value || '';
+
+		citySelect.innerHTML = '';
+
+		if (!country) {
+			citySelect.appendChild(makeOption('Select country first', '', currentSelected));
+			citySelect.disabled = true;
+			citySelect.dispatchEvent(new Event('change', { bubbles: true }));
+			citySelect.dispatchEvent(new Event('input', { bubbles: true }));
+			refreshPostcode(citySelect);
+			return;
+		}
+
+		citySelect.disabled = false;
+
+		let cityList = [];
+		if (country && citiesByCountry[country]) {
+			if (state && citiesByCountry[country][state]) {
+				cityList = citiesByCountry[country][state];
+			} else {
+				Object.values(citiesByCountry[country]).forEach((arr) => {
+					if (Array.isArray(arr)) {
+						cityList = cityList.concat(arr);
+					}
+				});
+				cityList = Array.from(new Set(cityList));
+			}
+		}
+
+		citySelect.appendChild(makeOption(cityList.length ? 'Select city' : 'Select or type city', '', currentSelected));
+
+		let matched = false;
+		cityList.forEach((cityName) => {
+			if (String(currentSelected).toLowerCase() === String(cityName).toLowerCase()) {
+				matched = true;
+			}
+			citySelect.appendChild(makeOption(cityName, cityName, currentSelected));
+		});
+
+		if (currentSelected && !matched && currentSelected !== 'OTHER') {
+			citySelect.appendChild(makeOption(currentSelected, currentSelected, currentSelected));
+		}
+
+		citySelect.appendChild(makeOption('Other / enter custom', 'OTHER', currentSelected));
+
+		if (currentSelected) {
+			citySelect.value = currentSelected;
+		}
+
+		citySelect.dispatchEvent(new Event('change', { bubbles: true }));
+		citySelect.dispatchEvent(new Event('input', { bubbles: true }));
+
+		refreshPostcode(citySelect);
+	}
+
+	function refreshPostcode(citySelect) {
+		const postcodeSelect = findLinkedField(citySelect, 'postcode');
+		if (!postcodeSelect) return;
+
+		const countrySelect = findLinkedField(citySelect, 'country');
+		const country = countrySelect ? (countrySelect.value || '').trim().toUpperCase() : '';
+		const city = (citySelect.value || '').trim();
+		const currentSelected = postcodeSelect.dataset.selected || postcodeSelect.value || '';
+
+		postcodeSelect.innerHTML = '';
+
+		if (!country) {
+			postcodeSelect.appendChild(makeOption('Select country first', '', currentSelected));
+			postcodeSelect.disabled = true;
+			postcodeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+			postcodeSelect.dispatchEvent(new Event('input', { bubbles: true }));
+			return;
+		}
+
+		postcodeSelect.disabled = false;
+
+		let zipList = [];
+		if (country && postcodesByCountry[country]) {
+			const countryZips = postcodesByCountry[country];
+			if (city && countryZips[city]) {
+				zipList = countryZips[city];
+			} else if (city) {
+				const cityKey = Object.keys(countryZips).find((k) => k.toLowerCase() === city.toLowerCase());
+				if (cityKey && countryZips[cityKey]) {
+					zipList = countryZips[cityKey];
+				}
+			}
+		}
+
+		postcodeSelect.appendChild(makeOption(zipList.length ? 'Select ZIP / postal code' : 'Select or type ZIP code', '', currentSelected));
+
+		let matched = false;
+		zipList.forEach((zipCode) => {
+			if (String(currentSelected).toLowerCase() === String(zipCode).toLowerCase()) {
+				matched = true;
+			}
+			postcodeSelect.appendChild(makeOption(zipCode, zipCode, currentSelected));
+		});
+
+		if (currentSelected && !matched && currentSelected !== 'OTHER') {
+			postcodeSelect.appendChild(makeOption(currentSelected, currentSelected, currentSelected));
+		}
+
+		postcodeSelect.appendChild(makeOption('Other / enter custom', 'OTHER', currentSelected));
+
+		if (currentSelected) {
+			postcodeSelect.value = currentSelected;
+		}
+
+		postcodeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		postcodeSelect.dispatchEvent(new Event('input', { bubbles: true }));
+	}
+
+	// 1. Country selects
+	scope.querySelectorAll('#omnify-shipping-country, #omnify-billing-country, #billing_country, #shipping_country, #modal_shipping_country, .omnify-country-select').forEach((select) => {
 		if (!select.dataset.locationBound) {
 			select.addEventListener('change', () => {
 				refreshState(select);
@@ -1104,6 +1467,29 @@ function initLocationSelects(root) {
 		refreshState(select);
 	});
 
+	// 2. State selects
+	scope.querySelectorAll('#omnify-shipping-state, #omnify-billing-state, #billing_state, #shipping_state, #modal_shipping_state, .omnify-state-select').forEach((select) => {
+		if (!select.dataset.stateBound) {
+			select.addEventListener('change', () => {
+				refreshCity(select);
+				select.dispatchEvent(new Event('input', { bubbles: true }));
+			});
+			select.dataset.stateBound = '1';
+		}
+	});
+
+	// 3. City selects
+	scope.querySelectorAll('#omnify-shipping-city, #omnify-billing-city, #billing_city, #shipping_city, #modal_shipping_city, .omnify-city-select').forEach((select) => {
+		if (!select.dataset.cityBound) {
+			select.addEventListener('change', () => {
+				refreshPostcode(select);
+				select.dispatchEvent(new Event('input', { bubbles: true }));
+			});
+			select.dataset.cityBound = '1';
+		}
+	});
+
+	// 4. Initialize searchable selects
 	scope.querySelectorAll('.omnify-searchable-select').forEach((select) => {
 		if (window.omnifyInitSearchableSelect) {
 			window.omnifyInitSearchableSelect(select);
@@ -1265,15 +1651,15 @@ function renderMiniCarts() {
 		if (emptyEl) emptyEl.style.display = items.length ? 'none' : 'block';
 		if (footerEl) footerEl.style.display = items.length ? 'block' : 'none';
 
-		// Dynamic Free Shipping Meter (Threshold $50)
+		// Dynamic Free Shipping Meter
 		if (shippingMeter && shippingMsg && shippingFill) {
-			if (!items.length) {
+			const freeThreshold = parseFloat(shippingMeter.dataset.threshold || window.omnifyStorefront?.freeShippingThreshold || 0) || 50;
+			if (!items.length || freeThreshold <= 0) {
 				shippingMeter.style.display = 'none';
 			} else {
 				shippingMeter.style.display = 'block';
-				const freeThreshold = 50;
 				if (subtotal >= freeThreshold) {
-					shippingMsg.textContent = '🎉 Free standard shipping unlocked!';
+					shippingMsg.textContent = 'Free standard shipping unlocked!';
 					shippingFill.style.width = '100%';
 					shippingFill.style.backgroundColor = '#10B981';
 				} else {
@@ -1476,6 +1862,16 @@ function initStorefrontFilters() {
 	}
 
 	const initialLimit = parseInt(grid.dataset.productsLimit || '8', 10);
+
+	let filterDebounceTimer = null;
+	function debouncedApplyFilters(delay = 200) {
+		if (filterDebounceTimer) {
+			clearTimeout(filterDebounceTimer);
+		}
+		filterDebounceTimer = setTimeout(() => {
+			applyFilters();
+		}, delay);
+	}
 
 	function applyFilters(isLoadMore = false) {
 		if (isLoadMore !== true) {
@@ -1888,8 +2284,14 @@ function initStorefrontFilters() {
 	const priceMaxInput = document.getElementById('omnify-sidebar-price-max');
 	const priceSlider = document.getElementById('omnify-sidebar-price-slider');
 
-	if (priceMinInput) priceMinInput.addEventListener('input', applyFilters);
-	if (priceMaxInput) priceMaxInput.addEventListener('input', applyFilters);
+	if (priceMinInput) {
+		priceMinInput.addEventListener('input', () => debouncedApplyFilters(200));
+		priceMinInput.addEventListener('change', applyFilters);
+	}
+	if (priceMaxInput) {
+		priceMaxInput.addEventListener('input', () => debouncedApplyFilters(200));
+		priceMaxInput.addEventListener('change', applyFilters);
+	}
 	if (priceSlider) {
 		priceSlider.addEventListener('input', (e) => {
 			const val = e.target.value;
@@ -1901,8 +2303,9 @@ function initStorefrontFilters() {
 			const topPriceDisplay = document.getElementById('omnify-top-price-display');
 			if (topPriceSlider) topPriceSlider.value = val;
 			if (topPriceDisplay) topPriceDisplay.textContent = '$' + val;
-			applyFilters();
+			debouncedApplyFilters(150);
 		});
+		priceSlider.addEventListener('change', applyFilters);
 	}
 
 	// Top Price Slider listener
@@ -1917,8 +2320,9 @@ function initStorefrontFilters() {
 			if (priceSlider) priceSlider.value = val;
 			if (priceMaxInput) priceMaxInput.value = val;
 			
-			applyFilters();
+			debouncedApplyFilters(150);
 		});
+		topPriceSlider.addEventListener('change', applyFilters);
 	}
 
 	// Sidebar toggle button click
@@ -1970,9 +2374,12 @@ function initStorefrontFilters() {
 	}
 
 	// Standard filter registers
-	[searchInput, categoryFilter, typeFilter, sortFilter, ...customFilters].forEach((control) => {
+	if (searchInput) {
+		searchInput.addEventListener('input', () => debouncedApplyFilters(250));
+		searchInput.addEventListener('change', applyFilters);
+	}
+	[categoryFilter, typeFilter, sortFilter, ...customFilters].forEach((control) => {
 		if (!control) return;
-		control.addEventListener('input', applyFilters);
 		control.addEventListener('change', applyFilters);
 	});
 
@@ -2046,7 +2453,7 @@ function showAddedToCartToast(item) {
 
 	toast.innerHTML = `
 		<div class="omnify-toast__header">
-			<span class="omnify-toast__icon">✓</span>
+			<span class="omnify-toast__icon"><span class="dashicons dashicons-yes"></span></span>
 			<span class="omnify-toast__title">Added to Cart</span>
 			<button type="button" class="omnify-toast__close" aria-label="Close">&times;</button>
 		</div>
@@ -2439,7 +2846,7 @@ function initCartPage() {
 				progressWrapper.style.display = 'block';
 			} else {
 				progressFill.style.width = '100%';
-				progressText.innerHTML = `🎉 You have reached <strong>FREE SHIPPING!</strong>`;
+				progressText.innerHTML = `You have reached <strong>FREE SHIPPING!</strong>`;
 				progressWrapper.style.display = 'block';
 			}
 		}
@@ -2461,6 +2868,10 @@ function initCartPage() {
 		resetCartCoupon({ silent: true });
 		renderCart();
 	}
+
+	document.addEventListener('omnify:cart-updated', () => {
+		renderCart();
+	});
 
 	document.addEventListener('click', (event) => {
 		const removeBtn = event.target.closest('.omnify-cart-remove');
@@ -2788,7 +3199,7 @@ function initCartPage() {
 				selectedCartKeys.add(`${pId}:`);
 				renderCart();
 
-				crossBtn.textContent = 'Added ✓';
+				crossBtn.textContent = 'Added';
 				crossBtn.disabled = true;
 				crossBtn.style.background = '#15803D';
 				crossBtn.style.color = '#fff';
@@ -2931,7 +3342,9 @@ function initCheckoutPageForm() {
 		clearPurchasedCartItems();
 	}
 
-	const abandonedCartStorageKey = `omnify_abandoned_cart_${productId}_${document.getElementById('omnify-checkout-variation-id')?.value || 0}`;
+	const abandonedCartStorageKey = productId
+		? `omnify_abandoned_cart_${productId}_${document.getElementById('omnify-checkout-variation-id')?.value || 0}`
+		: 'omnify_abandoned_cart_multi_item';
 	let abandonedCartToken = recoveredToken || window.localStorage.getItem(abandonedCartStorageKey) || '';
 	let abandonedCaptureTimer = null;
 
@@ -3195,14 +3608,12 @@ function initCheckoutPageForm() {
 
 	function buildAbandonedCartPayload() {
 		const email = document.getElementById('omnify-email')?.value || '';
-		if (!validCheckoutEmail(email) || !productId) return null;
+		if (!validCheckoutEmail(email)) return null;
 
 		const variationIdInput = document.getElementById('omnify-checkout-variation-id');
 		const variationId = variationIdInput ? parseInt(variationIdInput.value, 10) : 0;
 		const payload = {
 			token: abandonedCartToken,
-			product_id: productId,
-			quantity: quantityInput ? parseInt(quantityInput.value, 10) || 1 : 1,
 			email,
 			first_name: document.getElementById('omnify-firstname')?.value || '',
 			last_name: document.getElementById('omnify-lastname')?.value || '',
@@ -3212,8 +3623,27 @@ function initCheckoutPageForm() {
 			checkout_url: window.location.href
 		};
 
-		if (variationId) {
-			payload.variation_id = variationId;
+		if (productId) {
+			payload.product_id = productId;
+			payload.quantity = quantityInput ? parseInt(quantityInput.value, 10) || 1 : 1;
+			if (variationId) {
+				payload.variation_id = variationId;
+			}
+		} else {
+			let cartItems = [];
+			try {
+				const storedCart = window.localStorage.getItem('omnify_cart');
+				cartItems = storedCart ? JSON.parse(storedCart) : (window.omnifyCart?.items || []);
+			} catch (e) {
+				cartItems = window.omnifyCart?.items || [];
+			}
+			if (Array.isArray(cartItems) && cartItems.length > 0) {
+				payload.items = cartItems;
+				payload.product_id = parseInt(cartItems[0].product_id || cartItems[0].id, 10) || 0;
+				payload.quantity = parseInt(cartItems[0].quantity, 10) || 1;
+			} else {
+				return null;
+			}
 		}
 
 		return payload;
@@ -3386,7 +3816,7 @@ function initCheckoutPageForm() {
 					? `${parseFloat(data.discount_value).toFixed(0)}% off`
 					: `${formatStoreMoney(parseFloat(data.discount_value))} off`;
 
-				showCouponMsg(`✓ Coupon "${appliedCouponCode}" applied – ${discLabel}!`, false);
+				showCouponMsg(`Coupon "${appliedCouponCode}" applied – ${discLabel}!`, false);
 
 				// Lock the coupon input after successful apply + new applied UI
 				const formSection = document.getElementById('omnify-checkout-coupon-form');
@@ -3400,7 +3830,7 @@ function initCheckoutPageForm() {
 				}
 
 				couponInput.disabled  = true;
-				couponApplyBtn.textContent = 'Applied ✓';
+				couponApplyBtn.textContent = 'Applied';
 				couponApplyBtn.style.background = 'var(--omnify-success)';
 				scheduleAbandonedCartCapture();
 			})
@@ -3440,13 +3870,15 @@ function initCheckoutPageForm() {
 			});
 		}
 
+		const urlCoupon = new URLSearchParams(window.location.search).get('coupon') || '';
 		const storedCartCoupon = pageForm.getAttribute('data-cart-mode') === '1'
 			? window.sessionStorage.getItem('omnify_cart_coupon_code')
 			: '';
-		if (storedCartCoupon) {
-			couponInput.value = storedCartCoupon;
+		const effectiveCoupon = urlCoupon || storedCartCoupon;
+		if (effectiveCoupon) {
+			couponInput.value = effectiveCoupon.trim().toUpperCase();
 			window.sessionStorage.removeItem('omnify_cart_coupon_code');
-			window.setTimeout(() => couponApplyBtn.click(), 120);
+			window.setTimeout(() => couponApplyBtn.click(), 150);
 		}
 	}
 
@@ -3466,18 +3898,43 @@ function initCheckoutPageForm() {
 	const khaltiConfig = (window.omnifyStorefront && window.omnifyStorefront.khalti) || {};
 	const esewaConfig = (window.omnifyStorefront && window.omnifyStorefront.esewa) || {};
 	const paddleConfig = (window.omnifyStorefront && window.omnifyStorefront.paddle) || {};
-	const useStripeCheckout = () => Boolean(stripeConfig.enabled && stripeConfig.checkoutEnabled);
-	const usePayPalCheckout = () => Boolean(paypalConfig.enabled && paypalConfig.checkoutEnabled);
-	const useRazorpayCheckout = () => Boolean(razorpayConfig.enabled && razorpayConfig.checkoutEnabled);
-	const useAlipayCheckout = () => Boolean(alipayConfig.enabled && alipayConfig.checkoutEnabled);
-	const useWechatCheckout = () => Boolean(wechatConfig.enabled && wechatConfig.checkoutEnabled);
-	const useSslcommerzCheckout = () => Boolean(sslcommerzConfig.enabled && sslcommerzConfig.checkoutEnabled);
-	const usePaystackCheckout = () => Boolean(paystackConfig.enabled && paystackConfig.checkoutEnabled);
-	const useTapCheckout = () => Boolean(tapConfig.enabled && tapConfig.checkoutEnabled);
-	const useMollieCheckout = () => Boolean(mollieConfig.enabled && mollieConfig.checkoutEnabled);
-	const useKhaltiCheckout = () => Boolean(khaltiConfig.enabled && khaltiConfig.checkoutEnabled);
-	const useEsewaCheckout = () => Boolean(esewaConfig.enabled && esewaConfig.checkoutEnabled);
-	const usePaddleCheckout = () => Boolean(paddleConfig.enabled && paddleConfig.checkoutEnabled);
+	const useStripeCheckout = () => Boolean(stripeConfig.enabled || stripeConfig.checkoutEnabled);
+	const usePayPalCheckout = () => Boolean(paypalConfig.enabled || paypalConfig.checkoutEnabled);
+	const useRazorpayCheckout = () => Boolean(razorpayConfig.enabled || razorpayConfig.checkoutEnabled);
+	const useAlipayCheckout = () => Boolean(alipayConfig.enabled || alipayConfig.checkoutEnabled);
+	const useWechatCheckout = () => Boolean(wechatConfig.enabled || wechatConfig.checkoutEnabled);
+	const useSslcommerzCheckout = () => Boolean(sslcommerzConfig.enabled || sslcommerzConfig.checkoutEnabled);
+	const usePaystackCheckout = () => Boolean(paystackConfig.enabled || paystackConfig.checkoutEnabled);
+	const useTapCheckout = () => Boolean(tapConfig.enabled || tapConfig.checkoutEnabled);
+	const useMollieCheckout = () => Boolean(mollieConfig.enabled || mollieConfig.checkoutEnabled);
+	const useKhaltiCheckout = () => Boolean(khaltiConfig.enabled || khaltiConfig.checkoutEnabled);
+	const useEsewaCheckout = () => Boolean(esewaConfig.enabled || esewaConfig.checkoutEnabled);
+	const usePaddleCheckout = () => Boolean(paddleConfig.enabled || paddleConfig.checkoutEnabled);
+
+	const updateCheckoutTrustBadges = (selectedMethod) => {
+		const trustBadges = document.querySelectorAll('.omnify-checkout-trust-box .omnify-trust-badge');
+		if (!trustBadges.length) return;
+		trustBadges.forEach(badge => {
+			const m = badge.getAttribute('data-method');
+			if (m === 'ssl') {
+				badge.style.opacity = '1';
+				return;
+			}
+			if (m === selectedMethod) {
+				badge.classList.add('omnify-trust-badge--active');
+				badge.style.boxShadow = '0 0 0 1.5px var(--checkout-primary, #2563EB)';
+				badge.style.transform = 'translateY(-1px)';
+				badge.style.fontWeight = '700';
+				badge.style.opacity = '1';
+			} else {
+				badge.classList.remove('omnify-trust-badge--active');
+				badge.style.boxShadow = 'none';
+				badge.style.transform = 'none';
+				badge.style.fontWeight = '600';
+				badge.style.opacity = '0.7';
+			}
+		});
+	};
 
 	if (paymentRadios.length > 0) {
 		paymentRadios.forEach(radio => {
@@ -3497,30 +3954,29 @@ function initCheckoutPageForm() {
 					}
 				});
 
-				if (val === 'card') {
-					if (paypalNote) paypalNote.style.display = 'none';
-					instructionSections.forEach(sec => sec.style.display = 'none');
-				} else if (val === 'paypal') {
-					if (paypalNote) paypalNote.style.display = usePayPalCheckout() ? 'block' : 'none';
-					instructionSections.forEach(sec => sec.style.display = 'none');
-				} else if (val === 'razorpay') {
-					if (paypalNote) paypalNote.style.display = 'none';
-					instructionSections.forEach(sec => sec.style.display = 'none');
-				} else if (['alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'].includes(val)) {
-					if (paypalNote) paypalNote.style.display = 'none';
-					instructionSections.forEach(sec => sec.style.display = 'none');
-				} else {
-					if (paypalNote) paypalNote.style.display = 'none';
-					instructionSections.forEach(sec => {
-						if (sec.id === `omnify-instructions-${val}`) {
-							sec.style.display = 'block';
-						} else {
-							sec.style.display = 'none';
-						}
-					});
+				updateCheckoutTrustBadges(val);
+
+				// Hide all payment notes and instructions first
+				document.querySelectorAll('.omnify-checkout-gateway-note').forEach(sec => sec.style.display = 'none');
+
+				// Show contextual note if available
+				const noteEl = document.getElementById(`omnify-note-${val}`);
+				if (noteEl) {
+					noteEl.style.display = 'block';
+				}
+
+				// Show manual instructions if available
+				const instrEl = document.getElementById(`omnify-instructions-${val}`);
+				if (instrEl) {
+					instrEl.style.display = 'block';
 				}
 			});
 		});
+
+		const checkedPayment = document.querySelector('input[name="payment_method"]:checked');
+		if (checkedPayment) {
+			checkedPayment.dispatchEvent(new Event('change'));
+		}
 	}
 
 	// Helper to highlight invalid input with smooth scrolling and auto-clear on edit
@@ -3626,18 +4082,18 @@ function initCheckoutPageForm() {
 		// Get selected payment method
 		const selectedPaymentMethodEl = document.querySelector('input[name="payment_method"]:checked');
 		const selectedPaymentMethod = selectedPaymentMethodEl ? selectedPaymentMethodEl.value : 'card';
-		const shouldUseStripeCheckout = selectedPaymentMethod === 'card' && useStripeCheckout();
-		const shouldUsePayPalCheckout = selectedPaymentMethod === 'paypal' && usePayPalCheckout();
-		const shouldUseRazorpayCheckout = selectedPaymentMethod === 'razorpay' && useRazorpayCheckout();
-		const shouldUseAlipayCheckout = selectedPaymentMethod === 'alipay' && useAlipayCheckout();
-		const shouldUseWechatCheckout = selectedPaymentMethod === 'wechat' && useWechatCheckout();
-		const shouldUseSslcommerzCheckout = selectedPaymentMethod === 'sslcommerz' && useSslcommerzCheckout();
-		const shouldUsePaystackCheckout = selectedPaymentMethod === 'paystack' && usePaystackCheckout();
-		const shouldUseTapCheckout = selectedPaymentMethod === 'tap' && useTapCheckout();
-		const shouldUseMollieCheckout = selectedPaymentMethod === 'mollie' && useMollieCheckout();
-		const shouldUseKhaltiCheckout = selectedPaymentMethod === 'khalti' && useKhaltiCheckout();
-		const shouldUseEsewaCheckout = selectedPaymentMethod === 'esewa' && useEsewaCheckout();
-		const shouldUsePaddleCheckout = selectedPaymentMethod === 'paddle' && usePaddleCheckout();
+		const shouldUseStripeCheckout = selectedPaymentMethod === 'card';
+		const shouldUsePayPalCheckout = selectedPaymentMethod === 'paypal';
+		const shouldUseRazorpayCheckout = selectedPaymentMethod === 'razorpay';
+		const shouldUseAlipayCheckout = selectedPaymentMethod === 'alipay';
+		const shouldUseWechatCheckout = selectedPaymentMethod === 'wechat';
+		const shouldUseSslcommerzCheckout = selectedPaymentMethod === 'sslcommerz';
+		const shouldUsePaystackCheckout = selectedPaymentMethod === 'paystack';
+		const shouldUseTapCheckout = selectedPaymentMethod === 'tap';
+		const shouldUseMollieCheckout = selectedPaymentMethod === 'mollie';
+		const shouldUseKhaltiCheckout = selectedPaymentMethod === 'khalti';
+		const shouldUseEsewaCheckout = selectedPaymentMethod === 'esewa';
+		const shouldUsePaddleCheckout = selectedPaymentMethod === 'paddle';
 
 		// Terms acceptance check
 		const termsCheckbox = document.getElementById('omnify-agree-terms');
@@ -3742,14 +4198,14 @@ function initCheckoutPageForm() {
 
 				payload.billing_first_name = billingFirstNameEl.value;
 				payload.billing_last_name  = document.getElementById('omnify-billing-lastname').value;
-				payload.billing_company     = document.getElementById('omnify-billing-company')?.value || '';
+				payload.billing_company     = document.getElementById('omnify-billing-company')?.value || document.getElementById('omnify-company')?.value || '';
 				payload.billing_address_1  = document.getElementById('omnify-billing-address-1').value;
 				payload.billing_address_2  = document.getElementById('omnify-billing-address-2').value;
 				payload.billing_city       = document.getElementById('omnify-billing-city').value;
 				payload.billing_state      = document.getElementById('omnify-billing-state').value;
 				payload.billing_postcode   = document.getElementById('omnify-billing-postcode').value;
 				payload.billing_country    = document.getElementById('omnify-billing-country').value;
-				payload.billing_phone      = document.getElementById('omnify-billing-phone').value;
+				payload.billing_phone      = document.getElementById('omnify-billing-phone')?.value || document.getElementById('omnify-phone')?.value || '';
 			}
 			payload.billing_same_as_shipping = 0;
 		}
@@ -3891,7 +4347,7 @@ function initCheckoutPageForm() {
 						}
 					},
 					theme: {
-						color: '#6366f1'
+						color: '#0f766e'
 					}
 				};
 				const rzp = new window.Razorpay(options);
@@ -3965,6 +4421,31 @@ function initCheckoutPageForm() {
 					}
 					if (res.redirect_url) {
 						window.location.href = res.redirect_url;
+						return;
+					}
+				if (gateway === 'wechat' && (res.code_url || res.qr_code_url)) {
+					const qrUrl = res.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(res.code_url)}`;
+					const wechatModal = document.getElementById('omnify-wechat-modal');
+					const wechatQrImg = document.getElementById('omnify-wechat-qr-img');
+					const wechatPaidBtn = document.getElementById('omnify-wechat-paid-btn');
+					const wechatCancelBtn = document.getElementById('omnify-wechat-cancel-btn');
+					if (wechatModal && wechatQrImg) {
+						wechatQrImg.src = qrUrl;
+						wechatModal.style.display = 'flex';
+						if (wechatPaidBtn) {
+							wechatPaidBtn.onclick = () => {
+								clearPurchasedCartItems();
+								window.location.href = res.redirect_url || `${omnifyStorefront.checkoutUrl}?omnify_wechat=success&order_id=${res.order_id}`;
+							};
+						}
+						if (wechatCancelBtn) {
+							wechatCancelBtn.onclick = () => {
+								wechatModal.style.display = 'none';
+								submitBtn.disabled = false;
+								submitBtn.querySelector('.btn-text').style.display = 'inline';
+								submitBtn.querySelector('.btn-spinner').style.display = 'none';
+							};
+						}
 						return;
 					}
 				}
@@ -4242,14 +4723,53 @@ function initCheckoutPageForm() {
 	const prevBtn = document.getElementById('coupon-prev');
 	const nextBtn = document.getElementById('coupon-next');
 	const carousel = document.getElementById('omnify-coupons-carousel');
-	if (prevBtn && nextBtn && carousel) {
-		prevBtn.addEventListener('click', () => carousel.scrollBy({ left: -180, behavior: 'smooth' }));
-		nextBtn.addEventListener('click', () => carousel.scrollBy({ left: 180, behavior: 'smooth' }));
+	const navWrap = document.getElementById('omnify-coupon-nav');
+
+	if (carousel) {
+		const updateCarouselNav = () => {
+			if (!navWrap) return;
+			const canScroll = carousel.scrollWidth > carousel.clientWidth + 4;
+			if (!canScroll) {
+				navWrap.style.display = 'none';
+				return;
+			}
+			navWrap.style.display = 'flex';
+
+			if (prevBtn) {
+				const isAtStart = carousel.scrollLeft <= 2;
+				prevBtn.disabled = isAtStart;
+				prevBtn.classList.toggle('is-disabled', isAtStart);
+			}
+			if (nextBtn) {
+				const isAtEnd = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4;
+				nextBtn.disabled = isAtEnd;
+				nextBtn.classList.toggle('is-disabled', isAtEnd);
+			}
+		};
+
+		if (prevBtn && nextBtn) {
+			prevBtn.addEventListener('click', () => {
+				carousel.scrollBy({ left: -180, behavior: 'smooth' });
+				setTimeout(updateCarouselNav, 320);
+			});
+			nextBtn.addEventListener('click', () => {
+				carousel.scrollBy({ left: 180, behavior: 'smooth' });
+				setTimeout(updateCarouselNav, 320);
+			});
+			carousel.addEventListener('scroll', updateCarouselNav, { passive: true });
+			window.addEventListener('resize', updateCarouselNav);
+		}
+
+		updateCarouselNav();
 	}
 
 	// Available coupon selection autofill & apply
 	document.addEventListener('change', function(e) {
 		if (e.target && e.target.name === 'select_avail_coupon') {
+			document.querySelectorAll('.omnify-coupon-card').forEach(card => card.classList.remove('is-applied'));
+			const card = e.target.closest('.omnify-coupon-card');
+			if (card) card.classList.add('is-applied');
+
 			const couponInput = document.getElementById('omnify-coupon-input');
 			const applyBtn = document.getElementById('omnify-coupon-apply');
 			if (couponInput && applyBtn) {
@@ -4278,110 +4798,184 @@ function initCheckoutPageForm() {
 	}
 
 	// Saved address autofill
-	const trigger = document.querySelector('.omnify-saved-address-trigger');
-	const dropdown = document.querySelector('.omnify-saved-address-options');
-	const hiddenInput = document.getElementById('omnify-saved-address-select');
-	if (trigger && dropdown && hiddenInput) {
-		trigger.addEventListener('click', function(e) {
-			e.preventDefault();
-			e.stopPropagation();
-			dropdown.classList.toggle('show');
-		});
+	function initSavedAddressAutofill() {
+		const containers = document.querySelectorAll('.omnify-saved-address-dropdown-container');
+		if (!containers.length) return;
 
-		document.addEventListener('click', function() {
-			dropdown.classList.remove('show');
-		});
-
-		dropdown.addEventListener('click', function(e) {
-			const option = e.target.closest('.omnify-saved-address-option');
-			if (!option) return;
-
-			const value = option.dataset.value;
-			hiddenInput.value = value;
-			
-			const label = trigger.querySelector('.omnify-saved-address-selected-label');
-			if (label) {
-				label.textContent = option.textContent.trim();
-			}
-
-			dropdown.classList.remove('show');
-
-			if (!value) {
-				clearManualShippingFields();
-			} else {
-				autofillFromOption(option);
+		document.addEventListener('click', function(e) {
+			if (!e.target.closest('.omnify-saved-address-dropdown-container')) {
+				document.querySelectorAll('.omnify-saved-address-options.show').forEach(d => d.classList.remove('show'));
 			}
 		});
 
-		const defaultOpt = dropdown.querySelector('.omnify-saved-address-option[data-is-default="true"]');
-		if (defaultOpt) {
-			setTimeout(() => {
-				defaultOpt.click();
-			}, 100);
-		}
+		containers.forEach(container => {
+			const trigger = container.querySelector('.omnify-saved-address-trigger');
+			const dropdown = container.querySelector('.omnify-saved-address-options');
+			const hiddenInput = container.querySelector('.omnify-saved-address-select') || container.querySelector('input[type="hidden"]');
+			const parentGroup = container.closest('.omnify-checkout-form-group') || container.parentElement;
+			const useDifferentLink = parentGroup ? parentGroup.querySelector('.omnify-use-different-address') : null;
+			const targetType = container.dataset.target || (document.getElementById('omnify-shipping-address-1') ? 'shipping' : 'billing');
 
-		const useDifferentLink = document.getElementById('omnify-use-different-address');
-		if (useDifferentLink) {
-			useDifferentLink.addEventListener('click', function(e) {
+			if (!trigger || !dropdown) return;
+
+			trigger.addEventListener('click', function(e) {
 				e.preventDefault();
-				hiddenInput.value = '';
+				e.stopPropagation();
+				document.querySelectorAll('.omnify-saved-address-options.show').forEach(d => {
+					if (d !== dropdown) d.classList.remove('show');
+				});
+				dropdown.classList.toggle('show');
+			});
+
+			dropdown.addEventListener('click', function(e) {
+				const option = e.target.closest('.omnify-saved-address-option');
+				if (!option) return;
+
+				const value = option.dataset.value;
+				if (hiddenInput) hiddenInput.value = value;
+
 				const label = trigger.querySelector('.omnify-saved-address-selected-label');
 				if (label) {
-					label.textContent = '— Enter new address —';
+					label.textContent = option.dataset.displayLabel || option.querySelector('strong')?.textContent.trim() || option.textContent.trim();
 				}
-				clearManualShippingFields();
+
+				dropdown.classList.remove('show');
+
+				if (!value) {
+					clearManualAddressFields(targetType);
+				} else {
+					autofillFromSavedOption(option, targetType);
+				}
+			});
+
+			if (useDifferentLink) {
+				useDifferentLink.addEventListener('click', function(e) {
+					e.preventDefault();
+					if (hiddenInput) hiddenInput.value = '';
+					const label = trigger.querySelector('.omnify-saved-address-selected-label');
+					if (label) {
+						label.textContent = '— Enter new address —';
+					}
+					clearManualAddressFields(targetType);
+				});
+			}
+
+			// Auto-select default saved address if present
+			const defaultOpt = dropdown.querySelector('.omnify-saved-address-option[data-is-default="true"]') || dropdown.querySelector('.omnify-saved-address-option[data-value]:not([data-value=""])');
+			if (defaultOpt) {
+				setTimeout(() => {
+					defaultOpt.click();
+				}, 120);
+			}
+		});
+
+		function setSelectValueSafely(selectEl, value, callback) {
+			if (!selectEl || !value) {
+				if (callback) callback();
+				return;
+			}
+			const valLower = String(value).trim().toLowerCase();
+			const exists = Array.from(selectEl.options).some(o => o.value.toLowerCase() === valLower || o.textContent.trim().toLowerCase() === valLower);
+			if (!exists) {
+				const opt = document.createElement('option');
+				opt.value = value;
+				opt.textContent = value;
+				selectEl.appendChild(opt);
+			}
+			const match = Array.from(selectEl.options).find(o => o.value.toLowerCase() === valLower || o.textContent.trim().toLowerCase() === valLower);
+			selectEl.value = match ? match.value : value;
+			selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+			const wrapper = selectEl.closest('.omnify-custom-select-wrapper');
+			if (wrapper) {
+				const customInput = wrapper.querySelector('.omnify-custom-select-input');
+				if (customInput) customInput.value = match ? match.textContent.trim() : value;
+			}
+
+			if (callback) {
+				setTimeout(callback, 80);
+			}
+		}
+
+		function autofillFromSavedOption(opt, targetType) {
+			const prefix = targetType === 'shipping' ? 'shipping' : 'billing';
+
+			const firstName = opt.dataset.firstname || '';
+			const lastName = opt.dataset.lastname || '';
+			const company = opt.dataset.company || '';
+			const address1 = opt.dataset.address1 || '';
+			const address2 = opt.dataset.address2 || '';
+			const city = opt.dataset.city || '';
+			const state = opt.dataset.state || '';
+			const postcode = opt.dataset.postcode || '';
+			const country = opt.dataset.country || '';
+			const phone = opt.dataset.phone || '';
+
+			const firstNameEl = document.getElementById(`omnify-${prefix}-firstname`) || document.getElementById('omnify-firstname');
+			const lastNameEl = document.getElementById(`omnify-${prefix}-lastname`) || document.getElementById('omnify-lastname');
+			const companyEl = document.getElementById(`omnify-${prefix}-company`) || document.getElementById('omnify-company');
+			const address1El = document.getElementById(`omnify-${prefix}-address-1`);
+			const address2El = document.getElementById(`omnify-${prefix}-address-2`);
+			const countryEl = document.getElementById(`omnify-${prefix}-country`);
+			const stateEl = document.getElementById(`omnify-${prefix}-state`);
+			const cityEl = document.getElementById(`omnify-${prefix}-city`);
+			const postcodeEl = document.getElementById(`omnify-${prefix}-postcode`);
+			const phoneEl = document.getElementById(`omnify-${prefix}-phone`) || document.getElementById('omnify-phone');
+
+			if (firstNameEl) firstNameEl.value = firstName;
+			if (lastNameEl) lastNameEl.value = lastName;
+			if (companyEl) {
+				companyEl.value = company;
+				if (company) {
+					const compGroup = document.getElementById('omnify-company-input-group');
+					if (compGroup) compGroup.style.display = 'block';
+				}
+			}
+			if (address1El) address1El.value = address1;
+			if (address2El) address2El.value = address2;
+			if (phoneEl && phone) phoneEl.value = phone;
+
+			// Cascading select filling: Country -> State -> City -> Postcode
+			setSelectValueSafely(countryEl, country, () => {
+				setSelectValueSafely(stateEl, state, () => {
+					setSelectValueSafely(cityEl, city, () => {
+						setSelectValueSafely(postcodeEl, postcode);
+					});
+				});
+			});
+		}
+
+		function clearManualAddressFields(targetType) {
+			const prefix = targetType === 'shipping' ? 'shipping' : 'billing';
+			const ids = [
+				`omnify-${prefix}-firstname`,
+				`omnify-${prefix}-lastname`,
+				`omnify-${prefix}-address-1`,
+				`omnify-${prefix}-address-2`,
+				`omnify-${prefix}-phone`
+			];
+			ids.forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.value = '';
+			});
+			const countryEl = document.getElementById(`omnify-${prefix}-country`);
+			const stateEl = document.getElementById(`omnify-${prefix}-state`);
+			const cityEl = document.getElementById(`omnify-${prefix}-city`);
+			const postcodeEl = document.getElementById(`omnify-${prefix}-postcode`);
+
+			[countryEl, stateEl, cityEl, postcodeEl].forEach(sel => {
+				if (!sel) return;
+				sel.value = '';
+				sel.dispatchEvent(new Event('change', { bubbles: true }));
+				const wrapper = sel.closest('.omnify-custom-select-wrapper');
+				if (wrapper) {
+					const customInput = wrapper.querySelector('.omnify-custom-select-input');
+					if (customInput) customInput.value = '';
+				}
 			});
 		}
 	}
-
-	function autofillFromOption(opt) {
-		const fields = {
-			'omnify-shipping-firstname': 'firstname',
-			'omnify-shipping-lastname': 'lastname',
-			'omnify-shipping-address-1': 'address1',
-			'omnify-shipping-address-2': 'address2',
-			'omnify-shipping-city': 'city',
-			'omnify-shipping-postcode': 'postcode'
-		};
-		const map = {
-			firstname: opt.dataset.firstname,
-			lastname: opt.dataset.lastname,
-			address1: opt.dataset.address1,
-			address2: opt.dataset.address2,
-			city: opt.dataset.city,
-			postcode: opt.dataset.postcode
-		};
-		for (const [id, key] of Object.entries(fields)) {
-			const el = document.getElementById(id);
-			if (el) el.value = map[key] || '';
-		}
-		const countryEl = document.getElementById('omnify-shipping-country');
-		if (countryEl && opt.dataset.country) {
-			countryEl.value = opt.dataset.country;
-			countryEl.dispatchEvent(new Event('change', {bubbles: true}));
-			setTimeout(function() {
-				const stateEl = document.getElementById('omnify-shipping-state');
-				if (stateEl && opt.dataset.state) {
-					stateEl.value = opt.dataset.state;
-					stateEl.dispatchEvent(new Event('change', {bubbles: true}));
-				}
-			}, 300);
-		}
-		const phoneEl = document.getElementById('omnify-shipping-phone');
-		if (phoneEl && opt.dataset.phone) phoneEl.value = opt.dataset.phone;
-	}
-
-	function clearManualShippingFields() {
-		const ids = ['omnify-shipping-firstname', 'omnify-shipping-lastname', 'omnify-shipping-address-1', 'omnify-shipping-address-2', 'omnify-shipping-city', 'omnify-shipping-postcode', 'omnify-shipping-phone'];
-		ids.forEach(id => {
-			const el = document.getElementById(id);
-			if (el) el.value = '';
-		});
-		const country = document.getElementById('omnify-shipping-country');
-		const state = document.getElementById('omnify-shipping-state');
-		if (country) country.value = '';
-		if (state) state.innerHTML = '<option value="">Select country first</option>';
-	}
+	initSavedAddressAutofill();
 }
 
 function initPayPalCaptureReturn() {
@@ -4451,6 +5045,10 @@ function initPortalTabs() {
 			p.style.display = isTarget ? 'block' : 'none';
 			p.classList.toggle('active', isTarget);
 		});
+
+		document.querySelectorAll('.omnify-portal-stat[data-omnify-open-tab]').forEach((s) => {
+			s.classList.toggle('is-active', s.getAttribute('data-omnify-open-tab') === tabName);
+		});
 	}
 
 	tabs.forEach((tab) => {
@@ -4465,9 +5063,13 @@ function initPortalTabs() {
 		});
 	});
 
-	// Check hash on page load
+	// Check query param or hash on page load
+	const urlParams = new URLSearchParams(window.location.search);
+	const queryTab = urlParams.get('omnify_tab') || urlParams.get('tab');
 	const hash = window.location.hash;
-	if (hash && hash.startsWith('#omnify-tab-')) {
+	if (queryTab && tabs.some((t) => t.getAttribute('data-tab') === queryTab)) {
+		activateTab(queryTab);
+	} else if (hash && hash.startsWith('#omnify-tab-')) {
 		const tabName = hash.replace('#omnify-tab-', '');
 		activateTab(tabName);
 	} else if (hash && hash.startsWith('#omnify-pane-')) {
@@ -4490,6 +5092,19 @@ function initPortalTabs() {
 			} catch (_) {}
 			document.querySelector('.omnify-portal-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		});
+	});
+
+	// Files drawer toggle handler for portal product cards
+	document.addEventListener('click', (e) => {
+		const btn = e.target.closest('[data-omnify-files-drawer]');
+		if (!btn) return;
+		e.preventDefault();
+		const drawerId = btn.getAttribute('data-omnify-files-drawer');
+		const drawer = document.getElementById(drawerId);
+		if (!drawer) return;
+		const isVisible = drawer.style.display === 'block';
+		drawer.style.display = isVisible ? 'none' : 'block';
+		btn.classList.toggle('is-active', !isVisible);
 	});
 }
 
@@ -4541,6 +5156,38 @@ function initPortalAuthEnhancements() {
 }
 
 // ── Conversion Tracking Helpers ─────────────────────────────────────
+function omnifyTrackViewItem(item) {
+	if (!window.omnifyStorefront || !window.omnifyStorefront.tracking || !item) return;
+	const tracking = window.omnifyStorefront.tracking;
+	const currency = tracking.currency || 'USD';
+	const value = parseFloat(item.price || 0);
+	const itemId = String(item.id);
+
+	if (tracking.ga4Enabled && typeof window.gtag === 'function') {
+		window.gtag('event', 'view_item', {
+			currency: currency,
+			value: value,
+			items: [{
+				item_id: itemId,
+				item_name: item.name || '',
+				item_category: item.category || '',
+				price: value
+			}]
+		});
+	}
+
+	if (tracking.metaEnabled && typeof window.fbq === 'function') {
+		window.fbq('track', 'ViewContent', {
+			content_ids: [itemId],
+			content_name: item.name || '',
+			content_category: item.category || '',
+			content_type: 'product',
+			value: value,
+			currency: currency
+		});
+	}
+}
+
 function omnifyTrackAddToCart(item) {
 	if (!window.omnifyStorefront || !window.omnifyStorefront.tracking) return;
 	const tracking = window.omnifyStorefront.tracking;
@@ -5214,7 +5861,7 @@ function initProductSinglePage() {
 
 			// 2. MATCHING VARIATION FOUND
 			const isOutOfStock = isVariationOutOfStock(matching);
-			const isBackorder = matching.stock_status === 'backorder';
+			const isBackorder = matching.stock_status === 'onbackorder' || matching.stock_status === 'backorder' || (parseInt(matching.allow_backorders, 10) === 1 && parseInt(matching.stock_qty || 0, 10) <= 0);
 			const finalPrice = matching.sale_price !== null && matching.sale_price !== '' ? matching.sale_price : matching.price;
 
 			if (priceDisplay) priceDisplay.style.display = 'none';
@@ -5310,7 +5957,7 @@ function initProductSinglePage() {
 					buyBtn.classList.remove('disabled');
 					buyBtn.style.pointerEvents = 'auto';
 					buyBtn.style.opacity = '1';
-					buyBtn.innerHTML = `<span>Pay &bull; Buy Now in 1-Click</span>`;
+					buyBtn.innerHTML = `<span>Instant Checkout &bull; Buy Now in 1-Click</span>`;
 					if (buyBtn.dataset.baseUrl) {
 						const url = new URL(buyBtn.dataset.baseUrl, window.location.origin);
 						url.searchParams.set('variation_id', matching.id);
@@ -5757,11 +6404,27 @@ function initPortalAddressesPage() {
 				const field = form.querySelector('[name="shipping_' + key + '"]');
 				if (field) {
 					field.value = address[key] || '';
+					field.dataset.selected = address[key] || '';
 				}
 			});
+			const nameField = form.querySelector('[name="shipping_address_name"]');
+			if (nameField) {
+				nameField.value = address.address_name || address.label || '';
+			}
 			const defaultField = form.querySelector('[name="is_default"]');
 			if (defaultField) {
 				defaultField.checked = Boolean(address.is_default);
+			}
+
+			const countryField = form.querySelector('[name="shipping_country"]');
+			if (countryField) {
+				countryField.value = address.country || '';
+				countryField.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+		} else {
+			const countryField = form.querySelector('[name="shipping_country"]');
+			if (countryField) {
+				countryField.dispatchEvent(new Event('change', { bubbles: true }));
 			}
 		}
 		wrapper.style.display = 'block';
@@ -5789,11 +6452,14 @@ function initPortalAddressesPage() {
 	const sameCheckbox = document.querySelector('input[name="shipping_same_as_billing"]');
 	const shippingSec = document.getElementById('omnify-portal-shipping-section');
 	if (sameCheckbox && shippingSec) {
+		const card = sameCheckbox.closest('.omnify-portal-checkbox-card');
 		const toggleShipping = () => {
 			if (sameCheckbox.checked) {
 				shippingSec.style.display = 'none';
+				if (card) card.classList.add('is-active');
 			} else {
 				shippingSec.style.display = 'block';
+				if (card) card.classList.remove('is-active');
 			}
 		};
 		sameCheckbox.addEventListener('change', toggleShipping);
@@ -5995,6 +6661,168 @@ function initCardMockSwatches() {
 	});
 }
 
+function initLiveSearchAutocomplete() {
+	const searchInput = document.getElementById('omnify-product-search');
+	const resultsBox = document.getElementById('omnify-search-autocomplete');
+	if (!searchInput || !resultsBox) return;
+
+	let debounceTimer = null;
+	const store = window.omnifyStorefront || {};
+	const restUrl = (store.restUrl || '/wp-json/omnify/v1').replace(/\/$/, '');
+
+	searchInput.addEventListener('input', () => {
+		clearTimeout(debounceTimer);
+		const query = searchInput.value.trim();
+
+		if (query.length < 2) {
+			resultsBox.style.display = 'none';
+			resultsBox.innerHTML = '';
+			return;
+		}
+
+		debounceTimer = setTimeout(async () => {
+			try {
+				const response = await fetch(`${restUrl}/products/public?search=${encodeURIComponent(query)}&per_page=6`, {
+					headers: { 'X-WP-Nonce': store.nonce || '' }
+				});
+				if (!response.ok) throw new Error('Search failed');
+				const products = await response.json();
+
+				if (!Array.isArray(products) || products.length === 0) {
+					resultsBox.innerHTML = `<div style="padding: 12px; font-size: 13px; color: #64748b; text-align: center;">No matching products found</div>`;
+					resultsBox.style.display = 'block';
+					return;
+				}
+
+				resultsBox.innerHTML = products.map(p => {
+					const img = p.featured_image || p.thumbnail_url || (p.images && p.images[0]) || '';
+					const price = p.formatted_price || (store.currencySymbol || '$') + Number(p.sale_price !== null && p.sale_price !== '' ? p.sale_price : p.price).toFixed(2);
+					const link = p.permalink || `/?omnify_product=${encodeURIComponent(p.slug || p.id)}`;
+
+					return `
+						<a href="${link}" class="omnify-search-item" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-decoration: none; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+							${img ? `<img src="${img}" alt="${p.name || ''}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" />` : `<div style="width: 36px; height: 36px; background: #e2e8f0; border-radius: 4px; flex-shrink: 0;"></div>`}
+							<div style="flex: 1; min-width: 0;">
+								<div style="font-size: 13px; font-weight: 600; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name || ''}</div>
+								<div style="font-size: 12px; color: #008060; font-weight: 700;">${price}</div>
+							</div>
+						</a>
+					`;
+				}).join('');
+
+				resultsBox.style.display = 'block';
+			} catch (e) {
+				resultsBox.style.display = 'none';
+			}
+		}, 250);
+	});
+
+	document.addEventListener('click', (e) => {
+		if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+			resultsBox.style.display = 'none';
+		}
+	});
+
+	searchInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') {
+			resultsBox.style.display = 'none';
+		}
+	});
+}
+
+window.omnifySubscribeStock = async function(event, productId, variationId = null) {
+	event.preventDefault();
+	const form = event.target;
+	const input = form.querySelector('input[type="email"]');
+	const btn = form.querySelector('button[type="submit"]');
+	const msgBox = form.parentElement.querySelector('.omnify-stock-notify-msg');
+	if (!input || !btn) return;
+
+	const email = input.value.trim();
+	if (!email) return;
+
+	btn.disabled = true;
+	const originalText = btn.textContent;
+	btn.textContent = 'Subscribing...';
+
+	const store = window.omnifyStorefront || {};
+	const restUrl = (store.restUrl || '/wp-json/omnify/v1').replace(/\/$/, '');
+
+	try {
+		const res = await fetch(`${restUrl}/products/subscribe-stock`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': store.nonce || ''
+			},
+			body: JSON.stringify({
+				product_id: productId,
+				variation_id: variationId,
+				email: email
+			})
+		});
+		const data = await res.json();
+		if (!res.ok || data.code) {
+			throw new Error(data.message || 'Subscription failed');
+		}
+
+		if (msgBox) {
+			msgBox.textContent = data.message || 'Subscribed successfully!';
+			msgBox.style.color = '#047857';
+			msgBox.style.display = 'block';
+		}
+		form.reset();
+	} catch (err) {
+		if (msgBox) {
+			msgBox.textContent = err.message || 'Could not subscribe. Please try again.';
+			msgBox.style.color = '#b91c1c';
+			msgBox.style.display = 'block';
+		}
+	} finally {
+		btn.disabled = false;
+		btn.textContent = originalText;
+	}
+};
+
+function initPortalReorderButtons() {
+	document.addEventListener('click', async (e) => {
+		const btn = e.target.closest('.omnify-reorder-btn');
+		if (!btn) return;
+		const raw = btn.getAttribute('data-reorder-items');
+		if (!raw) return;
+
+		try {
+			const items = JSON.parse(raw);
+			if (Array.isArray(items) && items.length) {
+				e.preventDefault();
+				const originalText = btn.innerHTML;
+				btn.disabled = true;
+				btn.innerHTML = '<span>Reordering...</span>';
+
+				for (const item of items) {
+					if (item && item.id) {
+						addItemToCart({
+							id: item.id,
+							variationId: item.variationId || null,
+							quantity: parseInt(item.quantity || 1, 10),
+							name: item.name || '',
+							price: parseFloat(item.price || 0)
+						});
+					}
+				}
+
+				try {
+					await saveCartForCheckout(getCartItems());
+				} catch (err) {}
+
+				const store = window.omnifyStorefront || {};
+				const checkoutUrl = store.checkoutUrl || '/checkout';
+				window.location.href = checkoutUrl;
+			}
+		} catch (err) {}
+	});
+}
+
 omnifyRunOnReady(() => {
 	initProductSinglePage();
 	initPortalAddressesPage();
@@ -6004,5 +6832,7 @@ omnifyRunOnReady(() => {
 	initCouponPillCopy();
 	initQuickFilterPills();
 	initCardMockSwatches();
+	initLiveSearchAutocomplete();
+	initPortalReorderButtons();
 });
 

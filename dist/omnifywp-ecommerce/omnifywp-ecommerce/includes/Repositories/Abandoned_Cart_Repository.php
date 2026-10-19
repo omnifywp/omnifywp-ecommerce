@@ -52,6 +52,34 @@ class Omnify_Abandoned_Cart_Repository {
 		return apply_filters('omnify_get_abandoned_carts_results', $omnify_results, $omnify_args);
 	}
 
+	/**
+	 * Count total abandoned carts matching criteria for pagination.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_table  = $this->table();
+		$omnify_status = sanitize_key((string) ($omnify_args['status'] ?? ''));
+		$omnify_search = sanitize_text_field((string) ($omnify_args['search'] ?? ''));
+
+		$omnify_where = "WHERE deleted_at IS NULL";
+		if ($omnify_status === 'trash') {
+			$omnify_where = "WHERE deleted_at IS NOT NULL";
+		} elseif ($omnify_status) {
+			$omnify_where .= $wpdb->prepare(" AND status = %s", $omnify_status);
+		}
+		if ($omnify_search !== '') {
+			$omnify_like = '%' . $wpdb->esc_like($omnify_search) . '%';
+			$omnify_where .= $wpdb->prepare(
+				" AND (email LIKE %s OR first_name LIKE %s OR last_name LIKE %s)",
+				$omnify_like, $omnify_like, $omnify_like
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, "SELECT COUNT(*) FROM {$omnify_table} {$omnify_where}");
+	}
+
 	public function find(int $omnify_id): ?array {
 		global $wpdb;
 
@@ -139,7 +167,10 @@ class Omnify_Abandoned_Cart_Repository {
 
 		$omnify_delay_minutes = max(5, $omnify_delay_minutes);
 		$omnify_max_reminders = max(1, $omnify_max_reminders);
-		$omnify_threshold     = gmdate('Y-m-d H:i:s', time() - ($omnify_delay_minutes * MINUTE_IN_SECONDS));
+		$omnify_initial_threshold = gmdate('Y-m-d H:i:s', time() - ($omnify_delay_minutes * MINUTE_IN_SECONDS));
+		// Subsequent reminders (2nd, 3rd) require at least 24 hours between emails
+		$omnify_followup_hours    = (int) apply_filters('omnify_abandoned_cart_followup_interval_hours', 24);
+		$omnify_followup_threshold = gmdate('Y-m-d H:i:s', time() - ($omnify_followup_hours * HOUR_IN_SECONDS));
 		$omnify_now           = gmdate('Y-m-d H:i:s');
 		$omnify_table         = $this->table();
 
@@ -151,12 +182,16 @@ class Omnify_Abandoned_Cart_Repository {
 					AND deleted_at IS NULL
 					AND email <> ''
 					AND reminder_count < %d
-					AND updated_at <= %s
+					AND (
+						(reminder_count = 0 AND updated_at <= %s)
+						OR (reminder_count > 0 AND last_reminder_at IS NOT NULL AND last_reminder_at <= %s)
+					)
 					AND (expires_at IS NULL OR expires_at > %s)
 				ORDER BY updated_at ASC
 				LIMIT %d",
 				$omnify_max_reminders,
-				$omnify_threshold,
+				$omnify_initial_threshold,
+				$omnify_followup_threshold,
 				$omnify_now,
 				min(100, max(1, $omnify_limit))
 			),
@@ -209,6 +244,37 @@ class Omnify_Abandoned_Cart_Repository {
 			do_action('omnify_abandoned_cart_recovered', $omnify_token, $omnify_order_id);
 			return true;
 		}
+		return false;
+	}
+
+	public function mark_recovered_by_email(string $omnify_email, int $omnify_order_id): bool {
+		global $wpdb;
+
+		$omnify_email = sanitize_email($omnify_email);
+		if ('' === $omnify_email) {
+			return false;
+		}
+
+		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::update(
+			$wpdb,
+			$this->table(),
+			[
+				'status'             => 'recovered',
+				'recovered_order_id' => $omnify_order_id,
+				'recovered_at'       => $this->now(),
+				'updated_at'         => $this->now(),
+			],
+			[
+				'email'  => $omnify_email,
+				'status' => 'active',
+			]
+		);
+
+		if (false !== $omnify_result && $omnify_result > 0) {
+			do_action('omnify_abandoned_cart_recovered_by_email', $omnify_email, $omnify_order_id);
+			return true;
+		}
+
 		return false;
 	}
 
@@ -273,6 +339,29 @@ class Omnify_Abandoned_Cart_Repository {
 	}
 
 	/**
+	 * Prune unrecovered or trashed abandoned carts older than specified days.
+	 */
+	public function prune_stale(int $omnify_days = 60): int {
+		global $wpdb;
+
+		$omnify_days   = max(7, $omnify_days);
+		$omnify_cutoff = gmdate('Y-m-d H:i:s', time() - ($omnify_days * DAY_IN_SECONDS));
+		$omnify_table  = $this->table();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_deleted = \Omnify\eCommerce\Support\Omnify_DB::query(
+			$wpdb,
+			$wpdb->prepare(
+				"DELETE FROM {$omnify_table} WHERE (deleted_at IS NOT NULL AND deleted_at < %s) OR (status != 'recovered' AND updated_at < %s)",
+				$omnify_cutoff,
+				$omnify_cutoff
+			)
+		);
+
+		return false !== $omnify_deleted ? (int) $omnify_deleted : 0;
+	}
+
+	/**
 	 * @return array<string, int|float>
 	 */
 	public function stats(): array {
@@ -325,6 +414,48 @@ class Omnify_Abandoned_Cart_Repository {
 			$omnify_product_id, '%' . $wpdb->esc_like($omnify_json_id) . '%'
 		));
 		return max(0, $omnify_count);
+	}
+
+	/**
+	 * Mark active abandoned carts that have exceeded their expires_at date as 'expired'.
+	 */
+	public function mark_expired(): int {
+		global $wpdb;
+		$omnify_table = $this->table();
+		$omnify_now   = $this->now();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::query(
+			$wpdb,
+			$wpdb->prepare(
+				"UPDATE {$omnify_table} SET status = 'expired', updated_at = %s WHERE status = 'active' AND expires_at IS NOT NULL AND expires_at <= %s",
+				$omnify_now,
+				$omnify_now
+			)
+		);
+
+		return false !== $omnify_result ? (int) $omnify_result : 0;
+	}
+
+	/**
+	 * Prune old abandoned carts beyond retention days.
+	 */
+	public function cleanup_expired(int $omnify_days = 90): int {
+		global $wpdb;
+		$omnify_table = $this->table();
+		$omnify_days = max(14, $omnify_days);
+		$omnify_threshold = gmdate('Y-m-d H:i:s', time() - ($omnify_days * DAY_IN_SECONDS));
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::query(
+			$wpdb,
+			$wpdb->prepare(
+				"DELETE FROM {$omnify_table} WHERE status IN ('expired', 'recovered') AND updated_at < %s",
+				$omnify_threshold
+			)
+		);
+
+		return false !== $omnify_result ? (int) $omnify_result : 0;
 	}
 
 	private function table(): string {

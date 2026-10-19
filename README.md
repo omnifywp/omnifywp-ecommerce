@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://wordpress.org/plugins/omnifywp-ecommerce/"><img src="https://img.shields.io/badge/Version-1.4.0-18794E.svg?style=flat-square" alt="Plugin Version" /></a>
+  <a href="https://wordpress.org/plugins/omnifywp-ecommerce/"><img src="https://img.shields.io/badge/Version-1.4.2-18794E.svg?style=flat-square" alt="Plugin Version" /></a>
   <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-6.5+-21759B.svg?style=flat-square&logo=wordpress" alt="WordPress Version" /></a>
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2+-777BB4.svg?style=flat-square&logo=php" alt="PHP Version" /></a>
   <a href="https://gnu.org/licenses/gpl.html"><img src="https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg?style=flat-square" alt="License" /></a>
@@ -49,6 +49,10 @@
   * **3-Column Standard Grid** (`data-cols="3"`): Balanced grid layout for balanced presentation of imagery and meta details.
   * **2-Column Large Grid** (`data-cols="2"`): Large editorial cards emphasizing detailed product photography and descriptions.
   * **1-Column Detailed List View** (`data-cols="list"`): Three-column row layout (thumbnail, center details/attributes, and right purchase block).
+* **Card Hover Action Toolbar**: Floating product card toolbar with Wishlist toggle, Quick View modal trigger, and Product Compare launcher.
+* **Interactive Color Swatches**: Selectable color dots on catalog product cards with smooth active indicator states.
+* **Quick Filter Pills Strip**: Dynamic horizontal filter bar for 1-click client-side filtering by Flash Deals, Bestsellers, New In, and top categories with dynamic counter badges.
+* **Flash Sale Announcement Ticker**: Persistent countdown timer with 1-click coupon code copy button (`FLASH30`) and clipboard feedback.
 * **Responsive Full-Width Image Cards**: Engineered container rules (`width: 100%`, `max-width: 100%`, `aspect-ratio: auto`, `object-fit: cover`) preventing gap distortions or squishing across themes.
 * **Balanced Typography Hierarchy**: Calibrated font scales and line-heights ensuring long product titles never truncate prematurely.
 * **Compact Pill Action Buttons**: Sleek, non-wrapping `+ Quick Add` and `View Details` action buttons with balanced padding and font size.
@@ -63,8 +67,8 @@
 
 ### Complete Global Payment Gateways (Secure-by-Default)
 OmnifyWP features a **Secure-by-Default Architecture**: all gateways are disabled by default (`0`) upon installation. Merchants simply toggle on their preferred gateways and paste their API credentials. Built-in first-party integrations include:
-* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout. Webhook: `/wp-json/omnify/v1/webhook/stripe`.
-* **PayPal Commerce**: Express Checkout, smart payment buttons, Pay in 4, and card handling. Webhook: `/wp-json/omnify/v1/webhook/paypal`.
+* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Alipay, and Stripe Checkout. Webhook: `/wp-json/omnify/v1/webhook/stripe` (automated refund and dispute sync).
+* **PayPal Commerce**: Express Checkout, smart payment buttons, Pay in 4, and card handling. Webhook: `/wp-json/omnify/v1/webhook/paypal` (automated refund and dispute sync).
 * **Razorpay**: UPI (Google Pay, PhonePe, Paytm), RuPay, cards, and netbanking for India. Webhook: `/wp-json/omnify/v1/webhook/razorpay`.
 * **SSLCommerz**: Dedicated card, internet banking, and mobile wallet flow (bKash, Nagad, Rocket) for Bangladesh. IPN: `/wp-json/omnify/v1/webhook/sslcommerz`.
 * **Paystack**: Top payment gateway for Nigeria, Ghana, South Africa, and Kenya.
@@ -74,6 +78,7 @@ OmnifyWP features a **Secure-by-Default Architecture**: all gateways are disable
 * **Khalti & eSewa**: Trusted digital wallets and mobile banking for Nepal.
 * **Paddle Billing**: Merchant-of-Record checkout with automatic tax handling and webhooks.
 * **Offline Payment Workflows**: Cash on Delivery (COD) with physical item gating, Direct Bank Transfer (BACS) with automated bank detail presentation, and Cheque Payments.
+* **Partially Refunded Order Workflow**: Support for `partially_refunded` order status preserving download entitlements for remaining line items.
 
 ### Cryptographic Digital Locker
 * **HMAC-SHA256 Signed Links**: Generated with user-configurable expiry times, download count limits, and IP audit logging.
@@ -81,12 +86,22 @@ OmnifyWP features a **Secure-by-Default Architecture**: all gateways are disable
 * **Customer Account Dashboard**: Shortcode (`[omnify_customer_downloads]`) provides customers with direct access to file licenses, orders, and address books.
 * **Bandwidth & Usage Auditing**: Detailed tracking of downloads, IP logs, and server throughput.
 
-### Modern Management & CRM Tools
-* **Unified Admin Panel**: Standardized management tables across Products, Orders, Customers, Coupons, Abandoned Carts, and Reviews.
+### Modern Management, Tools & CRM
+* **Unified Admin Design System**: Elevated card surfaces, emerald accent tokens, and zero-emoji typography across Dashboard, Products, Orders, Customers, Coupons, Abandoned Carts, and Reviews.
+* **Live Database Diagnostics Overview**: Real-time 4-KPI metric strip in Tools reporting live counts for Products, Orders, Customers, and Reviews.
+* **Demo Data Seeding & Granular Cleanup**: One-click demo data generation with animated progress bar; granular cleanup utilities for individual data types and elevated Danger Zone wiping.
+* **Automated Database Maintenance**: Scheduled recurring background cron (`omnify_daily_database_cleanup`) for abandoned cart pruning, transient expiration, and index optimization.
+* **Server Runtime Specifications Panel**: Diagnostic inspection of PHP version, MySQL version, WordPress core version, memory limits, and database table prefix.
+* **Dataset Export & Import Suite**: One-click CSV exports for Products, Orders, and Customers with UTF-8 encoding; CSV drag-and-drop import container with column override option and CSV schema reference table.
+* **Administrative Activity Audit Trail**: Filterable chronological log with Actor, Category, Search, and Date filters, active filter chips, category badge treatments, and irreversible log clearing.
+* **REST API Keys & Outbound Webhooks**: Generate secure Consumer Key/Secret pairs with copy modal; register outbound webhooks with HMAC-SHA256 signatures and event topic subscriptions.
+* **Payment Gateway & URL Diagnostics**: Live API verification cards for Stripe and PayPal testing authentication credentials, environment mode, and roundtrip latency; arbitrary URL connection checker with latency rating and filtered response headers.
+* **Settings System Modernization**: Polished visual layouts across General, Localization, Currency, Payment, Tax, Shipping, Email, Customer Portal, and Advanced settings tabs.
 * **Trash & Soft Delete**: Full safety net allowing restoring or permanent purging of deleted store records.
-* **Coupons & Discount Rules**: Percentage, fixed, minimum cart subtotals, and expiration configurations.
+* **Coupons & Discount Rules**: Percentage, fixed, minimum cart subtotals, and timezone-aware expiration checks using `wp_timezone()`.
 * **Review Moderation System**: Dedicated workflow to approve, edit, filter, or trash user reviews and star ratings.
-* **Abandoned Cart Recovery**: Automatic recording of abandoned sessions with manual checkout recovery email dispatches.
+* **Multi-Item Abandoned Cart Recovery**: Automatic serialized capture of multi-item carts with encrypted 1-click tokenized checkout restoration links.
+* **High-Performance Query Batching & Scalability**: N+1 query elimination via `Product_File_Repository::all_for_products()` and SQL-optimized customer pagination.
 * **Customer Activity CRM**: Timeline tracking customer actions such as checkout initiation, completed orders, and support notes.
 
 ---

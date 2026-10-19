@@ -168,7 +168,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_stripe_mode,
 				'toggle_name' => 'stripe_checkout_enabled',
 				'logo_class'  => 'omnify-logo-stripe',
-				'logo_svg'    => '<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#635BFF"/><path d="M15.4 12.2c0-1.2 1-1.7 2.6-1.7 2.3 0 5.2.7 7.5 2v-5c-2.5-1-5.1-1.4-7.5-1.4-6.1 0-10.2 3.2-10.2 8.6 0 8.4 11.5 7 11.5 10.6 0 1.4-1.2 1.9-2.9 1.9-2.6 0-5.9-1.1-8.5-2.5v5.1c2.8 1.2 5.7 1.7 8.5 1.7 6.3 0 10.5-3.1 10.5-8.6-.1-9.1-11.5-7.4-11.5-10.7z" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#635BFF"/><path d="M47.2 41.5c0-3.3 2.6-4.6 7-4.6 6.3 0 14 1.9 20.3 5.4V26.7c-6.8-2.7-13.8-3.8-20.3-3.8-16.5 0-27.6 8.7-27.6 23.2 0 22.8 31.2 19 31.2 28.7 0 3.8-3.3 5.1-7.8 5.1-7 0-16-3-23-7.2v16.1c7.6 3.3 15.4 4.7 23 4.7 17.1 0 28.5-8.4 28.5-23.3-.2-24.7-31.3-20.1-31.3-28.8z" fill="#FFFFFF"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -260,7 +260,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_paypal_mode,
 				'toggle_name' => 'paypal_checkout_enabled',
 				'logo_class'  => 'omnify-logo-paypal',
-				'logo_svg'    => '<svg width="24" height="28" viewBox="0 0 84 100" fill="none"><path d="M68.5 28C66.9 39.8 58.4 47 46.5 47H34.7c-1.5 0-2.8 1.1-3.1 2.6L23.4 80.2c-.3 1.5.9 2.9 2.5 2.9h13c1.5 0 2.8-1.1 3.1-2.6l3-19.1c.3-1.5 1.5-2.6 3.1-2.6h5c15.8 0 27.1-9.1 29.2-25.1.8-5.8-.6-10.5-3.8-14-1.2 3.1-2.9 5.8-5 8.3z" fill="#0079C1"/><path d="M60.9 11C56.7 5.7 49 3.2 38.8 3.2H16c-2.1 0-3.9 1.5-4.1 3.6L.8 74.3c-.3 1.8 1.1 3.4 3 3.4h17.6l4.4-28.5c.3-2.1 2.1-3.6 4.1-3.6h11.8c15.8 0 27.1-9.1 29.2-25.1.9-6.7-.7-11.8-4.1-15.3l-5.9-4.2z" fill="#00457C"/><path d="M60.9 11C56.7 5.7 49 3.2 38.8 3.2H16c-2.1 0-3.9 1.5-4.1 3.6L.8 74.3c-.3 1.8 1.1 3.4 3 3.4h17.6l4.4-28.5c.3-2.1 2.1-3.6 4.1-3.6h11.8c11.9 0 20.4-7.1 21.9-18.9 2-15.3-9.1-23.4-13.2-23.4z" fill="#002952" opacity=".18"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><g transform="translate(22, 17) scale(0.68)"><path d="M68.5 28C66.9 39.8 58.4 47 46.5 47H34.7c-1.5 0-2.8 1.1-3.1 2.6L23.4 80.2c-.3 1.5.9 2.9 2.5 2.9h13c1.5 0 2.8-1.1 3.1-2.6l3-19.1c.3-1.5 1.5-2.6 3.1-2.6h5c15.8 0 27.1-9.1 29.2-25.1.8-5.8-.6-10.5-3.8-14-1.2 3.1-2.9 5.8-5 8.3z" fill="#0079C1"/><path d="M60.9 11C56.7 5.7 49 3.2 38.8 3.2H16c-2.1 0-3.9 1.5-4.1 3.6L.8 74.3c-.3 1.8 1.1 3.4 3 3.4h17.6l4.4-28.5c.3-2.1 2.1-3.6 4.1-3.6h11.8c15.8 0 27.1-9.1 29.2-25.1.9-6.7-.7-11.8-4.1-15.3l-5.9-4.2z" fill="#00457C"/><path d="M60.9 11C56.7 5.7 49 3.2 38.8 3.2H16c-2.1 0-3.9 1.5-4.1 3.6L.8 74.3c-.3 1.8 1.1 3.4 3 3.4h17.6l4.4-28.5c.3-2.1 2.1-3.6 4.1-3.6h11.8c11.9 0 20.4-7.1 21.9-18.9 2-15.3-9.1-23.4-13.2-23.4z" fill="#002952" opacity=".22"/></g></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -332,7 +332,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_razorpay_mode,
 				'toggle_name' => 'razorpay_checkout_enabled',
 				'logo_class'  => 'omnify-logo-razorpay',
-				'logo_svg'    => '<svg width="24" height="28" viewBox="0 0 100 115" fill="none"><path d="M57.6 2.3c-2.4-.4-4.8.8-5.7 3.1L27.1 66.8c-.8 1.9-.3 4.2 1.3 5.5 1.5 1.4 3.7 1.6 5.5.7l19.5-10.4-10.2 47.9c-.4 2.1.6 4.1 2.5 4.9 1.9.9 4.2.4 5.5-1.1L82.1 76.5c1.4-1.6 1.7-3.9.7-5.8-1-1.9-3.1-2.9-5.2-2.6l-18.4 2.9 23.4-62.8c.8-2.2-.2-4.6-2.2-5.7-1-.6-2-.8-2.8-.2z" fill="#0C2340"/><path d="M57.6 2.3c-2.4-.4-4.8.8-5.7 3.1L27.1 66.8c-.8 1.9-.3 4.2 1.3 5.5 1.5 1.4 3.7 1.6 5.5.7l19.5-10.4-10.2 47.9c-.4 2.1.6 4.1 2.5 4.9 1.9.9 4.2.4 5.5-1.1L82.1 76.5l-26.6-4.5 17.6-64.8c.8-2.2-.2-4.6-2.2-5.7-1-.6-2-.8-2.8-.2z" fill="#0284C7"/><path d="M57.6 2.3l-22 59.3 17.8-9.5-7.6 35.8 28.5-27.1-14.8 2.3 17.6-55.9c.8-2.2-.2-4.6-2.2-5.7-1-.6-2-.8-2.8-.2z" fill="#38BDF8"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#0C2340"/><g transform="translate(18, 14) scale(0.64)"><path d="M57.6 2.3c-2.4-.4-4.8.8-5.7 3.1L27.1 66.8c-.8 1.9-.3 4.2 1.3 5.5 1.5 1.4 3.7 1.6 5.5.7l19.5-10.4-10.2 47.9c-.4 2.1.6 4.1 2.5 4.9 1.9.9 4.2.4 5.5-1.1L82.1 76.5c1.4-1.6 1.7-3.9.7-5.8-1-1.9-3.1-2.9-5.2-2.6l-18.4 2.9 23.4-62.8c.8-2.2-.2-4.6-2.2-5.7-1-.6-2-.8-2.8-.2z" fill="#0284C7"/><path d="M57.6 2.3l-22 59.3 17.8-9.5-7.6 35.8 28.5-27.1-14.8 2.3 17.6-55.9c.8-2.2-.2-4.6-2.2-5.7-1-.6-2-.8-2.8-.2z" fill="#3395FF"/></g></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -407,7 +407,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_mollie_mode,
 				'toggle_name' => 'mollie_checkout_enabled',
 				'logo_class'  => 'omnify-logo-mollie',
-				'logo_svg'    => '<svg width="32" height="20" viewBox="0 0 120 70" fill="none"><path d="M30 60C13.43 60 0 46.57 0 30S13.43 0 30 0c11.05 0 20.67 6 25.86 14.89l-11.83 6.94C40.64 16.54 35.65 14 30 14c-8.84 0-16 7.16-16 16s7.16 16 16 16c5.65 0 10.64-2.54 14.03-7.83l11.83 6.94C50.67 54 41.05 60 30 60z" fill="#000000"/><path d="M90 60c-16.57 0-30-13.43-30-30s13.43-30 30-30 30 13.43 30 30-13.43 30-30 30zm0-14c8.84 0 16-7.16 16-16s-7.16-16-16-16-16 7.16-16 16 7.16 16 16 16z" fill="#FF5C35"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><g transform="translate(11, 28) scale(0.65)"><path d="M30 60C13.43 60 0 46.57 0 30S13.43 0 30 0c11.05 0 20.67 6 25.86 14.89l-11.83 6.94C40.64 16.54 35.65 14 30 14c-8.84 0-16 7.16-16 16s7.16 16 16 16c5.65 0 10.64-2.54 14.03-7.83l11.83 6.94C50.67 54 41.05 60 30 60z" fill="#000000"/><circle cx="90" cy="30" r="30" fill="#FF5C35"/></g></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -468,7 +468,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_paddle_mode,
 				'toggle_name' => 'paddle_checkout_enabled',
 				'logo_class'  => 'omnify-logo-paddle',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="#2D3142"/><path d="M50 20c-16.57 0-30 13.43-30 30 0 12.04 7.08 22.42 17.3 27.24L48 62.5c-4.14-2.12-7-6.44-7-11.41 0-7.18 5.82-13 13-13 5.3 0 9.87 3.16 11.95 7.69l12.78-7.38C73.34 27.42 62.53 20 50 20z" fill="#00FFB2"/><circle cx="54" cy="51" r="7" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#14171A"/><path d="M50 20C33.43 20 20 33.43 20 50c0 12.04 7.08 22.42 17.3 27.24L48 62.5c-4.14-2.12-7-6.44-7-11.41 0-7.18 5.82-13 13-13 5.3 0 9.87 3.16 11.95 7.69l12.78-7.38C73.34 27.42 62.53 20 50 20z" fill="#00EB99"/><circle cx="54" cy="51" r="7.5" fill="#FFFFFF"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -490,26 +490,32 @@ if (! function_exists('omnify_render_pm_header')) {
 				</div>
 				<div class="omnify-modern-form-row" data-cond-field="paddle_mode" data-cond-val="sandbox">
 					<div class="omnify-modern-form-group">
-						<label for="paddle_sandbox_vendor_id"><?php esc_html_e('Sandbox Vendor / Account ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="paddle_sandbox_vendor_id" name="paddle_sandbox_vendor_id" value="<?php echo esc_attr($omnify_settings['paddle_sandbox_vendor_id'] ?? ''); ?>" />
-					</div>
-					<div class="omnify-modern-form-group">
 						<label for="paddle_sandbox_api_key"><?php esc_html_e('Sandbox API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
-							<input type="password" id="paddle_sandbox_api_key" name="paddle_sandbox_api_key" value="<?php echo esc_attr($omnify_settings['paddle_sandbox_api_key'] ?? ''); ?>" />
+							<input type="password" id="paddle_sandbox_api_key" name="paddle_sandbox_api_key" placeholder="test_..." value="<?php echo esc_attr($omnify_settings['paddle_sandbox_api_key'] ?? ''); ?>" />
+							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+						</div>
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="paddle_sandbox_client_token"><?php esc_html_e('Sandbox Client-Side Token', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-password-field-wrap">
+							<input type="password" id="paddle_sandbox_client_token" name="paddle_sandbox_client_token" placeholder="test_..." value="<?php echo esc_attr($omnify_settings['paddle_sandbox_client_token'] ?? ''); ?>" />
 							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
 						</div>
 					</div>
 				</div>
 				<div class="omnify-modern-form-row" data-cond-field="paddle_mode" data-cond-val="live">
 					<div class="omnify-modern-form-group">
-						<label for="paddle_live_vendor_id"><?php esc_html_e('Live Vendor / Account ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="paddle_live_vendor_id" name="paddle_live_vendor_id" value="<?php echo esc_attr($omnify_settings['paddle_live_vendor_id'] ?? ''); ?>" />
-					</div>
-					<div class="omnify-modern-form-group">
 						<label for="paddle_live_api_key"><?php esc_html_e('Live API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
-							<input type="password" id="paddle_live_api_key" name="paddle_live_api_key" value="<?php echo esc_attr($omnify_settings['paddle_live_api_key'] ?? ''); ?>" />
+							<input type="password" id="paddle_live_api_key" name="paddle_live_api_key" placeholder="live_..." value="<?php echo esc_attr($omnify_settings['paddle_live_api_key'] ?? ''); ?>" />
+							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+						</div>
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="paddle_live_client_token"><?php esc_html_e('Live Client-Side Token', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-password-field-wrap">
+							<input type="password" id="paddle_live_client_token" name="paddle_live_client_token" placeholder="live_..." value="<?php echo esc_attr($omnify_settings['paddle_live_client_token'] ?? ''); ?>" />
 							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
 						</div>
 					</div>
@@ -540,7 +546,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_paystack_mode,
 				'toggle_name' => 'paystack_checkout_enabled',
 				'logo_class'  => 'omnify-logo-paystack',
-				'logo_svg'    => '<svg width="26" height="26" viewBox="0 0 100 100" fill="none"><rect x="10" y="16" width="80" height="14" rx="7" fill="#00C3F7"/><rect x="10" y="43" width="56" height="14" rx="7" fill="#00C3F7"/><rect x="10" y="70" width="80" height="14" rx="7" fill="#00C3F7"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#011B33"/><g transform="translate(16, 21) scale(0.68)"><rect x="0" y="0" width="100" height="16" rx="8" fill="#00C3F7"/><rect x="0" y="34" width="62" height="16" rx="8" fill="#00C3F7"/><rect x="0" y="68" width="100" height="16" rx="8" fill="#00C3F7"/></g></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -612,7 +618,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_tap_mode,
 				'toggle_name' => 'tap_checkout_enabled',
 				'logo_class'  => 'omnify-logo-tap',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="20" fill="#1E293B"/><circle cx="50" cy="50" r="30" stroke="#00D2D3" stroke-width="8" stroke-dasharray="140 50"/><circle cx="50" cy="50" r="10" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#0B111E"/><path d="M26 38c7-7 16-11 24-11s17 4 24 11M33 48c5-5 11-8 17-8s12 3 17 8M40 58c3-3 6-5 10-5s7 2 10 5" stroke="#2BD3B5" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="73" r="5" fill="#FFFFFF"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -675,7 +681,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_sslcommerz_mode,
 				'toggle_name' => 'sslcommerz_checkout_enabled',
 				'logo_class'  => 'omnify-logo-sslcommerz',
-				'logo_svg'    => '<svg width="32" height="20" viewBox="0 0 100 60" fill="none"><rect width="100" height="60" rx="8" fill="#E11D48"/><text x="50" y="40" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="28" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">SSL</text></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#E11D48"/><text x="50" y="52" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="32" font-weight="900" font-style="italic" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">SSL</text><text x="50" y="70" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="10.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5" opacity="0.95">COMMERZ</text></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -731,7 +737,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_alipay_mode,
 				'toggle_name' => 'alipay_checkout_enabled',
 				'logo_class'  => 'omnify-logo-alipay',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#1677FF"/><path d="M78 54.5c-4.2-1.8-11.4-5.2-17.6-8 4.2-8.4 7.6-17.8 9.4-23.5H53.5V17h-8v6H22.7v5.8h40.4c-1.6 4.3-4.4 11.2-7.8 17.5-12.8-4.5-22.3-3.6-26.6-2-5.5 2-8.7 6.6-8.7 12.3 0 7.8 6.5 13.9 16.5 13.9 10.6 0 20.3-6.6 27.6-17.3 7.8 4 17.6 8.5 25.1 11.2l8.8-13.9zm-50 11.7c-5.5 0-9.2-3.1-9.2-7.5 0-3.3 2.1-5.9 5.8-6.9 3.2-.8 9.5-.4 17.5 2.5-4.8 7.3-10.4 11.9-14.1 11.9z" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#1677FF"/><path d="M78 54.5c-4.2-1.8-11.4-5.2-17.6-8 4.2-8.4 7.6-17.8 9.4-23.5H53.5V17h-8v6H22.7v5.8h40.4c-1.6 4.3-4.4 11.2-7.8 17.5-12.8-4.5-22.3-3.6-26.6-2-5.5 2-8.7 6.6-8.7 12.3 0 7.8 6.5 13.9 16.5 13.9 10.6 0 20.3-6.6 27.6-17.3 7.8 4 17.6 8.5 25.1 11.2l8.8-13.9zm-50 11.7c-5.5 0-9.2-3.1-9.2-7.5 0-3.3 2.1-5.9 5.8-6.9 3.2-.8 9.5-.4 17.5 2.5-4.8 7.3-10.4 11.9-14.1 11.9z" fill="#FFFFFF"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -775,7 +781,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_wechat_mode,
 				'toggle_name' => 'wechat_checkout_enabled',
 				'logo_class'  => 'omnify-logo-wechat',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#07C160"/><path d="M41 24C26.1 24 14 34.1 14 46.5c0 6.9 3.8 13.1 9.9 17.5-.5 2.9-1.8 8.1-2.1 9.3-.4 1.5.6 1.5 1.3 1 5.3-3.6 10.8-7.5 12.5-8.7 1.8.5 3.6.9 5.4.9 14.9 0 27-10.1 27-22.5S55.9 24 41 24z" fill="#FFFFFF"/><circle cx="31" cy="39" r="3.5" fill="#07C160"/><circle cx="51" cy="39" r="3.5" fill="#07C160"/><path d="M64 45c-11.6 0-21 7.8-21 17.5 0 5.4 3 10.3 7.8 13.7-.4 2.3-1.4 6.4-1.6 7.4-.3 1.2.5 1.2 1 0.8 4.1-2.9 8.4-5.9 9.8-6.9 1.4.4 2.8.7 4 .7 11.6 0 21-7.8 21-17.5S75.6 45 64 45z" fill="#FFFFFF"/><circle cx="57" cy="57" r="2.8" fill="#07C160"/><circle cx="71" cy="57" r="2.8" fill="#07C160"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#07C160"/><path d="M43 25C27 25 14 35.5 14 48.5c0 7.5 4.3 14.1 11 18.5-.6 3.1-2 8.5-2.3 9.8-.4 1.6.7 1.6 1.4 1.1 5.8-3.9 11.8-8.1 13.7-9.4 1.7.5 3.5.8 5.2.8 16 0 29-10.5 29-23.5S59 25 43 25z" fill="#FFFFFF"/><circle cx="32" cy="41" r="3.6" fill="#07C160"/><circle cx="54" cy="41" r="3.6" fill="#07C160"/><path d="M66 46c-12 0-21.7 8.2-21.7 18.3 0 5.8 3.2 10.9 8.2 14.4-.4 2.4-1.5 6.6-1.7 7.7-.3 1.2.5 1.2 1 0.8 4.3-3 8.8-6.2 10.2-7.2 1.3.4 2.7.6 4 .6 12 0 21.7-8.2 21.7-18.3S78 46 66 46z" fill="#FFFFFF"/><circle cx="58.5" cy="58.5" r="2.9" fill="#07C160"/><circle cx="73.5" cy="58.5" r="2.9" fill="#07C160"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -789,20 +795,30 @@ if (! function_exists('omnify_render_pm_header')) {
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="wechat_app_id"><?php esc_html_e('WeChat App ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="wechat_app_id" name="wechat_app_id" value="<?php echo esc_attr($omnify_settings['wechat_app_id'] ?? ''); ?>" />
+						<input type="text" id="wechat_app_id" name="wechat_app_id" value="<?php echo esc_attr($omnify_settings['wechat_app_id'] ?? ($omnify_settings['wechat_appid'] ?? '')); ?>" />
 					</div>
 				</div>
 				<div class="omnify-modern-form-row">
 					<div class="omnify-modern-form-group">
 						<label for="wechat_mch_id"><?php esc_html_e('Merchant ID (Mch ID)', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="wechat_mch_id" name="wechat_mch_id" value="<?php echo esc_attr($omnify_settings['wechat_mch_id'] ?? ''); ?>" />
+						<input type="text" id="wechat_mch_id" name="wechat_mch_id" value="<?php echo esc_attr($omnify_settings['wechat_mch_id'] ?? ($omnify_settings['wechat_mchid'] ?? '')); ?>" />
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="wechat_api_key"><?php esc_html_e('API Key (v2 / v3 Key)', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
-							<input type="password" id="wechat_api_key" name="wechat_api_key" value="<?php echo esc_attr($omnify_settings['wechat_api_key'] ?? ''); ?>" />
+							<input type="password" id="wechat_api_key" name="wechat_api_key" value="<?php echo esc_attr($omnify_settings['wechat_api_key'] ?? ($omnify_settings['wechat_key'] ?? '')); ?>" />
 							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
 						</div>
+					</div>
+				</div>
+				<div class="omnify-modern-form-row">
+					<div class="omnify-modern-form-group">
+						<label for="wechat_serial_no"><?php esc_html_e('Certificate Serial Number (v3)', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="wechat_serial_no" name="wechat_serial_no" placeholder="<?php esc_attr_e('e.g. 4A3B2C...', 'omnifywp-ecommerce'); ?>" value="<?php echo esc_attr($omnify_settings['wechat_serial_no'] ?? ''); ?>" />
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="wechat_merchant_private_key"><?php esc_html_e('Merchant Private Key (v3, PEM)', 'omnifywp-ecommerce'); ?></label>
+						<textarea id="wechat_merchant_private_key" name="wechat_merchant_private_key" rows="3" placeholder="-----BEGIN PRIVATE KEY-----"><?php echo esc_textarea($omnify_settings['wechat_merchant_private_key'] ?? ''); ?></textarea>
 					</div>
 				</div>
 			</div>
@@ -822,7 +838,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_khalti_mode,
 				'toggle_name' => 'khalti_checkout_enabled',
 				'logo_class'  => 'omnify-logo-khalti',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#5C2D91"/><path d="M28 24h13v20.5L62.5 24H78L56 46.5 80 76H63.5L41 48.5V76H28V24z" fill="#FFFFFF"/><circle cx="69" cy="48" r="5" fill="#F59E0B"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#5C2D91"/><path d="M26 22h14v22.5L64 22h18L56.5 47 82 78H64L40 49v29H26V22z" fill="#FFFFFF"/><circle cx="68" cy="48" r="6" fill="#FBBF24"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -878,7 +894,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'mode'        => $omnify_esewa_mode,
 				'toggle_name' => 'esewa_checkout_enabled',
 				'logo_class'  => 'omnify-logo-esewa',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#60BB46"/><path d="M50 20C33.43 20 20 33.43 20 50s13.43 30 30 30 30-13.43 30-30-13.43-30-30-30zm0 10c11.05 0 20 8.95 20 20s-8.95 20-20 20c-5.8 0-11-2.5-14.7-6.5l8.7-8.7c1.7 1.9 4.2 3.2 7 3.2 5.2 0 9.5-4.3 9.5-9.5H35.5C36.2 38.6 42.4 30 50 30z" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#60BB46"/><path d="M50 18C32.33 18 18 32.33 18 50s14.33 32 32 32 32-14.33 32-32-14.33-32-32-32zm0 10.5c11.87 0 21.5 9.63 21.5 21.5 0 2.2-.33 4.31-.95 6.3H39.2c1.47 5.76 6.68 10 12.8 10 3.8 0 7.2-1.6 9.6-4.2l7.2 6.8C64.6 73.1 58.6 75.8 52 75.8 37.7 75.8 26.2 64.3 26.2 50S37.7 28.5 50 28.5zm-.5 9.2c-5.8 0-10.7 3.8-12.3 9h24.6c-1.6-5.2-6.5-9-12.3-9z" fill="#FFFFFF"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -890,24 +906,31 @@ if (! function_exists('omnify_render_pm_header')) {
 							<option value="live" <?php selected($omnify_settings['esewa_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Production', 'omnifywp-ecommerce'); ?></option>
 						</select>
 					</div>
+				</div>
+				<div class="omnify-modern-form-row" data-cond-field="esewa_mode" data-cond-val="test">
 					<div class="omnify-modern-form-group">
-						<label for="esewa_secret_key"><?php esc_html_e('eSewa Secret Key / Hash Key', 'omnifywp-ecommerce'); ?></label>
+						<label for="esewa_test_product_code"><?php esc_html_e('Test Product / Merchant Code (e.g. EPAYTEST)', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="esewa_test_product_code" name="esewa_test_product_code" placeholder="EPAYTEST" value="<?php echo esc_attr($omnify_settings['esewa_test_product_code'] ?? 'EPAYTEST'); ?>" />
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="esewa_test_secret_key"><?php esc_html_e('Test Secret Key / Hash Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
-							<input type="password" id="esewa_secret_key" name="esewa_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_secret_key'] ?? ''); ?>" />
+							<input type="password" id="esewa_test_secret_key" name="esewa_test_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_test_secret_key'] ?? ''); ?>" />
 							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
 						</div>
 					</div>
 				</div>
-				<div class="omnify-modern-form-row" data-cond-field="esewa_mode" data-cond-val="test">
-					<div class="omnify-modern-form-group" style="grid-column: span 2;">
-						<label for="esewa_test_merchant_id"><?php esc_html_e('Test Product / Merchant Code (e.g. EPAYTEST)', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="esewa_test_merchant_id" name="esewa_test_merchant_id" value="<?php echo esc_attr($omnify_settings['esewa_test_merchant_id'] ?? ''); ?>" />
-					</div>
-				</div>
 				<div class="omnify-modern-form-row" data-cond-field="esewa_mode" data-cond-val="live">
-					<div class="omnify-modern-form-group" style="grid-column: span 2;">
-						<label for="esewa_live_merchant_id"><?php esc_html_e('Live Merchant Code', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="esewa_live_merchant_id" name="esewa_live_merchant_id" value="<?php echo esc_attr($omnify_settings['esewa_live_merchant_id'] ?? ''); ?>" />
+					<div class="omnify-modern-form-group">
+						<label for="esewa_live_product_code"><?php esc_html_e('Live Merchant Code', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="esewa_live_product_code" name="esewa_live_product_code" value="<?php echo esc_attr($omnify_settings['esewa_live_product_code'] ?? ''); ?>" />
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="esewa_live_secret_key"><?php esc_html_e('Live Secret Key / Hash Key', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-password-field-wrap">
+							<input type="password" id="esewa_live_secret_key" name="esewa_live_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_live_secret_key'] ?? ''); ?>" />
+							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -932,7 +955,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'is_offline'  => true,
 				'toggle_name' => 'payment_methods[bank_transfer][enabled]',
 				'logo_class'  => 'omnify-logo-bank',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#0F766E"/><path d="M50 18L18 34v6h64v-6L50 18zm-24 26v26h8V44h-8zm16 0v26h8V44h-8zm16 0v26h8V44h-8zm16 0v26h8V44h-8zM14 74v8h72v-8H14z" fill="#FFFFFF"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#0F766E"/><path d="M50 20L18 34v5h64v-5L50 20zm-24 25v24h7V45h-7zm15 0v24h7V45h-7zm15 0v24h7V45h-7zm15 0v24h7V45h-7zM16 73v7h68v-7H16z" fill="#FFFFFF"/><circle cx="50" cy="27" r="2.5" fill="#5EEAD4"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -989,7 +1012,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'is_offline'  => true,
 				'toggle_name' => 'payment_methods[cheque][enabled]',
 				'logo_class'  => 'omnify-logo-cheque',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#0284C7"/><rect x="14" y="26" width="72" height="48" rx="6" fill="#FFFFFF"/><circle cx="28" cy="42" r="5" fill="#0284C7"/><path d="M40 40h34M40 50h24M40 60h30" stroke="#0284C7" stroke-width="3" stroke-linecap="round"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#0284C7"/><rect x="16" y="27" width="68" height="46" rx="6" fill="#FFFFFF"/><rect x="22" y="34" width="22" height="6" rx="2" fill="#BAE6FD"/><path d="M50 37h28M22 50h36M64 50h14M22 61h20M56 61h22" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/><circle cx="27" cy="50" r="1.5" fill="#0284C7"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -1022,7 +1045,7 @@ if (! function_exists('omnify_render_pm_header')) {
 				'is_offline'  => true,
 				'toggle_name' => 'payment_methods[cod][enabled]',
 				'logo_class'  => 'omnify-logo-cod',
-				'logo_svg'    => '<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="18" fill="#16A34A"/><rect x="14" y="28" width="72" height="44" rx="6" fill="#FFFFFF"/><circle cx="50" cy="50" r="12" fill="#16A34A"/><path d="M50 44v12M46 47h7a2 2 0 0 1 0 4h-6a2 2 0 0 0 0 4h7" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><circle cx="24" cy="50" r="3" fill="#16A34A"/><circle cx="76" cy="50" r="3" fill="#16A34A"/></svg>',
+				'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#16A34A"/><rect x="18" y="30" width="64" height="40" rx="6" fill="#FFFFFF"/><circle cx="50" cy="50" r="11" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/><path d="M50 43v14M45.5 46.5h6.5a2 2 0 0 1 0 4h-5a2 2 0 0 0 0 4h6" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/><circle cx="26" cy="50" r="3" fill="#86EFAC"/><circle cx="74" cy="50" r="3" fill="#86EFAC"/></svg>',
 			]);
 			?>
 			<div class="omnify-pm-body">
@@ -1062,7 +1085,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						'is_offline'  => true,
 						'toggle_name' => "payment_methods[{$omnify_custom_id}][enabled]",
 						'logo_class'  => 'omnify-logo-custom',
-						'logo_svg'    => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></svg>',
+						'logo_svg'    => '<svg width="44" height="44" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#475569"/><rect x="20" y="28" width="60" height="44" rx="8" stroke="#FFFFFF" stroke-width="4"/><line x1="20" y1="40" x2="80" y2="40" stroke="#FFFFFF" stroke-width="3"/><circle cx="34" cy="56" r="4" fill="#94A3B8"/><circle cx="46" cy="56" r="4" fill="#64748B"/><circle cx="68" cy="30" r="10" fill="#0D9488"/><path d="M68 25v10M63 30h10" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/></svg>',
 					]);
 					?>
 					<div class="omnify-pm-body">

@@ -46,15 +46,32 @@ if (! function_exists('omnify_render_category_table_rows')) {
 	function omnify_render_category_table_rows(array $omnify_tree, int $omnify_depth = 0) {
 		foreach ($omnify_tree as $omnify_node) {
 			$omnify_global_idx = $omnify_node['global_idx'];
-			$omnify_indent = str_repeat('- ', $omnify_depth);
 			?>
 			<tr>
-				<td style="font-weight: 600;"><?php echo esc_html($omnify_indent . $omnify_node['name']); ?></td>
-				<td><?php echo esc_html($omnify_node['slug']); ?></td>
+				<td>
+					<div class="omnify-tax-name-cell" style="<?php echo $omnify_depth > 0 ? 'padding-left: ' . (int) ($omnify_depth * 22) . 'px;' : ''; ?>">
+						<?php if ($omnify_depth > 0) : ?>
+							<span class="omnify-tree-branch">└─</span>
+							<span class="omnify-tax-icon-wrap omnify-tax-icon-wrap--subcat">
+								<span class="dashicons dashicons-arrow-right-alt2"></span>
+							</span>
+						<?php else : ?>
+							<span class="omnify-tax-icon-wrap omnify-tax-icon-wrap--cat">
+								<span class="dashicons dashicons-category"></span>
+							</span>
+						<?php endif; ?>
+						<span class="omnify-tax-name-text"><?php echo esc_html($omnify_node['name']); ?></span>
+					</div>
+				</td>
+				<td>
+					<code class="omnify-slug-pill">/<?php echo esc_html($omnify_node['slug']); ?></code>
+				</td>
 				<td style="text-align: right;">
-					<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_category&index=' . $omnify_global_idx), 'omnify_delete_global_category_' . $omnify_global_idx)); ?>" class="omnify-button omnify-button--danger omnify-button--sm js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete category "%s"? Any subcategories will be unparented.', 'omnifywp-ecommerce'), $omnify_node['name'])); ?>" style="text-decoration: none; padding: 4px 8px; font-size: 11px;">
-						<?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?>
-					</a>
+					<div class="omnify-table-actions" style="justify-content: flex-end;">
+						<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_category&index=' . $omnify_global_idx), 'omnify_delete_global_category_' . $omnify_global_idx)); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete category "%s"? Any subcategories will be unparented.', 'omnifywp-ecommerce'), $omnify_node['name'])); ?>" title="<?php esc_attr_e('Delete Category', 'omnifywp-ecommerce'); ?>">
+							<span class="dashicons dashicons-trash"></span>
+						</a>
+					</div>
 				</td>
 			</tr>
 			<?php
@@ -102,57 +119,88 @@ $omnify_category_tree = omnify_get_category_tree($omnify_global_categories);
 		</div>
 	<?php endif; ?>
 
-	<div class="omnify-card">
-		<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 32px;">
-			<!-- Left Side: Add Form -->
-			<div>
-				<h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e('Add New Category', 'omnifywp-ecommerce'); ?></h3>
+	<div class="omnify-taxonomy-grid">
+		<!-- Left Card: Add Category Form -->
+		<div class="omnify-card omnify-tax-card omnify-tax-card--form">
+			<div class="omnify-tax-card__header">
+				<div class="omnify-tax-card__header-icon">
+					<span class="dashicons dashicons-category"></span>
+				</div>
+				<div>
+					<h3 class="omnify-tax-card__title"><?php esc_html_e('Add New Category', 'omnifywp-ecommerce'); ?></h3>
+					<p class="omnify-tax-card__subtitle"><?php esc_html_e('Create a top-level or sub-category', 'omnifywp-ecommerce'); ?></p>
+				</div>
+			</div>
+			<div class="omnify-tax-card__body">
 				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 					<?php wp_nonce_field('omnify_add_global_category', 'omnify_add_global_cat_nonce'); ?>
 					<input type="hidden" name="action" value="omnify_add_global_category" />
 					
-					<div class="omnify-form-group" style="margin-bottom: 16px;">
-						<label for="category_name"><?php esc_html_e('Category Name', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="category_name" name="category_name" placeholder="e.g. Software, Design" required style="width: 100%; height: 36px; padding: 7px 12px; font-size: 14px;" />
+					<div class="omnify-form-group" style="margin-bottom: 18px;">
+						<label for="category_name" class="omnify-field-label"><?php esc_html_e('Category Name', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="category_name" name="category_name" class="omnify-input" placeholder="e.g. Software, Design, Audio" required />
+						<span class="omnify-field-hint"><?php esc_html_e('The name is how it appears on your site.', 'omnifywp-ecommerce'); ?></span>
 					</div>
 
-					<div class="omnify-form-group" style="margin-bottom: 16px;">
-						<label for="category_parent"><?php esc_html_e('Parent Category', 'omnifywp-ecommerce'); ?></label>
-						<select id="category_parent" name="category_parent" style="width: 100%; height: 36px; padding: 7px 12px; font-size: 14px; background: #fff; border: 1px solid var(--omnify-gray-300); border-radius: 6px;">
-							<option value=""><?php esc_html_e('-- None --', 'omnifywp-ecommerce'); ?></option>
-							<?php foreach ($omnify_global_categories as $omnify_c) : ?>
-								<option value="<?php echo esc_attr($omnify_c['slug']); ?>"><?php echo esc_html($omnify_c['name']); ?></option>
-							<?php endforeach; ?>
-						</select>
+					<div class="omnify-form-group" style="margin-bottom: 22px;">
+						<label for="category_parent" class="omnify-field-label"><?php esc_html_e('Parent Category', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-select-wrapper">
+							<select id="category_parent" name="category_parent" class="omnify-select">
+								<option value=""><?php esc_html_e('-- None (Top-level) --', 'omnifywp-ecommerce'); ?></option>
+								<?php foreach ($omnify_global_categories as $omnify_c) : ?>
+									<option value="<?php echo esc_attr($omnify_c['slug']); ?>"><?php echo esc_html($omnify_c['name']); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+						<span class="omnify-field-hint"><?php esc_html_e('Assign a parent to build hierarchical categories.', 'omnifywp-ecommerce'); ?></span>
 					</div>
 
-					<button type="submit" class="omnify-button omnify-button--primary omnify-button--full" style="height: 36px; justify-content: center; align-items: center;">
+					<button type="submit" class="omnify-button omnify-button--primary omnify-button--full" style="height: 40px; justify-content: center; font-size: 13.5px; font-weight: 600;">
+						<span class="dashicons dashicons-plus" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; margin-right: 4px;"></span>
 						<?php esc_html_e('Add Category', 'omnifywp-ecommerce'); ?>
 					</button>
 				</form>
 			</div>
-			<!-- Right Side: List -->
-			<div>
-				<h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e('Global Categories List', 'omnifywp-ecommerce'); ?></h3>
-				<?php if (empty($omnify_global_categories)) : ?>
-					<p style="font-size: 13px; color: var(--omnify-gray-600); font-style: italic; margin-top: 0;"><?php esc_html_e('No global categories created yet.', 'omnifywp-ecommerce'); ?></p>
-				<?php else : ?>
-					<div class="omnify-table-wrapper">
-						<table class="omnify-table">
-							<thead>
-								<tr>
-									<th><?php esc_html_e('Name', 'omnifywp-ecommerce'); ?></th>
-									<th><?php esc_html_e('Slug', 'omnifywp-ecommerce'); ?></th>
-									<th style="width: 80px; text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php omnify_render_category_table_rows($omnify_category_tree); ?>
-							</tbody>
-						</table>
-					</div>
-				<?php endif; ?>
+		</div>
+
+		<!-- Right Card: Global Categories List -->
+		<div class="omnify-card omnify-tax-card omnify-tax-card--list">
+			<div class="omnify-tax-card__header">
+				<div class="omnify-tax-card__header-icon">
+					<span class="dashicons dashicons-list-view"></span>
+				</div>
+				<div style="flex: 1;">
+					<h3 class="omnify-tax-card__title"><?php esc_html_e('Global Categories', 'omnifywp-ecommerce'); ?></h3>
+					<p class="omnify-tax-card__subtitle"><?php esc_html_e('Manage your product catalog taxonomy', 'omnifywp-ecommerce'); ?></p>
+				</div>
+				<span class="omnify-tax-count-badge">
+					<?php printf(esc_html(_n('%d Category', '%d Categories', count($omnify_global_categories), 'omnifywp-ecommerce')), count($omnify_global_categories)); ?>
+				</span>
 			</div>
+			<?php if (empty($omnify_global_categories)) : ?>
+				<div class="omnify-tax-empty-state">
+					<div class="omnify-tax-empty-icon">
+						<span class="dashicons dashicons-category"></span>
+					</div>
+					<h4><?php esc_html_e('No categories yet', 'omnifywp-ecommerce'); ?></h4>
+					<p><?php esc_html_e('Use the form on the left to add your first product category.', 'omnifywp-ecommerce'); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="omnify-table-wrapper" style="margin: 0; border: 0; border-radius: 0; box-shadow: none;">
+					<table class="omnify-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Name', 'omnifywp-ecommerce'); ?></th>
+								<th><?php esc_html_e('Slug', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 80px; text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php omnify_render_category_table_rows($omnify_category_tree); ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>

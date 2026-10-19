@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class Omnify_Signed_Url_Service {
-	public function create(int $omnify_file_id, int $omnify_expires_in = 900, ?int $omnify_customer_id = null): string {
+	public function create(int $omnify_file_id, int $omnify_expires_in = DAY_IN_SECONDS, ?int $omnify_customer_id = null): string {
+		$omnify_expires_in = (int) apply_filters('omnify_signed_url_ttl', $omnify_expires_in, $omnify_file_id, $omnify_customer_id);
 		$omnify_expires = time() + max(60, $omnify_expires_in);
 		$omnify_payload = $this->payload($omnify_file_id, $omnify_expires, $omnify_customer_id);
 		$omnify_signature = hash_hmac('sha256', $omnify_payload, wp_salt('auth'));

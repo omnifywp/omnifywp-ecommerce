@@ -13,9 +13,11 @@ use Omnify\eCommerce\Admin\Omnify_Admin_Page;
 use Omnify\eCommerce\Api\Omnify_Rest_Server;
 use Omnify\eCommerce\Database\Omnify_Migrations;
 use Omnify\eCommerce\Downloads\Omnify_Download_Controller;
+use Omnify\eCommerce\Repositories\Omnify_Customer_Repository;
 use Omnify\eCommerce\Storefront\Omnify_Storefront_Controller;
 use Omnify\eCommerce\Support\Omnify_Abandoned_Cart_Service;
 use Omnify\eCommerce\Support\Omnify_Container;
+use Omnify\eCommerce\Support\Omnify_Webhook_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -120,7 +122,9 @@ class Omnify_Plugin {
 	}
 
 	public static function deactivate(): void {
-		(new Omnify_Container())->get(Omnify_Abandoned_Cart_Service::class)->unschedule();
+		$omnify_container = new Omnify_Container();
+		$omnify_container->get(Omnify_Abandoned_Cart_Service::class)->unschedule();
+		$omnify_container->get(Omnify_Webhook_Service::class)->unschedule_prune();
 		flush_rewrite_rules();
 		do_action('omnify_deactivated');
 	}
@@ -159,6 +163,19 @@ class Omnify_Plugin {
 		add_filter('wp_privacy_personal_data_erasers', [$omnify_privacy, 'register_erasers']);
 
 		$this->omnify_container->get(\Omnify\eCommerce\Support\Omnify_Tracking_Service::class)->register();
+		$this->omnify_container->get(\Omnify\eCommerce\Support\Omnify_Webhook_Service::class)->register();
+
+		// Auto-link guest customer records when a new WordPress user registers
+		add_action('user_register', function(int $omnify_user_id): void {
+			$omnify_user = get_userdata($omnify_user_id);
+			if ($omnify_user && ! empty($omnify_user->user_email)) {
+				$omnify_customers = $this->omnify_container->get(Omnify_Customer_Repository::class);
+				$omnify_existing = $omnify_customers->find_by_email($omnify_user->user_email);
+				if ($omnify_existing && empty($omnify_existing['user_id'])) {
+					$omnify_customers->update((int) $omnify_existing['id'], ['user_id' => $omnify_user_id]);
+				}
+			}
+		});
 
 		// Additional extensibility points
 		add_action('admin_init', function() {

@@ -251,7 +251,8 @@ const chapters = [
           <tr><td><span class="badge success">Completed</span></td><td>Order successfully fulfilled and dispatched to customer.</td><td>Access active</td></tr>
           <tr><td><span class="badge neutral">On Hold</span></td><td>Awaiting manual verification (e.g. Bank Transfer / Wire).</td><td>Access withheld</td></tr>
           <tr><td><span class="badge danger">Cancelled</span></td><td>Order terminated before payment processing.</td><td>Access withheld</td></tr>
-          <tr><td><span class="badge danger">Refunded</span></td><td>Transaction reversed; funds returned to buyer.</td><td>Access automatically revoked</td></tr>
+          <tr><td><span class="badge warning" style="background:#fef3c7;color:#92400e;">Partially Refunded</span></td><td>Portion of total returned; balance remains captured.</td><td>Access active for non-refunded items</td></tr>
+          <tr><td><span class="badge danger">Refunded</span></td><td>Transaction reversed; full funds returned to buyer.</td><td>Access automatically revoked</td></tr>
         </tbody>
       </table>
 
@@ -263,7 +264,7 @@ const chapters = [
       <div class="callout warning">
         <div class="callout-icon">${svgIcons.alert}</div>
         <div class="callout-body">
-          <strong>Automatic File Revocation:</strong> Processing a full refund automatically revokes customer access to digital files, immediately canceling existing download tokens to protect your intellectual property.
+          <strong>Automatic File Revocation & Gateway Sync:</strong> Processing a full refund or receiving a full refund webhook from Stripe/PayPal automatically revokes customer access to digital files, canceling existing download tokens. Partial refunds transition status to <em>Partially Refunded</em>, preserving access for remaining line items.
         </div>
       </div>
     `
@@ -285,6 +286,7 @@ const chapters = [
         <li><strong>Order Histories:</strong> Direct chronological access to every transaction placed by the customer.</li>
         <li><strong>Saved Address Books:</strong> View and manage customer billing and shipping addresses for smooth reordering.</li>
         <li><strong>Digital Access Rights:</strong> Inspect which software licenses or downloadable products are currently assigned to the user.</li>
+        <li><strong>High-Performance Pagination:</strong> Instant search, sort, and SQL pagination optimized for enterprise customer bases with tens of thousands of records.</li>
       </ul>
     `
   },
@@ -313,7 +315,7 @@ const chapters = [
         <li><strong>Individual Use Only:</strong> Prevent shoppers from stacking promotional codes.</li>
         <li><strong>Usage Limit per Coupon:</strong> Cap the total times a coupon can be redeemed store-wide.</li>
         <li><strong>Usage Limit per User:</strong> Limit redemptions per customer email address (e.g. one-time use per customer).</li>
-        <li><strong>Expiration Timers:</strong> Set scheduled auto-expiry dates for seasonal marketing campaigns.</li>
+        <li><strong>Timezone-Aware Expiration:</strong> Expiration dates and times evaluate against your WordPress site timezone (using <code>wp_timezone()</code>), eliminating premature or delayed expiration.</li>
       </ul>
     `
   },
@@ -384,9 +386,10 @@ const chapters = [
 
       <h3>Recovery Workflow</h3>
       <ol class="styled-list">
-        <li><strong>Email Capture:</strong> As soon as a customer enters their email address during checkout, their cart state is recorded.</li>
+        <li><strong>Multi-Item Basket Capture:</strong> As soon as a customer enters their email address during checkout, Omnify serializes the entire shopping basket—including products, variations, quantities, and pricing.</li>
         <li><strong>Threshold Evaluation:</strong> If no completed order occurs within 60 minutes, the session is flagged as <code>Abandoned</code>.</li>
-        <li><strong>Automated Reminder:</strong> Dispatches personalized recovery reminder emails containing direct one-click checkout restoration links.</li>
+        <li><strong>Automated Reminder:</strong> Dispatches personalized recovery reminder emails containing direct, cryptographic 1-click checkout restoration links.</li>
+        <li><strong>Instant Session Restoration:</strong> Clicking the link reconstitutes the customer's entire basket with items, quantities, and active discounts intact.</li>
         <li><strong>Conversion Attribution:</strong> Once purchased, the status transitions to <code>Recovered</code>, updating your recovery metrics.</li>
       </ol>
     `
@@ -513,22 +516,56 @@ const chapters = [
   },
   {
     id: 'tools',
-    title: '12. System Tools & Maintenance',
+    title: '12. System Tools & Seeding',
     badge: 'Diagnostics & Seed',
     icon: svgIcons.tools,
-    summary: 'One-click demo data generation and cleanup, database table verification, and cache flushing.',
+    summary: '4-card database diagnostics overview, one-click demo data generation with animated progress bar, granular cleanups, and server runtime verification.',
     content: `
-      <p>Under <strong>Omnify → Tools & Seeding</strong>, manage maintenance operations and developer utilities.</p>
+      <p>Under <strong>Omnify → Tools & Seeding</strong>, store administrators have access to an enterprise maintenance suite for diagnostics, demo data generation, granular cache purging, and catalog import/export operations.</p>
 
       ${mockups.tools}
 
-      <h3>Available Tools</h3>
+      <h3>Real-Time Database Diagnostics</h3>
+      <p>The top diagnostic bar queries all 18 normalized custom tables to present instant volume and operational metrics across key entities:</p>
+      <div class="grid-cards-4" style="margin-top:1rem;margin-bottom:1.5rem;">
+        <div class="feature-card">
+          <h4>Orders Table</h4>
+          <p><strong>1,420 Total Records:</strong> Active order lifecycle tracking with zero postmeta latency.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Products Table</h4>
+          <p><strong>38 Products:</strong> Physical, digital, and variant items with normalized inventory indexes.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Customers</h4>
+          <p><strong>892 Profiles:</strong> Dedicated guest and registered customer records with lifetime revenue tracking.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Activity Logs</h4>
+          <p><strong>2,840 Events:</strong> Immutable audit records tracking administrative and payment operations.</p>
+        </div>
+      </div>
+
+      <h3>Demo Data Generation & Seeding</h3>
+      <p>Seed realistic test catalogs with a single click. The interactive generation process features an animated progress bar that stages records across multiple entities:</p>
       <ul class="styled-list">
-        <li><strong>Generate Demo Data:</strong> Seeds 50 sample products, orders, customers, and categories to preview themes.</li>
-        <li><strong>Clear Demo Data:</strong> Safely removes generated demo records without affecting real customer purchases.</li>
-        <li><strong>Flush Transients & Caches:</strong> Flushes cached queries and price calculations to reflect catalog changes immediately.</li>
-        <li><strong>Verify Database Tables:</strong> Validates indexes and schemas across all 18 custom Omnify database tables.</li>
+        <li><strong>Sample Products:</strong> Seeds physical goods, downloadable digital assets, and multi-attribute variations complete with pricing and stock levels.</li>
+        <li><strong>Orders & Customers:</strong> Populates historical orders with various payment statuses (Paid, Processing, Completed, Refunded) to test reporting.</li>
+        <li><strong>Coupons & Categories:</strong> Creates promotional discount rules, taxonomy categories, and storefront tags.</li>
       </ul>
+
+      <h3>Granular Database Maintenance & Cleanups</h3>
+      <p>Selectively optimize or purge specific data partitions without affecting live customer transactions:</p>
+      <ul class="styled-list">
+        <li><strong>Purge Demo Records:</strong> Safely removes only records flagged with demo metadata, preserving real customer orders.</li>
+        <li><strong>Clear Abandoned Carts:</strong> Prunes stale sessions older than 30 days to optimize session table storage.</li>
+        <li><strong>Automated Daily Database Maintenance:</strong> Runs background cron (<code>omnify_daily_database_cleanup</code>) to automatically prune stale carts, expire transients, and optimize indexes.</li>
+        <li><strong>Flush Transients & Query Caches:</strong> Recomputes pricing tiers, shipping rules, and cached queries immediately.</li>
+        <li><strong>Verify Table Schema & Indexes:</strong> Runs integrity checks across all 18 custom tables and applies missing migrations automatically.</li>
+      </ul>
+
+      <h3>Server Runtime & Environment Specs</h3>
+      <p>Inspect server environmental requirements at a glance: PHP version (8.2+ recommended), MySQL/MariaDB version, memory allocation limits, maximum execution timeouts, and upload size allowances.</p>
     `
   },
   {
@@ -536,39 +573,67 @@ const chapters = [
     title: '13. Administrative Activity Log',
     badge: 'Audit Trail',
     icon: svgIcons.activity,
-    summary: 'Maintain an immutable audit trail of administrator actions, price changes, and order modifications.',
+    summary: 'Immutable chronological audit trail tracking administrator actions, price modifications, refund executions, and security events.',
     content: `
-      <p>Under <strong>Omnify → Activity Log</strong>, view a complete chronological audit trail of administrative changes for accountability and security.</p>
+      <p>Under <strong>Omnify → Activity Log</strong>, store administrators can audit an immutable, chronological stream of all system, administrative, and payment gateway events.</p>
 
       ${mockups.activity_log}
 
-      <h3>Tracked Events Include</h3>
+      <h3>Advanced Event Filtering</h3>
+      <p>Filter thousands of audit events in real time with comprehensive criteria:</p>
       <ul class="styled-list">
-        <li>Product additions, price changes, and inventory updates.</li>
-        <li>Order status transitions and processed refund amounts.</li>
-        <li>Coupon creation, updates, and removals.</li>
-        <li>Payment gateway credential modifications and system setting edits.</li>
+        <li><strong>Category Filter:</strong> Narrow down events by functional domain (Orders, Products, Customers, Coupons, Settings, System, Security).</li>
+        <li><strong>Date Range Filter:</strong> Inspect activities within custom date boundaries (Today, Yesterday, Last 7 Days, Last 30 Days, Custom Range).</li>
+        <li><strong>Administrator Filter:</strong> Isolate changes executed by specific store managers, clerks, or system automated cron workers.</li>
+        <li><strong>Search Keywords:</strong> Search across event summaries, object IDs, and user metadata instantly.</li>
+      </ul>
+
+      <h3>Event Data & Detail Inspection</h3>
+      <p>Each logged action records complete forensic metadata for compliance and security:</p>
+      <ul class="styled-list">
+        <li><strong>Action Type & Severity:</strong> Color-coded badges denote informational events, updates, deletions, and security alerts.</li>
+        <li><strong>Actor Identification:</strong> Displays the executing user avatar, display name, user ID, and remote IP address.</li>
+        <li><strong>State Diffs:</strong> Captures before-and-after values for critical changes such as price modifications, inventory overrides, and setting updates.</li>
+        <li><strong>One-Click Log Pruning:</strong> Securely purge historical logs older than 90 days or export logs to CSV for external archiving.</li>
       </ul>
     `
   },
   {
     id: 'api',
-    title: '14. REST API Key Management',
+    title: '14. REST API, Webhooks & Diagnostics',
     badge: 'Headless & API',
     icon: svgIcons.api,
-    summary: 'Generate secure Consumer Key and Consumer Secret pairs for headless frontends, mobile apps, and ERP sync.',
+    summary: 'Manage REST API credentials, configure outbound webhook topic subscriptions with HMAC-SHA256 signatures, and run live payment diagnostics.',
     content: `
-      <p>Under <strong>Omnify → API Keys</strong>, generate and manage REST API credentials for external integrations.</p>
+      <p>Under <strong>Omnify → API & Webhooks</strong>, developers and system administrators manage external integrations, outbound event dispatches, and live connectivity health checks.</p>
 
       ${mockups.api_keys}
 
-      <h3>Generating API Credentials</h3>
+      <h3>REST API Key Management</h3>
+      <p>Generate cryptographically secure API credentials for headless storefronts (Next.js, Astro), mobile applications, and ERP integrations:</p>
       <ol class="styled-list">
-        <li>Click <strong>+ Generate API Key</strong>.</li>
-        <li>Provide a descriptive label (e.g. <em>Next.js Headless Front</em> or <em>iOS Mobile App</em>).</li>
+        <li>Click <strong>+ Generate API Key</strong> in the management toolbar.</li>
+        <li>Specify a descriptive label (e.g. <em>Next.js Production Front</em> or <em>Inventory Sync Worker</em>).</li>
         <li>Select permission scope: <code>Read</code>, <code>Write</code>, or <code>Read/Write</code>.</li>
-        <li>Save to reveal the generated <strong>Consumer Key</strong> and <strong>Consumer Secret</strong>.</li>
+        <li>Assign a user account with appropriate capabilities.</li>
+        <li>Save to reveal the generated <strong>Consumer Key</strong> (<code>ck_...</code>) and <strong>Consumer Secret</strong> (<code>cs_...</code>). Note: The secret is displayed once upon creation.</li>
       </ol>
+
+      <h3>Outbound Webhooks Manager</h3>
+      <p>Publish real-time event notifications to external web services and automation pipelines (Zapier, Make, custom webhooks):</p>
+      <ul class="styled-list">
+        <li><strong>Topic Subscriptions:</strong> Subscribe to granular events including <code>order.created</code>, <code>order.paid</code>, <code>order.refunded</code>, <code>order.status_changed</code>, <code>product.created</code>, and <code>customer.created</code>.</li>
+        <li><strong>Payload Signing:</strong> Every outbound HTTP POST request includes an <code>X-Omnify-Signature</code> header generated via HMAC-SHA256 using your configured webhook secret key.</li>
+        <li><strong>Delivery Testing & Logs:</strong> Dispatch test ping events and review delivery status codes, latency timings, and response headers.</li>
+      </ul>
+
+      <h3>Live Diagnostics & Connectivity Checker</h3>
+      <p>Verify live API keys, gateway credentials, and network connectivity without leaving the WordPress administration panel:</p>
+      <ul class="styled-list">
+        <li><strong>Stripe Connection Test:</strong> Validates secret key authentication against the Stripe API (<code>/v1/balance</code>) and checks account currency and live/test mode.</li>
+        <li><strong>PayPal REST Connection Test:</strong> Verifies Client ID and Secret credentials by executing an OAuth2 token handshake against PayPal servers.</li>
+        <li><strong>Arbitrary Endpoint Connectivity Test:</strong> Sends an authenticated HEAD/GET probe to custom webhook receivers or API endpoints to test SSL certificates and HTTP latency.</li>
+      </ul>
     `
   },
   {
@@ -576,27 +641,31 @@ const chapters = [
     title: '15. Customer Storefront & Portal 2.0',
     badge: 'Shopper Experience',
     icon: svgIcons.storefront,
-    summary: 'Comprehensive walkthrough of the modern shopper experience: faceted catalog filtering, sticky checkout, and the Customer Portal 2.0 hub.',
+    summary: 'Comprehensive walkthrough of the modern shopper experience: 4-layout catalog switcher, quick filter pills, flash sale countdown, and Customer Portal 2.0 hub.',
     content: `
       <p class="lead-text">
-        OmnifyWP eCommerce features a high-converting storefront design inspired by modern apparel and luxury fashion brands. Shoppers enjoy sub-millisecond catalog browsing, multi-layout switching, interactive color/size swatches, social proof notifications, and seamless checkout journeys.
+        OmnifyWP eCommerce features a high-converting storefront design inspired by modern luxury apparel and modern commerce brands. Shoppers enjoy sub-millisecond catalog browsing, 4-layout switching, interactive color/size swatches, flash sale countdowns, social proof notifications, and seamless checkout journeys.
       </p>
 
       <h3>Catalog Multi-Layout Switcher (<code>[omnify_storefront]</code>)</h3>
-      <p>The catalog toolbar includes an interactive layout switcher with preferences saved in <code>localStorage</code>:</p>
+      <p>The catalog toolbar includes an interactive layout switcher with preferences automatically saved in browser <code>localStorage</code>:</p>
 
-      <div class="grid-cards-3" style="margin-top:1.25rem;">
+      <div class="grid-cards-4" style="margin-top:1.25rem;">
         <div class="feature-card">
           <h4>1. 4-Column Modern Grid (<code>data-cols="4"</code>)</h4>
-          <p><strong>Clean borderless cards:</strong> Soft <code>#f6f6f8</code> image box (1:1.18 aspect ratio), pill badges (<code>HOT</code>, <code>-14%</code>, <code>LIMITED</code>), outline heart wishlist button (turns red on click), slide-in hover tools (Quick View & Compare), floating sizes (<code>S M</code>), circular plus button, and price with swatches.</p>
+          <p><strong>Clean borderless cards:</strong> Soft <code>#f6f6f8</code> image box, pill badges (<code>HOT</code>, <code>-14%</code>, <code>LIMITED</code>), outline heart wishlist button, slide-in hover tools (Quick View & Compare), floating sizes, circular plus button, and interactive swatches.</p>
         </div>
         <div class="feature-card">
-          <h4>2. 2-Column Split View (<code>data-cols="2"</code>)</h4>
-          <p><strong>Horizontal split cards:</strong> Left image column (46% width) paired with right details column (54% width) displaying title, 5-star rating (5.0 / 5.0 Stars), price, swatches, sizes, full-width "Select options" button, and Quick View/Compare links.</p>
+          <h4>2. 3-Column Classic Grid (<code>data-cols="3"</code>)</h4>
+          <p><strong>Balanced editorial cards:</strong> Medium-format image boxes with generous spacing, star ratings, price with discount badges, color swatches, and direct Add to Cart buttons.</p>
         </div>
         <div class="feature-card">
-          <h4>3. 1-Column List View (<code>data-cols="list"</code>)</h4>
-          <p><strong>3-Section row layout:</strong> Left 220px image, center details (title, rating, swatches, sizes, 2-line excerpt), and right panel with price, green <code>292 IN STOCK</code> badge, full-width button, and vertical action links (Wishlist, Quick View, Compare).</p>
+          <h4>3. 2-Column Split View (<code>data-cols="2"</code>)</h4>
+          <p><strong>Horizontal split cards:</strong> Left image column (46% width) paired with right details column (54% width) displaying title, 5-star rating, price, swatches, sizes, full-width "Select options" button, and Quick View/Compare links.</p>
+        </div>
+        <div class="feature-card">
+          <h4>4. 1-Column List View (<code>data-cols="list"</code>)</h4>
+          <p><strong>3-Section row layout:</strong> Left 220px image, center details (title, rating, swatches, sizes, 2-line excerpt), and right panel with price, green <code>292 IN STOCK</code> badge, full-width button, and vertical action links.</p>
         </div>
       </div>
 
@@ -785,7 +854,7 @@ const fullHtml = `<!DOCTYPE html>
   <meta name="description" content="Complete user documentation for OmnifyWP eCommerce: catalog management, orders, customer CRM, coupons, analytics, payment gateways, and storefront guide.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <script>
     // System color scheme auto-detection on initial load
@@ -803,8 +872,13 @@ const fullHtml = `<!DOCTYPE html>
   <style>
     /* Website Palette (Forest Green, Emerald, Mint & Obsidian) */
     :root {
-      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    h1, h2, h3, h4, h5, h6, .brand-title, .doc-hero h1 {
+      font-family: var(--font-heading);
     }
 
     /* Light Mode (Omnify Website Color Palette) */
@@ -822,59 +896,59 @@ const fullHtml = `<!DOCTYPE html>
 
       --text-main: #0D1B12;
       --text-muted: #3D5147;
-      --text-dim: #6B7F74;
+      --text-dim: #64748b;
 
-      --brand-forest-dark: #063d26;
-      --brand-forest: #0B5135;
-      --brand-forest-mid: #126343;
-      --brand-forest-light: #18794E;
-      --brand-emerald: #22A06B;
-      --brand-emerald-vivid: #34D399;
-      --brand-mint-light: #A8DFBF;
-      --brand-mint-pale: #EFF8F2;
+      --brand-forest-dark: #134e4a;
+      --brand-forest: #0f766e;
+      --brand-forest-mid: #0d9488;
+      --brand-forest-light: #14b8a6;
+      --brand-emerald: #0f766e;
+      --brand-emerald-vivid: #14b8a6;
+      --brand-mint-light: #99f6e4;
+      --brand-mint-pale: #f0fdfa;
       --brand-amber: #D97706;
       --brand-rose: #DC2626;
 
-      --brand-gradient: linear-gradient(135deg, #0B5135 0%, #18794E 45%, #22A06B 100%);
-      --brand-button-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 100%);
-      --hero-gradient: linear-gradient(160deg, #0B5135 0%, #18794E 40%, #22A06B 100%);
-      --glow-emerald: 0 0 35px -5px rgba(34, 160, 107, 0.25);
-      --grid-pattern: radial-gradient(rgba(11, 81, 53, 0.08) 1px, transparent 1px);
+      --brand-gradient: linear-gradient(135deg, #134e4a 0%, #0f766e 45%, #0d9488 100%);
+      --brand-button-gradient: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+      --hero-gradient: linear-gradient(160deg, #134e4a 0%, #0f766e 40%, #0d9488 100%);
+      --glow-emerald: 0 0 35px -5px rgba(15, 118, 110, 0.25);
+      --grid-pattern: radial-gradient(rgba(15, 118, 110, 0.08) 1px, transparent 1px);
     }
 
-    /* Dark Mode (Forest Obsidian & Vivid Emerald) */
+    /* Dark Mode (Teal Slate & Vivid Mint) */
     :root[data-theme="dark"] {
-      --bg-body: #08100B;
-      --bg-surface: #0E1A13;
-      --bg-card: #13241B;
-      --bg-card-hover: #193024;
-      --bg-subtle: #162B20;
-      --bg-glass: rgba(14, 26, 19, 0.90);
-      --bg-code: #050B07;
-      --border-subtle: rgba(212, 232, 220, 0.12);
-      --border-highlight: rgba(52, 211, 153, 0.28);
-      --border-accent: #22A06B;
+      --bg-body: #091312;
+      --bg-surface: #0f1d1c;
+      --bg-card: #132726;
+      --bg-card-hover: #173230;
+      --bg-subtle: #152b29;
+      --bg-glass: rgba(15, 29, 28, 0.90);
+      --bg-code: #050e0d;
+      --border-subtle: rgba(153, 246, 228, 0.12);
+      --border-highlight: rgba(45, 212, 191, 0.28);
+      --border-accent: #14b8a6;
 
       --text-main: #F4FAF6;
-      --text-muted: #A3BFB0;
-      --text-dim: #718F7F;
+      --text-muted: #99f6e4;
+      --text-dim: #5eead4;
 
-      --brand-forest-dark: #063d26;
-      --brand-forest: #126343;
-      --brand-forest-mid: #18794E;
-      --brand-forest-light: #22A06B;
-      --brand-emerald: #34D399;
-      --brand-emerald-vivid: #6EE7B7;
-      --brand-mint-light: #A8DFBF;
-      --brand-mint-pale: #1A3326;
+      --brand-forest-dark: #042f2e;
+      --brand-forest: #0f766e;
+      --brand-forest-mid: #14b8a6;
+      --brand-forest-light: #2dd4bf;
+      --brand-emerald: #14b8a6;
+      --brand-emerald-vivid: #5eead4;
+      --brand-mint-light: #99f6e4;
+      --brand-mint-pale: #134e4a;
       --brand-amber: #FBBF24;
       --brand-rose: #F87171;
 
-      --brand-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 50%, #34D399 100%);
-      --brand-button-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 100%);
-      --hero-gradient: linear-gradient(160deg, #063d26 0%, #0B5135 40%, #18794E 100%);
-      --glow-emerald: 0 0 35px -5px rgba(52, 211, 153, 0.2);
-      --grid-pattern: radial-gradient(rgba(52, 211, 153, 0.08) 1px, transparent 1px);
+      --brand-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%);
+      --brand-button-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+      --hero-gradient: linear-gradient(160deg, #042f2e 0%, #134e4a 40%, #0f766e 100%);
+      --glow-emerald: 0 0 35px -5px rgba(20, 184, 166, 0.2);
+      --grid-pattern: radial-gradient(rgba(20, 184, 166, 0.08) 1px, transparent 1px);
     }
 
     html {

@@ -38,6 +38,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 <script>document.body.classList.add('omnify-cart-active');</script>
 <div class="omnify-storefront-wrapper">
 	<div class="omnify-cart-page" data-checkout-url="<?php echo esc_url($omnify_checkout_url); ?>">
+		<?php do_action('omnify_before_cart'); ?>
 		
 		<!-- Steps Nav (Minimal Modern) -->
 		<div class="omnify-cart-steps-minimal" aria-label="<?php esc_attr_e('Checkout progress', 'omnifywp-ecommerce'); ?>">
@@ -64,7 +65,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 		<!-- Urgency countdown banner -->
 		<?php if (! empty($omnify_settings['cart_countdown_enabled'])) : ?>
 		<div class="omnify-cart-urgency-banner">
-			<span class="omnify-urgency-text"><span class="omnify-urgency-icon">⚡</span> <?php esc_html_e('Hurry up! These products are limited, checkout within', 'omnifywp-ecommerce'); ?> <strong id="omnify-cart-countdown"><?php echo esc_html(sprintf('%02dm00s', intval($omnify_settings['cart_countdown_duration'] ?? 7))); ?></strong></span>
+			<span class="omnify-urgency-text"><span class="omnify-urgency-icon"><span class="dashicons dashicons-clock" style="font-size:14px; width:14px; height:14px; line-height:1; vertical-align:middle;"></span></span> <?php esc_html_e('Hurry up! These products are limited, checkout within', 'omnifywp-ecommerce'); ?> <strong id="omnify-cart-countdown"><?php echo esc_html(sprintf('%02dm00s', intval($omnify_settings['cart_countdown_duration'] ?? 7))); ?></strong></span>
 		</div>
 		<?php endif; ?>
 
@@ -102,6 +103,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 				</div>
 
 				<!-- Column Titles -->
+				<?php do_action('omnify_before_cart_table'); ?>
 				<div class="omnify-cart-table-header">
 					<span class="omnify-header-product"><?php esc_html_e('Product', 'omnifywp-ecommerce'); ?></span>
 					<span class="omnify-header-price"><?php esc_html_e('Price', 'omnifywp-ecommerce'); ?></span>
@@ -112,6 +114,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 
 				<!-- Rendered items -->
 				<div id="omnify-cart-items" class="omnify-cart-items"></div>
+				<?php do_action('omnify_after_cart_table'); ?>
 
 				<!-- Coupon Input (Moved to bottom of items list) -->
 				<?php if ($omnify_coupons_enabled) : ?>
@@ -127,11 +130,11 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 					<!-- Applied State -->
 					<div class="omnify-cart-coupon__applied" id="omnify-cart-coupon-applied" style="display: none !important;">
 						<div style="display: flex; align-items: center; gap: 8px;">
-							<span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #16A34A; color: #fff; font-size: 11px;">✓</span>
+							<span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #16A34A; color: #fff; font-size: 11px;"><span class="dashicons dashicons-yes" style="font-size:12px; width:12px; height:12px; line-height:1;"></span></span>
 							<span style="font-size: 11px; font-weight: 700; color: #16A34A; letter-spacing: 0.04em; text-transform: uppercase;"><?php esc_html_e('Applied', 'omnifywp-ecommerce'); ?>:</span>
 							<strong id="omnify-applied-coupon-code" style="color: #0F172A; font-size: 13.5px; font-weight: 600; text-transform: uppercase;"></strong>
 						</div>
-						<button type="button" id="omnify-cart-coupon-remove" class="omnify-coupon-remove-btn"><?php esc_html_e('✕ Remove', 'omnifywp-ecommerce'); ?></button>
+						<button type="button" id="omnify-cart-coupon-remove" class="omnify-coupon-remove-btn"><?php esc_html_e('&times; Remove', 'omnifywp-ecommerce'); ?></button>
 					</div>
 					
 					<div id="omnify-cart-coupon-message" class="omnify-cart-coupon__message" style="display: none;"></div>
@@ -142,6 +145,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 
 			<!-- Right Column: Cart Totals Box -->
 			<aside class="omnify-cart-summary">
+				<?php do_action('omnify_before_cart_totals'); ?>
 				<div class="omnify-cart-summary__header">
 					<span><?php esc_html_e('Order Summary', 'omnifywp-ecommerce'); ?></span>
 					<strong id="omnify-cart-total"><?php echo esc_html($omnify_format_price(0)); ?></strong>
@@ -178,7 +182,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 							<div class="omnify-estimator-fields">
 								<select id="omnify-estimate-country" class="omnify-select-field">
 									<option value=""><?php esc_html_e('Select Country', 'omnifywp-ecommerce'); ?></option>
-									<?php foreach (\Omnify\eCommerce\Support\Omnify_Locations::countries() as $omnify_c_code => $omnify_c_name) : ?>
+									<?php foreach (\Omnify\eCommerce\Support\Omnify_Locations::allowed_countries() as $omnify_c_code => $omnify_c_name) : ?>
 										<option value="<?php echo esc_attr($omnify_c_code); ?>" <?php selected($omnify_c_code, 'US'); ?>><?php echo esc_html($omnify_c_name); ?></option>
 									<?php endforeach; ?>
 								</select>
@@ -227,16 +231,21 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#18794E" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
 						<span><?php esc_html_e('Guaranteed Safe & Secure Checkout', 'omnifywp-ecommerce'); ?></span>
 					</div>
+					<?php
+					$omnify_cart_badges = method_exists($this, 'get_trust_badges') ? $this->get_trust_badges($omnify_settings) : [];
+					?>
 					<div class="trust-badge-icons">
-						<span class="trust-pill">VISA</span>
-						<span class="trust-pill">Mastercard</span>
-						<span class="trust-pill">AMEX</span>
-						<span class="trust-pill">PayPal</span>
-						<span class="trust-pill">Pay</span>
+						<?php foreach ($omnify_cart_badges as $omnify_cb) : 
+							if ('ssl' === $omnify_cb['id']) {
+								continue;
+							}
+						?>
+							<span class="trust-pill" style="color: <?php echo esc_attr($omnify_cb['color']); ?>; background: <?php echo esc_attr($omnify_cb['bg']); ?>; border: 1px solid <?php echo esc_attr($omnify_cb['border']); ?>;"><?php echo esc_html($omnify_cb['label']); ?></span>
+						<?php endforeach; ?>
 					</div>
 					<div class="trust-badge-features">
-						<span>🔒 256-Bit Encryption</span>
-						<span>⚡ Instant Access</span>
+						<span><span class="dashicons dashicons-lock" style="font-size:12px; width:12px; height:12px; vertical-align:middle; margin-right:4px;"></span>256-Bit Encryption</span>
+						<span><span class="dashicons dashicons-download" style="font-size:12px; width:12px; height:12px; vertical-align:middle; margin-right:4px;"></span>Instant Access</span>
 					</div>
 				</div>
 
@@ -248,6 +257,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 						<?php esc_html_e('Clear cart', 'omnifywp-ecommerce'); ?>
 					</button>
 				</div>
+				<?php do_action('omnify_after_cart_totals'); ?>
 			</aside>
 
 		</div>
@@ -274,17 +284,6 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 						$omnify_save_pct = round((((float)$omnify_cs_regular - (float)$omnify_cs_sale) / (float)$omnify_cs_regular) * 100);
 					}
 					$omnify_cs_thumb = ! empty($omnify_cs['thumbnail_url']) ? $omnify_cs['thumbnail_url'] : '';
-					if (empty($omnify_cs_thumb)) {
-						$omnify_cs_name_lower = strtolower((string) ($omnify_cs['name'] ?? ''));
-						$omnify_assets_img = defined('OMNIFY_URL') ? OMNIFY_URL . 'assets/storefront/images/' : plugins_url('assets/storefront/images/', dirname(__DIR__, 1) . '/dummy.php');
-						if (strpos($omnify_cs_name_lower, 'hoodie') !== false || strpos($omnify_cs_name_lower, 'shirt') !== false || strpos($omnify_cs_name_lower, 'merch') !== false || strpos($omnify_cs_name_lower, 't-shirt') !== false || strpos($omnify_cs_name_lower, 'cotton') !== false || strpos($omnify_cs_name_lower, 'apparel') !== false || 'physical' === strtolower((string) ($omnify_cs['type'] ?? ''))) {
-							$omnify_cs_thumb = $omnify_assets_img . 'product-merch-hoodie.jpg';
-						} elseif (strpos($omnify_cs_name_lower, 'bundle') !== false || strpos($omnify_cs_name_lower, 'kit') !== false || strpos($omnify_cs_name_lower, 'pack') !== false || 'bundle' === strtolower((string) ($omnify_cs['type'] ?? ''))) {
-							$omnify_cs_thumb = $omnify_assets_img . 'product-bundle-kit.jpg';
-						} else {
-							$omnify_cs_thumb = $omnify_assets_img . 'product-digital-suite.jpg';
-						}
-					}
 				?>
 					<div class="omnify-cart-cross-sell-card">
 						<a href="<?php echo esc_url($omnify_url_cs); ?>">
@@ -322,5 +321,6 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 		</div>
 		<?php endif; ?>
 
+		<?php do_action('omnify_after_cart'); ?>
 	</div>
 </div>

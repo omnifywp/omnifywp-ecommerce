@@ -14,6 +14,9 @@ $omnify_ac_chips = $omnify_template_vars['omnify_ac_chips'] ?? null;
 $omnify_active_tab = $omnify_template_vars['omnify_active_tab'] ?? null;
 $omnify_cart = $omnify_template_vars['omnify_cart'] ?? null;
 $omnify_carts = $omnify_template_vars['omnify_carts'] ?? null;
+$omnify_paged = (int) ($omnify_template_vars['omnify_paged'] ?? 1);
+$omnify_total_pages = (int) ($omnify_template_vars['omnify_total_pages'] ?? 1);
+$omnify_total_carts = (int) ($omnify_template_vars['omnify_total_carts'] ?? (is_countable($omnify_carts) ? count($omnify_carts) : 0));
 $omnify_chip = $omnify_template_vars['omnify_chip'] ?? null;
 $omnify_delete_url = $omnify_template_vars['omnify_delete_url'] ?? null;
 $omnify_payload = $omnify_template_vars['omnify_payload'] ?? null;
@@ -26,6 +29,18 @@ $omnify_status = $omnify_template_vars['omnify_status'] ?? null;
 $omnify_status = $omnify_status ?? '';
 $omnify_stats  = $omnify_stats ?? [];
 $omnify_carts  = $omnify_carts ?? [];
+$omnify_settings = get_option('omnify_settings', []);
+$omnify_currency_symbol = function($omnify_currency) {
+	switch ($omnify_currency) {
+		case 'EUR': return '€';
+		case 'GBP': return '£';
+		case 'JPY': return '¥';
+		case 'CAD': return 'C$';
+		case 'AUD': return 'A$';
+		default: return '$';
+	}
+};
+$omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ?? 'USD');
 ?>
 
 <div class="omnify-admin-wrapper">
@@ -58,26 +73,41 @@ $omnify_carts  = $omnify_carts ?? [];
 		</div>
 	</div>
 
-	<div class="omnify-dashboard-stats" style="grid-template-columns: repeat(5, minmax(140px, 1fr)); margin-bottom: 16px;">
+	<div class="omnify-dashboard-stats omnify-ac-stats-grid">
 		<div class="omnify-dashboard-stat-card">
-			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Captured', 'omnifywp-ecommerce'); ?></span>
+			<div class="omnify-stat-header">
+				<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Captured', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-stat-icon omnify-stat-icon--captured"><span class="dashicons dashicons-cart"></span></span>
+			</div>
 			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html((string) ($omnify_stats['total'] ?? 0)); ?></p>
 		</div>
 		<div class="omnify-dashboard-stat-card">
-			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Active', 'omnifywp-ecommerce'); ?></span>
+			<div class="omnify-stat-header">
+				<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Active', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-stat-icon omnify-stat-icon--active"><span class="dashicons dashicons-clock"></span></span>
+			</div>
 			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html((string) ($omnify_stats['active'] ?? 0)); ?></p>
 		</div>
 		<div class="omnify-dashboard-stat-card">
-			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Emailed', 'omnifywp-ecommerce'); ?></span>
+			<div class="omnify-stat-header">
+				<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Emailed', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-stat-icon omnify-stat-icon--emailed"><span class="dashicons dashicons-email-alt"></span></span>
+			</div>
 			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html((string) ($omnify_stats['emailed'] ?? 0)); ?></p>
 		</div>
 		<div class="omnify-dashboard-stat-card">
-			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Recovered', 'omnifywp-ecommerce'); ?></span>
+			<div class="omnify-stat-header">
+				<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Recovered', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-stat-icon omnify-stat-icon--recovered"><span class="dashicons dashicons-yes-alt"></span></span>
+			</div>
 			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html((string) ($omnify_stats['recovered'] ?? 0)); ?></p>
 		</div>
 		<div class="omnify-dashboard-stat-card">
-			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Open Value', 'omnifywp-ecommerce'); ?></span>
-			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((float) ($omnify_stats['value'] ?? 0), 2)); ?></p>
+			<div class="omnify-stat-header">
+				<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Open Value', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-stat-icon omnify-stat-icon--value"><span class="dashicons dashicons-money-alt"></span></span>
+			</div>
+			<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_symbol . number_format((float) ($omnify_stats['value'] ?? 0), 2)); ?></p>
 		</div>
 	</div>
 
@@ -146,24 +176,29 @@ $omnify_filter_status = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['
 	</div>
 	<?php endif; ?>
 
-	<div class="omnify-card">
+	<div class="omnify-card omnify-abandoned-carts-card">
 
 		<div class="omnify-table-wrapper">
 			<table class="omnify-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e('Customer', 'omnifywp-ecommerce'); ?></th>
-						<th><?php esc_html_e('Cart', 'omnifywp-ecommerce'); ?></th>
-						<th><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
-						<th><?php esc_html_e('Reminder', 'omnifywp-ecommerce'); ?></th>
-						<th><?php esc_html_e('Last Activity', 'omnifywp-ecommerce'); ?></th>
-						<th><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
+						<th style="min-width: 190px;"><?php esc_html_e('Customer', 'omnifywp-ecommerce'); ?></th>
+						<th style="min-width: 220px;"><?php esc_html_e('Cart', 'omnifywp-ecommerce'); ?></th>
+						<th style="width: 130px; white-space: nowrap;"><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
+						<th style="width: 160px; white-space: nowrap;"><?php esc_html_e('Reminder', 'omnifywp-ecommerce'); ?></th>
+						<th style="width: 170px; white-space: nowrap;"><?php esc_html_e('Last Activity', 'omnifywp-ecommerce'); ?></th>
+						<th style="width: 160px; text-align: right; white-space: nowrap;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if (empty($omnify_carts)) : ?>
 						<tr>
-							<td colspan="6"><?php esc_html_e('No abandoned carts found yet.', 'omnifywp-ecommerce'); ?></td>
+							<td colspan="6" style="text-align: center; padding: 48px 24px;">
+								<div class="omnify-empty-state__icon" style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+									<span class="dashicons dashicons-cart" style="font-size: 26px; width: 26px; height: 26px; color: #94a3b8;"></span>
+								</div>
+								<p style="color: #64748b; font-size: 14px; margin: 0;"><?php esc_html_e('No abandoned carts found.', 'omnifywp-ecommerce'); ?></p>
+							</td>
 						</tr>
 					<?php else : ?>
 						<?php foreach ($omnify_carts as $omnify_cart) : ?>
@@ -172,45 +207,77 @@ $omnify_filter_status = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['
 							$omnify_product_name = (string) ($omnify_payload['product_name'] ?? __('Unknown product', 'omnifywp-ecommerce'));
 							$omnify_send_url     = wp_nonce_url(admin_url('admin-post.php?action=omnify_send_abandoned_cart_email&id=' . (int) $omnify_cart['id']), 'omnify_send_abandoned_cart_email_' . (int) $omnify_cart['id']);
 							$omnify_delete_url   = wp_nonce_url(admin_url('admin-post.php?action=omnify_trash_abandoned_cart&id=' . (int) $omnify_cart['id']), 'omnify_trash_abandoned_cart_' . (int) $omnify_cart['id']);
+							$omnify_cust_name    = trim((string) (($omnify_cart['first_name'] ?? '') . ' ' . ($omnify_cart['last_name'] ?? '')));
+							$omnify_cust_email   = (string) ($omnify_cart['email'] ?? '');
+							$omnify_cart_status  = (string) ($omnify_cart['status'] ?? 'active');
 							?>
 							<tr>
 								<td>
-									<strong><?php echo esc_html(trim((string) (($omnify_cart['first_name'] ?? '') . ' ' . ($omnify_cart['last_name'] ?? ''))) ?: __('Guest customer', 'omnifywp-ecommerce')); ?></strong><br />
-									<span><?php echo esc_html((string) ($omnify_cart['email'] ?? '')); ?></span>
+									<div class="omnify-ac-cust-cell">
+										<strong class="omnify-ac-cust-name"><?php echo esc_html($omnify_cust_name ?: __('Guest Customer', 'omnifywp-ecommerce')); ?></strong>
+										<?php if (! empty($omnify_cust_email)) : ?>
+											<span class="omnify-ac-cust-email"><?php echo esc_html($omnify_cust_email); ?></span>
+										<?php endif; ?>
+									</div>
 								</td>
 								<td>
-									<strong><?php echo esc_html($omnify_product_name); ?></strong><br />
-									<span><?php echo esc_html(sprintf('%1$s %2$s x %3$d', (string) ($omnify_cart['currency'] ?? 'USD'), number_format((float) ($omnify_cart['subtotal'] ?? 0), 2), (int) ($omnify_cart['quantity'] ?? 1))); ?></span>
-									<?php if (! empty($omnify_cart['coupon_code'])) : ?>
-										<br /><span><?php
-										// translators: %s: placeholder value. echo esc_html(sprintf(__('Coupon: %s', 'omnifywp-ecommerce'), strtoupper((string) $cart['coupon_code']))); ?></span>
-									<?php endif; ?>
+									<div class="omnify-ac-cart-cell">
+										<strong class="omnify-ac-prod-name"><?php echo esc_html($omnify_product_name); ?></strong>
+										<div class="omnify-ac-cart-meta">
+											<span class="omnify-ac-cart-price"><?php echo esc_html(sprintf('%1$s %2$s', (string) ($omnify_cart['currency'] ?? 'USD'), number_format((float) ($omnify_cart['subtotal'] ?? 0), 2))); ?></span>
+											<span class="omnify-ac-cart-qty">× <?php echo (int) ($omnify_cart['quantity'] ?? 1); ?></span>
+										</div>
+										<?php if (! empty($omnify_cart['coupon_code'])) : ?>
+											<div class="omnify-cart-coupon-pill">
+												<span class="dashicons dashicons-tag" style="font-size: 11px; width: 11px; height: 11px; line-height: 1;"></span>
+												<?php
+												/* translators: %s: Coupon code */
+												echo esc_html(sprintf(__('Coupon: %s', 'omnifywp-ecommerce'), strtoupper((string) $omnify_cart['coupon_code']))); ?>
+											</div>
+										<?php endif; ?>
+									</div>
 								</td>
-								<td>
-									<span class="omnify-badge omnify-badge--<?php echo esc_attr((string) ($omnify_cart['status'] ?? 'active')); ?>">
-										<?php echo esc_html(ucwords(str_replace('_', ' ', (string) ($omnify_cart['status'] ?? 'active')))); ?>
+								<td style="white-space: nowrap;">
+									<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_cart_status === 'recovered' ? 'completed' : ($omnify_cart_status === 'active' ? 'processing' : 'draft')); ?>">
+										<?php echo esc_html(ucwords(str_replace('_', ' ', $omnify_cart_status))); ?>
 									</span>
 									<?php if (! empty($omnify_cart['recovered_order_id'])) : ?>
-										<br /><a href="<?php
-										// translators: %d: placeholder value. echo esc_url(admin_url('admin.php?page=omnify-orders&action=view&id=' . (int) $cart['recovered_order_id'])); ?>"><?php
-										// translators: %d: placeholder value. echo esc_html(sprintf(__('Order #%d', 'omnifywp-ecommerce'), (int) $cart['recovered_order_id'])); ?></a>
+										<div style="margin-top: 4px;">
+											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders&action=view&id=' . (int) $omnify_cart['recovered_order_id'])); ?>" class="omnify-recovered-order-link">
+												<span class="dashicons dashicons-yes" style="font-size: 12px; width: 12px; height: 12px; vertical-align: middle;"></span>
+												<?php
+												/* translators: %d: Order ID */
+												echo esc_html(sprintf(__('Order #%d', 'omnifywp-ecommerce'), (int) $omnify_cart['recovered_order_id'])); ?>
+											</a>
+										</div>
 									<?php endif; ?>
 								</td>
-								<td>
-									<?php 
-									// translators: %d: placeholder value.
-									echo esc_html(sprintf(_n('%d email', '%d emails', (int) ($omnify_cart['reminder_count'] ?? 0), 'omnifywp-ecommerce'), (int) ($omnify_cart['reminder_count'] ?? 0))); ?><br />
-									<span><?php echo ! empty($omnify_cart['last_reminder_at']) ? esc_html(get_date_from_gmt((string) $omnify_cart['last_reminder_at'])) : esc_html__('Not sent', 'omnifywp-ecommerce'); ?></span>
+								<td style="white-space: nowrap;">
+									<div class="omnify-reminder-cell">
+										<span class="omnify-reminder-count">
+											<span class="dashicons dashicons-email-alt" style="font-size: 13px; width: 13px; height: 13px; vertical-align: middle; margin-right: 3px;"></span>
+											<?php 
+											/* translators: %d: Email count */
+											echo esc_html(sprintf(_n('%d email', '%d emails', (int) ($omnify_cart['reminder_count'] ?? 0), 'omnifywp-ecommerce'), (int) ($omnify_cart['reminder_count'] ?? 0))); ?>
+										</span>
+										<span class="omnify-reminder-time"><?php echo ! empty($omnify_cart['last_reminder_at']) ? esc_html(get_date_from_gmt((string) $omnify_cart['last_reminder_at'])) : esc_html__('Not sent', 'omnifywp-ecommerce'); ?></span>
+									</div>
 								</td>
-								<td>
-									<?php echo esc_html(get_date_from_gmt((string) ($omnify_cart['updated_at'] ?? ''))); ?>
+								<td style="white-space: nowrap;">
+									<span class="omnify-ac-date"><?php echo esc_html(get_date_from_gmt((string) ($omnify_cart['updated_at'] ?? ''))); ?></span>
 								</td>
-								<td>
-									<div class="omnify-action-stack">
+								<td style="text-align: right; white-space: nowrap;">
+									<div class="omnify-row-actions" style="justify-content: flex-end;">
 										<?php if (! empty($omnify_cart['recovery_url'])) : ?>
-											<a class="omnify-button omnify-button--secondary" href="<?php echo esc_url((string) $omnify_cart['recovery_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Open Link', 'omnifywp-ecommerce'); ?></a>
+											<a class="omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url((string) $omnify_cart['recovery_url']); ?>" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e('Open Cart Link', 'omnifywp-ecommerce'); ?>" style="font-size: 11.5px; height: 32px; padding: 0 10px;">
+												<span class="dashicons dashicons-external" style="font-size: 12px; width: 12px; height: 12px; line-height: 1; vertical-align: middle;"></span>
+												<?php esc_html_e('Link', 'omnifywp-ecommerce'); ?>
+											</a>
 										<?php endif; ?>
-										<a class="omnify-button" href="<?php echo esc_url($omnify_send_url); ?>"><?php esc_html_e('Send Email', 'omnifywp-ecommerce'); ?></a>
+										<a class="omnify-button omnify-button--primary omnify-button--sm" href="<?php echo esc_url($omnify_send_url); ?>" title="<?php esc_attr_e('Send recovery reminder email', 'omnifywp-ecommerce'); ?>" style="font-size: 11.5px; height: 32px; padding: 0 12px;">
+											<span class="dashicons dashicons-email-alt" style="font-size: 12px; width: 12px; height: 12px; line-height: 1; vertical-align: middle;"></span>
+											<?php esc_html_e('Send Email', 'omnifywp-ecommerce'); ?>
+										</a>
 										<a class="omnify-icon-btn omnify-icon-btn--danger" href="<?php echo esc_url($omnify_delete_url); ?>" title="<?php esc_attr_e('Move to trash', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php echo esc_js(__('Move to trash?', 'omnifywp-ecommerce')); ?>');">
 											<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
 										</a>
@@ -222,6 +289,34 @@ $omnify_filter_status = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['
 				</tbody>
 			</table>
 		</div>
+		<?php if ($omnify_total_pages > 1) : ?>
+			<div class="tablenav" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--omnify-gray-200, #e2e8f0);">
+				<div class="tablenav-pages" style="display: flex; align-items: center; gap: 8px;">
+					<span class="displaying-num" style="font-size: 13px; color: #64748b;">
+						<?php
+						/* translators: %s: total carts count */
+						printf(esc_html(_n('%s cart', '%s carts', $omnify_total_carts, 'omnifywp-ecommerce')), number_format_i18n($omnify_total_carts));
+						?>
+					</span>
+					<span class="pagination-links" style="display: flex; gap: 4px; align-items: center;">
+						<?php
+						$omnify_current_url = remove_query_arg('paged');
+						if ($omnify_paged > 1) : ?>
+							<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('First page', 'omnifywp-ecommerce'); ?>">&laquo;</a>
+							<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged - 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Previous page', 'omnifywp-ecommerce'); ?>">&lsaquo;</a>
+						<?php endif; ?>
+						<span class="paging-input" style="font-size: 13px; margin: 0 4px;">
+							<span class="current-page"><?php echo esc_html((string) $omnify_paged); ?></span>
+							<span class="tablenav-paging-text"> <?php esc_html_e('of', 'omnifywp-ecommerce'); ?> <span class="total-pages"><?php echo esc_html((string) $omnify_total_pages); ?></span></span>
+						</span>
+						<?php if ($omnify_paged < $omnify_total_pages) : ?>
+							<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged + 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Next page', 'omnifywp-ecommerce'); ?>">&rsaquo;</a>
+							<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_total_pages, $omnify_current_url)); ?>" title="<?php esc_attr_e('Last page', 'omnifywp-ecommerce'); ?>">&raquo;</a>
+						<?php endif; ?>
+					</span>
+				</div>
+			</div>
+		<?php endif; ?>
 	</div>
 </div>
 

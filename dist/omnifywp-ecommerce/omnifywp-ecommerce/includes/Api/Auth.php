@@ -42,7 +42,7 @@ class Omnify_Auth {
 
 		// Ensure we are hitting an Omnify endpoint
 		$omnify_request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '';
-		if (! str_contains($omnify_request_uri, '/wp-json/omnify/')) {
+		if (! str_contains($omnify_request_uri, '/wp-json/omnify/') && ! str_contains($omnify_request_uri, 'rest_route=%2Fomnify%2F') && ! str_contains($omnify_request_uri, 'rest_route=/omnify/')) {
 			return $omnify_user_id;
 		}
 

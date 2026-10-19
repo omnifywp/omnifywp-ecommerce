@@ -32,6 +32,13 @@ window.omnifyInitSearchableSelect = function(select) {
 	input.placeholder = select.getAttribute('placeholder') || select.dataset.placeholder || 'Select option...';
 	wrapper.appendChild(input);
 
+	const clearBtn = document.createElement('span');
+	clearBtn.className = 'omnify-custom-select-clear';
+	clearBtn.setAttribute('title', 'Deselect option');
+	clearBtn.setAttribute('aria-label', 'Deselect option');
+	clearBtn.innerHTML = '&times;';
+	wrapper.appendChild(clearBtn);
+
 	const dropdown = document.createElement('div');
 	dropdown.className = 'omnify-custom-select-dropdown';
 	wrapper.appendChild(dropdown);
@@ -46,10 +53,74 @@ window.omnifyInitSearchableSelect = function(select) {
 	customOpt.style.display = 'none';
 	dropdown.appendChild(customOpt);
 
+	function getDefaultOption() {
+		const emptyOpt = Array.from(select.options).find(o => o.value === '');
+		if (emptyOpt) return emptyOpt;
+		const starOpt = Array.from(select.options).find(o => o.value === '*');
+		if (starOpt) return starOpt;
+		return null;
+	}
+
+	function getDefaultValue() {
+		const defaultOpt = getDefaultOption();
+		return defaultOpt ? defaultOpt.value : '';
+	}
+
+	function hasSelection() {
+		if (isMultiple) {
+			return getSelectedOptions().length > 0;
+		}
+		if (select.selectedIndex === -1) {
+			return false;
+		}
+		const val = select.value;
+		return Boolean(val !== '' && val !== null && val !== undefined);
+	}
+
+	function deselect() {
+		if (isMultiple) {
+			Array.from(select.options).forEach(opt => {
+				opt.selected = false;
+			});
+		} else {
+			const emptyOpt = Array.from(select.options).find(o => o.value === '');
+			if (emptyOpt) {
+				select.value = '';
+				Array.from(select.options).forEach(o => {
+					o.selected = (o === emptyOpt);
+				});
+			} else {
+				select.selectedIndex = -1;
+				select.value = '';
+				Array.from(select.options).forEach(o => {
+					o.selected = false;
+				});
+			}
+		}
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		select.dispatchEvent(new Event('input', { bubbles: true }));
+		updateInputFromSelect();
+		rebuildOptions();
+		closeDropdown();
+	}
+
+	clearBtn.addEventListener('mousedown', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		deselect();
+	});
+	clearBtn.addEventListener('click', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+	});
+
 	function getSelectedOption() {
 		const val = select.value;
+		if (!val && !Array.from(select.options).some(o => o.value === '')) {
+			return null;
+		}
 		const option = Array.from(select.options).find(o => o.value === val);
-		return option || select.options[0];
+		return option || null;
 	}
 
 	function getSelectedOptions() {
@@ -60,14 +131,27 @@ window.omnifyInitSearchableSelect = function(select) {
 		if (isMultiple) {
 			const selected = getSelectedOptions();
 			input.value = selected.length ? selected.map(opt => opt.textContent.trim()).join(', ') : '';
+			wrapper.classList.toggle('has-value', selected.length > 0);
 			return;
 		}
 		const opt = getSelectedOption();
 		input.value = opt ? opt.textContent.trim() : '';
+		wrapper.classList.toggle('has-value', hasSelection());
 	}
 
 	function rebuildOptions() {
 		dropdown.querySelectorAll('.omnify-custom-select-option:not(.omnify-custom-select-custom-val)').forEach(el => el.remove());
+
+		if (hasSelection()) {
+			const deselectDiv = document.createElement('div');
+			deselectDiv.className = 'omnify-custom-select-option omnify-custom-select-deselect';
+			deselectDiv.innerHTML = '<span class="omnify-deselect-cross">&times;</span> ' + (isMultiple ? 'Clear all selections' : 'Deselect option');
+			deselectDiv.addEventListener('mousedown', (e) => {
+				e.preventDefault();
+				deselect();
+			});
+			dropdown.insertBefore(deselectDiv, customOpt);
+		}
 
 		Array.from(select.options).forEach(opt => {
 			const optionDiv = document.createElement('div');
@@ -75,7 +159,8 @@ window.omnifyInitSearchableSelect = function(select) {
 			optionDiv.textContent = opt.textContent.trim();
 			optionDiv.dataset.value = opt.value;
 
-			if (opt.selected) {
+			const isOptSelected = isMultiple ? opt.selected : (select.value === opt.value);
+			if (isOptSelected) {
 				optionDiv.classList.add('selected');
 			}
 
@@ -88,6 +173,10 @@ window.omnifyInitSearchableSelect = function(select) {
 					rebuildOptions();
 					openDropdown();
 					input.focus();
+					return;
+				}
+				if (select.value === opt.value) {
+					deselect();
 					return;
 				}
 				select.value = opt.value;
@@ -111,10 +200,51 @@ window.omnifyInitSearchableSelect = function(select) {
 	observer.observe(select, { childList: true });
 
 	function openDropdown() {
+		// Close any other open dropdowns first to prevent stacking conflicts
+		document.querySelectorAll('.omnify-custom-select-wrapper.open').forEach(w => {
+			if (w !== wrapper) {
+				const otherDropdown = w.querySelector('.omnify-custom-select-dropdown');
+				if (otherDropdown) otherDropdown.style.display = 'none';
+				w.classList.remove('open');
+				w.style.removeProperty('z-index');
+				const otherTr = w.closest('tr');
+				if (otherTr) {
+					otherTr.style.removeProperty('z-index');
+					otherTr.style.removeProperty('position');
+				}
+				const otherTd = w.closest('td');
+				if (otherTd) {
+					otherTd.style.removeProperty('z-index');
+					otherTd.style.removeProperty('position');
+				}
+			}
+		});
+
 		dropdown.style.display = 'block';
 		wrapper.classList.add('open');
+		wrapper.style.zIndex = '999999';
+
+		const tr = wrapper.closest('tr');
+		if (tr) {
+			tr.style.position = 'relative';
+			tr.style.zIndex = '99999';
+		}
+		const td = wrapper.closest('td');
+		if (td) {
+			td.style.position = 'relative';
+			td.style.zIndex = '99999';
+		}
+		const card = wrapper.closest('.omnify-delivery-zone-card, .omnify-card');
+		if (card) {
+			card.style.position = 'relative';
+			card.style.zIndex = '99999';
+		}
+
 		dropdown.querySelectorAll('.omnify-custom-select-option').forEach(el => {
 			el.classList.remove('hidden');
+			if (el.classList.contains('omnify-custom-select-deselect')) {
+				return;
+			}
 			if (isMultiple) {
 				const option = Array.from(select.options).find(opt => opt.value === el.dataset.value);
 				el.classList.toggle('selected', Boolean(option && option.selected));
@@ -130,6 +260,23 @@ window.omnifyInitSearchableSelect = function(select) {
 	function closeDropdown() {
 		dropdown.style.display = 'none';
 		wrapper.classList.remove('open');
+		wrapper.style.removeProperty('z-index');
+
+		const tr = wrapper.closest('tr');
+		if (tr) {
+			tr.style.removeProperty('z-index');
+			tr.style.removeProperty('position');
+		}
+		const td = wrapper.closest('td');
+		if (td) {
+			td.style.removeProperty('z-index');
+			td.style.removeProperty('position');
+		}
+		const card = wrapper.closest('.omnify-delivery-zone-card, .omnify-card');
+		if (card) {
+			card.style.removeProperty('z-index');
+			card.style.removeProperty('position');
+		}
 	}
 
 	input.addEventListener('focus', () => {
@@ -196,6 +343,10 @@ window.omnifyInitSearchableSelect = function(select) {
 		let exactMatch = false;
 
 		dropdown.querySelectorAll('.omnify-custom-select-option:not(.omnify-custom-select-custom-val)').forEach(el => {
+			if (el.classList.contains('omnify-custom-select-deselect')) {
+				el.classList.remove('hidden');
+				return;
+			}
 			const text = el.textContent.toLowerCase();
 			if (text === queryLower) {
 				exactMatch = true;
@@ -825,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				preview.className = `omnify-attribute-option-preview omnify-attribute-option-preview--${type}`;
 				preview.title = label;
 				if (showColor && colorInput) {
-					preview.style.setProperty('--option-color', colorInput.value || '#6366f1');
+					preview.style.setProperty('--option-color', colorInput.value || '#0f766e');
 					preview.innerHTML = `<span data-option-preview-label>${escapeHtml(label)}</span>`;
 				} else if (showImage) {
 					preview.style.removeProperty('--option-color');
@@ -848,7 +999,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	function createAttributeOptionRow(label = '', meta = {}) {
 		if (!attrOptionBuilder) return;
 
-		const color = meta.color || '#6366f1';
+		const color = meta.color || '#0f766e';
 		const imageId = meta.image_id || '';
 		const imageUrl = meta.image_url || '';
 		const fieldId = `omnify-attribute-option-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -1067,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			btn.disabled = true;
 			const originalText = btn.innerHTML;
-			btn.innerHTML = '⌛ Generating...';
+			btn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Generating...';
 
 			jQuery.ajax({
 				url: omnifyAdmin.ajaxUrl,
@@ -1178,6 +1329,152 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+	// Create Webhook Handler
+	const createWebhookForm = document.getElementById('omnify-create-webhook-form');
+	if (createWebhookForm) {
+		createWebhookForm.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const nameInput = document.getElementById('webhook-name');
+			const urlInput = document.getElementById('webhook-url');
+			const secretInput = document.getElementById('webhook-secret');
+			const eventsCheckboxes = document.querySelectorAll('input[name="webhook_events[]"]:checked');
+			const btn = document.getElementById('omnify-create-webhook-btn');
+
+			if (!nameInput || !urlInput || !nameInput.value.trim() || !urlInput.value.trim()) return;
+
+			const selectedEvents = Array.from(eventsCheckboxes).map(cb => cb.value).join(',');
+
+			btn.disabled = true;
+			const originalText = btn.innerHTML;
+			btn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Registering...';
+
+			jQuery.ajax({
+				url: omnifyAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'omnify_create_webhook',
+					nonce: omnifyAdmin.apiNonce,
+					name: nameInput.value.trim(),
+					url: urlInput.value.trim(),
+					secret: secretInput ? secretInput.value.trim() : '',
+					events: selectedEvents || '*'
+				},
+				success: function(response) {
+					btn.disabled = false;
+					btn.innerHTML = originalText;
+					if (response.success) {
+						window.location.reload();
+					} else {
+						alert((response.data && response.data.message) || 'Error registering webhook');
+					}
+				},
+				error: function() {
+					btn.disabled = false;
+					btn.innerHTML = originalText;
+					alert('Request failed. Please try again.');
+				}
+			});
+		});
+	}
+
+	// Delete Webhook Handler
+	document.addEventListener('click', function(e) {
+		const deleteBtn = e.target.closest('.delete-webhook-btn');
+		if (!deleteBtn) return;
+		e.preventDefault();
+
+		if (!confirm('Are you sure you want to delete this webhook? Outbound events will no longer be dispatched to this URL.')) {
+			return;
+		}
+
+		const webhookId = deleteBtn.getAttribute('data-webhook-id');
+		deleteBtn.disabled = true;
+		deleteBtn.textContent = '...';
+
+		jQuery.ajax({
+			url: omnifyAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'omnify_delete_webhook',
+				nonce: omnifyAdmin.apiNonce,
+				id: webhookId
+			},
+			success: function(response) {
+				if (response.success) {
+					const row = document.getElementById('webhook-row-' + webhookId);
+					if (row) {
+						row.style.transition = 'all 0.5s ease';
+						row.style.opacity = '0';
+						setTimeout(() => row.remove(), 500);
+					}
+				} else {
+					deleteBtn.disabled = false;
+					deleteBtn.textContent = 'Delete';
+					alert((response.data && response.data.message) || 'Error deleting webhook');
+				}
+			},
+			error: function() {
+				deleteBtn.disabled = false;
+				deleteBtn.textContent = 'Delete';
+				alert('Request failed.');
+			}
+		});
+	});
+
+	// Test Webhook Ping Handler
+	document.addEventListener('click', function(e) {
+		const testBtn = e.target.closest('.test-webhook-btn');
+		if (!testBtn) return;
+		e.preventDefault();
+
+		const webhookId = testBtn.getAttribute('data-webhook-id');
+		const resultSpan = document.getElementById('webhook-test-result-' + webhookId);
+		testBtn.disabled = true;
+		const originalText = testBtn.innerHTML;
+		testBtn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span> Ping...';
+
+		if (resultSpan) {
+			resultSpan.style.display = 'inline-block';
+			resultSpan.textContent = 'Testing...';
+			resultSpan.style.color = 'var(--omnify-gray-600)';
+		}
+
+		jQuery.ajax({
+			url: omnifyAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'omnify_test_webhook',
+				nonce: omnifyAdmin.apiNonce,
+				id: webhookId
+			},
+			success: function(response) {
+				testBtn.disabled = false;
+				testBtn.innerHTML = originalText;
+				if (resultSpan) {
+					if (response.success) {
+						resultSpan.style.color = '#059669';
+						resultSpan.textContent = response.data.message || 'Ping OK';
+					} else {
+						resultSpan.style.color = '#dc2626';
+						resultSpan.textContent = (response.data && response.data.message) ? response.data.message : 'Ping Failed';
+					}
+				} else {
+					alert((response.data && response.data.message) || (response.success ? 'Success' : 'Failed'));
+				}
+			},
+			error: function() {
+				testBtn.disabled = false;
+				testBtn.innerHTML = originalText;
+				if (resultSpan) {
+					resultSpan.style.color = '#dc2626';
+					resultSpan.textContent = 'Request timed out or failed';
+				} else {
+					alert('Request failed.');
+				}
+			}
+		});
+	});
+
 	// Check Stripe Connection Status
 	const testStripeBtn = document.getElementById('test-stripe-connection-btn');
 	if (testStripeBtn) {
@@ -1185,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			e.preventDefault();
 			const resultsDiv = document.getElementById('stripe-test-results');
 			testStripeBtn.disabled = true;
-			testStripeBtn.innerHTML = '⌛ Testing...';
+			testStripeBtn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Testing...';
 			resultsDiv.style.display = 'block';
 			resultsDiv.className = '';
 			resultsDiv.style.background = '#f3f4f6';
@@ -1206,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						resultsDiv.style.background = 'rgba(16, 185, 129, 0.1)';
 						resultsDiv.style.color = '#065f46';
 						resultsDiv.style.border = '1px solid var(--omnify-success)';
-						resultsDiv.innerHTML = '<strong>✅ Connected Successfully</strong><br/>' +
+						resultsDiv.innerHTML = '<strong>Connected Successfully</strong><br/>' +
 							'Mode: ' + response.data.mode.toUpperCase() + '<br/>' +
 							'Account ID: ' + response.data.account_id + '<br/>' +
 							'Latency: ' + response.data.latency + ' ms';
@@ -1214,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						resultsDiv.style.background = 'rgba(239, 68, 68, 0.1)';
 						resultsDiv.style.color = '#991b1b';
 						resultsDiv.style.border = '1px solid var(--omnify-danger, #ef4444)';
-						resultsDiv.innerHTML = '<strong>❌ Connection Failed</strong><br/>' +
+						resultsDiv.innerHTML = '<strong>Connection Failed</strong><br/>' +
 							(response.data.message || 'Unknown error occurred') + '<br/>' +
 							'Latency: ' + (response.data.latency || 0) + ' ms';
 					}
@@ -1225,7 +1522,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					resultsDiv.style.background = 'rgba(239, 68, 68, 0.1)';
 					resultsDiv.style.color = '#991b1b';
 					resultsDiv.style.border = '1px solid var(--omnify-danger, #ef4444)';
-					resultsDiv.innerHTML = '<strong>❌ Request Failed</strong><br/>Stripe endpoint request timed out or was blocked by server policies.';
+					resultsDiv.innerHTML = '<strong>Request Failed</strong><br/>Stripe endpoint request timed out or was blocked by server policies.';
 				}
 			});
 		});
@@ -1238,7 +1535,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			e.preventDefault();
 			const resultsDiv = document.getElementById('paypal-test-results');
 			testPaypalBtn.disabled = true;
-			testPaypalBtn.innerHTML = '⌛ Testing...';
+			testPaypalBtn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Testing...';
 			resultsDiv.style.display = 'block';
 			resultsDiv.className = '';
 			resultsDiv.style.background = '#f3f4f6';
@@ -1259,14 +1556,14 @@ document.addEventListener('DOMContentLoaded', function() {
 						resultsDiv.style.background = 'rgba(16, 185, 129, 0.1)';
 						resultsDiv.style.color = '#065f46';
 						resultsDiv.style.border = '1px solid var(--omnify-success)';
-						resultsDiv.innerHTML = '<strong>✅ Authenticated Successfully</strong><br/>' +
+						resultsDiv.innerHTML = '<strong>Authenticated Successfully</strong><br/>' +
 							'Mode: ' + response.data.mode.toUpperCase() + '<br/>' +
 							'Latency: ' + response.data.latency + ' ms';
 					} else {
 						resultsDiv.style.background = 'rgba(239, 68, 68, 0.1)';
 						resultsDiv.style.color = '#991b1b';
 						resultsDiv.style.border = '1px solid var(--omnify-danger, #ef4444)';
-						resultsDiv.innerHTML = '<strong>❌ Authentication Failed</strong><br/>' +
+						resultsDiv.innerHTML = '<strong>Authentication Failed</strong><br/>' +
 							(response.data.message || 'Unknown error occurred') + '<br/>' +
 							'Latency: ' + (response.data.latency || 0) + ' ms';
 					}
@@ -1277,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					resultsDiv.style.background = 'rgba(239, 68, 68, 0.1)';
 					resultsDiv.style.color = '#991b1b';
 					resultsDiv.style.border = '1px solid var(--omnify-danger, #ef4444)';
-					resultsDiv.innerHTML = '<strong>❌ Request Failed</strong><br/>PayPal endpoint request timed out or was blocked by server policies.';
+					resultsDiv.innerHTML = '<strong>Request Failed</strong><br/>PayPal endpoint request timed out or was blocked by server policies.';
 				}
 			});
 		});
@@ -1296,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (!url) return;
 
 			submitBtn.disabled = true;
-			submitBtn.innerHTML = '⌛ Connecting...';
+			submitBtn.innerHTML = '<span class="dashicons dashicons-update omnify-spin" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Connecting...';
 			dashboard.style.display = 'none';
 
 			jQuery.ajax({
@@ -1309,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				},
 				success: function(response) {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '📡 Send Ping';
+					submitBtn.innerHTML = '<span class="dashicons dashicons-networking" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> ' + (window.omnifyL10n?.sendPing || 'Send Ping');
 					if (response.success) {
 						dashboard.style.display = 'block';
 						document.getElementById('report-target-url').textContent = url;
@@ -1351,7 +1648,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				},
 				error: function() {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '📡 Send Ping';
+					submitBtn.innerHTML = '<span class="dashicons dashicons-networking" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> ' + (window.omnifyL10n?.sendPing || 'Send Ping');
 					alert('Failed to connect to the test connection endpoint.');
 				}
 			});
@@ -1456,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								bar.style.width = '100%';
 								statusText.textContent = 'Success! Seeding complete.';
 								window.omnifyShowToast('Demo data successfully generated!', 'success');
-								btn.innerHTML = '✅ Demo Data Generated';
+								btn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Demo Data Generated';
 							} else {
 								bar.style.width = '0%';
 								container.style.display = 'none';
@@ -1496,13 +1793,13 @@ document.addEventListener('DOMContentLoaded', function() {
 						window.location.href = 'admin.php?page=omnifywp-ecommerce';
 					} else {
 						submitBtn.disabled = false;
-						submitBtn.innerHTML = 'Save & Go to Dashboard 🚀';
+						submitBtn.innerHTML = 'Save & Go to Dashboard';
 						window.omnifyShowToast(response.data.message || 'Error saving settings.', 'error');
 					}
 				},
 				error: function() {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = 'Save & Go to Dashboard 🚀';
+					submitBtn.innerHTML = 'Save & Go to Dashboard';
 					window.omnifyShowToast('Network error. Failed to save setup.', 'error');
 				}
 			});
@@ -1542,7 +1839,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								progressBar.style.width = '100%';
 								progressStatus.textContent = 'Success! Seeding complete.';
 								window.omnifyShowToast('Demo data successfully generated!', 'success');
-								toolsGenBtn.innerHTML = '✅ Demo Data Generated';
+								toolsGenBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Demo Data Generated';
 							} else {
 								progressBar.style.width = '0%';
 								progressContainer.style.display = 'none';
@@ -1568,7 +1865,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const type = btn.getAttribute('data-type');
 			let confirmMsg = 'Are you sure you want to delete this data? This action is permanent!';
 			if (type === 'all') {
-				confirmMsg = '🔥 DANGER: Are you absolutely sure you want to delete ALL products, orders, customers, reviews, and transaction records? This will completely empty your store data!';
+				confirmMsg = 'DANGER: Are you absolutely sure you want to delete ALL products, orders, customers, reviews, and transaction records? This will completely empty your store data!';
 			}
 
 			if (!confirm(confirmMsg)) {
@@ -1603,6 +1900,108 @@ document.addEventListener('DOMContentLoaded', function() {
 					window.omnifyShowToast('Network error. Failed to clear data.', 'error');
 				}
 			});
+		});
+	});
+
+	// ── 1-Click WooCommerce Migrator ───────────────────
+	const wcMigrateBtn = document.getElementById('omnify-btn-migrate-woocommerce');
+	if (wcMigrateBtn) {
+		const progressBar = document.getElementById('omnify-mig-progress-bar');
+		const progressStatus = document.getElementById('omnify-mig-progress-status');
+		const progressContainer = document.getElementById('omnify-mig-progress-container');
+
+		wcMigrateBtn.addEventListener('click', () => {
+			const importProducts = document.getElementById('omnify-mig-products')?.checked ? 1 : 0;
+			const importOrders = document.getElementById('omnify-mig-orders')?.checked ? 1 : 0;
+
+			if (!importProducts && !importOrders) {
+				window.omnifyShowToast('Please select at least one item type to migrate.', 'error');
+				return;
+			}
+
+			wcMigrateBtn.disabled = true;
+			progressContainer.style.display = 'block';
+			progressBar.style.width = '20%';
+			progressStatus.textContent = 'Reading WooCommerce catalog & variations...';
+
+			setTimeout(() => {
+				progressBar.style.width = '55%';
+				progressStatus.textContent = 'Importing products, media, and taxonomies into OmnifyWP...';
+
+				jQuery.ajax({
+					url: omnifyAdmin.ajaxUrl,
+					method: 'POST',
+					data: {
+						action: 'omnify_migrate_woocommerce',
+						nonce: omnifyAdmin.adminNonce,
+						import_products: importProducts,
+						import_orders: importOrders
+					},
+					success: function(response) {
+						if (response.success) {
+							progressBar.style.width = '100%';
+							progressStatus.textContent = response.data.message || 'Migration complete!';
+							window.omnifyShowToast(response.data.message || 'Migration complete!', 'success');
+							wcMigrateBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Migration Finished';
+							setTimeout(() => window.location.reload(), 1800);
+						} else {
+							progressBar.style.width = '0%';
+							progressContainer.style.display = 'none';
+							wcMigrateBtn.disabled = false;
+							window.omnifyShowToast(response.data.message || 'Migration failed.', 'error');
+						}
+					},
+					error: function() {
+						progressBar.style.width = '0%';
+						progressContainer.style.display = 'none';
+						wcMigrateBtn.disabled = false;
+						window.omnifyShowToast('Network error while migrating WooCommerce data.', 'error');
+					}
+				});
+			}, 600);
+		});
+	}
+
+	// ── Webhook Replay Action ──────────────────────────
+	document.addEventListener('click', function(e) {
+		const replayBtn = e.target.closest('.btn-replay-webhook');
+		if (!replayBtn) return;
+
+		const eventId = replayBtn.getAttribute('data-event-id');
+		const gateway = replayBtn.getAttribute('data-gateway');
+		if (!eventId || !gateway) return;
+
+		const origText = replayBtn.innerHTML;
+		replayBtn.disabled = true;
+		replayBtn.innerHTML = '<span class="dashicons dashicons-update" style="font-size: 13px; width: 13px; height: 13px; line-height: 1; animation: spin 1s infinite linear;"></span> Replaying...';
+
+		jQuery.ajax({
+			url: omnifyAdmin.ajaxUrl,
+			method: 'POST',
+			data: {
+				action: 'omnify_replay_webhook',
+				nonce: omnifyAdmin.adminNonce,
+				event_id: eventId,
+				gateway: gateway
+			},
+			success: function(response) {
+				replayBtn.disabled = false;
+				replayBtn.innerHTML = origText;
+				if (response.success) {
+					window.omnifyShowToast(response.data.message || 'Webhook replayed!', 'success');
+					const statusCell = document.getElementById('webhook-status-' + eventId);
+					if (statusCell) {
+						statusCell.innerHTML = '<span class="omnify-badge omnify-badge--info">replayed</span>';
+					}
+				} else {
+					window.omnifyShowToast(response.data.message || 'Failed to replay webhook.', 'error');
+				}
+			},
+			error: function() {
+				replayBtn.disabled = false;
+				replayBtn.innerHTML = origText;
+				window.omnifyShowToast('Network error replaying webhook.', 'error');
+			}
 		});
 	});
 
@@ -1851,6 +2250,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		function activateAnalyticsTab(targetTab) {
 			const targetSec = targetTab.getAttribute('data-analytics-tab') || targetTab.getAttribute('data-section') || 'overview';
+			const pageWrapper = document.querySelector('.omnify-analytics-page');
+			if (pageWrapper) {
+				pageWrapper.setAttribute('data-active-tab', targetSec);
+			}
 
 			// Update tabs active state
 			analyticsTabs.forEach((t) => {
@@ -1940,8 +2343,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (ctxSales) {
 					const ctx = ctxSales.getContext('2d');
 					const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-					gradient.addColorStop(0, 'rgba(20, 119, 108, 0.86)');
-					gradient.addColorStop(1, 'rgba(20, 119, 108, 0.46)');
+					gradient.addColorStop(0, 'rgba(5, 150, 105, 0.85)');
+					gradient.addColorStop(1, 'rgba(5, 150, 105, 0.25)');
 
 					chartInstances.push(new Chart(ctx, {
 						type: 'bar',
@@ -1952,17 +2355,19 @@ document.addEventListener('DOMContentLoaded', function() {
 									label: 'Revenue',
 									data: d.revenue,
 									backgroundColor: gradient,
-									borderColor: '#14776c',
-									borderWidth: 1,
+									borderColor: '#059669',
+									borderWidth: 1.5,
+									borderRadius: 6,
 									yAxisID: 'y'
 								},
 								{
 									label: 'Orders',
 									data: d.orders,
 									type: 'line',
-									borderColor: '#d89616',
-									backgroundColor: 'rgba(216, 150, 22, 0.1)',
-									borderWidth: 2,
+									borderColor: '#2563eb',
+									backgroundColor: 'rgba(37, 99, 235, 0.08)',
+									pointBackgroundColor: '#2563eb',
+									borderWidth: 2.5,
 									tension: 0.35,
 									yAxisID: 'y1'
 								}
@@ -1971,9 +2376,31 @@ document.addEventListener('DOMContentLoaded', function() {
 						options: {
 							responsive: true,
 							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'top',
+									labels: { font: { family: 'Inter', size: 12, weight: 600 }, boxWidth: 14, boxHeight: 14 }
+								}
+							},
 							scales: {
-								y: { type: 'linear', display: true, position: 'left' },
-								y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+								y: {
+									type: 'linear',
+									display: true,
+									position: 'left',
+									grid: { color: 'rgba(226, 232, 240, 0.6)' },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								},
+								y1: {
+									type: 'linear',
+									display: true,
+									position: 'right',
+									grid: { drawOnChartArea: false },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								},
+								x: {
+									grid: { display: false },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								}
 							}
 						}
 					}));
@@ -1988,13 +2415,20 @@ document.addEventListener('DOMContentLoaded', function() {
 							labels: d.catLabels,
 							datasets: [{
 								data: d.catRevenue,
-								backgroundColor: ['#14776c', '#d89616', '#0369a1', '#be185d', '#8b5cf6', '#3b82f6', '#10b981']
+								backgroundColor: ['#059669', '#2563eb', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#10b981'],
+								borderWidth: 2,
+								borderColor: '#ffffff'
 							}]
 						},
 						options: {
 							responsive: true,
 							maintainAspectRatio: false,
-							plugins: { legend: { position: 'right' } }
+							plugins: {
+								legend: {
+									position: 'right',
+									labels: { font: { family: 'Inter', size: 12 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+								}
+							}
 						}
 					}));
 				}
@@ -2008,13 +2442,20 @@ document.addEventListener('DOMContentLoaded', function() {
 							labels: d.pmLabels,
 							datasets: [{
 								data: d.pmOrders,
-								backgroundColor: ['#14776c', '#0f172a', '#d89616', '#be185d']
+								backgroundColor: ['#059669', '#2563eb', '#f59e0b', '#8b5cf6', '#0f172a'],
+								borderWidth: 2,
+								borderColor: '#ffffff'
 							}]
 						},
 						options: {
 							responsive: true,
 							maintainAspectRatio: false,
-							plugins: { legend: { position: 'right' } }
+							plugins: {
+								legend: {
+									position: 'right',
+									labels: { font: { family: 'Inter', size: 12 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+								}
+							}
 						}
 					}));
 				}
@@ -2030,14 +2471,17 @@ document.addEventListener('DOMContentLoaded', function() {
 								{
 									label: 'Revenue',
 									data: d.weekdayRevenue,
-									backgroundColor: 'rgba(20, 119, 108, 0.85)',
+									backgroundColor: 'rgba(5, 150, 105, 0.85)',
+									borderRadius: 5,
 									yAxisID: 'y'
 								},
 								{
-									label: 'OrdersCount',
+									label: 'Orders',
 									data: d.weekdayOrders,
 									type: 'line',
-									borderColor: '#d89616',
+									borderColor: '#f59e0b',
+									backgroundColor: 'rgba(245, 158, 11, 0.1)',
+									pointBackgroundColor: '#f59e0b',
 									borderWidth: 2,
 									tension: 0.3,
 									yAxisID: 'y1'
@@ -2047,9 +2491,31 @@ document.addEventListener('DOMContentLoaded', function() {
 						options: {
 							responsive: true,
 							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'top',
+									labels: { font: { family: 'Inter', size: 12, weight: 600 }, boxWidth: 12, boxHeight: 12 }
+								}
+							},
 							scales: {
-								y: { type: 'linear', display: true, position: 'left' },
-								y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+								y: {
+									type: 'linear',
+									display: true,
+									position: 'left',
+									grid: { color: 'rgba(226, 232, 240, 0.6)' },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								},
+								y1: {
+									type: 'linear',
+									display: true,
+									position: 'right',
+									grid: { drawOnChartArea: false },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								},
+								x: {
+									grid: { display: false },
+									ticks: { font: { family: 'Inter', size: 11 } }
+								}
 							}
 						}
 					}));
@@ -2099,27 +2565,33 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (!stateSelect) return;
 
 			const selected = stateSelect.dataset.selected || stateSelect.value || '*';
+			const country = countrySelect.value || '*';
+			const states = country !== '*' && data.states[country] ? data.states[country] : {};
 			stateSelect.innerHTML = '';
-			stateSelect.appendChild(option('All states', '*', selected));
-
-			const country = countrySelect.value;
-			if (country && data.states[country]) {
-				Object.entries(data.states[country]).forEach(([code, name]) => {
-					stateSelect.appendChild(option(name, code, selected));
-				});
-				stateSelect.disabled = false;
-			} else {
-				stateSelect.disabled = true;
-			}
-
+			stateSelect.appendChild(option(window.omnifySettingsL10n?.allStates || 'All states (*)', '*', selected));
+			Object.keys(states).forEach(function(code) {
+				stateSelect.appendChild(option(states[code], code, selected));
+			});
+			stateSelect.dataset.selected = stateSelect.value || '*';
 			if (typeof window.omnifyInitSearchableSelect === 'function' && stateSelect.classList.contains('omnify-searchable-select')) {
 				window.omnifyInitSearchableSelect(stateSelect);
 			}
 		}
 
-		scope.querySelectorAll('.omnify-country-select').forEach(cs => {
-			cs.addEventListener('change', () => refreshStateSelect(cs));
-			refreshStateSelect(cs);
+		scope.querySelectorAll('.omnify-country-select').forEach(function(select) {
+			refreshStateSelect(select);
+			if (!select.dataset.locationBound) {
+				select.addEventListener('change', function() {
+					refreshStateSelect(select);
+				});
+				select.dataset.locationBound = '1';
+			}
+		});
+
+		scope.querySelectorAll('.omnify-searchable-select').forEach(function(select) {
+			if (window.omnifyInitSearchableSelect) {
+				window.omnifyInitSearchableSelect(select);
+			}
 		});
 	};
 
@@ -2168,6 +2640,38 @@ document.addEventListener('DOMContentLoaded', function() {
 		form.submit();
 	});
 
+	// ── Multi-item orders popover toggle handler ──
+	document.addEventListener('click', function(e) {
+		const btn = e.target.closest('.omnify-order-more-btn');
+		if (btn) {
+			e.preventDefault();
+			e.stopPropagation();
+			const wrap = btn.closest('.omnify-order-items-popover-wrap');
+			const wasOpen = wrap && wrap.classList.contains('is-open');
+			document.querySelectorAll('.omnify-order-items-popover-wrap.is-open').forEach(function(el) {
+				el.classList.remove('is-open');
+			});
+			if (wrap && !wasOpen) {
+				wrap.classList.add('is-open');
+			}
+			return;
+		}
+
+		if (!e.target.closest('.omnify-order-items-popover')) {
+			document.querySelectorAll('.omnify-order-items-popover-wrap.is-open').forEach(function(el) {
+				el.classList.remove('is-open');
+			});
+		}
+	});
+
+	document.addEventListener('keydown', function(e) {
+		if (e.key === 'Escape') {
+			document.querySelectorAll('.omnify-order-items-popover-wrap.is-open').forEach(function(el) {
+				el.classList.remove('is-open');
+			});
+		}
+	});
+
 	// ── Timeline search filter ──
 	const search = document.getElementById('omnify-timeline-search');
 	if (search) {
@@ -2193,10 +2697,10 @@ window.omnifyShowToast = function(message, type = 'error') {
 	const toast = document.createElement('div');
 	toast.className = `omnify-toast omnify-toast--${type}`;
 	
-	let icon = 'ℹ️';
-	if (type === 'success') icon = '✅';
-	else if (type === 'error') icon = '❌';
-	else if (type === 'warning') icon = '⚠️';
+	let icon = '<span class="dashicons dashicons-info"></span>';
+	if (type === 'success') icon = '<span class="dashicons dashicons-yes"></span>';
+	else if (type === 'error') icon = '<span class="dashicons dashicons-dismiss"></span>';
+	else if (type === 'warning') icon = '<span class="dashicons dashicons-warning"></span>';
 
 	toast.innerHTML = `
 		<span class="omnify-toast__icon">${icon}</span>

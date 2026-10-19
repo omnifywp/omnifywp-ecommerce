@@ -119,15 +119,21 @@ class Omnify_Demo_Data_Service {
 		// 2. Create Demo Products
 		$product_ids = [];
 
+		$thumb_wallet = null;
+		$thumb_ebook  = null;
+		$thumb_tshirt = null;
+		$thumb_kit    = null;
+
 		// A. Simple Physical Product
 		$phys_product_data = [
-			'status'       => 'publish',
+			'status'       => 'published',
 			'type'         => 'physical',
 			'name'         => 'Premium Leather Wallet',
 			'description'  => '<p>Crafted from premium full-grain leather, this minimalist wallet offers durability and style. Features multiple card slots and a dedicated bill compartment.</p>',
 			'short_description' => 'Sleek full-grain leather wallet for modern everyday carry.',
 			'price'        => 49.00,
 			'sku'          => 'WAL-LTH-01',
+			'thumbnail_id' => $thumb_wallet,
 			'manage_stock' => 1,
 			'stock_qty'    => 150,
 			'weight'       => 0.15,
@@ -142,13 +148,14 @@ class Omnify_Demo_Data_Service {
 
 		// B. Simple Digital Product
 		$dig_product_data = [
-			'status'       => 'publish',
+			'status'       => 'published',
 			'type'         => 'download',
 			'name'         => 'Mastering WordPress & PHP E-Book',
 			'description'  => '<p>The ultimate guide to building high-performance WordPress plugins and scaling PHP applications. Includes real-world examples and code snippets.</p>',
 			'short_description' => 'Comprehensive digital e-book guide for WordPress plugin developers.',
 			'price'        => 29.00,
 			'sku'          => 'DIG-BK-WP01',
+			'thumbnail_id' => $thumb_ebook,
 			'manage_stock' => 0,
 			'download_expiry_days' => 365,
 			'categories'   => ['Education', 'Digital Goods'],
@@ -176,13 +183,14 @@ class Omnify_Demo_Data_Service {
 
 		// C. Variable Product
 		$var_product_data = [
-			'status'       => 'publish',
+			'status'       => 'published',
 			'type'         => 'variable',
 			'name'         => 'Classic Cotton T-Shirt',
 			'description'  => '<p>Made from 100% organic cotton, this t-shirt provides all-day comfort. Available in multiple colors and sizes.</p>',
 			'short_description' => 'Comfy organic cotton everyday casual t-shirt.',
 			'price'        => 25.00,
 			'sku'          => 'TSH-CL-01',
+			'thumbnail_id' => $thumb_tshirt,
 			'manage_stock' => 0,
 			'categories'   => ['Apparel', 'Shirts'],
 			'tags'         => ['Cotton', 'T-Shirt', 'Organic'],
@@ -225,7 +233,7 @@ class Omnify_Demo_Data_Service {
 				'price' => 25.00,
 				'sale_price' => '',
 				'manage_stock' => 1,
-				'stock_qty' => 45,
+				'stock_qty' => 35,
 				'stock_status' => 'instock',
 				'attributes' => [
 					'Size' => 'M',
@@ -249,13 +257,14 @@ class Omnify_Demo_Data_Service {
 
 		// D. Product Bundle
 		$bundle_product_data = [
-			'status'       => 'publish',
+			'status'       => 'published',
 			'type'         => 'bundle',
 			'name'         => 'Modern Developer Travel Kit',
 			'description'  => '<p>An exclusive combination of our Premium Leather Wallet and the Mastering WordPress E-Book at a special bundled price. Perfect for developers on the go.</p>',
 			'short_description' => 'Get our premium wallet and developer e-book together and save!',
 			'price'        => 65.00, // Special discount price
 			'sku'          => 'BND-DEV-01',
+			'thumbnail_id' => $thumb_kit,
 			'manage_stock' => 0,
 			'categories'   => ['Bundles', 'Special Packs'],
 			'tags'         => ['Bundle', 'Deal', 'Travel'],
@@ -433,49 +442,54 @@ class Omnify_Demo_Data_Service {
 		foreach ($types_to_clean as $t) {
 			switch ($t) {
 				case 'products':
-					// Delete products, variations, categories, tags, brands, files, inventory logs, metadata, customer access
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('products')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('product_categories')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('product_tags')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('product_brands')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('product_variations')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('product_files')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('inventory_logs')));
+					// Delete products, variations, categories, tags, brands, files, inventory logs, metadata, customer access, downloads
+					$this->safe_truncate($this->get_table_name('products'));
+					$this->safe_truncate($this->get_table_name('product_categories'));
+					$this->safe_truncate($this->get_table_name('product_tags'));
+					$this->safe_truncate($this->get_table_name('product_brands'));
+					$this->safe_truncate($this->get_table_name('product_variations'));
+					$this->safe_truncate($this->get_table_name('product_files'));
+					$this->safe_truncate($this->get_table_name('inventory_logs'));
 					$wpdb->query($wpdb->prepare(
 						'DELETE FROM %i WHERE object_type IN (%s, %s)',
 						$this->get_table_name('metadata'),
 						'product',
 						'variation'
 					));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('customer_access')));
+					$this->safe_truncate($this->get_table_name('customer_access'));
+					$this->safe_truncate($this->get_table_name('downloads'));
 					
 					$this->omnify_activities->log($current_user_id, 'clear_data_products', 'system', 'products', __('Cleared all products and linked variation/inventory/file data.', 'omnifywp-ecommerce'));
 					break;
 
 				case 'orders':
-					// Delete orders, items, notes, abandoned carts
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('orders')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('order_items')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('order_notes')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('abandoned_carts')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('customer_access')));
+					// Delete orders, items, notes, abandoned carts, customer access, downloads
+					$this->safe_truncate($this->get_table_name('orders'));
+					$this->safe_truncate($this->get_table_name('order_items'));
+					$this->safe_truncate($this->get_table_name('order_notes'));
+					$this->safe_truncate($this->get_table_name('abandoned_carts'));
+					$this->safe_truncate($this->get_table_name('customer_access'));
+					$this->safe_truncate($this->get_table_name('downloads'));
 
 					$this->omnify_activities->log($current_user_id, 'clear_data_orders', 'system', 'orders', __('Cleared all orders, items, notes, and abandoned carts.', 'omnifywp-ecommerce'));
 					break;
 
 				case 'customers':
-					// Delete customers, wishlists, and null out customer_ids in orders
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('customers')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('wishlists')));
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('customer_access')));
+					// Delete customers, notes, activity, wishlists, and null out customer_ids in orders and downloads
+					$this->safe_truncate($this->get_table_name('customers'));
+					$this->safe_truncate($this->get_table_name('customer_notes'));
+					$this->safe_truncate($this->get_table_name('customer_activity'));
+					$this->safe_truncate($this->get_table_name('wishlists'));
+					$this->safe_truncate($this->get_table_name('customer_access'));
 					$wpdb->query($wpdb->prepare('UPDATE %i SET customer_id = NULL', $this->get_table_name('orders')));
+					$wpdb->query($wpdb->prepare('UPDATE %i SET customer_id = NULL', $this->get_table_name('downloads')));
 
 					$this->omnify_activities->log($current_user_id, 'clear_data_customers', 'system', 'customers', __('Cleared all customers and customer access records.', 'omnifywp-ecommerce'));
 					break;
 
 				case 'reviews':
 					// Delete reviews
-					$wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $this->get_table_name('reviews')));
+					$this->safe_truncate($this->get_table_name('reviews'));
 
 					$this->omnify_activities->log($current_user_id, 'clear_data_reviews', 'system', 'reviews', __('Cleared all product reviews.', 'omnifywp-ecommerce'));
 					break;
@@ -483,5 +497,19 @@ class Omnify_Demo_Data_Service {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Safely truncate a table with fallback to DELETE if TRUNCATE permission is denied.
+	 */
+	private function safe_truncate(string $table_name): void {
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors(true);
+		$result   = $wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $table_name));
+		$wpdb->suppress_errors($suppress);
+
+		if (false === $result) {
+			$wpdb->query($wpdb->prepare('DELETE FROM %i', $table_name));
+		}
 	}
 }

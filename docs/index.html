@@ -7,7 +7,7 @@
   <meta name="description" content="Complete developer documentation for OmnifyWP eCommerce: architecture, database schema, repository SDK, REST APIs, action and filter hooks, and step-by-step developer recipes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <script>
     // System color scheme auto-detection on initial load
@@ -25,78 +25,83 @@
   <style>
     /* Website Palette (Forest Green, Emerald, Mint & Obsidian) */
     :root {
-      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
 
-    /* Light Mode (Omnify Website Color Palette) */
+    h1, h2, h3, h4, h5, h6, .brand-title, .doc-hero h1 {
+      font-family: var(--font-heading);
+    }
+
+    /* Light Mode (Omnify Website Color Palette - Unified #0f766e) */
     :root[data-theme="light"] {
       --bg-body: #F7FCF9;
       --bg-surface: #FFFFFF;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #EFF8F2;
-      --bg-subtle: #EFF8F2;
+      --bg-card-hover: #F0FDFA;
+      --bg-subtle: #F0FDFA;
       --bg-glass: rgba(255, 255, 255, 0.92);
-      --bg-code: #0D1B12;
-      --border-subtle: #D4E8DC;
-      --border-highlight: #BCE0CB;
-      --border-accent: #22A06B;
+      --bg-code: #042F2E;
+      --border-subtle: #CCFBF1;
+      --border-highlight: #99F6E4;
+      --border-accent: #0F766E;
 
-      --text-main: #0D1B12;
-      --text-muted: #3D5147;
-      --text-dim: #6B7F74;
+      --text-main: #0F172A;
+      --text-muted: #334155;
+      --text-dim: #64748B;
 
-      --brand-cyan: #22A06B;
-      --brand-violet: #126343;
-      --brand-emerald: #22A06B;
+      --brand-cyan: #0F766E;
+      --brand-violet: #115E59;
+      --brand-emerald: #0F766E;
       --brand-amber: #D97706;
       --brand-rose: #DC2626;
-      --brand-purple: #18794E;
+      --brand-purple: #0D9488;
 
-      --brand-forest-dark: #063d26;
-      --brand-forest: #0B5135;
-      --brand-forest-mid: #126343;
-      --brand-forest-light: #18794E;
-      --brand-emerald-vivid: #34D399;
+      --brand-forest-dark: #134E4A;
+      --brand-forest: #0F766E;
+      --brand-forest-mid: #0D9488;
+      --brand-forest-light: #14B8A6;
+      --brand-emerald-vivid: #14B8A6;
 
-      --brand-gradient: linear-gradient(135deg, #0B5135 0%, #18794E 45%, #22A06B 100%);
-      --glow-cyan: 0 0 35px -5px rgba(34, 160, 107, 0.25);
-      --grid-pattern: radial-gradient(rgba(11, 81, 53, 0.08) 1px, transparent 1px);
+      --brand-gradient: linear-gradient(135deg, #134E4A 0%, #0F766E 45%, #0D9488 100%);
+      --glow-cyan: 0 0 35px -5px rgba(15, 118, 110, 0.25);
+      --grid-pattern: radial-gradient(rgba(15, 118, 110, 0.08) 1px, transparent 1px);
     }
 
-    /* Dark Mode (Forest Obsidian & Vivid Emerald) */
+    /* Dark Mode (Teal Obsidian & Vivid Mint - Unified #0f766e) */
     :root[data-theme="dark"] {
-      --bg-body: #08100B;
-      --bg-surface: #0E1A13;
-      --bg-card: #13241B;
-      --bg-card-hover: #193024;
-      --bg-subtle: #162B20;
-      --bg-glass: rgba(14, 26, 19, 0.90);
-      --bg-code: #050B07;
-      --border-subtle: rgba(212, 232, 220, 0.12);
-      --border-highlight: rgba(52, 211, 153, 0.28);
-      --border-accent: #22A06B;
+      --bg-body: #081211;
+      --bg-surface: #0E1C1B;
+      --bg-card: #132726;
+      --bg-card-hover: #173230;
+      --bg-subtle: #152B29;
+      --bg-glass: rgba(14, 28, 27, 0.90);
+      --bg-code: #041B1A;
+      --border-subtle: rgba(153, 246, 228, 0.12);
+      --border-highlight: rgba(45, 212, 191, 0.28);
+      --border-accent: #14B8A6;
 
       --text-main: #F4FAF6;
-      --text-muted: #A3BFB0;
-      --text-dim: #718F7F;
+      --text-muted: #99F6E4;
+      --text-dim: #5EEAD4;
 
-      --brand-cyan: #34D399;
-      --brand-violet: #22A06B;
-      --brand-emerald: #34D399;
+      --brand-cyan: #14B8A6;
+      --brand-violet: #0F766E;
+      --brand-emerald: #14B8A6;
       --brand-amber: #FBBF24;
       --brand-rose: #F87171;
-      --brand-purple: #6EE7B7;
+      --brand-purple: #2DD4BF;
 
-      --brand-forest-dark: #063d26;
-      --brand-forest: #126343;
-      --brand-forest-mid: #18794E;
-      --brand-forest-light: #22A06B;
-      --brand-emerald-vivid: #6EE7B7;
+      --brand-forest-dark: #042F2E;
+      --brand-forest: #0F766E;
+      --brand-forest-mid: #14B8A6;
+      --brand-forest-light: #2DD4BF;
+      --brand-emerald-vivid: #5EEAD4;
 
-      --brand-gradient: linear-gradient(135deg, #18794E 0%, #22A06B 50%, #34D399 100%);
-      --glow-cyan: 0 0 35px -5px rgba(52, 211, 153, 0.2);
-      --grid-pattern: radial-gradient(rgba(52, 211, 153, 0.08) 1px, transparent 1px);
+      --brand-gradient: linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #2DD4BF 100%);
+      --glow-cyan: 0 0 35px -5px rgba(20, 184, 166, 0.2);
+      --grid-pattern: radial-gradient(rgba(20, 184, 166, 0.08) 1px, transparent 1px);
     }
 
     html {
@@ -1201,6 +1206,322 @@
       }
       .docs-sidebar.active { display: block; }
     }
+
+    /* ==========================================================================
+       Pro Frontend Interactive Sandbox & Hooks Explorer Styles
+       ========================================================================== */
+    .sandbox-card {
+      margin: 36px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--glow-cyan);
+    }
+    .sandbox-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+    .sandbox-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+    .sandbox-tab-btn {
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sandbox-tab-btn.active {
+      background: #0f766e;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(15, 118, 110, 0.35);
+    }
+    .sandbox-tools {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sandbox-color-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .color-dot-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+      outline: 1px solid var(--border-subtle);
+      transition: transform 0.2s, outline-color 0.2s;
+    }
+    .color-dot-btn:hover {
+      transform: scale(1.15);
+    }
+    .color-dot-btn.active {
+      outline: 2px solid #0f766e;
+      transform: scale(1.2);
+    }
+    .device-switcher {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .device-btn {
+      padding: 5px 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .device-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .sandbox-viewport-wrap {
+      padding: 24px;
+      background: var(--bg-subtle);
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      transition: all 0.3s ease;
+    }
+    .sandbox-device-frame {
+      width: 100%;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      transition: max-width 0.3s ease, border-radius 0.3s ease;
+      --sf-accent: #0f766e;
+      --sf-accent-hover: #115e59;
+      --sf-accent-light: #f0fdfa;
+    }
+    .sandbox-device-frame[data-device="tablet"] {
+      max-width: 768px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+      border: 8px solid #1e293b;
+      border-radius: 20px;
+    }
+    .sandbox-device-frame[data-device="mobile"] {
+      max-width: 390px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+      border: 10px solid #1e293b;
+      border-radius: 32px;
+    }
+    .sf-view-panel {
+      display: none;
+      padding: 24px;
+    }
+    .sf-view-panel.active {
+      display: block;
+      animation: sfFadeIn 0.25s ease-out;
+    }
+    @keyframes sfFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hooks Live Search Explorer Styles */
+    .hooks-explorer-card {
+      margin: 32px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .hooks-filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .hooks-search-input {
+      flex: 1;
+      min-width: 260px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .hooks-search-input:focus {
+      border-color: #0f766e;
+    }
+    .hooks-category-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hook-cat-pill {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .hook-cat-pill:hover {
+      color: var(--text-main);
+      border-color: var(--border-highlight);
+    }
+    .hook-cat-pill.active {
+      background: #0f766e;
+      color: #fff;
+      border-color: #0f766e;
+    }
+    .hooks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 14px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .hook-item-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .hook-item-card:hover {
+      border-color: #0f766e;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.1);
+    }
+    .hook-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .hook-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .hook-tag.action { background: rgba(15, 118, 110, 0.15); color: #0f766e; }
+    .hook-tag.filter { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+    .hook-tag.helper { background: rgba(217, 119, 6, 0.15); color: #d97706; }
+    .hook-name-text {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+    .hook-desc-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 8px 0 14px;
+      line-height: 1.45;
+    }
+    .hook-copy-btn {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .hook-copy-btn:hover {
+      background: #0f766e;
+      color: #fff;
+      border-color: #0f766e;
+    }
+
+    /* Floating Toast Alerts */
+    .omnify-toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .omnify-toast {
+      pointer-events: auto;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid #0f766e;
+      animation: toastSlideUp 0.3s ease-out;
+      max-width: 380px;
+    }
+    @keyframes toastSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
   </style>
 </head>
 <body>
@@ -1219,7 +1540,7 @@
         </div>
         <div class="brand-text">
           <span>OmnifyWP</span>
-          <span class="brand-version-pill">v1.2.0</span>
+          <span class="brand-version-pill">v1.4.2</span>
         </div>
       </a>
 
@@ -1230,6 +1551,10 @@
         </a>
         <a href="index.html" class="switcher-btn active">
           <span>Developer Docs</span>
+        </a>
+        <a href="#pro-frontend-mockup" class="switcher-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Live Sandbox</span>
         </a>
       </nav>
     </div>
@@ -1301,6 +1626,7 @@
       <div class="sidebar-group">
         <div class="sidebar-heading">Storefront & Checkout</div>
         <ul class="sidebar-items">
+          <li><a href="#pro-frontend-mockup" class="sidebar-link">Pro Frontend Sandbox <span class="sidebar-tag" style="background:#0f766e;color:#fff;">Live</span></a></li>
           <li><a href="#shortcodes-directory" class="sidebar-link">Shortcodes Directory</a></li>
           <li><a href="#client-state" class="sidebar-link">Storefront.js Engine</a></li>
           <li><a href="#gateway-architecture" class="sidebar-link">Payment Gateways</a></li>
@@ -1321,6 +1647,7 @@
       <div class="sidebar-group">
         <div class="sidebar-heading">Hooks & Extensibility</div>
         <ul class="sidebar-items">
+          <li><a href="#hooks-explorer" class="sidebar-link">Hooks Live Explorer <span class="sidebar-tag" style="background:#0f766e;color:#fff;">Searchable</span></a></li>
           <li><a href="#actions-directory" class="sidebar-link">Action Hooks Directory</a></li>
           <li><a href="#filters-directory" class="sidebar-link">Filter Hooks Directory</a></li>
           <li><a href="#developer-recipes" class="sidebar-link">Developer Recipes <span class="sidebar-tag">6 Guides</span></a></li>
@@ -1428,6 +1755,423 @@
               <div class="pipeline-step-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
               <div class="pipeline-step-title">Delivery & Pay</div>
               <div class="pipeline-step-desc">Stripe, PayPal & HMAC Locker</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Pro Frontend Experience & Live Storefront Sandbox -->
+      <section id="pro-frontend-mockup" style="scroll-margin-top: 80px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+          <h2 class="doc-heading" style="margin-bottom: 0;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Pro Frontend Experience &amp; Live Storefront Sandbox
+          </h2>
+          <span class="brand-version-pill" style="background:#f0fdfa; color:#0f766e; border-color:#99f6e4;">Interactive Playground</span>
+        </div>
+        <p style="color:var(--text-muted); margin-bottom: 20px;">
+          Experience OmnifyWP's conversion-optimized Elessi-style 3-column single product page, real-time scarcity countdown cart, and frictionless multi-gateway checkout. Test responsive screen sizes, click variation swatches, and switch storefront brand accent colors live!
+        </p>
+
+        <!-- Interactive Sandbox Card -->
+        <div class="sandbox-card">
+          <!-- Sandbox Controls Topbar -->
+          <div class="sandbox-topbar">
+            <!-- Experience Views -->
+            <div class="sandbox-tabs">
+              <button type="button" class="sandbox-tab-btn active" onclick="switchSandboxView('product', this)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Single Product (3-Col)</span>
+              </button>
+              <button type="button" class="sandbox-tab-btn" onclick="switchSandboxView('cart', this)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <span>Shopping Cart (Urgency)</span>
+              </button>
+              <button type="button" class="sandbox-tab-btn" onclick="switchSandboxView('checkout', this)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span>Checkout (10+ Gateways)</span>
+              </button>
+            </div>
+
+            <!-- Accent Color Switcher & Device Frame Toggles -->
+            <div class="sandbox-tools">
+              <!-- Color Switcher -->
+              <div class="sandbox-color-picker">
+                <span>Theme Accent:</span>
+                <span class="color-dot-btn active" style="background:#0f766e;" title="Teal (Default)" onclick="setSandboxColor('#0f766e', '#115e59', '#f0fdfa', this)"></span>
+                <span class="color-dot-btn" style="background:#059669;" title="Emerald" onclick="setSandboxColor('#059669', '#047857', '#ecfdf5', this)"></span>
+                <span class="color-dot-btn" style="background:#6366f1;" title="Indigo" onclick="setSandboxColor('#6366f1', '#4f46e5', '#eef2ff', this)"></span>
+                <span class="color-dot-btn" style="background:#d97706;" title="Amber" onclick="setSandboxColor('#d97706', '#b45309', '#fffbeb', this)"></span>
+                <span class="color-dot-btn" style="background:#1e293b;" title="Charcoal Obsidian" onclick="setSandboxColor('#1e293b', '#0f172a', '#f8fafc', this)"></span>
+              </div>
+
+              <!-- Device Viewport Switcher -->
+              <div class="device-switcher">
+                <button type="button" class="device-btn active" onclick="setSandboxDevice('desktop', this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <span>Desktop</span>
+                </button>
+                <button type="button" class="device-btn" onclick="setSandboxDevice('tablet', this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  <span>Tablet</span>
+                </button>
+                <button type="button" class="device-btn" onclick="setSandboxDevice('mobile', this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  <span>Mobile</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sandbox Viewport Area -->
+          <div class="sandbox-viewport-wrap">
+            <div class="sandbox-device-frame" id="sandboxDeviceFrame" data-device="desktop">
+              
+              <!-- VIEW 1: ELESSI 3-COLUMN SINGLE PRODUCT PAGE -->
+              <div class="sf-view-panel active" id="sfViewProduct">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; align-items:start;">
+                  <!-- Col 1: Vertical Gallery & Hero Preview -->
+                  <div style="display:flex; gap: 12px;">
+                    <div style="display:flex; flex-direction:column; gap:8px; width:64px; flex-shrink:0;">
+                      <div class="sf-thumb active" style="width:64px; height:64px; border:2px solid var(--sf-accent); border-radius:8px; overflow:hidden; cursor:pointer;" onclick="selectProductImage('../assets/storefront/images/product-merch-hoodie.jpg', this)">
+                        <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Onyx Black" style="width:100%;height:100%;object-fit:cover;">
+                      </div>
+                      <div class="sf-thumb" style="width:64px; height:64px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer;" onclick="selectProductImage('../assets/storefront/images/product-digital-suite.jpg', this)">
+                        <img src="../assets/storefront/images/product-digital-suite.jpg" alt="Angle 2" style="width:100%;height:100%;object-fit:cover;">
+                      </div>
+                      <div class="sf-thumb" style="width:64px; height:64px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer;" onclick="selectProductImage('../assets/storefront/images/product-bundle-kit.jpg', this)">
+                        <img src="../assets/storefront/images/product-bundle-kit.jpg" alt="Angle 3" style="width:100%;height:100%;object-fit:cover;">
+                      </div>
+                    </div>
+                    <div style="flex:1; height:340px; border-radius:12px; overflow:hidden; position:relative; background:#f8fafc; border:1px solid #e2e8f0;">
+                      <img id="sfMainHeroImg" src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Heavyweight Hoodie" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.2s;">
+                      <span style="position:absolute; top:12px; left:12px; background:var(--sf-accent); color:#fff; font-size:0.7rem; font-weight:800; padding:4px 9px; border-radius:6px; letter-spacing:0.04em;">SALE -20%</span>
+                    </div>
+                  </div>
+
+                  <!-- Col 2: Product Core, Swatches & CTA -->
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                      <span style="background:var(--sf-accent-light); color:var(--sf-accent); border:1px solid #ccfbf1; font-size:0.75rem; padding:3px 9px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        In Stock &bull; Dispatches in 24h
+                      </span>
+                      <span style="font-size:0.75rem; color:#64748b;">SKU: <strong id="sfSkuDisplay" style="color:#0f172a;">OMN-HD-BLK-M</strong></span>
+                    </div>
+
+                    <h3 style="margin:6px 0 8px; font-size:1.45rem; font-weight:800; color:#0f172a; line-height:1.25;">Omnify Heavyweight French Terry Hoodie</h3>
+
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.84rem; margin-bottom:12px;">
+                      <span style="color:#d97706; font-weight:700;">&#9733; 5.0 / 5.0</span>
+                      <span style="color:#64748b;">(42 verified reviews) &bull; 342 sold</span>
+                    </div>
+
+                    <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+                      <span id="sfLivePrice" style="font-size:1.85rem; font-weight:800; color:var(--sf-accent);">$68.00</span>
+                      <s style="font-size:1.1rem; color:#94a3b8;">$85.00</s>
+                      <span style="background:#ecfdf5; color:#0f766e; font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:700;">Save $17.00</span>
+                    </div>
+
+                    <!-- Color Swatches Selector -->
+                    <div style="margin-bottom:16px;">
+                      <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:8px;">
+                        <span style="font-weight:700; color:#334155;">Color: <strong id="sfColorName" style="color:var(--sf-accent);">Onyx Black</strong></span>
+                        <span style="color:#64748b;">3 Colors</span>
+                      </div>
+                      <div style="display:flex; gap:10px;">
+                        <span class="sf-swatch-circle active" style="width:30px; height:30px; border-radius:50%; background:#1e293b; border:2px solid #fff; outline:2px solid var(--sf-accent); cursor:pointer;" onclick="selectProductColor('Onyx Black', 'BLK', '../assets/storefront/images/product-merch-hoodie.jpg', this)"></span>
+                        <span class="sf-swatch-circle" style="width:30px; height:30px; border-radius:50%; background:#64748b; border:2px solid #fff; outline:1px solid #cbd5e1; cursor:pointer;" onclick="selectProductColor('Heather Gray', 'GRY', '../assets/storefront/images/product-digital-suite.jpg', this)"></span>
+                        <span class="sf-swatch-circle" style="width:30px; height:30px; border-radius:50%; background:#0f766e; border:2px solid #fff; outline:1px solid #cbd5e1; cursor:pointer;" onclick="selectProductColor('Teal Forest', 'TEA', '../assets/storefront/images/product-bundle-kit.jpg', this)"></span>
+                      </div>
+                    </div>
+
+                    <!-- Size Pills Selector -->
+                    <div style="margin-bottom:18px;">
+                      <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:8px;">
+                        <span style="font-weight:700; color:#334155;">Size: <strong id="sfSizeName" style="color:var(--sf-accent);">M</strong></span>
+                        <span style="font-size:0.75rem; color:var(--sf-accent); font-weight:600; cursor:pointer;">Size Guide</span>
+                      </div>
+                      <div style="display:flex; gap:8px;">
+                        <button type="button" class="sf-size-pill" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:7px; font-weight:600; background:#fff; cursor:pointer; font-size:0.82rem;" onclick="selectProductSize('S', this)">S</button>
+                        <button type="button" class="sf-size-pill active" style="padding:6px 14px; border:2px solid var(--sf-accent); border-radius:7px; font-weight:700; background:var(--sf-accent-light); color:var(--sf-accent); cursor:pointer; font-size:0.82rem;" onclick="selectProductSize('M', this)">M</button>
+                        <button type="button" class="sf-size-pill" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:7px; font-weight:600; background:#fff; cursor:pointer; font-size:0.82rem;" onclick="selectProductSize('L', this)">L</button>
+                        <button type="button" class="sf-size-pill" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:7px; font-weight:600; background:#fff; cursor:pointer; font-size:0.82rem;" onclick="selectProductSize('XL', this)">XL</button>
+                      </div>
+                    </div>
+
+                    <!-- Quantity Stepper & Add to Cart -->
+                    <div style="display:flex; gap:10px; margin-bottom:16px;">
+                      <div style="display:flex; align-items:center; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#fff;">
+                        <button type="button" style="padding:10px 14px; border:none; background:transparent; font-weight:800; cursor:pointer; font-size:1rem;" onclick="adjustQuantity(-1)">-</button>
+                        <span id="sfQtyNumber" style="padding:0 8px; font-weight:800; font-size:0.95rem; min-width:24px; text-align:center;">1</span>
+                        <button type="button" style="padding:10px 14px; border:none; background:transparent; font-weight:800; cursor:pointer; font-size:1rem;" onclick="adjustQuantity(1)">+</button>
+                      </div>
+                      <button type="button" style="flex:2; background:var(--sf-accent); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:0.95rem; padding:12px; cursor:pointer; transition:background 0.2s;" onclick="triggerAddToCart()">Add to Cart</button>
+                      <button type="button" style="flex:2; background:transparent; color:var(--sf-accent); border:2px solid var(--sf-accent); border-radius:8px; font-weight:700; font-size:0.95rem; padding:12px; cursor:pointer;" onclick="triggerBuyNow()">Instant Buy Now</button>
+                    </div>
+
+                    <!-- Wishlist & Compare Icons -->
+                    <div style="display:flex; gap:16px; font-size:0.82rem; color:#64748b;">
+                      <span id="sfWishlistBtn" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;" onclick="toggleWishlist(this)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        <span>Add to Wishlist</span>
+                      </span>
+                      <span style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        <span>Compare</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Col 3: Customer Guarantee Box & VIP Order Bump -->
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+                    <h5 style="margin:0 0 12px; font-size:0.85rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">Customer Guarantee</h5>
+                    <div style="display:flex; flex-direction:column; gap:12px; font-size:0.82rem; color:#334155;">
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sf-accent)" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span><strong>Free Expedited Shipping</strong> over $50</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sf-accent)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span><strong>30-Day Hassle-Free Returns</strong></span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sf-accent)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span><strong>256-Bit Encrypted Checkout</strong></span>
+                      </div>
+                    </div>
+
+                    <!-- VIP Add-On Bump Box -->
+                    <div style="margin-top:18px; padding:12px 14px; background:#fff; border:1px dashed var(--sf-accent); border-radius:10px;">
+                      <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="sfOrderBumpCheck" checked style="accent-color:var(--sf-accent); margin-top:3px;" onchange="toggleOrderBump(this)">
+                        <div>
+                          <div style="font-weight:700; font-size:0.82rem; color:#0f172a;">Add Heavyweight Beanie +$15</div>
+                          <div style="font-size:0.74rem; color:#64748b; margin-top:2px;">Special matching bundled pricing ($10 savings).</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <div style="margin-top:24px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                  <div style="display:flex; gap:16px; border-bottom:1px solid #e2e8f0; padding-bottom:8px; font-size:0.85rem; font-weight:700;">
+                    <span class="sf-tab-link active" style="color:var(--sf-accent); border-bottom:2px solid var(--sf-accent); padding-bottom:6px; cursor:pointer;" onclick="switchProductTab('desc', this)">Description</span>
+                    <span class="sf-tab-link" style="color:#64748b; cursor:pointer;" onclick="switchProductTab('specs', this)">Technical Specs</span>
+                    <span class="sf-tab-link" style="color:#64748b; cursor:pointer;" onclick="switchProductTab('reviews', this)">Verified Reviews (42)</span>
+                    <span class="sf-tab-link" style="color:#64748b; cursor:pointer;" onclick="switchProductTab('shipping', this)">Shipping &amp; Care</span>
+                  </div>
+                  <div id="sfTabDesc" class="sf-tab-content" style="padding-top:14px; font-size:0.88rem; color:#475569; line-height:1.6;">
+                    Engineered with 450 GSM French terry cotton, double-lined hood, and reinforced flatlock stitching. The Omnify Heavyweight Hoodie sets a new standard for luxury streetwear essentials, offering thermal regulation and shape retention across hundreds of wash cycles.
+                  </div>
+                  <div id="sfTabSpecs" class="sf-tab-content" style="display:none; padding-top:14px; font-size:0.88rem; color:#475569; line-height:1.6;">
+                    <strong>Material:</strong> 100% Organic French Terry Cotton &bull; <strong>Fabric Weight:</strong> 450 GSM &bull; <strong>Origin:</strong> Portugal &bull; <strong>Fit:</strong> True to size athletic streetwear fit &bull; <strong>Hardware:</strong> Heavyweight antique brass aglets.
+                  </div>
+                  <div id="sfTabReviews" class="sf-tab-content" style="display:none; padding-top:14px; font-size:0.88rem; color:#475569; line-height:1.6;">
+                    &#9733; &#9733; &#9733; &#9733; &#9733; &mdash; <em>"Hands down the best quality hoodie I've ever owned. Heavy fabric with perfect drape."</em> &mdash; Marcus K. (Verified Buyer)
+                  </div>
+                  <div id="sfTabShipping" class="sf-tab-content" style="display:none; padding-top:14px; font-size:0.88rem; color:#475569; line-height:1.6;">
+                    Free shipping on orders over $50 within the US. International orders dispatched via DHL Express with tracking provided within 24 hours. Machine wash cold, hang dry recommended.
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 2: SHOPPING CART WITH URGENCY SCARCITY & SHIPPING METER -->
+              <div class="sf-view-panel" id="sfViewCart">
+                <!-- Urgency Countdown Banner -->
+                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 18px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem; color:#92400e;">
+                  <div style="display:flex; align-items:center; gap:8px; font-weight:700;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Items reserved! Special bundle discount held for:</span>
+                  </div>
+                  <span id="sfCountdownTimer" style="font-family:var(--font-mono); font-weight:800; background:#fef3c7; padding:4px 10px; border-radius:6px; color:#b45309; font-size:0.95rem;">14:52</span>
+                </div>
+
+                <!-- Dynamic Free Shipping Progress Meter -->
+                <div style="background:var(--sf-accent-light); border:1px solid #ccfbf1; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; font-size:0.88rem;">
+                  <div style="display:flex; align-items:center; gap:10px; color:var(--sf-accent); font-weight:700;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span id="sfShippingMeterText">You've unlocked <strong>Free Expedited Shipping</strong>!</span>
+                  </div>
+                  <div style="width:160px; height:8px; background:#e2e8f0; border-radius:9999px; overflow:hidden;">
+                    <div id="sfShippingMeterBar" style="width:100%; height:100%; background:var(--sf-accent); border-radius:9999px; transition:width 0.3s;"></div>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1.8fr 1.2fr; gap:24px;">
+                  <div>
+                    <!-- Items Table -->
+                    <div style="border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; margin-bottom:16px;">
+                      <div style="display:flex; padding:10px 14px; background:#f8fafc; font-size:0.78rem; font-weight:700; color:#64748b; border-bottom:1px solid #e2e8f0;">
+                        <span style="flex:3;">Product</span>
+                        <span style="flex:1;">Price</span>
+                        <span style="flex:1.2;">Quantity</span>
+                        <span style="flex:1; text-align:right;">Subtotal</span>
+                      </div>
+                      <div style="display:flex; align-items:center; padding:14px; border-bottom:1px solid #f1f5f9;">
+                        <div style="flex:3; display:flex; gap:12px; align-items:center;">
+                          <img src="../assets/storefront/images/product-merch-hoodie.jpg" alt="Hoodie" style="width:50px; height:50px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
+                          <div>
+                            <div style="font-weight:700; font-size:0.88rem; color:#0f172a;">Omnify Heavyweight Hoodie</div>
+                            <div style="font-size:0.75rem; color:#64748b;">Color: Onyx Black &bull; Size: M</div>
+                          </div>
+                        </div>
+                        <div style="flex:1; font-weight:600; font-size:0.88rem;">$68.00</div>
+                        <div style="flex:1.2;">
+                          <div style="display:inline-flex; align-items:center; border:1px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                            <button type="button" style="padding:4px 8px; border:none; background:transparent; font-weight:700; cursor:pointer;" onclick="adjustQuantity(-1)">-</button>
+                            <span id="sfCartQtyNumber" style="padding:0 6px; font-weight:700; font-size:0.85rem;">1</span>
+                            <button type="button" style="padding:4px 8px; border:none; background:transparent; font-weight:700; cursor:pointer;" onclick="adjustQuantity(1)">+</button>
+                          </div>
+                        </div>
+                        <div id="sfCartItemSubtotal" style="flex:1; text-align:right; font-weight:800; font-size:0.92rem; color:var(--sf-accent);">$68.00</div>
+                      </div>
+                    </div>
+
+                    <!-- Coupon Code Input -->
+                    <div style="display:flex; gap:8px;">
+                      <input type="text" id="sfCouponInput" value="SUMMER20" placeholder="Coupon Code" style="flex:1; padding:9px 14px; border:1px solid #cbd5e1; border-radius:8px; font-weight:700; font-family:var(--font-mono); font-size:0.85rem; color:var(--sf-accent); outline:none;">
+                      <button type="button" style="background:#fff; color:var(--sf-accent); border:2px solid var(--sf-accent); font-weight:700; padding:9px 16px; border-radius:8px; cursor:pointer; font-size:0.85rem;" onclick="applyCouponCode()">Apply Coupon</button>
+                    </div>
+                  </div>
+
+                  <!-- Cart Summary Card -->
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+                    <h5 style="margin:0 0 14px; font-size:1.05rem; font-weight:800; color:#0f172a;">Order Summary</h5>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.88rem;">
+                      <span>Subtotal:</span>
+                      <b id="sfSummarySubtotal">$68.00</b>
+                    </div>
+                    <div id="sfDiscountRow" style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.88rem; color:#0f766e; font-weight:700;">
+                      <span>Coupon (SUMMER20):</span>
+                      <b id="sfDiscountAmt">-$13.60</b>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.88rem;">
+                      <span>Shipping:</span>
+                      <span style="color:#0f766e; font-weight:700;">Free Expedited</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #e2e8f0; padding-top:12px; margin-top:10px; font-size:1.25rem; font-weight:800; color:var(--sf-accent);">
+                      <span>Total:</span>
+                      <span id="sfSummaryTotal">$54.40</span>
+                    </div>
+                    <button type="button" style="width:100%; text-align:center; margin-top:18px; background:var(--sf-accent); color:#fff; font-weight:700; padding:12px; border-radius:8px; font-size:0.95rem; border:none; cursor:pointer;" onclick="switchSandboxView('checkout')">Proceed to Checkout &rarr;</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 3: SECURE CHECKOUT WITH 10+ GATEWAYS & VIP BUMP -->
+              <div class="sf-view-panel" id="sfViewCheckout">
+                <!-- Express 1-Click Pay -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:20px; text-align:center;">
+                  <div style="font-size:0.78rem; font-weight:800; color:#64748b; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">Express 1-Click Checkout</div>
+                  <div style="display:flex; gap:12px; justify-content:center;">
+                    <button type="button" style="background:#000; color:#fff; border:none; padding:10px 28px; border-radius:8px; font-weight:700; font-size:0.9rem; cursor:pointer;" onclick="triggerExpressPay('Apple Pay')">
+                      Apple Pay
+                    </button>
+                    <button type="button" style="background:#fff; color:#3c4043; border:1px solid #dadce0; padding:10px 28px; border-radius:8px; font-weight:700; font-size:0.9rem; cursor:pointer;" onclick="triggerExpressPay('Google Pay')">
+                      Google Pay
+                    </button>
+                  </div>
+                  <div style="position:relative; margin:18px 0 8px; text-align:center;">
+                    <div style="height:1px; background:#e2e8f0;"></div>
+                    <span style="position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:#f8fafc; padding:0 12px; font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Or pay with traditional methods</span>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1.8fr 1.2fr; gap:24px;">
+                  <div>
+                    <h4 style="margin:0 0 12px; font-size:0.95rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                      <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--sf-accent); color:#fff; font-size:0.75rem; font-weight:700;">1</span>
+                      Payment Method (10+ Gateways Integrated)
+                    </h4>
+
+                    <!-- 10+ Gateway Cards Grid -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; margin-bottom:16px;">
+                      <label class="sf-gateway-card active" style="border:2px solid var(--sf-accent); background:var(--sf-accent-light); border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" checked style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:700; font-size:0.8rem; color:var(--sf-accent);">Stripe Card</span>
+                      </label>
+                      <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:600; font-size:0.8rem;">PayPal</span>
+                      </label>
+                      <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:600; font-size:0.8rem;">Razorpay</span>
+                      </label>
+                      <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:600; font-size:0.8rem;">Mollie</span>
+                      </label>
+                      <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:600; font-size:0.8rem;">Square</span>
+                      </label>
+                      <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
+                        <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
+                        <span style="font-weight:600; font-size:0.8rem;">Authorize.Net</span>
+                      </label>
+                    </div>
+
+                    <!-- Simulated Credit Card Form -->
+                    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:16px; background:#f8fafc; margin-bottom:16px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:0.85rem; font-weight:700; color:#0f172a;">Credit Card Details</span>
+                        <span style="font-size:0.75rem; color:#0f766e; font-weight:600;">256-Bit SSL Encrypted</span>
+                      </div>
+                      <div style="margin-bottom:10px;">
+                        <input type="text" value="•••• •••• •••• 4242" readonly style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; background:#fff;">
+                      </div>
+                      <div style="display:flex; gap:10px;">
+                        <input type="text" value="12/28" readonly style="flex:1; padding:9px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; background:#fff;">
+                        <input type="text" value="•••" readonly style="flex:1; padding:9px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; background:#fff;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Checkout Order Summary -->
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+                    <h5 style="margin:0 0 12px; font-size:1rem; font-weight:800; color:#0f172a;">Order Summary</h5>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
+                      <span>Omnify Heavyweight Hoodie</span>
+                      <b>$68.00</b>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem; color:#0f766e; font-weight:700;">
+                      <span>Discount (SUMMER20):</span>
+                      <b>-$13.60</b>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.88rem;">
+                      <span>Shipping:</span>
+                      <span style="color:#0f766e; font-weight:700;">Free Expedited</span>
+                    </div>
+
+                    <!-- VIP Order Bump Checkbox -->
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin:12px 0;">
+                      <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="sfVipBumpCheckout" checked style="accent-color:var(--sf-accent); margin-top:2px;" onchange="toggleVipBump(this)">
+                        <div>
+                          <div style="font-weight:700; font-size:0.8rem; color:#92400e;">VIP Priority Processing (+$4.99)</div>
+                          <div style="font-size:0.72rem; color:#b45309;">Jump to the front of warehouse fulfillment queue.</div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #e2e8f0; padding-top:12px; margin-top:8px; font-size:1.25rem; font-weight:800; color:var(--sf-accent);">
+                      <span>Order Total:</span>
+                      <span id="sfCheckoutTotal">$59.39</span>
+                    </div>
+                    <button type="button" style="width:100%; text-align:center; margin-top:16px; background:var(--sf-accent); color:#fff; font-weight:800; padding:13px; border-radius:8px; font-size:0.95rem; border:none; cursor:pointer;" onclick="completeMockOrder()">
+                      Complete Order (<span id="sfCompleteOrderPrice">$59.39</span>)
+                    </button>
+                    <div style="text-align:center; font-size:0.75rem; color:#64748b; margin-top:10px;">
+                      PCI-DSS Level 1 Compliant &bull; 30-Day Money Back Guarantee
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -1704,9 +2448,9 @@ node build.js
         </p>
         <div class="code-block">
           <pre><code class="language-php">add_filter( 'omnify_storefront_css_variables', function( $vars ) {
-    $vars['--om-primary']       = '#059669'; // SupportHub Emerald
-    $vars['--om-primary-hover'] = '#047857';
-    $vars['--om-success-bg']    = '#ecfdf5';
+    $vars['--om-primary']       = '#0f766e'; // Unified Teal
+    $vars['--om-primary-hover'] = '#115e59';
+    $vars['--om-success-bg']    = '#f0fdfa';
     return $vars;
 } );</code></pre>
         </div>
@@ -1728,13 +2472,13 @@ node build.js
         </p>
         <p>Omnify provides native API integrations and automated webhook verification for:</p>
         <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem;">
-          <li><strong>Stripe</strong>: Credit/Debit, Apple Pay, Google Pay, SEPA (Webhook: <code>/wp-json/omnify/v1/webhook/stripe</code>)</li>
-          <li><strong>PayPal Commerce</strong>: Smart Buttons, Pay in 4, Venmo (Webhook: <code>/wp-json/omnify/v1/webhook/paypal</code>)</li>
+          <li><strong>Stripe</strong>: Credit/Debit, Apple Pay, Google Pay, SEPA (Webhook: <code>/wp-json/omnify/v1/webhook/stripe</code> — handles <code>payment_intent.succeeded</code>, <code>charge.refunded</code>, <code>charge.dispute.created</code>)</li>
+          <li><strong>PayPal Commerce</strong>: Smart Buttons, Pay in 4, Venmo (Webhook: <code>/wp-json/omnify/v1/webhook/paypal</code> — handles <code>PAYMENT.CAPTURE.COMPLETED</code>, <code>PAYMENT.CAPTURE.REFUNDED</code>, <code>CUSTOMER.DISPUTE.CREATED</code>)</li>
           <li><strong>Razorpay</strong>: UPI, RuPay, NetBanking, Wallets (Webhook: <code>/wp-json/omnify/v1/webhook/razorpay</code>)</li>
           <li><strong>SSLCommerz</strong>: bKash, Nagad, Rocket, Bangladeshi cards (Webhook: <code>/wp-json/omnify/v1/webhook/sslcommerz</code>)</li>
           <li><strong>Manual Methods</strong>: Cash on Delivery (COD), Direct Bank Transfer (BACS), and Cheque Payments.</li>
         </ul>
-        <p>When an admin processes a refund, the gateway API is executed, the order is updated, and all digital file access rights in <code>wp_omnify_customer_access</code> are revoked automatically.</p>
+        <p>When an admin processes a full refund or a full refund webhook is received, the gateway API is executed, the order transitions to <code>refunded</code>, and all digital file access rights in <code>wp_omnify_customer_access</code> are revoked automatically. For partial refunds, status transitions to <code>partially_refunded</code>, recording refunded amounts while preserving file entitlements for non-refunded line items.</p>
       </section>
 
       <!-- Digital Locker -->
@@ -1873,6 +2617,42 @@ node build.js
               <tr><td><span class="badge badge-post">POST</span></td><td><code>/access/revoke</code></td><td>Revokes file download entitlements.</td></tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+
+      <!-- Interactive Hooks & Filters Live Search Explorer -->
+      <section id="hooks-explorer" style="scroll-margin-top: 80px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+          <h2 class="doc-heading" style="margin-bottom: 0;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Interactive Hooks &amp; Filters Live Explorer
+          </h2>
+          <span class="brand-version-pill" style="background:#f0fdfa; color:#0f766e; border-color:#99f6e4;">30+ Hooks Indexed</span>
+        </div>
+        <p style="color:var(--text-muted); margin-bottom: 20px;">
+          Search and filter all available actions, filters, and public developer helper functions. Click any card to copy the ready-to-paste PHP code snippet directly into your functions.php or custom plugin.
+        </p>
+
+        <div class="hooks-explorer-card">
+          <!-- Filter Toolbar -->
+          <div class="hooks-filter-bar">
+            <input type="text" id="hooksSearchInput" class="hooks-search-input" placeholder="Search by hook name, argument, or description..." oninput="filterHooksLive()">
+            <div class="hooks-category-pills">
+              <span class="hook-cat-pill active" onclick="setHookCategory('all', this)">All (32)</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('wizard', this)">Wizard Steps</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('lifecycle', this)">Lifecycle</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('single', this)">Single Product</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('cart', this)">Cart &amp; Checkout</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('table', this)">Admin Tables</span>
+              <span class="hook-cat-pill" onclick="setHookCategory('helper', this)">Helper APIs</span>
+            </div>
+          </div>
+
+          <!-- Hooks Live Grid -->
+          <div class="hooks-grid" id="hooksCardsGrid">
+            <!-- Dynamically populated by JS -->
+          </div>
         </div>
       </section>
 
@@ -2788,7 +3568,7 @@ node build.js
         size: "380 B",
         response: {
           "status": "healthy",
-          "engine_version": "1.2.0",
+          "engine_version": "1.4.2",
           "php_version": "8.2.14",
           "mysql_version": "8.0.36",
           "database_schema": "2026_09_24_000000",
@@ -3244,5 +4024,392 @@ node build.js
       }
     }, { passive: true });
   </script>
+
+  <div class="omnify-toast-container" id="omnifyToastContainer"></div>
+
+  <script>
+    // Pro Frontend Sandbox State
+    let sfState = {
+      view: 'product',
+      device: 'desktop',
+      accent: '#0f766e',
+      color: 'Onyx Black',
+      size: 'M',
+      qty: 1,
+      basePrice: 68.00,
+      orderBumpActive: true,
+      orderBumpPrice: 15.00,
+      vipBumpActive: true,
+      vipBumpPrice: 4.99,
+      couponActive: true,
+      couponDiscount: 13.60
+    };
+
+    function showToast(message) {
+      const container = document.getElementById('omnifyToastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'omnify-toast';
+      toast.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>' + message + '</span>';
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function switchSandboxView(viewName, btn) {
+      sfState.view = viewName;
+      document.querySelectorAll('.sandbox-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('.sf-view-panel').forEach(p => p.classList.remove('active'));
+      if (viewName === 'product') document.getElementById('sfViewProduct').classList.add('active');
+      if (viewName === 'cart') document.getElementById('sfViewCart').classList.add('active');
+      if (viewName === 'checkout') document.getElementById('sfViewCheckout').classList.add('active');
+    }
+
+    function setSandboxDevice(deviceName, btn) {
+      sfState.device = deviceName;
+      document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const frame = document.getElementById('sandboxDeviceFrame');
+      frame.setAttribute('data-device', deviceName);
+    }
+
+    function setSandboxColor(primary, hover, light, btn) {
+      document.querySelectorAll('.color-dot-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const frame = document.getElementById('sandboxDeviceFrame');
+      frame.style.setProperty('--sf-accent', primary);
+      frame.style.setProperty('--sf-accent-hover', hover);
+      frame.style.setProperty('--sf-accent-light', light);
+    }
+
+    function selectProductImage(imgSrc, thumbEl) {
+      document.querySelectorAll('.sf-thumb').forEach(t => {
+        t.classList.remove('active');
+        t.style.border = '1px solid #e2e8f0';
+      });
+      if (thumbEl) {
+        thumbEl.classList.add('active');
+        thumbEl.style.border = '2px solid var(--sf-accent)';
+      }
+      const hero = document.getElementById('sfMainHeroImg');
+      hero.style.opacity = '0.4';
+      setTimeout(() => {
+        hero.src = imgSrc;
+        hero.style.opacity = '1';
+      }, 150);
+    }
+
+    function selectProductColor(name, code, imgSrc, circleEl) {
+      sfState.color = name;
+      document.querySelectorAll('.sf-swatch-circle').forEach(c => {
+        c.classList.remove('active');
+        c.style.outline = '1px solid #cbd5e1';
+      });
+      if (circleEl) {
+        circleEl.classList.add('active');
+        circleEl.style.outline = '2px solid var(--sf-accent)';
+      }
+      document.getElementById('sfColorName').innerText = name;
+      document.getElementById('sfSkuDisplay').innerText = 'OMN-HD-' + code + '-' + sfState.size;
+      selectProductImage(imgSrc, document.querySelector('.sf-thumb'));
+    }
+
+    function selectProductSize(size, pillEl) {
+      sfState.size = size;
+      document.querySelectorAll('.sf-size-pill').forEach(p => {
+        p.classList.remove('active');
+        p.style.border = '1px solid #e2e8f0';
+        p.style.background = '#fff';
+        p.style.color = '#0f172a';
+      });
+      if (pillEl) {
+        pillEl.classList.add('active');
+        pillEl.style.border = '2px solid var(--sf-accent)';
+        pillEl.style.background = 'var(--sf-accent-light)';
+        pillEl.style.color = 'var(--sf-accent)';
+      }
+      document.getElementById('sfSizeName').innerText = size;
+      const skuParts = document.getElementById('sfSkuDisplay').innerText.split('-');
+      skuParts[skuParts.length - 1] = size;
+      document.getElementById('sfSkuDisplay').innerText = skuParts.join('-');
+    }
+
+    function adjustQuantity(delta) {
+      sfState.qty = Math.max(1, sfState.qty + delta);
+      document.getElementById('sfQtyNumber').innerText = sfState.qty;
+      const cartQty = document.getElementById('sfCartQtyNumber');
+      if (cartQty) cartQty.innerText = sfState.qty;
+      recalculateTotals();
+    }
+
+    function toggleOrderBump(cb) {
+      sfState.orderBumpActive = cb.checked;
+      recalculateTotals();
+    }
+
+    function toggleVipBump(cb) {
+      sfState.vipBumpActive = cb.checked;
+      recalculateTotals();
+    }
+
+    function toggleWishlist(btn) {
+      const svg = btn.querySelector('svg');
+      if (svg.getAttribute('fill') === 'currentColor') {
+        svg.setAttribute('fill', 'none');
+        btn.querySelector('span').innerText = 'Add to Wishlist';
+        showToast('Removed from wishlist');
+      } else {
+        svg.setAttribute('fill', 'currentColor');
+        svg.style.color = '#ef4444';
+        btn.querySelector('span').innerText = 'Saved in Wishlist';
+        showToast('Added to wishlist!');
+      }
+    }
+
+    function switchProductTab(tabId, el) {
+      document.querySelectorAll('.sf-tab-link').forEach(l => {
+        l.classList.remove('active');
+        l.style.color = '#64748b';
+        l.style.borderBottom = 'none';
+      });
+      el.classList.add('active');
+      el.style.color = 'var(--sf-accent)';
+      el.style.borderBottom = '2px solid var(--sf-accent)';
+      document.querySelectorAll('.sf-tab-content').forEach(c => c.style.display = 'none');
+      if (tabId === 'desc') document.getElementById('sfTabDesc').style.display = 'block';
+      if (tabId === 'specs') document.getElementById('sfTabSpecs').style.display = 'block';
+      if (tabId === 'reviews') document.getElementById('sfTabReviews').style.display = 'block';
+      if (tabId === 'shipping') document.getElementById('sfTabShipping').style.display = 'block';
+    }
+
+    function recalculateTotals() {
+      const itemSubtotal = sfState.basePrice * sfState.qty;
+      const bumpTotal = sfState.orderBumpActive ? sfState.orderBumpPrice : 0;
+      const subtotal = itemSubtotal;
+      const discount = sfState.couponActive ? 13.60 : 0;
+      const vipFee = sfState.vipBumpActive ? sfState.vipBumpPrice : 0;
+
+      const total = Math.max(0, subtotal - discount + vipFee);
+
+      const cartItemSub = document.getElementById('sfCartItemSubtotal');
+      if (cartItemSub) cartItemSub.innerText = '
+</html>
+ + itemSubtotal.toFixed(2);
+
+      const summarySub = document.getElementById('sfSummarySubtotal');
+      if (summarySub) summarySub.innerText = '
+</html>
+ + subtotal.toFixed(2);
+
+      const summaryTot = document.getElementById('sfSummaryTotal');
+      if (summaryTot) summaryTot.innerText = '
+</html>
+ + (subtotal - discount).toFixed(2);
+
+      const chkTot = document.getElementById('sfCheckoutTotal');
+      if (chkTot) chkTot.innerText = '
+</html>
+ + total.toFixed(2);
+
+      const completeBtnPrice = document.getElementById('sfCompleteOrderPrice');
+      if (completeBtnPrice) completeBtnPrice.innerText = '
+</html>
+ + total.toFixed(2);
+
+      // Shipping progress meter calculation (Threshold: $50)
+      const bar = document.getElementById('sfShippingMeterBar');
+      const text = document.getElementById('sfShippingMeterText');
+      if (bar && text) {
+        if (subtotal >= 50) {
+          bar.style.width = '100%';
+          text.innerHTML = 'You\'ve unlocked <strong>Free Expedited Shipping</strong>!';
+        } else {
+          const diff = (50 - subtotal).toFixed(2);
+          const pct = Math.min(100, Math.round((subtotal / 50) * 100));
+          bar.style.width = pct + '%';
+          text.innerHTML = 'Add <strong>
+</html>
+ + diff + '</strong> more for FREE Shipping!';
+        }
+      }
+    }
+
+    function triggerAddToCart() {
+      showToast('Omnify Heavyweight Hoodie added to cart! (Qty: ' + sfState.qty + ')');
+    }
+
+    function triggerBuyNow() {
+      switchSandboxView('checkout');
+      showToast('Proceeding to instant checkout...');
+    }
+
+    function triggerExpressPay(method) {
+      showToast('Connecting to ' + method + ' authentic biometric authorization...');
+    }
+
+    function selectGateway(labelEl) {
+      document.querySelectorAll('.sf-gateway-card').forEach(g => {
+        g.classList.remove('active');
+        g.style.border = '1px solid #e2e8f0';
+        g.style.background = '#fff';
+      });
+      labelEl.classList.add('active');
+      labelEl.style.border = '2px solid var(--sf-accent)';
+      labelEl.style.background = 'var(--sf-accent-light)';
+    }
+
+    function applyCouponCode() {
+      const code = document.getElementById('sfCouponInput').value.trim();
+      if (code.toUpperCase() === 'SUMMER20') {
+        sfState.couponActive = true;
+        recalculateTotals();
+        showToast('Coupon SUMMER20 applied! Saved $13.60');
+      } else {
+        showToast('Invalid coupon code. Try SUMMER20');
+      }
+    }
+
+    function completeMockOrder() {
+      showToast('Order completed successfully! Transaction ID: #OMN-2026-9481');
+    }
+
+    // Scarcity Urgency Ticking Timer
+    let secondsLeft = 14 * 60 + 52;
+    setInterval(() => {
+      if (secondsLeft > 0) {
+        secondsLeft--;
+        const mins = Math.floor(secondsLeft / 60);
+        const secs = secondsLeft % 60;
+        const display = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+        const el = document.getElementById('sfCountdownTimer');
+        if (el) el.innerText = display;
+      }
+    }, 1000);
+
+    // =========================================================================
+    // Hooks & Filters Explorer Live Search & Dataset
+    // =========================================================================
+    const omnifyHooksData = [
+      // Wizard Steps
+      { name: 'omnify_before_product_editor_wizard', type: 'action', cat: 'wizard', args: '', desc: 'Fires before the 4-step product creation wizard markup renders in wp-admin.', snippet: 'add_action(\'omnify_before_product_editor_wizard\', function() {\n    // Inject notice or custom header before wizard\n});' },
+      { name: 'omnify_after_product_editor_wizard_step_1', type: 'action', cat: 'wizard', args: '$product', desc: 'Fires immediately after Step 1 (General & Pricing) input fields.', snippet: 'add_action(\'omnify_after_product_editor_wizard_step_1\', function($product) {\n    // Add custom pricing or tax fields\n});' },
+      { name: 'omnify_after_product_editor_wizard_step_2', type: 'action', cat: 'wizard', args: '$product', desc: 'Fires immediately after Step 2 (Inventory & Shipping) input fields.', snippet: 'add_action(\'omnify_after_product_editor_wizard_step_2\', function($product) {\n    // Add warehouse location fields\n});' },
+      { name: 'omnify_after_product_editor_wizard_step_3', type: 'action', cat: 'wizard', args: '$product', desc: 'Fires immediately after Step 3 (Digital Files & Media) file locker.', snippet: 'add_action(\'omnify_after_product_editor_wizard_step_3\', function($product) {\n    // Add license key generator options\n});' },
+      { name: 'omnify_after_product_editor_wizard_step_4', type: 'action', cat: 'wizard', args: '$product', desc: 'Fires immediately after Step 4 (Variations & SEO) configuration.', snippet: 'add_action(\'omnify_after_product_editor_wizard_step_4\', function($product) {\n    // Add custom OpenGraph or rich schema fields\n});' },
+      { name: 'omnify_after_product_editor_wizard', type: 'action', cat: 'wizard', args: '', desc: 'Fires after all 4 steps of the product wizard have rendered.', snippet: 'add_action(\'omnify_after_product_editor_wizard\', function() {\n    // Append footer notes or scripts\n});' },
+      { name: 'omnify_product_editor_wizard_steps', type: 'filter', cat: 'wizard', args: '$steps', desc: 'Filter array of wizard steps to reorder, rename, or inject new wizard steps.', snippet: 'add_filter(\'omnify_product_editor_wizard_steps\', function($steps) {\n    $steps[\'custom_step\'] = [\'title\' => \'Affiliate Rules\', \'icon\' => \'share\'];\n    return $steps;\n});' },
+
+      // Product Lifecycle
+      { name: 'omnify_product_before_save', type: 'action', cat: 'lifecycle', args: '$data, $product_id', desc: 'Fires right before saving or updating a product record in omnify_products.', snippet: 'add_action(\'omnify_product_before_save\', function($data, $product_id) {\n    // Log audit or validate business constraints\n}, 10, 2);' },
+      { name: 'omnify_product_saved', type: 'action', cat: 'lifecycle', args: '$product_id, $data', desc: 'Fires immediately after a product is successfully saved in database.', snippet: 'add_action(\'omnify_product_saved\', function($product_id, $data) {\n    // Trigger external webhook or sync to ERP\n}, 10, 2);' },
+      { name: 'omnify_product_before_delete', type: 'action', cat: 'lifecycle', args: '$product_id', desc: 'Fires prior to trashing or deleting a product record.', snippet: 'add_action(\'omnify_product_before_delete\', function($product_id) {\n    // Clean up external cloud attachments\n});' },
+      { name: 'omnify_product_deleted', type: 'action', cat: 'lifecycle', args: '$product_id', desc: 'Fires after permanent product deletion.', snippet: 'add_action(\'omnify_product_deleted\', function($product_id) {\n    // Clear transients\n});' },
+      { name: 'omnify_product_data_before_save', type: 'filter', cat: 'lifecycle', args: '$data, $product_id', desc: 'Filter and sanitize product payload fields before database insertion.', snippet: 'add_filter(\'omnify_product_data_before_save\', function($data, $product_id) {\n    $data[\'sku\'] = strtoupper($data[\'sku\']);\n    return $data;\n}, 10, 2);' },
+
+      // Single Product (PDP)
+      { name: 'omnify_before_single_product', type: 'action', cat: 'single', args: '$product', desc: 'Fires before the Elessi 3-column single product container begins.', snippet: 'add_action(\'omnify_before_single_product\', function($product) {\n    // Render custom breadcrumbs or banner\n});' },
+      { name: 'omnify_single_product_gallery_start', type: 'action', cat: 'single', args: '$product', desc: 'Fires at top of vertical thumbnail rail and gallery preview.', snippet: 'add_action(\'omnify_single_product_gallery_start\', function($product) {\n    // Custom badge or 360 viewer trigger\n});' },
+      { name: 'omnify_single_product_gallery_end', type: 'action', cat: 'single', args: '$product', desc: 'Fires at bottom of gallery column.', snippet: 'add_action(\'omnify_single_product_gallery_end\', function($product) {\n    // Social share buttons\n});' },
+      { name: 'omnify_single_product_summary_start', type: 'action', cat: 'single', args: '$product', desc: 'Fires before title, ratings, and price callout in center column.', snippet: 'add_action(\'omnify_single_product_summary_start\', function($product) {\n    // Flash deal urgency countdown pill\n});' },
+      { name: 'omnify_single_product_summary_end', type: 'action', cat: 'single', args: '$product', desc: 'Fires after quantity stepper, Add to Cart, and Buy Now buttons.', snippet: 'add_action(\'omnify_single_product_summary_end\', function($product) {\n    // Security trust icons or installments callout\n});' },
+      { name: 'omnify_single_product_meta_start', type: 'action', cat: 'single', args: '$product', desc: 'Fires at the start of SKU and category taxonomy meta block.', snippet: 'add_action(\'omnify_single_product_meta_start\', function($product) {\n    // Display Brand logo\n});' },
+      { name: 'omnify_single_product_meta_end', type: 'action', cat: 'single', args: '$product', desc: 'Fires at the end of the metadata block.', snippet: 'add_action(\'omnify_single_product_meta_end\', function($product) {\n    // Display tags or return policy link\n});' },
+      { name: 'omnify_after_single_product', type: 'action', cat: 'single', args: '$product', desc: 'Fires after the entire single product page and bottom tab panels.', snippet: 'add_action(\'omnify_after_single_product\', function($product) {\n    // Render related products or upsells\n});' },
+      { name: 'omnify_single_product_tabs', type: 'filter', cat: 'single', args: '$tabs, $product', desc: 'Add, remove, or modify product specification and description tabs.', snippet: 'add_filter(\'omnify_single_product_tabs\', function($tabs, $product) {\n    $tabs[\'size_chart\'] = [\'title\' => \'Size Chart\', \'callback\' => \'my_custom_size_chart\'];\n    return $tabs;\n}, 10, 2);' },
+
+      // Cart & Checkout
+      { name: 'omnify_before_cart', type: 'action', cat: 'cart', args: '', desc: 'Fires before the shopping cart table and urgency countdown timer.', snippet: 'add_action(\'omnify_before_cart\', function() {\n    // Insert announcement banner\n});' },
+      { name: 'omnify_cart_contents', type: 'action', cat: 'cart', args: '', desc: 'Fires inside cart table rows to append custom add-ons or gift wraps.', snippet: 'add_action(\'omnify_cart_contents\', function() {\n    // Render free gift row\n});' },
+      { name: 'omnify_after_cart_contents', type: 'action', cat: 'cart', args: '', desc: 'Fires immediately after cart items table.', snippet: 'add_action(\'omnify_after_cart_contents\', function() {\n    // Insert cross-sell recommendations carousel\n});' },
+      { name: 'omnify_after_cart', type: 'action', cat: 'cart', args: '', desc: 'Fires after the entire cart layout container.', snippet: 'add_action(\'omnify_after_cart\', function() {\n    // Security trust badges\n});' },
+      { name: 'omnify_cart_shipping_free_threshold', type: 'filter', cat: 'cart', args: '$threshold', desc: 'Filter the free shipping threshold dollar amount dynamically.', snippet: 'add_filter(\'omnify_cart_shipping_free_threshold\', function($threshold) {\n    // VIP members get free shipping over $25\n    return is_user_logged_in() ? 25.00 : 50.00;\n});' },
+      { name: 'omnify_before_checkout_form', type: 'action', cat: 'cart', args: '', desc: 'Fires before checkout form and Express Apple/Google Pay buttons.', snippet: 'add_action(\'omnify_before_checkout_form\', function() {\n    // Returning customer login prompt\n});' },
+      { name: 'omnify_checkout_payment_gateways', type: 'action', cat: 'cart', args: '', desc: 'Fires right before payment gateway cards render.', snippet: 'add_action(\'omnify_checkout_payment_gateways\', function() {\n    // Notice about SSL encryption\n});' },
+      { name: 'omnify_available_payment_gateways', type: 'filter', cat: 'cart', args: '$gateways', desc: 'Filter list of available payment gateway instances during checkout.', snippet: 'add_filter(\'omnify_available_payment_gateways\', function($gateways) {\n    // Conditionally enable Cash on Delivery\n    return $gateways;\n});' },
+
+      // Admin Row Actions
+      { name: 'omnify_product_row_actions', type: 'filter', cat: 'table', args: '$actions, $item', desc: 'Customize action links on products list table in wp-admin.', snippet: 'add_filter(\'omnify_product_row_actions\', function($actions, $item) {\n    $actions[\'duplicate\'] = \'<a href="#">Duplicate</a>\';\n    return $actions;\n}, 10, 2);' },
+      { name: 'omnify_order_row_actions', type: 'filter', cat: 'table', args: '$actions, $item', desc: 'Customize action links on orders list table in wp-admin.', snippet: 'add_filter(\'omnify_order_row_actions\', function($actions, $item) {\n    $actions[\'invoice\'] = \'<a href="#">PDF Invoice</a>\';\n    return $actions;\n}, 10, 2);' },
+
+      // Public Helpers
+      { name: 'omnify_get_product', type: 'helper', cat: 'helper', args: '$product_id', desc: 'Global API to retrieve a full normalized product record by ID.', snippet: '$product = omnify_get_product( 101 );\necho esc_html( $product[\'name\'] );' },
+      { name: 'omnify_get_order', type: 'helper', cat: 'helper', args: '$order_id', desc: 'Global API to retrieve a complete order transaction record by ID.', snippet: '$order = omnify_get_order( 1042 );\necho esc_html( $order[\'total\'] );' },
+      { name: 'omnify_format_price', type: 'helper', cat: 'helper', args: '$amount, $currency = \'\'', desc: 'Format numeric price according to store currency formatting settings.', snippet: 'echo omnify_format_price( 68.00 ); // Returns "$68.00"' }
+    ];
+
+    let activeHookCat = 'all';
+
+    function renderHooksGrid() {
+      const container = document.getElementById('hooksCardsGrid');
+      if (!container) return;
+      const search = (document.getElementById('hooksSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = omnifyHooksData.filter(item => {
+        const matchesCat = (activeHookCat === 'all' || item.cat === activeHookCat);
+        const matchesSearch = !search || item.name.toLowerCase().includes(search) || item.desc.toLowerCase().includes(search) || item.args.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; padding:32px; text-align:center; color:var(--text-dim);">No matching hooks or helpers found. Try adjusting your search query.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        return `
+          <div class="hook-item-card">
+            <div>
+              <div class="hook-meta-row">
+                <span class="hook-tag ${item.type}">${item.type}</span>
+                <span style="font-size:0.7rem; color:var(--text-dim); font-family:var(--font-mono);">${item.cat}</span>
+              </div>
+              <div class="hook-name-text">${item.name}</div>
+              <div class="hook-desc-text">${item.desc}</div>
+            </div>
+            <button type="button" class="hook-copy-btn" onclick="copyHookCode('${item.snippet.replace(/\'/g, "\\\'").replace(/\n/g, "\\n")}', this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Code</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setHookCategory(cat, el) {
+      activeHookCat = cat;
+      document.querySelectorAll('.hook-cat-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      renderHooksGrid();
+    }
+
+    function filterHooksLive() {
+      renderHooksGrid();
+    }
+
+    function copyHookCode(snippet, btn) {
+      navigator.clipboard.writeText(snippet).then(() => {
+        const span = btn.querySelector('span');
+        const orig = span.innerText;
+        span.innerText = 'Copied!';
+        btn.style.background = '#0f766e';
+        btn.style.color = '#fff';
+        setTimeout(() => {
+          span.innerText = orig;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHooksGrid();
+    });
+  </script>
+
 </body>
 </html>

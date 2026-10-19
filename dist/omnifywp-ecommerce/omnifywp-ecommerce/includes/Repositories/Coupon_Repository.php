@@ -32,7 +32,13 @@ class Omnify_Coupon_Repository {
 
 		if (! empty($omnify_args['status']) && $omnify_args['status'] !== 'all') {
 			if ($omnify_args['status'] === 'active') {
-				$omnify_where .= " AND is_active = 1";
+				$omnify_where .= " AND is_active = 1 AND (expires_at IS NULL OR expires_at > %s)";
+				$omnify_params[] = current_time('mysql', true);
+			} elseif ($omnify_args['status'] === 'inactive') {
+				$omnify_where .= " AND is_active = 0";
+			} elseif ($omnify_args['status'] === 'expired') {
+				$omnify_where .= " AND expires_at IS NOT NULL AND expires_at <= %s";
+				$omnify_params[] = current_time('mysql', true);
 			} elseif ($omnify_args['status'] === 'trash') {
 				$omnify_where = "WHERE deleted_at IS NOT NULL";
 			}
@@ -40,7 +46,7 @@ class Omnify_Coupon_Repository {
 
 		if (! empty($omnify_args['search'])) {
 			$omnify_search = '%' . $wpdb->esc_like($omnify_args['search']) . '%';
-			$omnify_where .= " AND code LIKE %s";
+			$omnify_where .= " AND UPPER(code) LIKE UPPER(%s)";
 			$omnify_params[] = $omnify_search;
 		}
 
@@ -78,6 +84,61 @@ class Omnify_Coupon_Repository {
 		return apply_filters('omnify_get_coupons_results', $omnify_coupons, $omnify_args);
 	}
 
+	/**
+	 * Count total coupons matching criteria for pagination.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_table = $this->table('coupons');
+		$omnify_where = "WHERE deleted_at IS NULL";
+		$omnify_params = [];
+
+		if (! empty($omnify_args['status']) && $omnify_args['status'] !== 'all') {
+			if ($omnify_args['status'] === 'active') {
+				$omnify_where .= " AND is_active = 1 AND (expires_at IS NULL OR expires_at > %s)";
+				$omnify_params[] = current_time('mysql', true);
+			} elseif ($omnify_args['status'] === 'inactive') {
+				$omnify_where .= " AND is_active = 0";
+			} elseif ($omnify_args['status'] === 'expired') {
+				$omnify_where .= " AND expires_at IS NOT NULL AND expires_at <= %s";
+				$omnify_params[] = current_time('mysql', true);
+			} elseif ($omnify_args['status'] === 'trash') {
+				$omnify_where = "WHERE deleted_at IS NOT NULL";
+			}
+		}
+
+		if (! empty($omnify_args['search'])) {
+			$omnify_search = '%' . $wpdb->esc_like($omnify_args['search']) . '%';
+			$omnify_where .= " AND UPPER(code) LIKE UPPER(%s)";
+			$omnify_params[] = $omnify_search;
+		}
+
+		if (! empty($omnify_args['type'])) {
+			$omnify_where .= " AND discount_type = %s";
+			$omnify_params[] = $omnify_args['type'];
+		}
+
+		if (! empty($omnify_args['date_from'])) {
+			$omnify_where .= ' AND DATE(created_at) >= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
+		}
+		if (! empty($omnify_args['date_to'])) {
+			$omnify_where .= ' AND DATE(created_at) <= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
+		}
+
+		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_table} {$omnify_where}";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
+	}
+
 	public function find(int $omnify_id): ?array {
 		global $wpdb;
 
@@ -112,7 +173,7 @@ class Omnify_Coupon_Repository {
 		$omnify_data = apply_filters('omnify_pre_create_coupon_data', $omnify_data);
 
 		$omnify_now        = $this->now();
-		$omnify_expires_at = ! empty($omnify_data['expires_at']) ? sanitize_text_field($omnify_data['expires_at']) : null;
+		$omnify_expires_at = $this->normalize_expires_at($omnify_data['expires_at'] ?? null);
 
 		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
 			$this->table('coupons'),
@@ -151,7 +212,7 @@ class Omnify_Coupon_Repository {
 
 		$omnify_data = apply_filters('omnify_pre_update_coupon_data', $omnify_data, $omnify_id);
 
-		$omnify_expires_at = isset($omnify_data['expires_at']) ? (! empty($omnify_data['expires_at']) ? sanitize_text_field($omnify_data['expires_at']) : null) : null;
+		$omnify_expires_at = array_key_exists('expires_at', $omnify_data) ? $this->normalize_expires_at($omnify_data['expires_at'] ?? null) : null;
 		$omnify_update     = [];
 
 			if (isset($omnify_data['code'])) {
@@ -262,7 +323,23 @@ class Omnify_Coupon_Repository {
 		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::query($wpdb, 
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				"UPDATE {$omnify_table} SET usage_count = usage_count + 1, updated_at = %s WHERE id = %d",
+				"UPDATE {$omnify_table} SET usage_count = usage_count + 1, updated_at = %s WHERE id = %d AND (usage_limit IS NULL OR usage_limit = 0 OR usage_count < usage_limit)",
+				$this->now(),
+				$omnify_id
+			)
+		);
+
+		return ! empty($omnify_result);
+	}
+
+	public function decrement_usage(int $omnify_id): bool {
+		global $wpdb;
+
+		$omnify_table = $this->table('coupons');
+		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::query($wpdb, 
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"UPDATE {$omnify_table} SET usage_count = GREATEST(0, usage_count - 1), updated_at = %s WHERE id = %d",
 				$this->now(),
 				$omnify_id
 			)
@@ -294,10 +371,38 @@ class Omnify_Coupon_Repository {
 			if (1 === preg_match('/^\d{4}-\d{2}-\d{2}$/', $omnify_expires_str)) {
 				$omnify_expires_str .= ' 23:59:59';
 			}
-			$omnify_row['is_expired'] = strtotime($omnify_expires_str) < time();
+			$omnify_timestamp = strtotime($omnify_expires_str . ' UTC');
+			$omnify_row['is_expired'] = $omnify_timestamp ? $omnify_timestamp < time() : false;
 		}
 
 		return $omnify_row;
+	}
+
+	private function normalize_expires_at(?string $omnify_date): ?string {
+		if (empty($omnify_date)) {
+			return null;
+		}
+
+		$omnify_date = trim((string) $omnify_date);
+		if (1 === preg_match('/^\d{4}-\d{2}-\d{2}$/', $omnify_date)) {
+			$omnify_date .= ' 23:59:59';
+		}
+
+		if (function_exists('get_gmt_from_date')) {
+			$omnify_gmt = get_gmt_from_date($omnify_date, 'Y-m-d H:i:s');
+			if (! empty($omnify_gmt) && '0000-00-00 00:00:00' !== $omnify_gmt) {
+				return $omnify_gmt;
+			}
+		}
+
+		try {
+			$omnify_tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
+			$omnify_dt = new \DateTimeImmutable($omnify_date, $omnify_tz);
+			return $omnify_dt->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+		} catch (\Exception $omnify_e) {
+			$omnify_timestamp = strtotime($omnify_date);
+			return $omnify_timestamp ? gmdate('Y-m-d H:i:s', $omnify_timestamp) : null;
+		}
 	}
 
 	private function table(string $omnify_name): string {

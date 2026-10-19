@@ -15,12 +15,18 @@ use Omnify\eCommerce\Database\Omnify_Schema;
 class Omnify_Product_Repository {
 	private const STATUSES = ['draft', 'published'];
 
-	public function __construct(private Omnify_Schema $omnify_schema) {}
+	public function __construct(private Omnify_Schema $omnify_schema) {
+		if (function_exists('wp_cache_add_global_groups')) {
+			wp_cache_add_global_groups(['omnifywp-ecommerce', 'omnify_products']);
+		}
+	}
 
 	/**
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function all(array $omnify_args = []): array {
+		$omnify_args = apply_filters('omnify_get_products_args', $omnify_args);
+
 		$omnify_cache_version = $this->get_cache_version();
 		$omnify_cache_key     = 'omnify_prod_all_' . md5(serialize($omnify_args)) . '_' . $omnify_cache_version;
 		$omnify_cached        = wp_cache_get($omnify_cache_key, 'omnifywp-ecommerce');
@@ -29,8 +35,6 @@ class Omnify_Product_Repository {
 		}
 
 		global $wpdb;
-
-		$omnify_args = apply_filters('omnify_get_products_args', $omnify_args);
 
 		$omnify_status = sanitize_key((string) ($omnify_args['status'] ?? 'all'));
 		$omnify_category = sanitize_text_field((string) ($omnify_args['category'] ?? ''));
@@ -51,7 +55,7 @@ class Omnify_Product_Repository {
 		$omnify_where = "WHERE 1=1";
 		if ('trash' === $omnify_status) {
 			$omnify_where .= " AND deleted_at IS NOT NULL";
-		} elseif ('all' !== $omnify_status) {
+		} elseif (! empty($omnify_status) && 'all' !== $omnify_status && 'any' !== $omnify_status) {
 			$omnify_where .= $wpdb->prepare(" AND status = %s AND deleted_at IS NULL", $omnify_status);
 		} else {
 			$omnify_where .= " AND deleted_at IS NULL";
@@ -60,21 +64,21 @@ class Omnify_Product_Repository {
 		if ($omnify_category) {
 			$omnify_cat_table = $this->table('product_categories');
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_cat_table} WHERE name = %s)", $omnify_category);
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_cat_table} WHERE name = %s OR slug = %s)", $omnify_category, $omnify_category);
 		}
 
 		$omnify_brand = sanitize_text_field((string) ($omnify_args['brand'] ?? ''));
 		if ($omnify_brand) {
 			$omnify_brand_table = $this->table('product_brands');
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_brand_table} WHERE name = %s)", $omnify_brand);
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_brand_table} WHERE name = %s OR slug = %s)", $omnify_brand, $omnify_brand);
 		}
 
 		$omnify_tag = sanitize_text_field((string) ($omnify_args['tag'] ?? ''));
 		if ($omnify_tag) {
 			$omnify_tag_table = $this->table('product_tags');
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_tag_table} WHERE name = %s)", $omnify_tag);
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_tag_table} WHERE name = %s OR slug = %s)", $omnify_tag, $omnify_tag);
 		}
 
 		if ($omnify_type) {
@@ -149,19 +153,21 @@ class Omnify_Product_Repository {
 			case 'sales_desc':
 				$omnify_orders_table = $wpdb->prefix . 'omnify_orders';
 				$omnify_order_items_table = $wpdb->prefix . 'omnify_order_items';
+				$omnify_products_table = $this->table('products');
 				$omnify_order_by = "ORDER BY (
 					SELECT COALESCE(SUM(oi.quantity), 0)
 					FROM {$omnify_order_items_table} oi
 					JOIN {$omnify_orders_table} o ON o.id = oi.order_id
-					WHERE oi.product_id = id AND o.status = 'completed'
+					WHERE oi.product_id = {$omnify_products_table}.id AND o.status = 'completed'
 				) DESC";
 				break;
 			case 'rating_desc':
 				$omnify_reviews_table = $wpdb->prefix . 'omnify_reviews';
+				$omnify_products_table = $this->table('products');
 				$omnify_order_by = "ORDER BY (
 					SELECT COALESCE(AVG(r.rating), 0)
 					FROM {$omnify_reviews_table} r
-					WHERE r.product_id = id AND r.status = 'approved' AND r.deleted_at IS NULL
+					WHERE r.product_id = {$omnify_products_table}.id AND r.status = 'approved' AND r.deleted_at IS NULL
 				) DESC";
 				break;
 		}
@@ -178,10 +184,110 @@ class Omnify_Product_Repository {
 		);
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
-		$omnify_products = array_map([$this, 'with_terms'], array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []));
+		$omnify_hydrated = array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
+		$omnify_products = $this->with_terms_batch($omnify_hydrated);
 		$omnify_result = apply_filters('omnify_get_products_results', $omnify_products, $omnify_args);
 		wp_cache_set($omnify_cache_key, $omnify_result, 'omnifywp-ecommerce', HOUR_IN_SECONDS);
 		return $omnify_result;
+	}
+
+	/**
+	 * Count products matching criteria for pagination.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_status = sanitize_key((string) ($omnify_args['status'] ?? 'all'));
+		$omnify_category = sanitize_text_field((string) ($omnify_args['category'] ?? ''));
+		$omnify_type = sanitize_key((string) ($omnify_args['type'] ?? ''));
+		$omnify_search = sanitize_text_field((string) ($omnify_args['search'] ?? ''));
+		$omnify_price_min = isset($omnify_args['price_min']) ? (float) $omnify_args['price_min'] : null;
+		$omnify_price_max = isset($omnify_args['price_max']) ? (float) $omnify_args['price_max'] : null;
+		$omnify_stock_status = sanitize_key((string) ($omnify_args['stock_status'] ?? ''));
+		$omnify_date_from = sanitize_text_field((string) ($omnify_args['date_from'] ?? ''));
+		$omnify_date_to = sanitize_text_field((string) ($omnify_args['date_to'] ?? ''));
+		$omnify_attribute_filters = (array) ($omnify_args['attributes'] ?? []);
+
+		$omnify_where = "WHERE 1=1";
+		if ('trash' === $omnify_status) {
+			$omnify_where .= " AND deleted_at IS NOT NULL";
+		} elseif (! empty($omnify_status) && 'all' !== $omnify_status && 'any' !== $omnify_status) {
+			$omnify_where .= $wpdb->prepare(" AND status = %s AND deleted_at IS NULL", $omnify_status);
+		} else {
+			$omnify_where .= " AND deleted_at IS NULL";
+		}
+
+		if ($omnify_category) {
+			$omnify_cat_table = $this->table('product_categories');
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_cat_table} WHERE name = %s OR slug = %s)", $omnify_category, $omnify_category);
+		}
+
+		$omnify_brand = sanitize_text_field((string) ($omnify_args['brand'] ?? ''));
+		if ($omnify_brand) {
+			$omnify_brand_table = $this->table('product_brands');
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_brand_table} WHERE name = %s OR slug = %s)", $omnify_brand, $omnify_brand);
+		}
+
+		$omnify_tag = sanitize_text_field((string) ($omnify_args['tag'] ?? ''));
+		if ($omnify_tag) {
+			$omnify_tag_table = $this->table('product_tags');
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$omnify_where .= $wpdb->prepare(" AND id IN (SELECT product_id FROM {$omnify_tag_table} WHERE name = %s OR slug = %s)", $omnify_tag, $omnify_tag);
+		}
+
+		if ($omnify_type) {
+			$omnify_where .= $wpdb->prepare(" AND type = %s", $omnify_type);
+		}
+
+		if ($omnify_search) {
+			$omnify_like = '%' . $wpdb->esc_like($omnify_search) . '%';
+			$omnify_where .= $wpdb->prepare(" AND (name LIKE %s OR description LIKE %s OR sku LIKE %s)", $omnify_like, $omnify_like, $omnify_like);
+		}
+
+		if ($omnify_price_min !== null) {
+			$omnify_where .= $wpdb->prepare(" AND COALESCE(sale_price, price) >= %f", $omnify_price_min);
+		}
+		if ($omnify_price_max !== null) {
+			$omnify_where .= $wpdb->prepare(" AND COALESCE(sale_price, price) <= %f", $omnify_price_max);
+		}
+
+		if ($omnify_stock_status === 'instock') {
+			$omnify_where .= " AND stock_status = 'instock' AND (manage_stock = 0 OR stock_qty > 0)";
+		} elseif ($omnify_stock_status === 'onsale') {
+			$omnify_where .= " AND sale_price IS NOT NULL AND sale_price < price";
+		}
+
+		if (! empty($omnify_attribute_filters)) {
+			foreach ($omnify_attribute_filters as $omnify_attr_name => $omnify_values) {
+				if (empty($omnify_values)) continue;
+				$omnify_attr_name = sanitize_text_field($omnify_attr_name);
+				$omnify_values = (array) $omnify_values;
+
+				$omnify_attr_placeholders = implode(',', array_fill(0, count($omnify_values), '%s'));
+				$omnify_attr_table = $this->table('product_attributes');
+
+				$omnify_attr_query = $wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					"SELECT product_id FROM {$omnify_attr_table} WHERE name = %s AND value IN ($omnify_attr_placeholders)",
+					array_merge([$omnify_attr_name], $omnify_values)
+				);
+
+				$omnify_where .= " AND id IN ($omnify_attr_query)";
+			}
+		}
+
+		if ($omnify_date_from) {
+			$omnify_where .= $wpdb->prepare(" AND created_at >= %s", $omnify_date_from);
+		}
+		if ($omnify_date_to) {
+			$omnify_where .= $wpdb->prepare(" AND created_at <= %s", $omnify_date_to);
+		}
+
+		$omnify_products_table = $this->table('products');
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, "SELECT COUNT(*) FROM {$omnify_products_table} {$omnify_where}");
 	}
 
 	public function find(int $omnify_id): ?array {
@@ -212,6 +318,47 @@ class Omnify_Product_Repository {
 		return $omnify_result;
 	}
 
+	/**
+	 * Find multiple products by their IDs in a single batch query.
+	 *
+	 * @param array<int, int> $omnify_ids
+	 * @return array<int, array<string, mixed>> Keyed by product ID.
+	 */
+	public function find_many(array $omnify_ids): array {
+		$omnify_clean_ids = array_values(array_unique(array_filter(array_map('absint', $omnify_ids))));
+		if (empty($omnify_clean_ids)) {
+			return [];
+		}
+
+		global $wpdb;
+		$omnify_table = $this->table('products');
+		$omnify_placeholders = implode(',', array_fill(0, count($omnify_clean_ids), '%d'));
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare("SELECT * FROM {$omnify_table} WHERE id IN ({$omnify_placeholders})", ...$omnify_clean_ids),
+			ARRAY_A
+		);
+
+		if (empty($omnify_rows) || ! is_array($omnify_rows)) {
+			return [];
+		}
+
+		$omnify_hydrated   = array_map([$this, 'hydrate'], $omnify_rows);
+		$omnify_with_terms = $this->with_terms_batch($omnify_hydrated);
+
+		$omnify_indexed = [];
+		foreach ($omnify_with_terms as $omnify_product) {
+			$omnify_pid = (int) $omnify_product['id'];
+			if ('variable' === $omnify_product['type']) {
+				$omnify_product['variations'] = $this->get_variations($omnify_pid);
+			}
+			$omnify_indexed[$omnify_pid] = apply_filters('omnify_get_product', $omnify_product, $omnify_pid);
+		}
+
+		return $omnify_indexed;
+	}
+
 	public function find_by_slug(string $omnify_slug): ?array {
 		$omnify_cache_version = $this->get_cache_version();
 		$omnify_cache_key     = 'omnify_prod_slug_' . sanitize_title($omnify_slug) . '_' . $omnify_cache_version;
@@ -223,7 +370,7 @@ class Omnify_Product_Repository {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('products')} WHERE slug = %s", sanitize_title($omnify_slug)), ARRAY_A);
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('products')} WHERE slug = %s AND deleted_at IS NULL", sanitize_title($omnify_slug)), ARRAY_A);
 
 		if (! is_array($omnify_row)) {
 			wp_cache_set($omnify_cache_key, '__null', 'omnifywp-ecommerce', HOUR_IN_SECONDS);
@@ -251,7 +398,7 @@ class Omnify_Product_Repository {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('products')} WHERE sku = %s", sanitize_text_field($omnify_sku)), ARRAY_A);
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('products')} WHERE sku = %s AND deleted_at IS NULL", sanitize_text_field($omnify_sku)), ARRAY_A);
 
 		if (! is_array($omnify_row)) {
 			wp_cache_set($omnify_cache_key, '__null', 'omnifywp-ecommerce', HOUR_IN_SECONDS);
@@ -316,7 +463,7 @@ class Omnify_Product_Repository {
 				'bundled_ids'  => ! empty($omnify_data['bundled_ids']) && is_array($omnify_data['bundled_ids']) ? wp_json_encode(array_map('absint', $omnify_data['bundled_ids'])) : null,
 				'upsell_ids'   => ! empty($omnify_data['upsell_ids']) && is_array($omnify_data['upsell_ids']) ? wp_json_encode(array_map('absint', $omnify_data['upsell_ids'])) : null,
 				'cross_sell_ids' => ! empty($omnify_data['cross_sell_ids']) && is_array($omnify_data['cross_sell_ids']) ? wp_json_encode(array_map('absint', $omnify_data['cross_sell_ids'])) : null,
-				'refund_enabled' => ! empty($omnify_data['refund_enabled']) ? 1 : 0,
+				'refund_enabled' => array_key_exists('refund_enabled', $omnify_data) ? (! empty($omnify_data['refund_enabled']) ? 1 : 0) : 1,
 				'refund_window_days' => isset($omnify_data['refund_window_days']) && '' !== trim((string)$omnify_data['refund_window_days']) ? absint($omnify_data['refund_window_days']) : null,
 				'refund_policy_text' => sanitize_textarea_field($omnify_data['refund_policy_text'] ?? ''),
 				'specifications' => ! empty($omnify_data['specifications']) && is_array($omnify_data['specifications']) ? wp_json_encode($omnify_data['specifications']) : null,
@@ -523,6 +670,10 @@ class Omnify_Product_Repository {
 						$omnify_new_stock,
 						__('Admin manual update', 'omnifywp-ecommerce')
 					);
+
+					if ($omnify_old_stock_val <= 0 && $omnify_new_stock > 0) {
+						do_action('omnify_product_restocked', $omnify_id, null);
+					}
 				}
 			}
 		}
@@ -586,6 +737,16 @@ class Omnify_Product_Repository {
 	public function delete(int $omnify_id): bool {
 		global $wpdb;
 
+		// Clean up physical product files safely
+		$omnify_files_table = $this->table('product_files');
+		$omnify_file_ids    = \Omnify\eCommerce\Support\Omnify_DB::get_col($wpdb, $wpdb->prepare("SELECT id FROM {$omnify_files_table} WHERE product_id = %d", $omnify_id));
+		if (! empty($omnify_file_ids) && is_array($omnify_file_ids)) {
+			$omnify_file_repo = new \Omnify\eCommerce\Repositories\Omnify_Product_File_Repository($this->omnify_schema);
+			foreach ($omnify_file_ids as $omnify_file_id) {
+				$omnify_file_repo->delete((int) $omnify_file_id);
+			}
+		}
+
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('product_categories'), ['product_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('product_tags'), ['product_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('product_brands'), ['product_id' => $omnify_id]);
@@ -594,6 +755,7 @@ class Omnify_Product_Repository {
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('wishlists'), ['product_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('reviews'), ['product_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('customer_access'), ['product_id' => $omnify_id]);
+		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('stock_subscribers'), ['product_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('metadata'), ['object_type' => 'product', 'object_id' => $omnify_id]);
 
 		$omnify_deleted = false !== \Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('products'), ['id' => $omnify_id]);
@@ -659,10 +821,70 @@ class Omnify_Product_Repository {
 		return $omnify_product;
 	}
 
+	/**
+	 * Attach categories, tags, and brands to a list of products in 3 bulk queries.
+	 *
+	 * @param array<int, array<string, mixed>> $omnify_products
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function with_terms_batch(array $omnify_products): array {
+		if (empty($omnify_products)) {
+			return [];
+		}
+
+		$omnify_ids = array_values(array_filter(array_map(static fn(array $p): int => (int) ($p['id'] ?? 0), $omnify_products)));
+		if (empty($omnify_ids)) {
+			return $omnify_products;
+		}
+
+		global $wpdb;
+		$omnify_terms_map = [
+			'categories' => [],
+			'tags'       => [],
+			'brands'     => [],
+		];
+
+		$omnify_tables = [
+			'categories' => $this->table('product_categories'),
+			'tags'       => $this->table('product_tags'),
+			'brands'     => $this->table('product_brands'),
+		];
+
+		$omnify_id_placeholders = implode(',', array_fill(0, count($omnify_ids), '%d'));
+
+		foreach ($omnify_tables as $omnify_type => $omnify_table) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+			$omnify_term_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+				$wpdb,
+				$wpdb->prepare("SELECT product_id, name FROM {$omnify_table} WHERE product_id IN ({$omnify_id_placeholders}) ORDER BY name ASC", ...$omnify_ids),
+				ARRAY_A
+			);
+			if (is_array($omnify_term_rows)) {
+				foreach ($omnify_term_rows as $omnify_trow) {
+					$omnify_pid = (int) $omnify_trow['product_id'];
+					$omnify_terms_map[$omnify_type][$omnify_pid][] = (string) $omnify_trow['name'];
+				}
+			}
+		}
+
+		foreach ($omnify_products as &$omnify_prod) {
+			$omnify_pid = (int) ($omnify_prod['id'] ?? 0);
+			$omnify_prod['categories'] = $omnify_terms_map['categories'][$omnify_pid] ?? [];
+			$omnify_prod['tags']       = $omnify_terms_map['tags'][$omnify_pid] ?? [];
+			$omnify_prod['brands']     = $omnify_terms_map['brands'][$omnify_pid] ?? [];
+		}
+		unset($omnify_prod);
+
+		return $omnify_products;
+	}
+
 	private function hydrate(array $omnify_row): array {
 		$omnify_row['id']            = (int) $omnify_row['id'];
 		$omnify_row['thumbnail_id']  = null === $omnify_row['thumbnail_id'] ? null : (int) $omnify_row['thumbnail_id'];
 		$omnify_row['thumbnail_url'] = $omnify_row['thumbnail_id'] ? wp_get_attachment_image_url((int) $omnify_row['thumbnail_id'], 'full') : '';
+		if (empty($omnify_row['thumbnail_url'])) {
+			$omnify_row['thumbnail_url'] = self::resolve_fallback_thumbnail_url($omnify_row);
+		}
 		$omnify_row['price']         = (float) $omnify_row['price'];
 		$omnify_row['sale_price']    = null === $omnify_row['sale_price'] ? null : (float) $omnify_row['sale_price'];
 		$omnify_row['sku']           = $omnify_row['sku'] ?? '';
@@ -739,6 +961,9 @@ class Omnify_Product_Repository {
 
 	private function status(string $omnify_status): string {
 		$omnify_status = sanitize_key($omnify_status);
+		if ('publish' === $omnify_status) {
+			$omnify_status = 'published';
+		}
 
 		return in_array($omnify_status, self::STATUSES, true) ? $omnify_status : 'draft';
 	}
@@ -824,6 +1049,106 @@ class Omnify_Product_Repository {
 		}, $omnify_rows);
 	}
 
+	/**
+	 * Batch-load variations for multiple product IDs in a single query.
+	 *
+	 * @param array<int> $omnify_product_ids
+	 * @return array<int, array<int, array<string, mixed>>>
+	 */
+	public function get_variations_for_products(array $omnify_product_ids): array {
+		$omnify_product_ids = array_values(array_filter(array_map('absint', $omnify_product_ids)));
+		if (empty($omnify_product_ids)) {
+			return [];
+		}
+
+		global $wpdb;
+		$omnify_table = $this->table('product_variations');
+		$omnify_placeholders = implode(',', array_fill(0, count($omnify_product_ids), '%d'));
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_sql = "SELECT * FROM {$omnify_table} WHERE product_id IN ({$omnify_placeholders}) ORDER BY product_id ASC, id ASC";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare($omnify_sql, ...$omnify_product_ids),
+			ARRAY_A
+		);
+
+		$omnify_out = [];
+		foreach ($omnify_product_ids as $omnify_pid) {
+			$omnify_out[$omnify_pid] = [];
+		}
+
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_row) {
+				$omnify_row['id']           = (int) $omnify_row['id'];
+				$omnify_row['product_id']   = (int) $omnify_row['product_id'];
+				$omnify_row['price']        = (float) $omnify_row['price'];
+				$omnify_row['sale_price']   = null === $omnify_row['sale_price'] ? null : (float) $omnify_row['sale_price'];
+				$omnify_row['attributes']   = empty($omnify_row['attributes']) ? [] : json_decode((string) $omnify_row['attributes'], true);
+				$omnify_row['description']  = $omnify_row['description'] ?? '';
+				$omnify_row['manage_stock'] = (int) $omnify_row['manage_stock'];
+				$omnify_row['stock_qty']    = null === $omnify_row['stock_qty'] ? null : (int) $omnify_row['stock_qty'];
+				$omnify_row['stock_status'] = $omnify_row['stock_status'] ?? 'instock';
+				$omnify_row['allow_backorders'] = (int) ($omnify_row['allow_backorders'] ?? 0);
+				$omnify_row['preorder_enabled'] = (int) ($omnify_row['preorder_enabled'] ?? 0);
+				$omnify_row['preorder_release_date'] = $omnify_row['preorder_release_date'] ?? null;
+				$omnify_row['preorder_limit'] = null === ($omnify_row['preorder_limit'] ?? null) ? null : (int) $omnify_row['preorder_limit'];
+				$omnify_row['preorder_message'] = $omnify_row['preorder_message'] ?? '';
+				$omnify_row['thumbnail_id'] = null === $omnify_row['thumbnail_id'] ? null : (int) $omnify_row['thumbnail_id'];
+				$omnify_row['thumbnail_url'] = $omnify_row['thumbnail_id'] ? wp_get_attachment_image_url((int) $omnify_row['thumbnail_id'], 'full') : '';
+
+				$omnify_out[$omnify_row['product_id']][] = $omnify_row;
+			}
+		}
+
+		return $omnify_out;
+	}
+
+	/**
+	 * Compute the effective price range for a product with variations.
+	 *
+	 * @param array<string, mixed> $omnify_product
+	 * @param array<int, array<string, mixed>>|null $omnify_variations Optional pre-loaded variations.
+	 * @return array{min: float, max: float, has_range: bool}|null
+	 */
+	public function get_variation_price_range(array $omnify_product, ?array $omnify_variations = null): ?array {
+		if ('variable' !== ($omnify_product['type'] ?? '')) {
+			return null;
+		}
+
+		$omnify_vars = $omnify_variations ?? ($omnify_product['variations'] ?? null);
+		if (null === $omnify_vars && ! empty($omnify_product['id'])) {
+			$omnify_vars = $this->get_variations((int) $omnify_product['id']);
+		}
+
+		if (empty($omnify_vars) || ! is_array($omnify_vars)) {
+			return null;
+		}
+
+		$omnify_prices = [];
+		foreach ($omnify_vars as $omnify_v) {
+			$omnify_price = (null !== ($omnify_v['sale_price'] ?? null) && '' !== (string) $omnify_v['sale_price'])
+				? (float) $omnify_v['sale_price']
+				: (float) ($omnify_v['price'] ?? 0.0);
+			$omnify_prices[] = $omnify_price;
+		}
+
+		if (empty($omnify_prices)) {
+			return null;
+		}
+
+		$omnify_min = min($omnify_prices);
+		$omnify_max = max($omnify_prices);
+
+		return [
+			'min'       => $omnify_min,
+			'max'       => $omnify_max,
+			'has_range' => ($omnify_max - $omnify_min) > 0.001,
+		];
+	}
+
 	public function save_variations(int $omnify_product_id, array $omnify_variations): void {
 		global $wpdb;
 
@@ -882,6 +1207,10 @@ class Omnify_Product_Repository {
 							$omnify_new_stock,
 							__('Admin manual update (Variation)', 'omnifywp-ecommerce')
 						);
+
+						if ($omnify_old_stock_val <= 0 && $omnify_new_stock > 0) {
+							do_action('omnify_product_restocked', $omnify_product_id, $omnify_var_id);
+						}
 					}
 				}
 			} else {
@@ -930,6 +1259,10 @@ class Omnify_Product_Repository {
 	public function increment_stock(int $omnify_product_id, ?int $omnify_variation_id, int $omnify_qty): void {
 		global $wpdb;
 
+		$omnify_old_stock = $omnify_variation_id > 0
+			? $this->get_variation_stock_qty($omnify_variation_id)
+			: $this->get_product_stock_qty($omnify_product_id);
+
 		$omnify_qty = max(1, absint($omnify_qty));
 
 		if ($omnify_variation_id > 0) {
@@ -973,6 +1306,9 @@ class Omnify_Product_Repository {
 			));
 		}
 		$this->clean_product_caches($omnify_product_id);
+		if ($omnify_old_stock <= 0 && ($omnify_old_stock + $omnify_qty) > 0) {
+			do_action('omnify_product_restocked', $omnify_product_id, $omnify_variation_id);
+		}
 	}
 
 	/**
@@ -998,16 +1334,17 @@ class Omnify_Product_Repository {
 					ELSE 'instock'
 				END,
 				updated_at = %s
-				WHERE id = %d AND manage_stock = 1",
+				WHERE id = %d AND manage_stock = 1 AND (allow_backorders = 1 OR preorder_enabled = 1 OR stock_qty >= %d)",
 				$omnify_qty,
 				$omnify_qty,
 				$omnify_qty,
 				$omnify_qty,
 				$this->now(),
-				$omnify_variation_id
+				$omnify_variation_id,
+				$omnify_qty
 			));
 
-			if (false !== $omnify_updated) {
+			if ($omnify_updated && $omnify_updated > 0) {
 				$this->clean_variation_caches($omnify_variation_id);
 				$this->clean_product_caches($omnify_product_id);
 				return true;
@@ -1027,16 +1364,17 @@ class Omnify_Product_Repository {
 					ELSE 'instock'
 				END,
 				updated_at = %s
-				WHERE id = %d AND manage_stock = 1",
+				WHERE id = %d AND manage_stock = 1 AND (allow_backorders = 1 OR preorder_enabled = 1 OR stock_qty >= %d)",
 				$omnify_qty,
 				$omnify_qty,
 				$omnify_qty,
 				$omnify_qty,
 				$this->now(),
-				$omnify_product_id
+				$omnify_product_id,
+				$omnify_qty
 			));
 
-			if (false !== $omnify_updated) {
+			if ($omnify_updated && $omnify_updated > 0) {
 				$this->clean_product_caches($omnify_product_id);
 				return true;
 			}
@@ -1090,13 +1428,14 @@ class Omnify_Product_Repository {
 			$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, 
 				$wpdb->prepare(
 					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-					"SELECT * FROM {$this->table('products')} WHERE id != %d AND status = 'published' ORDER BY created_at DESC LIMIT %d",
+					"SELECT * FROM {$this->table('products')} WHERE id != %d AND status = 'published' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT %d",
 					$omnify_product_id,
 					$omnify_limit
 				),
 				ARRAY_A
 			);
-			$omnify_result = array_map([$this, 'with_terms'], array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []));
+			$omnify_hydrated = array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
+			$omnify_result = $this->with_terms_batch($omnify_hydrated);
 			wp_cache_set($omnify_cache_key, $omnify_result, 'omnifywp-ecommerce', HOUR_IN_SECONDS);
 			return $omnify_result;
 		}
@@ -1120,7 +1459,7 @@ class Omnify_Product_Repository {
 		// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 		$omnify_query = $wpdb->prepare(
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			"SELECT * FROM {$this->table('products')} WHERE id != %d AND status = 'published' AND ($omnify_where_clause) ORDER BY RAND() LIMIT %d",
+			"SELECT * FROM {$this->table('products')} WHERE id != %d AND status = 'published' AND deleted_at IS NULL AND ($omnify_where_clause) ORDER BY RAND() LIMIT %d",
 			array_merge([$omnify_product_id], $omnify_params, [$omnify_limit])
 		);
 
@@ -1138,7 +1477,7 @@ class Omnify_Product_Repository {
 			$omnify_placeholders = implode(',', array_fill(0, count($omnify_exclude_ids), '%d'));
 			$omnify_backfill_query = $wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				"SELECT * FROM {$this->table('products')} WHERE id NOT IN ($omnify_placeholders) AND status = 'published' ORDER BY created_at DESC LIMIT %d",
+				"SELECT * FROM {$this->table('products')} WHERE id NOT IN ($omnify_placeholders) AND status = 'published' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT %d",
 				array_merge($omnify_exclude_ids, [$omnify_needed])
 			);
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -1148,7 +1487,8 @@ class Omnify_Product_Repository {
 			}
 		}
 
-		$omnify_result = array_map([$this, 'with_terms'], array_map([$this, 'hydrate'], $omnify_rows));
+		$omnify_hydrated = array_map([$this, 'hydrate'], $omnify_rows);
+		$omnify_result   = $this->with_terms_batch($omnify_hydrated);
 		wp_cache_set($omnify_cache_key, $omnify_result, 'omnifywp-ecommerce', HOUR_IN_SECONDS);
 		return $omnify_result;
 	}
@@ -1167,7 +1507,7 @@ class Omnify_Product_Repository {
 		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, 
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-				"SELECT * FROM {$this->table('products')} WHERE id IN ($omnify_placeholders) AND status = 'published'",
+				"SELECT * FROM {$this->table('products')} WHERE id IN ($omnify_placeholders) AND status = 'published' AND deleted_at IS NULL",
 				...$omnify_ids
 			),
 			ARRAY_A
@@ -1177,7 +1517,7 @@ class Omnify_Product_Repository {
 			return [];
 		}
 
-		return array_map([$this, 'with_terms'], array_map([$this, 'hydrate'], $omnify_rows));
+		return $this->with_terms_batch(array_map([$this, 'hydrate'], $omnify_rows));
 	}
 
 	/**
@@ -1194,7 +1534,7 @@ class Omnify_Product_Repository {
 		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, 
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-				"SELECT * FROM {$this->table('products')} WHERE id IN ($omnify_placeholders) AND status = 'published'",
+				"SELECT * FROM {$this->table('products')} WHERE id IN ($omnify_placeholders) AND status = 'published' AND deleted_at IS NULL",
 				...$omnify_ids
 			),
 			ARRAY_A
@@ -1204,7 +1544,7 @@ class Omnify_Product_Repository {
 			return [];
 		}
 
-		return array_map([$this, 'with_terms'], array_map([$this, 'hydrate'], $omnify_rows));
+		return $this->with_terms_batch(array_map([$this, 'hydrate'], $omnify_rows));
 	}
 
 	/**
@@ -1360,7 +1700,7 @@ class Omnify_Product_Repository {
 			$omnify_table = $this->table('products');
 			$omnify_products = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, 
 				$wpdb->prepare(
-					"SELECT id, name, status, sku FROM %i WHERE type = 'download' AND id != %d ORDER BY name ASC",
+					"SELECT id, name, status, sku FROM %i WHERE type = 'download' AND id != %d AND deleted_at IS NULL ORDER BY name ASC",
 					$omnify_table,
 					$omnify_exclude_id
 				),
@@ -1382,7 +1722,7 @@ class Omnify_Product_Repository {
 			$omnify_table = $this->table('products');
 			$omnify_products = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, 
 				$wpdb->prepare(
-					'SELECT id, name, status, sku FROM %i WHERE id != %d ORDER BY name ASC',
+					'SELECT id, name, status, sku FROM %i WHERE id != %d AND deleted_at IS NULL ORDER BY name ASC',
 					$omnify_table,
 					$omnify_exclude_id
 				),
@@ -1524,6 +1864,13 @@ class Omnify_Product_Repository {
 		$omnify_new_version = (string) microtime(true);
 		update_option('omnify_products_cache_version', $omnify_new_version);
 		wp_cache_set('omnify_products_cache_version', $omnify_new_version, 'omnifywp-ecommerce');
+	}
+
+	/**
+	 * Resolve fallback thumbnail URL when a product has no custom thumbnail.
+	 */
+	public static function resolve_fallback_thumbnail_url(array $product): string {
+		return (string) apply_filters('omnify_product_fallback_thumbnail_url', '', $product);
 	}
 }
 

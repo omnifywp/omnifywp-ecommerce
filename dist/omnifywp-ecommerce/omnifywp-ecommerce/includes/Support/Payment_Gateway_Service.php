@@ -27,9 +27,11 @@ class Omnify_Payment_Gateway_Service {
 			return new WP_Error('omnify_stripe_key_missing', __('Stripe secret key is missing.', 'omnifywp-ecommerce'));
 		}
 
+		$omnify_target_key = str_starts_with($omnify_transaction_id, 'pi_') ? 'payment_intent' : 'charge';
+
 		$omnify_body = [
-			'charge' => $omnify_transaction_id,
-			'amount' => (string) $this->stripe_amount($omnify_amount, $omnify_currency),
+			$omnify_target_key => $omnify_transaction_id,
+			'amount'           => (string) $this->stripe_amount($omnify_amount, $omnify_currency),
 		];
 
 		$omnify_response = $this->stripe_request('refunds', $omnify_body, $omnify_secret_key);
@@ -129,18 +131,19 @@ class Omnify_Payment_Gateway_Service {
 			? 'https://securepay.sslcommerz.com' 
 			: 'https://sandbox.sslcommerz.com';
 
-		$omnify_body = [
-			'store_id' => $omnify_store_id,
-			'store_passwd' => $omnify_store_passwd,
-			'refund_amount' => number_format($omnify_amount, 2, '.', ''),
+		$omnify_params = [
+			'store_id'       => $omnify_store_id,
+			'store_passwd'   => $omnify_store_passwd,
+			'refund_amount'  => number_format($omnify_amount, 2, '.', ''),
 			'refund_remarks' => 'Refund for order',
-			'bank_tran_id' => $omnify_bank_tran_id,
-			'refe_id' => 'ref_' . uniqid(),
+			'bank_tran_id'   => $omnify_bank_tran_id,
+			'refe_id'        => 'ref_' . uniqid(),
+			'format'         => 'json',
 		];
 
-		$omnify_response = wp_remote_post($omnify_base . '/validator/api/merchantTransIDvalidationAPI.php', [
+		$omnify_url = add_query_arg($omnify_params, $omnify_base . '/validator/api/merchantTransIDvalidationAPI.php');
+		$omnify_response = wp_remote_get($omnify_url, [
 			'timeout' => 30,
-			'body' => $omnify_body,
 		]);
 
 		if (is_wp_error($omnify_response)) {
@@ -316,14 +319,70 @@ class Omnify_Payment_Gateway_Service {
 			return new WP_Error('omnify_paddle_credentials_missing', __('Paddle API key is missing.', 'omnifywp-ecommerce'));
 		}
 
+		if ($omnify_amount <= 0) {
+			return new WP_Error('omnify_paddle_invalid_amount', __('Refund amount must be greater than zero.', 'omnifywp-ecommerce'));
+		}
+
 		$omnify_base = 'live' === $omnify_mode ? 'https://api.paddle.com' : 'https://sandbox-api.paddle.com';
+
+		// Check transaction details from Paddle to decide full vs partial adjustment
+		$omnify_txn_res = wp_remote_get(
+			$omnify_base . '/transactions/' . rawurlencode($omnify_transaction_id),
+			[
+				'timeout' => 30,
+				'headers' => [
+					'Authorization' => 'Bearer ' . $omnify_api_key,
+					'Accept'        => 'application/json',
+				],
+			]
+		);
+
+		$omnify_is_partial = false;
+		$omnify_adj_items  = [];
+
+		if (! is_wp_error($omnify_txn_res) && 200 === (int) wp_remote_retrieve_response_code($omnify_txn_res)) {
+			$omnify_txn_body = json_decode((string) wp_remote_retrieve_body($omnify_txn_res), true);
+			$omnify_txn_data = is_array($omnify_txn_body) ? ($omnify_txn_body['data'] ?? []) : [];
+			$omnify_txn_currency = strtoupper((string) ($omnify_txn_data['currency_code'] ?? $omnify_currency));
+			$omnify_is_zero_decimal = in_array($omnify_txn_currency, ['JPY', 'KRW', 'VND', 'CLP', 'PYG', 'UGX', 'BIF', 'DJF', 'GNF', 'RWF'], true);
+			$omnify_factor = $omnify_is_zero_decimal ? 1 : 100;
+
+			$omnify_grand_total = isset($omnify_txn_data['details']['totals']['grand_total'])
+				? (int) $omnify_txn_data['details']['totals']['grand_total']
+				: (isset($omnify_txn_data['details']['totals']['total']) ? (int) $omnify_txn_data['details']['totals']['total'] : 0);
+
+			$omnify_refund_minor = (int) round($omnify_amount * $omnify_factor);
+
+			if ($omnify_grand_total > 0 && $omnify_refund_minor < $omnify_grand_total) {
+				// Find line item to adjust
+				$omnify_line_items = $omnify_txn_data['details']['line_items'] ?? ($omnify_txn_data['items'] ?? []);
+				if (! empty($omnify_line_items) && is_array($omnify_line_items)) {
+					$omnify_first_item = reset($omnify_line_items);
+					$omnify_item_id    = (string) ($omnify_first_item['id'] ?? ($omnify_first_item['item_id'] ?? ''));
+					if ('' !== $omnify_item_id) {
+						$omnify_is_partial = true;
+						$omnify_adj_items  = [
+							[
+								'item_id' => $omnify_item_id,
+								'type'    => 'partial',
+								'amount'  => (string) $omnify_refund_minor,
+							],
+						];
+					}
+				}
+			}
+		}
 
 		$omnify_body = [
 			'action'         => 'refund',
 			'transaction_id' => $omnify_transaction_id,
 			'reason'         => __('Order refund requested via Omnify e-Commerce', 'omnifywp-ecommerce'),
-			'type'           => 'full',
+			'type'           => $omnify_is_partial ? 'partial' : 'full',
 		];
+
+		if ($omnify_is_partial && ! empty($omnify_adj_items)) {
+			$omnify_body['items'] = $omnify_adj_items;
+		}
 
 		$omnify_response = wp_remote_post(
 			$omnify_base . '/adjustments',

@@ -42,7 +42,7 @@ class Omnify_Tracking_Service {
 				'omnify-google-analytics',
 				add_query_arg('id', rawurlencode($omnify_measurement_id), 'https://www.googletagmanager.com/gtag/js'),
 				[],
-				OMNIFY_VERSION,
+				null,
 				[
 					'strategy'  => 'async',
 					'in_footer' => false,
@@ -62,7 +62,7 @@ class Omnify_Tracking_Service {
 				'omnify-meta-pixel',
 				'https://connect.facebook.net/en_US/fbevents.js',
 				[],
-				OMNIFY_VERSION,
+				null,
 				[
 					'strategy'  => 'async',
 					'in_footer' => false,

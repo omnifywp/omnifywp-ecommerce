@@ -4,7 +4,7 @@ Tags: ecommerce, digital downloads, online store, payment gateway, checkout
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.4.0
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,10 +20,15 @@ Whether you are selling **digital downloads** (ebooks, software, music, audio pr
 
 ### Why Choose OmnifyWP eCommerce?
 
-* **Ultra-Lightweight & Zero Database Bloat**: Engineered with a minimal frontend footprint (<35KB total scripts) and clean SQL schema indexing. Say goodbye to heavy scripts and slow checkout pages.
-* **11 Global & Regional Payment Gateways Included Free**: Stop paying $79–$199/year for separate gateway add-ons. OmnifyWP includes native support for Stripe, PayPal, Paystack (Africa), Tap Payments (Middle East / GCC), Mollie (EU), Razorpay (India), Alipay & WeChat Pay (China), SSLCommerz (Bangladesh), Khalti & eSewa (Nepal), plus offline Direct Bank Transfer and COD.
-* **Frictionless 1-Page Checkout**: Designed specifically to slash cart abandonment with dynamic scarcity countdown timers, free-shipping threshold meters, country/state autocomplete, and seamless guest checkout.
-* **Bulletproof Digital File Protection**: Protect your digital assets with cryptographically signed HMAC-SHA256 expiring download URLs, chunked memory streaming buffers (never revealing real server paths), and a self-service Customer Portal.
+* **Save Over $800/Year in Extension Fees**: Stop paying $79–$199/year for separate gateway, abandoned cart, and digital download add-ons. OmnifyWP includes 11 native payment gateways, automated multi-item abandoned cart recovery, HMAC file encryption, customer wishlists, and multi-layout catalog switchers out of the box with zero subscription fees.
+* **Ultra-Lightweight & Scalable SQL Architecture**: Engineered with a minimal frontend footprint (<35KB total scripts) and optimized database queries. Zero N+1 queries across catalog grids, single product cards, and customer portals. Features smart deferred order aggregations and indexed schema architecture for high-volume stores.
+* **11 Global & Regional Payment Gateways Included Free**: Native support for Stripe, PayPal, Paystack (Africa), Tap Payments (Middle East / GCC), Mollie (EU), Razorpay (India), Alipay & WeChat Pay (China), SSLCommerz (Bangladesh), Khalti & eSewa (Nepal), plus offline Direct Bank Transfer and COD.
+* **Automated Webhook Synchronization**: Real-time two-way synchronization for Stripe and PayPal dashboard refunds and disputes. External refunds immediately update order records, restock inventory, and revoke digital download permissions automatically.
+* **Intelligent Multi-Item Cart Abandonment Recovery**: Automatically tracks abandoned checkouts for both single-product purchases and multi-item shopping carts. Dispatches automated personalized recovery email sequences with dynamic item summaries, incentive coupons, and 1-click cart restoration.
+* **Frictionless 1-Page Checkout Engine**: Designed specifically to slash cart abandonment with dynamic scarcity countdown timers, free-shipping threshold meters, country/state autocomplete, and seamless guest checkout.
+* **Bulletproof Digital File Protection**: Protect your digital assets with cryptographically signed HMAC-SHA256 expiring download URLs, chunked 8KB memory streaming buffers (never revealing real server paths), and a self-service Customer Portal.
+* **Timezone-Aware Promotions & Coupon Engine**: Flexible percentage or fixed discounts with store-local expiration windows, usage limits, minimum order thresholds, and live checkout validation.
+* **Automated Database Hygiene**: Built-in scheduled cron maintenance routines automatically prune expired abandoned carts and purge stale checkout sessions to ensure top database performance over years of store operation.
 * **Developer-First & Headless Ready**: Built with a 100% hook-driven architecture, customizable template overrides, and clean public REST API endpoints (`/wp-json/omnify/v1/`).
 
 ---
@@ -44,11 +49,11 @@ Whether you are selling **digital downloads** (ebooks, software, music, audio pr
 * **Responsive Full-Width Image Cards**: Engineered full-width card imagery (`aspect-ratio: auto`, `object-fit: cover`) ensuring consistent card alignment across all WordPress themes.
 * **Balanced Typography Hierarchy**: Refined title, price, description, and badge sizing with 2-line clamps that gracefully prevent clipping on long product names.
 * **Sleek Pill Action Buttons**: Streamlined `+ Quick Add` and `View Details` action buttons with balanced padding and font size, avoiding row wrapping or awkward overflows.
-* **Recently Viewed Products Section**: Automatic carousel/grid showing recently browsed items with cookie persistence and configurable product display counts.
+* **Recently Viewed Products Carousel**: High-performance batch-loaded carousel/grid showing recently browsed items with cookie persistence and configurable product display counts.
 * **Storefront Features & Trust Bar**: Configurable value propositions strip (secure payments, instant access, money-back guarantee, dedicated support) boosting checkout conversion.
 * **Faceted Sidebar Filtering**: Instant price range sliders, category pills, brand selectors, and in-stock / on-sale status filters.
 * **Storefront AJAX Quick Add**: Single-click add-to-cart with smooth micro-animations and live header badge updates.
-* **High-Impact Product Details**: Conversion-focused product pages with media galleries, trust badges, feature callouts, and sticky purchase panels.
+* **High-Impact Product Details**: Conversion-focused product pages with media galleries, color swatches, trust badges, feature callouts, and sticky purchase panels.
 * **Simple, Variable & Bundled Products**: Sell standard standalone products, multi-attribute variants (sizes, formats, licenses) with unique SKUs and pricing, or bundle multiple items together.
 * **Integrated Customer Wishlist**: Allow shoppers to save favorite products for later, driving repeat visits and higher customer lifetime value.
 * **Cart Scarcity Countdown**: Urgency-driven countdown timer with session storage persistence that drives higher checkout completion.
@@ -56,20 +61,21 @@ Whether you are selling **digital downloads** (ebooks, software, music, audio pr
 
 #### Conversion-Optimized 1-Page Checkout Engine
 * **Single-Page Checkout**: Streamlined checkout layout requiring zero page reloads, drastically reducing checkout drop-off.
+* **Intelligent Multi-Item Abandoned Cart Recovery**: Tracks abandoned carts from both single products and multi-item shopping carts, dispatching automated recovery emails with dynamic item summaries and 1-click recovery URLs.
 * **Country-First Dynamic Selectors**: Smart address selectors with automatic state/region filtering and saved address book autofill.
 * **Flexible Account Handling**: Seamless support for guest checkouts, optional account creation, or automatic account provisioning.
-* **Coupons & Discount Rules**: Create percentage or fixed discounts with usage caps, expiration dates, and minimum order values.
-* **Automated Abandoned Cart Recovery**: Tracks abandoned carts and provides recovery links to win back lost sales automatically.
+* **Timezone-Aware Coupons & Discount Rules**: Percentage or fixed discounts with usage caps, minimum spend rules, and local store timezone expiration accuracy.
+* **Express Digital Wallets**: Native support for Apple Pay, Google Pay, and one-click express payment buttons.
 
 #### Enterprise-Grade Digital File Delivery
 * **Cryptographically Signed URLs**: Generates HMAC-SHA256 authenticated links with customizable expiration windows and download attempt limits.
 * **Secure Chunked Streaming**: Delivers files through 8KB memory-efficient streaming buffers that conceal your physical server paths and prevent hotlinking or memory exhaustion.
-* **Self-Service Customer Portal**: Embed `[omnify_customer_downloads]` to give buyers an intuitive dashboard to access purchased files, view order histories, and manage billing details.
+* **Fast Self-Service Customer Portal**: Embed `[omnify_customer_downloads]` to give buyers an instant, batch-loaded dashboard to access purchased files, view order histories, and manage billing details with sub-millisecond response times.
 * **Comprehensive Download Logs**: Audit IP addresses, user agents, download counts, and bandwidth directly in your WordPress admin.
 
 #### Built-In Payment Gateways (Zero Addon Fees)
-* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, and Stripe Checkout.
-* **PayPal Commerce**: PayPal Express Checkout, credit/debit cards, and smart pay buttons.
+* **Stripe**: Credit/debit cards, Apple Pay, Google Pay, Stripe Checkout, plus automated two-way webhook sync for dashboard refunds and disputes.
+* **PayPal Commerce**: PayPal Express Checkout, credit/debit cards, smart pay buttons, and automated refund webhook synchronization.
 * **Paystack (Africa)**: Market-leading payment infrastructure for Nigeria, Ghana, Kenya, and South Africa supporting cards, Mobile Money (M-Pesa, MTN, Airtel), EFT bank transfers, and USSD.
 * **Tap Payments (Middle East & GCC)**: Full coverage across Saudi Arabia, UAE, Kuwait, Bahrain, Qatar, Oman, Egypt, and Jordan with mada, KNET, Benefit, NAPS, and cards.
 * **Mollie (European Union)**: Seamless EU commerce supporting iDEAL, Bancontact, SEPA Direct Debit / Bank Transfer, Klarna, and cards.
@@ -79,13 +85,14 @@ Whether you are selling **digital downloads** (ebooks, software, music, audio pr
 * **Alipay & WeChat Pay**: Comprehensive Chinese cross-border mobile commerce with QR code checkout.
 * **SSLCommerz (Bangladesh)**: Top gateway for Bangladesh supporting cards, mobile banking (bKash, Nagad, Rocket), and internet banking.
 * **Offline & Manual Payments**: Configurable instructions for Direct Bank Transfer (BACS), Cheque Payments, and Cash on Delivery (COD).
-* **One-Click Refunds**: Issue full or partial refunds directly from the WordPress order management screen for supported gateways.
+* **One-Click & Partial Refunds**: Issue full or partial refunds directly from the WordPress order screen, with dedicated `Partially Refunded` status tracking and automated inventory restocking.
 
 #### Marketing, Analytics & Taxes
 * **Google Analytics 4 & Meta Pixel**: Built-in conversion tracking for purchase events, item revenue, order IDs, and cart behavior.
 * **Country-Specific Tax Rules**: Multi-tier tax tables with inclusive/exclusive pricing toggles and shipping tax options.
 * **Shipping Zones & Rules**: Define country- and region-based shipping rates, flat fees, and free shipping thresholds.
-* **Automated HTML Email Notifications**: Professional order confirmations, payment receipts, signed download access emails, and admin alerts.
+* **Automated HTML Email Notifications**: Professional order confirmations, payment receipts, signed download access emails, abandoned cart recovery sequences, and admin alerts.
+* **Automated Database Maintenance**: Scheduled hourly cron cleanup for expired carts, stale checkout sessions, and automated pending order cancellation.
 
 ---
 
@@ -138,18 +145,43 @@ Yes. OmnifyWP provides clean, public endpoints under `/wp-json/omnify/v1/` to ac
 
 == Screenshots ==
 
-1. Executive store dashboard with real-time financial KPIs, recent transactions, and quick action shortcuts.
-2. Product catalog management table with multi-attribute filtering, date ranges, and stock indicators.
-3. Comprehensive product editor interface for pricing, stock management, dimensions, and digital file attachments.
-4. Order fulfillment directory with status workflows, item breakdowns, fraud risk assessment, and one-click refund handling.
-5. Customer Relationship Management (CRM) directory tracking buyer histories, lifetime value, and saved addresses.
-6. Promotional coupons engine with percentage/fixed discounts, usage limits, and expiration controls.
-7. Store analytics dashboard presenting sales figures, conversion metrics, AOV, and CSV export.
-8. Automated abandoned cart recovery tracking lost checkouts and customer re-engagement workflows.
-9. Comprehensive store payment center covering 10+ global and regional gateways with zero platform fees.
-10. High-converting customer storefront catalog grid with responsive sidebar filters and AJAX Quick Add.
+1. Executive store dashboard with real-time financial KPIs ($48,290.00 Gross Sales, 1,248 Orders), 30-day health monitor, and revenue charts.
+2. Product catalog management table with multi-attribute filtering, instant search, stock level badges, SKU tracking, and bulk actions.
+3. 4-step product creation wizard with pricing tiers, cryptographic HMAC digital file locker, and live "Preview Product" modal.
+4. Order fulfillment & lifecycle directory with status workflows, automated fraud risk scoring, PDF invoices, and one-click gateway refunds.
+5. Customer Relationship Management (CRM) directory tracking customer lifetime value (LTV), order histories, and saved addresses.
+6. Promotions & coupons engine with percentage and fixed discount rules, usage counters, expiration countdowns, and coupon analytics.
+7. Payment gateway center supporting 10+ built-in global and regional gateways (Stripe, PayPal, Razorpay, Mollie, Square, etc.) with zero platform fees.
+8. Automated store email notifications with 16 automated triggers, visual HTML template preview modal, and dynamic merge tags.
+9. Modern Elessi-style single product page with 3-column conversion layout, vertical gallery, color swatches, trust badges, and instant checkout.
+10. Conversion-optimized cart & one-page checkout with urgency countdown timer, free shipping progress bar, express digital wallets, and 1-click order bump.
 
 == Changelog ==
+
+= 1.4.2 =
+* Feature: Multi-Item Abandoned Cart Capture & Recovery — Extended cart abandonment tracking to capture multi-item shopping carts as well as single-product checkouts, ensuring recovery emails and dynamic item summary merge tags trigger reliably.
+* Feature: Gateway Dashboard Webhook Synchronization — Added native webhook event handlers for Stripe (`charge.refunded`, `charge.dispute.created`) and PayPal (`PAYMENT.CAPTURE.REFUNDED`), automatically syncing external dashboard refunds with order status, inventory restoration, and customer file revocation.
+* Feature: Partially Refunded Order Workflow & Audit Trails — Introduced dedicated `'partially_refunded'` status to distinguish partially refunded orders from fully paid orders across admin order listings, customer activity logs, and order lifecycle automation hooks.
+* Performance: N+1 Review & Rating Query Elimination — Implemented batch rating summarization across single product page (PDP) related, upsell, cross-sell, and recently viewed cards, reducing template database queries from 30+ down to a single batch query.
+* Performance: High-Volume Customer Pagination Optimization — Redesigned customer listing queries to defer order aggregations during standard pagination, switching to lightweight indexed batch queries for page records and eliminating full-table order grouping scans on large databases.
+* Performance: Customer Downloads Tab Acceleration — Added batch file resolution in `Product_File_Repository::all_for_products()` and streamlined `Customer_Access_Repository` to pre-fetch all products and digital files in 3 queries instead of 30+ sequential lookups.
+* Performance: Customer Portal Refund Eligibility Memoization — Implemented runtime static caching for product refund policy lookups across order line items, eliminating redundant database queries on portal order histories.
+* Performance: PDP Recently Viewed Products Batch Loading — Replaced sequential single-item lookups with `Product_Repository::find_many()` to load all recently viewed products in a single SQL query.
+* Fix: Coupon Expiration Timezone Shift — Resolved timezone discrepancy in coupon expiration normalization by anchoring date-only strings to the WordPress site's local timezone via `get_gmt_from_date()` and `wp_timezone()`.
+* Maintenance: Automated Abandoned Cart Database Hygiene — Added automated maintenance routines (`mark_expired()` and `cleanup_expired()`) hooked into the hourly cleanup cron to prevent indefinite database growth.
+* Reliability: Safe Download Normalization & Windows Path Resolution — Hardened path verification across local files and upload directories with cross-platform normalization.
+
+= 1.4.1 =
+* Admin Tools & Diagnostics Modernization: Complete design and UX overhaul across all Tools pages (System Tools & Seeding, Import/Export, Activity Log, and API Keys / Connection Diagnostics).
+* Database Diagnostics Overview: Real-time 4-card status strip reporting live counts for Products, Orders, Customers, and Reviews.
+* System Tools & Seeding: Modern animated progress bar for demo data generation, structured granular database cleanup actions, server runtime specifications dashboard, and elevated danger zone.
+* Import & Export: Redesigned export cards with emerald accent bubbles and format tags, streamlined CSV upload dropzone, and modernized CSV header specification table.
+* Activity Audit Trail: Replaced legacy styling with modern table components, circular user avatars, category-specific badge treatments, and fixed pagination character encoding issues.
+* REST API & Diagnostics: Modernized API key generation form, clean active credentials table, outbound webhooks manager with trigger topic pills, and polished remote URL connectivity checker.
+* Payment Gateway Connectivity: Fixed nested button markup on diagnostic cards and improved Stripe and PayPal connection test feedback.
+* Storefront Navigation: Fixed broken URL parameter handling between catalog listings and single product details pages.
+* Admin Settings Redesign: Comprehensive visual polish across General, Localization, Currency, Payment, Tax, Shipping, Email, Customer Portal, and Advanced settings tabs.
+* Standards & Compliance: Standardized all administrative interfaces, scripts, and buttons with Dashicons and clean text labels.
 
 = 1.4.0 =
 * Storefront Interactivity: Added dynamic Flash Sale announcement ticker with live session-persisted countdown timer and 1-click coupon code copy button (`FLASH30`) with instant clipboard feedback.
@@ -207,6 +239,12 @@ Yes. OmnifyWP provides clean, public endpoints under `/wp-json/omnify/v1/` to ac
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+Version 1.4.2 introduces multi-item abandoned cart capture, two-way Stripe and PayPal refund webhook synchronization, partially refunded order status tracking, major database query optimizations across customer and product listings, coupon timezone accuracy, and automated database hygiene. Recommended for all stores.
+
+= 1.4.1 =
+Version 1.4.1 brings a complete redesign of the administrative Tools and Diagnostics pages, real-time database health metrics, streamlined CSV import/export, modernized REST API key and webhook managers, settings tabs polish, and bug fixes for storefront navigation. Recommended for all stores.
 
 = 1.4.0 =
 Version 1.4.0 introduces a major storefront product card redesign, 4-layout catalog switcher, full-width responsive image layouts, balanced typography, compact pill buttons, and unified Recently Viewed Products grid. Recommended for all stores.

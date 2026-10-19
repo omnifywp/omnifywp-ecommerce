@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OmnifyWP WordPress.org Banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1544px;
+    height: 500px;
+    overflow: hidden;
+    background: #FFFFFF;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* Subtle ambient lighting */
+  .ambient-glow-1 {
+    position: absolute;
+    width: 650px;
+    height: 650px;
+    left: -120px;
+    top: -220px;
+    background: radial-gradient(circle, rgba(15, 118, 110, 0.045) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+  }
+  .ambient-glow-2 {
+    position: absolute;
+    width: 750px;
+    height: 750px;
+    right: 30px;
+    top: -180px;
+    background: radial-gradient(circle, rgba(15, 118, 110, 0.05) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+  }
+
+  /* Left Content */
+  .left-container {
+    position: absolute;
+    left: 58px;
+    top: 52px;
+    bottom: 48px;
+    width: 685px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 10;
+  }
+
+  /* Brand Header */
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #093725 0%, #031c12 100%);
+    border: 1.2px solid rgba(52, 211, 153, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(9, 55, 37, 0.28);
+    flex-shrink: 0;
+  }
+  .brand-text-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .brand-title {
+    font-size: 24.5px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+  .brand-tagline {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    margin-top: 3px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Main Headline */
+  .headline-wrap {
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+  .headline-main {
+    font-size: 64px;
+    font-weight: 850;
+    line-height: 1.01;
+    letter-spacing: -0.04em;
+  }
+  .headline-dark {
+    color: #0f172a;
+  }
+  .headline-teal {
+    color: #0f766e;
+  }
+
+  /* Subtitle */
+  .subtitle {
+    font-size: 19.5px;
+    font-weight: 450;
+    color: #475569;
+    line-height: 1.45;
+    max-width: 630px;
+    letter-spacing: -0.015em;
+  }
+
+  /* Feature Badges Strip */
+  .features-strip {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 4px;
+  }
+  .feature-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .feature-icon-square {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #0f766e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.28);
+    flex-shrink: 0;
+  }
+  .feature-icon-square svg {
+    width: 24px;
+    height: 24px;
+    fill: #FFFFFF;
+    stroke: none;
+  }
+  .feature-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .feature-text-bold {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .feature-text-sub {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .badge-divider {
+    width: 1px;
+    height: 40px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+  }
+
+  /* Right Side Mockup */
+  .right-mockup-wrap {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 814px;
+    height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .right-mockup-img {
+    width: 814px;
+    height: 500px;
+    object-fit: cover;
+    object-position: right center;
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <div class="left-container">
+    <!-- Brand Info -->
+    <div class="brand-group">
+      <div class="brand-icon-box">
+        <svg width="26" height="26" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(1, 1) scale(0.5)">
+            <path d="M18 7.5C12.201 7.5 7.5 12.201 7.5 18C7.5 23.799 12.201 28.5 18 28.5C21.468 28.5 24.526 26.815 26.4 24.225C26.828 23.636 26.545 22.809 25.828 22.607C25.178 22.423 24.522 22.754 24.161 23.313C22.695 25.586 20.518 26.7 18 26.7C13.195 26.7 9.3 22.805 9.3 18C9.3 13.195 13.195 9.3 18 9.3C20.655 9.3 23.018 10.493 24.606 12.383L22.188 14.502C21.579 15.035 21.954 16.05 22.768 16.05H28.65C29.119 16.05 29.5 15.669 29.5 15.2V9.45C29.5 8.647 28.497 8.273 27.973 8.877L25.986 10.749C24.004 8.736 21.157 7.5 18 7.5Z" fill="#F0FDF4"/>
+            <path d="M19.75 12.5L14.25 19.25H18.25L16.25 24.5L22.75 17.25H18.75L19.75 12.5Z" fill="#34D399"/>
+          </g>
+        </svg>
+      </div>
+      <div class="brand-text-col">
+        <span class="brand-title">OmnifyWP</span>
+        <span class="brand-tagline">The High-Speed Autonomous eCommerce Engine</span>
+      </div>
+    </div>
+
+    <!-- Main Headline -->
+    <div class="headline-wrap">
+      <div class="headline-main headline-dark">Modern eCommerce</div>
+      <div class="headline-main headline-teal">Without the Bloat.</div>
+    </div>
+
+    <!-- Subtitle -->
+    <p class="subtitle">
+      Fast online stores, digital downloads and global payments —<br>everything you need, out of the box.
+    </p>
+
+    <!-- 3 Features with Dividers -->
+    <div class="features-strip">
+      <div class="feature-pill">
+        <div class="feature-icon-square">
+          <!-- Lightning Bolt -->
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+        </div>
+        <div class="feature-text">
+          <span class="feature-text-bold">11 Built-in</span>
+          <span class="feature-text-sub">Payment Gateways</span>
+        </div>
+      </div>
+
+      <div class="badge-divider"></div>
+
+      <div class="feature-pill">
+        <div class="feature-icon-square">
+          <!-- Shopping Cart -->
+          <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </div>
+        <div class="feature-text">
+          <span class="feature-text-bold">1-Page</span>
+          <span class="feature-text-sub">Checkout</span>
+        </div>
+      </div>
+
+      <div class="badge-divider"></div>
+
+      <div class="feature-pill">
+        <div class="feature-icon-square">
+          <!-- Document with Downward Download Arrow -->
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1 14v-4h-2v4H8l4 4 4-4h-3zm1-7V3.5L18.5 9H14z"/></svg>
+        </div>
+        <div class="feature-text">
+          <span class="feature-text-bold">Secure</span>
+          <span class="feature-text-sub">Digital Downloads</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side Visual Mockup -->
+  <div class="right-mockup-wrap">
+    <img src="scaled_right_mockup.png" class="right-mockup-img" alt="OmnifyWP Storefront and Checkout Mockup">
+  </div>
+</body>
+</html>

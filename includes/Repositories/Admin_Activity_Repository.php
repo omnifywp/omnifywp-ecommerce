@@ -22,22 +22,31 @@ class Omnify_Admin_Activity_Repository {
 		global $wpdb;
 
 		$omnify_ip = '';
-		if (! empty($_SERVER['HTTP_CLIENT_IP'])) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$omnify_ip = $_SERVER['HTTP_CLIENT_IP'];
-		} elseif (! empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$omnify_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		} elseif (! empty($_SERVER['REMOTE_ADDR'])) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$omnify_ip = $_SERVER['REMOTE_ADDR'];
+		$omnify_headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+		foreach ($omnify_headers as $omnify_header) {
+			if (! empty($_SERVER[$omnify_header])) {
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$omnify_raw = (string) $_SERVER[$omnify_header];
+				if (str_contains($omnify_raw, ',')) {
+					$omnify_parts     = explode(',', $omnify_raw);
+					$omnify_candidate = trim($omnify_parts[0]);
+				} else {
+					$omnify_candidate = trim($omnify_raw);
+				}
+				if (filter_var($omnify_candidate, FILTER_VALIDATE_IP)) {
+					$omnify_ip = $omnify_candidate;
+					break;
+				}
+			}
 		}
 
-		if (strpos($omnify_ip, ',') !== false) {
-			$omnify_parts = explode(',', $omnify_ip);
-			$omnify_ip = trim($omnify_parts[0]);
+		if ('' === $omnify_ip) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$omnify_remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+			$omnify_ip     = filter_var($omnify_remote, FILTER_VALIDATE_IP) ? $omnify_remote : '0.0.0.0';
 		}
-		$omnify_ip_address = sanitize_text_field((string) $omnify_ip);
+
+		$omnify_ip_address = sanitize_text_field($omnify_ip);
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 		$omnify_user_agent = sanitize_text_field((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 
@@ -207,6 +216,37 @@ class Omnify_Admin_Activity_Repository {
 			do_action('omnify_admin_activities_cleared');
 		}
 		return $omnify_cleared;
+	}
+
+	/**
+	 * Get distinct actors who have recorded activities.
+	 *
+	 * @return array<int, string> Map of user_id => actor_name
+	 */
+	public function get_actors(): array {
+		global $wpdb;
+
+		$omnify_table = $this->omnify_schema->table('admin_activities');
+		$omnify_users = $wpdb->users;
+
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			"SELECT DISTINCT a.user_id, COALESCE(NULLIF(u.display_name, ''), u.user_login, CONCAT('#', a.user_id)) AS actor_name
+			 FROM {$omnify_table} a
+			 LEFT JOIN {$omnify_users} u ON a.user_id = u.ID
+			 WHERE a.user_id > 0
+			 ORDER BY actor_name ASC",
+			ARRAY_A
+		);
+
+		$omnify_actors = [];
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_r) {
+				$omnify_actors[(int) $omnify_r['user_id']] = (string) $omnify_r['actor_name'];
+			}
+		}
+
+		return $omnify_actors;
 	}
 
 	private function hydrate(array $omnify_row): array {

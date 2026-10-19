@@ -62,7 +62,8 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 			?></p>
 		</div>
 		<div class="omnify-header-row__actions">
-			<a href="<?php echo esc_url(home_url('/')); ?>" target="_blank" class="omnify-button omnify-button--secondary">
+			<?php $omnify_storefront_url = function_exists('omnify_get_storefront_url') ? omnify_get_storefront_url() : home_url('/storefront/'); ?>
+			<a href="<?php echo esc_url($omnify_storefront_url); ?>" target="_blank" class="omnify-button omnify-button--secondary">
 				<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; margin-right: 4px;"></span>
 				<?php esc_html_e('View Storefront', 'omnifywp-ecommerce'); ?>
 			</a>

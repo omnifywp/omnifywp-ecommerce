@@ -45,57 +45,96 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 		</div>
 	<?php endif; ?>
 
-	<div class="omnify-card">
-		<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 32px;">
-			<!-- Left Side: Add Form -->
-			<div>
-				<h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e('Add New Tag', 'omnifywp-ecommerce'); ?></h3>
+	<div class="omnify-taxonomy-grid">
+		<!-- Left Card: Add Tag Form -->
+		<div class="omnify-card omnify-tax-card omnify-tax-card--form">
+			<div class="omnify-tax-card__header">
+				<div class="omnify-tax-card__header-icon">
+					<span class="dashicons dashicons-tag"></span>
+				</div>
+				<div>
+					<h3 class="omnify-tax-card__title"><?php esc_html_e('Add New Tag', 'omnifywp-ecommerce'); ?></h3>
+					<p class="omnify-tax-card__subtitle"><?php esc_html_e('Create a product label for search & filtering', 'omnifywp-ecommerce'); ?></p>
+				</div>
+			</div>
+			<div class="omnify-tax-card__body">
 				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 					<?php wp_nonce_field('omnify_add_global_tag', 'omnify_add_global_tag_nonce'); ?>
 					<input type="hidden" name="action" value="omnify_add_global_tag" />
 					
-					<div class="omnify-form-group" style="margin-bottom: 16px;">
-						<label for="tag_name"><?php esc_html_e('Tag Name', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="tag_name" name="tag_name" placeholder="e.g. Hot, New, Promo" required style="width: 100%; height: 36px; padding: 7px 12px; font-size: 14px;" />
+					<div class="omnify-form-group" style="margin-bottom: 22px;">
+						<label for="tag_name" class="omnify-field-label"><?php esc_html_e('Tag Name', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="tag_name" name="tag_name" class="omnify-input" placeholder="e.g. Hot, New, Promo, Summer" required />
+						<span class="omnify-field-hint"><?php esc_html_e('Tags help customers filter and discover items quickly.', 'omnifywp-ecommerce'); ?></span>
 					</div>
 
-					<button type="submit" class="omnify-button omnify-button--primary omnify-button--full" style="height: 36px; justify-content: center; align-items: center;">
+					<button type="submit" class="omnify-button omnify-button--primary omnify-button--full" style="height: 40px; justify-content: center; font-size: 13.5px; font-weight: 600;">
+						<span class="dashicons dashicons-plus" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; margin-right: 4px;"></span>
 						<?php esc_html_e('Add Tag', 'omnifywp-ecommerce'); ?>
 					</button>
 				</form>
 			</div>
-			<!-- Right Side: List -->
-			<div>
-				<h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e('Global Tags List', 'omnifywp-ecommerce'); ?></h3>
-				<?php if (empty($omnify_global_tags)) : ?>
-					<p style="font-size: 13px; color: var(--omnify-gray-600); font-style: italic; margin-top: 0;"><?php esc_html_e('No global tags created yet.', 'omnifywp-ecommerce'); ?></p>
-				<?php else : ?>
-					<div class="omnify-table-wrapper">
-						<table class="omnify-table">
-							<thead>
-								<tr>
-									<th><?php esc_html_e('Name', 'omnifywp-ecommerce'); ?></th>
-									<th><?php esc_html_e('Slug', 'omnifywp-ecommerce'); ?></th>
-									<th style="width: 80px; text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($omnify_global_tags as $omnify_idx => $omnify_t) : ?>
-									<tr>
-										<td style="font-weight: 600;"><?php echo esc_html($omnify_t['name']); ?></td>
-										<td><?php echo esc_html($omnify_t['slug']); ?></td>
-										<td style="text-align: right;">
-											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_tag&index=' . $omnify_idx), 'omnify_delete_global_tag_' . $omnify_idx)); ?>" class="omnify-button omnify-button--danger omnify-button--sm js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete tag "%s"?', 'omnifywp-ecommerce'), $omnify_t['name'])); ?>" style="text-decoration: none; padding: 4px 8px; font-size: 11px;">
-												<?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?>
-											</a>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				<?php endif; ?>
+		</div>
+
+		<!-- Right Card: Global Tags List -->
+		<div class="omnify-card omnify-tax-card omnify-tax-card--list">
+			<div class="omnify-tax-card__header">
+				<div class="omnify-tax-card__header-icon">
+					<span class="dashicons dashicons-list-view"></span>
+				</div>
+				<div style="flex: 1;">
+					<h3 class="omnify-tax-card__title"><?php esc_html_e('Global Tags', 'omnifywp-ecommerce'); ?></h3>
+					<p class="omnify-tax-card__subtitle"><?php esc_html_e('All defined tags across your catalog', 'omnifywp-ecommerce'); ?></p>
+				</div>
+				<span class="omnify-tax-count-badge">
+					<?php printf(esc_html(_n('%d Tag', '%d Tags', count($omnify_global_tags), 'omnifywp-ecommerce')), count($omnify_global_tags)); ?>
+				</span>
 			</div>
+			<?php if (empty($omnify_global_tags)) : ?>
+				<div class="omnify-tax-empty-state">
+					<div class="omnify-tax-empty-icon">
+						<span class="dashicons dashicons-tag"></span>
+					</div>
+					<h4><?php esc_html_e('No tags yet', 'omnifywp-ecommerce'); ?></h4>
+					<p><?php esc_html_e('Use the form on the left to add your first product tag.', 'omnifywp-ecommerce'); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="omnify-table-wrapper" style="margin: 0; border: 0; border-radius: 0; box-shadow: none;">
+					<table class="omnify-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Name', 'omnifywp-ecommerce'); ?></th>
+								<th><?php esc_html_e('Slug', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 80px; text-align: right;"><?php esc_html_e('Actions', 'omnifywp-ecommerce'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($omnify_global_tags as $omnify_idx => $omnify_t) : ?>
+								<tr>
+									<td>
+										<div class="omnify-tax-name-cell">
+											<span class="omnify-tax-icon-wrap omnify-tax-icon-wrap--tag">
+												<span class="dashicons dashicons-tag"></span>
+											</span>
+											<span class="omnify-tax-name-text"><?php echo esc_html($omnify_t['name']); ?></span>
+										</div>
+									</td>
+									<td>
+										<code class="omnify-slug-pill">/<?php echo esc_html($omnify_t['slug']); ?></code>
+									</td>
+									<td style="text-align: right;">
+										<div class="omnify-table-actions" style="justify-content: flex-end;">
+											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_tag&index=' . $omnify_idx), 'omnify_delete_global_tag_' . $omnify_idx)); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete tag "%s"?', 'omnifywp-ecommerce'), $omnify_t['name'])); ?>" title="<?php esc_attr_e('Delete Tag', 'omnifywp-ecommerce'); ?>">
+												<span class="dashicons dashicons-trash"></span>
+											</a>
+										</div>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>

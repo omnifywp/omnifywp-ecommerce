@@ -116,7 +116,8 @@ class Omnify_Schema {
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
 				KEY product_id (product_id),
-				KEY slug (slug)
+				KEY slug (slug),
+				KEY name (name)
 			) {$omnify_charset};",
 			'product_tags' => "CREATE TABLE {$this->table('product_tags')} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -126,7 +127,8 @@ class Omnify_Schema {
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
 				KEY product_id (product_id),
-				KEY slug (slug)
+				KEY slug (slug),
+				KEY name (name)
 			) {$omnify_charset};",
 			'product_brands' => "CREATE TABLE {$this->table('product_brands')} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -136,7 +138,8 @@ class Omnify_Schema {
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
 				KEY product_id (product_id),
-				KEY slug (slug)
+				KEY slug (slug),
+				KEY name (name)
 			) {$omnify_charset};",
 			'product_files' => "CREATE TABLE {$this->table('product_files')} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -319,6 +322,8 @@ class Omnify_Schema {
 				fraud_score INT NOT NULL DEFAULT 0,
 				fraud_flags TEXT NULL,
 				ip_address VARCHAR(45) NULL,
+				stock_reduced TINYINT NOT NULL DEFAULT 0,
+				restocked TINYINT NOT NULL DEFAULT 0,
 				deleted_at DATETIME NULL,
 				created_at DATETIME NOT NULL,
 				updated_at DATETIME NOT NULL,
@@ -328,6 +333,7 @@ class Omnify_Schema {
 				KEY transaction_id (transaction_id),
 				KEY status (status),
 				KEY created_at (created_at),
+				KEY customer_status_created (customer_id, status, created_at),
 				UNIQUE KEY order_number (order_number)
 			) {$omnify_charset};",
 			'order_items' => "CREATE TABLE {$this->table('order_items')} (
@@ -340,6 +346,7 @@ class Omnify_Schema {
 				tax DECIMAL(18,6) NOT NULL DEFAULT 0,
 				quantity INT NOT NULL DEFAULT 1,
 				refunded_qty INT NOT NULL DEFAULT 0,
+				item_meta LONGTEXT NULL,
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
 				KEY order_id (order_id),
@@ -445,9 +452,13 @@ class Omnify_Schema {
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				event_id VARCHAR(190) NOT NULL,
 				gateway VARCHAR(50) NOT NULL,
+				status VARCHAR(32) NOT NULL DEFAULT 'processed',
+				payload LONGTEXT NULL,
+				error_message TEXT NULL,
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
-				UNIQUE KEY event_gateway (event_id, gateway)
+				UNIQUE KEY event_gateway (event_id, gateway),
+				KEY status (status)
 			) {$omnify_charset};",
 			'inventory_logs' => "CREATE TABLE {$this->table('inventory_logs')} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -522,6 +533,19 @@ class Omnify_Schema {
 				PRIMARY KEY (id),
 				UNIQUE KEY object_meta (object_type, object_id, meta_key),
 				KEY meta_key (meta_key)
+			) {$omnify_charset};",
+			'stock_subscribers' => "CREATE TABLE {$this->table('stock_subscribers')} (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				product_id BIGINT UNSIGNED NOT NULL,
+				variation_id BIGINT UNSIGNED NULL,
+				email VARCHAR(190) NOT NULL,
+				status VARCHAR(32) NOT NULL DEFAULT 'pending',
+				notified_at DATETIME NULL,
+				created_at DATETIME NOT NULL,
+				PRIMARY KEY (id),
+				KEY product_variation (product_id, variation_id),
+				KEY email_product (email(100), product_id),
+				KEY status_notified (status, notified_at)
 			) {$omnify_charset};",
 		];
 	}

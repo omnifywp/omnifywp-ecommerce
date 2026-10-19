@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Omnify_Migrations {
-	private const VERSION = '2026_10_08_000089_orders_lookup_indexes';
+	private const VERSION = '2026_10_18_000094_stock_subscribers';
 
 	public function __construct(private Omnify_Schema $omnify_schema) {}
 
@@ -64,6 +64,10 @@ class Omnify_Migrations {
 		$this->migrate_add_customer_note_visibility();
 		$this->migrate_add_order_items_compound_index();
 		$this->migrate_add_orders_indexes();
+		$this->migrate_add_order_items_item_meta();
+		$this->migrate_add_product_taxonomy_indexes();
+		$this->migrate_add_order_stock_lifecycle_columns();
+		$this->migrate_webhook_events_diagnostic_columns();
 
 		$this->record(self::VERSION);
 		update_option('omnify_schema_version', self::VERSION);
@@ -1300,6 +1304,75 @@ class Omnify_Migrations {
 
 		if (empty($this->table_indexes($omnify_table, 'customer_status_created'))) {
 			$this->add_key($omnify_table, 'customer_status_created', 'customer_id, status, created_at');
+		}
+	}
+
+	private function migrate_add_order_items_item_meta(): void {
+		global $wpdb;
+
+		$omnify_table = $this->omnify_schema->table('order_items');
+		if (! $this->table_exists($omnify_table)) {
+			return;
+		}
+
+		if (! $this->column_exists($omnify_table, 'item_meta')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN item_meta LONGTEXT NULL AFTER refunded_qty', $omnify_table));
+		}
+	}
+
+	private function migrate_add_product_taxonomy_indexes(): void {
+		$omnify_tables = [
+			$this->omnify_schema->table('product_categories'),
+			$this->omnify_schema->table('product_tags'),
+			$this->omnify_schema->table('product_brands'),
+		];
+
+		foreach ($omnify_tables as $omnify_table) {
+			if (! $this->table_exists($omnify_table)) {
+				continue;
+			}
+
+			if (empty($this->table_indexes($omnify_table, 'name'))) {
+				$this->add_key($omnify_table, 'name', 'name');
+			}
+		}
+	}
+
+	private function migrate_add_order_stock_lifecycle_columns(): void {
+		global $wpdb;
+
+		$omnify_orders_table = $this->omnify_schema->table('orders');
+		if (! $this->table_exists($omnify_orders_table)) {
+			return;
+		}
+
+		if (! $this->column_exists($omnify_orders_table, 'stock_reduced')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN stock_reduced TINYINT NOT NULL DEFAULT 0 AFTER ip_address', $omnify_orders_table));
+		}
+		if (! $this->column_exists($omnify_orders_table, 'restocked')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN restocked TINYINT NOT NULL DEFAULT 0 AFTER stock_reduced', $omnify_orders_table));
+		}
+	}
+
+	private function migrate_webhook_events_diagnostic_columns(): void {
+		global $wpdb;
+
+		$omnify_table = $this->omnify_schema->table('webhook_events');
+		if (! $this->table_exists($omnify_table)) {
+			return;
+		}
+
+		if (! $this->column_exists($omnify_table, 'status')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare("ALTER TABLE %i ADD COLUMN status VARCHAR(32) NOT NULL DEFAULT 'processed' AFTER gateway", $omnify_table));
+		}
+		if (! $this->column_exists($omnify_table, 'payload')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN payload LONGTEXT NULL AFTER status', $omnify_table));
+		}
+		if (! $this->column_exists($omnify_table, 'error_message')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN error_message TEXT NULL AFTER payload', $omnify_table));
+		}
+		if (empty($this->table_indexes($omnify_table, 'status'))) {
+			$this->add_key($omnify_table, 'status', 'status');
 		}
 	}
 

@@ -12,6 +12,9 @@ $omnify_chip = $omnify_template_vars['omnify_chip'] ?? null;
 $omnify_coupon = $omnify_template_vars['omnify_coupon'] ?? null;
 $omnify_coupon_csv_values = $omnify_template_vars['omnify_coupon_csv_values'] ?? null;
 $omnify_coupons = $omnify_template_vars['omnify_coupons'] ?? null;
+$omnify_paged = (int) ($omnify_template_vars['omnify_paged'] ?? 1);
+$omnify_total_pages = (int) ($omnify_template_vars['omnify_total_pages'] ?? 1);
+$omnify_total_coupons = (int) ($omnify_template_vars['omnify_total_coupons'] ?? (is_countable($omnify_coupons) ? count($omnify_coupons) : 0));
 $omnify_cp_chips = $omnify_template_vars['omnify_cp_chips'] ?? null;
 $omnify_currency = $omnify_template_vars['omnify_currency'] ?? null;
 $omnify_currency_symbol = $omnify_template_vars['omnify_currency_symbol'] ?? null;
@@ -45,10 +48,13 @@ $omnify_value = $omnify_template_vars['omnify_value'] ?? null;
  */
 // Helper to format prices
 $omnify_currency_symbol = function($omnify_currency) {
-	switch ($omnify_currency) {
+	if (class_exists('\Omnify\eCommerce\Support\Omnify_Locations')) {
+		return \Omnify\eCommerce\Support\Omnify_Locations::currency_symbol($omnify_currency);
+	}
+	switch (strtoupper((string) $omnify_currency)) {
 		case 'EUR': return '€';
-		case 'GBP': return 'Â£';
-		case 'JPY': return 'Â¥';
+		case 'GBP': return '£';
+		case 'JPY': return '¥';
 		case 'CAD': return 'C$';
 		case 'AUD': return 'A$';
 		default: return '$';
@@ -147,6 +153,8 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 				<select id="status" name="status">
 					<option value=""><?php esc_html_e('All Statuses', 'omnifywp-ecommerce'); ?></option>
 					<option value="active" <?php selected($omnify_filter_status, 'active'); ?>><?php esc_html_e('Active', 'omnifywp-ecommerce'); ?></option>
+					<option value="inactive" <?php selected($omnify_filter_status, 'inactive'); ?>><?php esc_html_e('Inactive', 'omnifywp-ecommerce'); ?></option>
+					<option value="expired" <?php selected($omnify_filter_status, 'expired'); ?>><?php esc_html_e('Expired', 'omnifywp-ecommerce'); ?></option>
 					<option value="trash" <?php selected($omnify_filter_status, 'trash'); ?>><?php esc_html_e('Trash', 'omnifywp-ecommerce'); ?></option>
 				</select>
 			</div>
@@ -169,10 +177,12 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 			</div>
 			<div class="omnify-filter-actions">
 				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-search" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
 				</button>
 				<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-coupons')); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
-					<span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
 			</div>
 		</div>
@@ -233,12 +243,15 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 								<option value="">Bulk actions</option>
 								<option value="trash">Move to Trash</option>
 								<option value="restore">Restore</option>
+								<?php if ('trash' === $omnify_status) : ?>
+									<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
+								<?php endif; ?>
 							</select>
 							<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm">Apply</button>
 						</div>
 					</div>
 					<div class="right">
-						<a href="#" class="omnify-button omnify-button--secondary omnify-button--sm">Export</a>
+						<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_export_coupons'), 'omnify_export_coupons')); ?>" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Export', 'omnifywp-ecommerce'); ?></a>
 					</div>
 				</div>
 
@@ -341,6 +354,34 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 						</table>
 					</div>
 				</form>
+				<?php if ($omnify_total_pages > 1) : ?>
+					<div class="tablenav" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--omnify-gray-200, #e2e8f0);">
+						<div class="tablenav-pages" style="display: flex; align-items: center; gap: 8px;">
+							<span class="displaying-num" style="font-size: 13px; color: #64748b;">
+								<?php
+								/* translators: %s: total coupons count */
+								printf(esc_html(_n('%s coupon', '%s coupons', $omnify_total_coupons, 'omnifywp-ecommerce')), number_format_i18n($omnify_total_coupons));
+								?>
+							</span>
+							<span class="pagination-links" style="display: flex; gap: 4px; align-items: center;">
+								<?php
+								$omnify_current_url = remove_query_arg('paged');
+								if ($omnify_paged > 1) : ?>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('First page', 'omnifywp-ecommerce'); ?>">&laquo;</a>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged - 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Previous page', 'omnifywp-ecommerce'); ?>">&lsaquo;</a>
+								<?php endif; ?>
+								<span class="paging-input" style="font-size: 13px; margin: 0 4px;">
+									<span class="current-page"><?php echo esc_html((string) $omnify_paged); ?></span>
+									<span class="tablenav-paging-text"> <?php esc_html_e('of', 'omnifywp-ecommerce'); ?> <span class="total-pages"><?php echo esc_html((string) $omnify_total_pages); ?></span></span>
+								</span>
+								<?php if ($omnify_paged < $omnify_total_pages) : ?>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_paged + 1, $omnify_current_url)); ?>" title="<?php esc_attr_e('Next page', 'omnifywp-ecommerce'); ?>">&rsaquo;</a>
+									<a class="button omnify-button omnify-button--secondary omnify-button--sm" href="<?php echo esc_url(add_query_arg('paged', $omnify_total_pages, $omnify_current_url)); ?>" title="<?php esc_attr_e('Last page', 'omnifywp-ecommerce'); ?>">&raquo;</a>
+								<?php endif; ?>
+							</span>
+						</div>
+					</div>
+				<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		</div>
@@ -382,11 +423,14 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 					<input type="hidden" name="id" value="<?php echo esc_attr((string) ($omnify_coupon['id'] ?? 0)); ?>" />
 
 					<!-- Status -->
-					<div class="omnify-form-group" style="margin-bottom: 12px;">
-						<label class="omnify-toggle">
-							<input  type="checkbox" name="is_active" value="1" <?php checked(! empty($omnify_coupon['is_active']) || empty($omnify_coupon['id'])); ?> />
-							<span class="omnify-toggle__label"><strong><?php esc_html_e('Coupon is active', 'omnifywp-ecommerce'); ?></strong></span>
-						</label>
+					<div class="omnify-form-group" style="margin-bottom: 16px;">
+						<div style="display: inline-flex; align-items: center; gap: 10px;">
+							<label class="omnify-switch">
+								<input type="checkbox" name="is_active" value="1" <?php checked(! empty($omnify_coupon['is_active']) || empty($omnify_coupon['id'])); ?> />
+								<span class="omnify-slider"></span>
+							</label>
+							<span style="font-size: 13.5px; font-weight: 600; color: #1e293b;"><?php esc_html_e('Coupon is active', 'omnifywp-ecommerce'); ?></span>
+						</div>
 					</div>
 
 					<!-- Basic Details -->
@@ -458,18 +502,24 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 						<h3><?php esc_html_e('Special Rules', 'omnifywp-ecommerce'); ?></h3>
 					</div>
 
-					<div class="omnify-form-group">
-						<label class="omnify-toggle">
-							<input  type="checkbox" name="free_shipping" value="1" <?php checked(! empty($omnify_coupon['free_shipping'])); ?> />
-							<span class="omnify-toggle__label"><?php esc_html_e('Gives free shipping', 'omnifywp-ecommerce'); ?></span>
-						</label>
+					<div class="omnify-form-group" style="margin-bottom: 12px;">
+						<div style="display: inline-flex; align-items: center; gap: 10px;">
+							<label class="omnify-switch">
+								<input type="checkbox" name="free_shipping" value="1" <?php checked(! empty($omnify_coupon['free_shipping'])); ?> />
+								<span class="omnify-slider"></span>
+							</label>
+							<span style="font-size: 13px; font-weight: 500; color: #334155;"><?php esc_html_e('Gives free shipping', 'omnifywp-ecommerce'); ?></span>
+						</div>
 					</div>
 
 					<div class="omnify-form-group">
-						<label class="omnify-toggle">
-							<input  type="checkbox" name="first_order_only" value="1" <?php checked(! empty($omnify_coupon['first_order_only'])); ?> />
-							<span class="omnify-toggle__label"><?php esc_html_e('Valid for first order only', 'omnifywp-ecommerce'); ?></span>
-						</label>
+						<div style="display: inline-flex; align-items: center; gap: 10px;">
+							<label class="omnify-switch">
+								<input type="checkbox" name="first_order_only" value="1" <?php checked(! empty($omnify_coupon['first_order_only'])); ?> />
+								<span class="omnify-slider"></span>
+							</label>
+							<span style="font-size: 13px; font-weight: 500; color: #334155;"><?php esc_html_e('Valid for first order only', 'omnifywp-ecommerce'); ?></span>
+						</div>
 					</div>
 
 					<!-- Restrictions -->

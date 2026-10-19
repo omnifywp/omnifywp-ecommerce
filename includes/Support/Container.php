@@ -27,6 +27,7 @@ use Omnify\eCommerce\Repositories\Omnify_Coupon_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Review_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Wishlist_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Admin_Activity_Repository;
+use Omnify\eCommerce\Repositories\Omnify_Stock_Subscriber_Repository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -55,14 +56,37 @@ class Omnify_Container {
 		$this->set(Omnify_Review_Repository::class, static fn (self $omnify_c): Omnify_Review_Repository => new Omnify_Review_Repository($omnify_c->get(Omnify_Schema::class)));
 		$this->set(Omnify_Wishlist_Repository::class, static fn (self $omnify_c): Omnify_Wishlist_Repository => new Omnify_Wishlist_Repository($omnify_c->get(Omnify_Schema::class)));
 		$this->set(Omnify_Admin_Activity_Repository::class, static fn (self $omnify_c): Omnify_Admin_Activity_Repository => new Omnify_Admin_Activity_Repository($omnify_c->get(Omnify_Schema::class)));
+		$this->set(Omnify_Stock_Subscriber_Repository::class, static fn (self $omnify_c): Omnify_Stock_Subscriber_Repository => new Omnify_Stock_Subscriber_Repository($omnify_c->get(Omnify_Schema::class)));
 		$this->set(Omnify_Customer_Access_Repository::class, static fn (self $omnify_c): Omnify_Customer_Access_Repository => new Omnify_Customer_Access_Repository($omnify_c->get(Omnify_Schema::class), $omnify_c->get(Omnify_Customer_Repository::class), $omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Product_File_Repository::class)));
-		$this->set(Omnify_Signed_Url_Service::class, static fn (): Omnify_Signed_Url_Service => new Omnify_Signed_Url_Service());
-		$this->set(Omnify_Email_Service::class, static fn (self $omnify_c): Omnify_Email_Service => new Omnify_Email_Service($omnify_c->get(Omnify_Order_Repository::class), $omnify_c->get(Omnify_Product_File_Repository::class), $omnify_c->get(Omnify_Signed_Url_Service::class), $omnify_c->get(Omnify_Product_Repository::class)));
-		$this->set(Omnify_Order_Lifecycle_Service::class, static fn (self $omnify_c): Omnify_Order_Lifecycle_Service => new Omnify_Order_Lifecycle_Service($omnify_c->get(Omnify_Order_Repository::class), $omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Customer_Access_Repository::class)));
-		$this->set(Omnify_Abandoned_Cart_Service::class, static fn (self $omnify_c): Omnify_Abandoned_Cart_Service => new Omnify_Abandoned_Cart_Service($omnify_c->get(Omnify_Settings_Repository::class), $omnify_c->get(Omnify_Abandoned_Cart_Repository::class), $omnify_c->get(Omnify_Email_Service::class)));
 		$this->set(Omnify_Download_Permission_Service::class, static fn (self $omnify_c): Omnify_Download_Permission_Service => new Omnify_Download_Permission_Service($omnify_c->get(Omnify_Product_File_Repository::class), $omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Customer_Access_Repository::class)));
-		$this->set(Omnify_Download_Controller::class, static fn (self $omnify_c): Omnify_Download_Controller => new Omnify_Download_Controller($omnify_c->get(Omnify_Product_File_Repository::class), $omnify_c->get(Omnify_Download_Repository::class), $omnify_c->get(Omnify_Signed_Url_Service::class), $omnify_c->get(Omnify_Download_Permission_Service::class), $omnify_c->get(Omnify_Customer_Repository::class), $omnify_c->get(Omnify_Customer_Access_Repository::class)));
-		$this->set(Omnify_Storefront_Controller::class, static fn (self $omnify_c): Omnify_Storefront_Controller => new Omnify_Storefront_Controller($omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Product_File_Repository::class), $omnify_c->get(Omnify_Customer_Repository::class), $omnify_c->get(Omnify_Customer_Access_Repository::class), $omnify_c->get(Omnify_Signed_Url_Service::class), $omnify_c->get(Omnify_Order_Repository::class), $omnify_c->get(Omnify_Download_Repository::class), $omnify_c->get(Omnify_Review_Repository::class), $omnify_c->get(Omnify_Email_Service::class), $omnify_c->get(Omnify_Wishlist_Repository::class)));
+		$this->set(Omnify_Signed_Url_Service::class, static fn (): Omnify_Signed_Url_Service => new Omnify_Signed_Url_Service());
+		$this->set(Omnify_Email_Service::class, static fn (self $omnify_c): Omnify_Email_Service => new Omnify_Email_Service($omnify_c->get(Omnify_Order_Repository::class), $omnify_c->get(Omnify_Product_File_Repository::class), $omnify_c->get(Omnify_Signed_Url_Service::class), $omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Stock_Subscriber_Repository::class)));
+		$this->set(Omnify_Order_Lifecycle_Service::class, static fn (self $omnify_c): Omnify_Order_Lifecycle_Service => new Omnify_Order_Lifecycle_Service($omnify_c->get(Omnify_Order_Repository::class), $omnify_c->get(Omnify_Product_Repository::class), $omnify_c->get(Omnify_Customer_Access_Repository::class), $omnify_c->get(Omnify_Coupon_Repository::class), $omnify_c->get(Omnify_Abandoned_Cart_Repository::class)));
+		$this->set(Omnify_Abandoned_Cart_Service::class, static fn (self $omnify_c): Omnify_Abandoned_Cart_Service => new Omnify_Abandoned_Cart_Service($omnify_c->get(Omnify_Settings_Repository::class), $omnify_c->get(Omnify_Abandoned_Cart_Repository::class), $omnify_c->get(Omnify_Email_Service::class)));
+		$this->set(Omnify_Download_Controller::class, static fn (self $omnify_c): Omnify_Download_Controller => new Omnify_Download_Controller(
+			$omnify_c->get(Omnify_Product_File_Repository::class), 
+			$omnify_c->get(Omnify_Download_Repository::class), 
+			$omnify_c->get(Omnify_Signed_Url_Service::class), 
+			$omnify_c->get(Omnify_Download_Permission_Service::class), 
+			$omnify_c->get(Omnify_Customer_Repository::class), 
+			$omnify_c->get(Omnify_Customer_Access_Repository::class),
+			$omnify_c->get(Omnify_Order_Repository::class),
+			$omnify_c->get(Omnify_Email_Service::class)
+		));
+		$this->set(Omnify_Storefront_Controller::class, static fn (self $omnify_c): Omnify_Storefront_Controller => new Omnify_Storefront_Controller(
+			$omnify_c->get(Omnify_Product_Repository::class),
+			$omnify_c->get(Omnify_Product_File_Repository::class),
+			$omnify_c->get(Omnify_Customer_Repository::class),
+			$omnify_c->get(Omnify_Customer_Access_Repository::class),
+			$omnify_c->get(Omnify_Signed_Url_Service::class),
+			$omnify_c->get(Omnify_Order_Repository::class),
+			$omnify_c->get(Omnify_Download_Repository::class),
+			$omnify_c->get(Omnify_Review_Repository::class),
+			$omnify_c->get(Omnify_Email_Service::class),
+			$omnify_c->get(Omnify_Wishlist_Repository::class),
+			$omnify_c->get(Omnify_Abandoned_Cart_Repository::class),
+			$omnify_c->get(Omnify_Settings_Repository::class)
+		));
 		$this->set(Omnify_Payment_Gateway_Service::class, static fn (self $omnify_c): Omnify_Payment_Gateway_Service => new Omnify_Payment_Gateway_Service($omnify_c->get(Omnify_Settings_Repository::class)));
 		$this->set(Omnify_Demo_Data_Service::class, static fn (self $omnify_c): Omnify_Demo_Data_Service => new Omnify_Demo_Data_Service(
 			$omnify_c->get(Omnify_Product_Repository::class),
@@ -88,7 +112,8 @@ class Omnify_Container {
 			$omnify_c->get(Omnify_Abandoned_Cart_Repository::class),
 			$omnify_c->get(Omnify_Payment_Gateway_Service::class),
 			$omnify_c->get(Omnify_Admin_Activity_Repository::class),
-			$omnify_c->get(Omnify_Demo_Data_Service::class)
+			$omnify_c->get(Omnify_Demo_Data_Service::class),
+			$omnify_c->get(Omnify_Webhook_Service::class)
 		));
 		$this->set(Omnify_Rest_Server::class, static fn (self $omnify_c): Omnify_Rest_Server => new Omnify_Rest_Server(
 			$omnify_c->get(Omnify_Settings_Repository::class),
@@ -117,6 +142,11 @@ class Omnify_Container {
 			$omnify_c->get(Omnify_Abandoned_Cart_Repository::class)
 		));
 		$this->set(Omnify_Tracking_Service::class, static fn (self $omnify_c): Omnify_Tracking_Service => new Omnify_Tracking_Service($omnify_c->get(Omnify_Settings_Repository::class)));
+		$this->set(Omnify_Webhook_Service::class, static fn (self $omnify_c): Omnify_Webhook_Service => new Omnify_Webhook_Service(
+			$omnify_c->get(Omnify_Schema::class),
+			$omnify_c->get(Omnify_Order_Repository::class),
+			$omnify_c->get(Omnify_Customer_Repository::class)
+		));
 
 		/**
 		 * Fires after all default service factories are registered.

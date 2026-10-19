@@ -232,6 +232,7 @@ ksort($omnify_all_currencies);
 						<div class="omnify-form-group">
 							<label for="country"><?php esc_html_e('Store Country', 'omnifywp-ecommerce'); ?></label>
 							<select id="country" name="country" class="omnify-searchable-select">
+								<option value=""><?php esc_html_e('Select country...', 'omnifywp-ecommerce'); ?></option>
 								<?php foreach ($omnify_countries as $omnify_code => $omnify_name) : ?>
 									<option value="<?php echo esc_attr($omnify_code); ?>" <?php selected($omnify_country, $omnify_code); ?>>
 										<?php echo esc_html($omnify_name); ?>
@@ -336,7 +337,7 @@ ksort($omnify_all_currencies);
 
 			<!-- STEP 3: Demo Data & Finish -->
 			<div class="omnify-setup-panel" data-panel="3">
-				<div class="panel-finish-icon">🎉</div>
+				<div class="panel-finish-icon"><span class="dashicons dashicons-yes-alt" style="font-size:48px; width:48px; height:48px; color:var(--omnify-primary, #0f766e);"></span></div>
 				<h2 class="panel-title"><?php esc_html_e('Almost finished!', 'omnifywp-ecommerce'); ?></h2>
 				<p class="panel-desc"><?php esc_html_e('Your store configuration is complete. You can optionally generate mock store data to preview layout functions.', 'omnifywp-ecommerce'); ?></p>
 

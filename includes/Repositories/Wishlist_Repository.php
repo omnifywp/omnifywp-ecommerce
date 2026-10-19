@@ -65,6 +65,37 @@ class Omnify_Wishlist_Repository {
 	}
 
 	/**
+	 * Count total wishlist items matching filters.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_table = $this->table();
+		$omnify_where = ['1=1'];
+		$omnify_params = [];
+
+		if (! empty($omnify_args['user_id'])) {
+			$omnify_where[] = 'user_id = %d';
+			$omnify_params[] = absint($omnify_args['user_id']);
+		}
+		if (! empty($omnify_args['product_id'])) {
+			$omnify_where[] = 'product_id = %d';
+			$omnify_params[] = absint($omnify_args['product_id']);
+		}
+
+		$omnify_where_sql = implode(' AND ', $omnify_where);
+		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_table} WHERE {$omnify_where_sql}";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
+	}
+
+	/**
 	 * @return array<int, int>
 	 */
 	public function product_ids_for_user(int $omnify_user_id): array {
@@ -88,6 +119,16 @@ class Omnify_Wishlist_Repository {
 		global $wpdb;
 
 		if ($omnify_user_id <= 0 || $omnify_product_id <= 0 || $this->exists($omnify_user_id, $omnify_product_id)) {
+			return false;
+		}
+
+		$omnify_products_table = $this->omnify_schema->table('products');
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_product_exists = (bool) \Omnify\eCommerce\Support\Omnify_DB::get_var(
+			$wpdb,
+			$wpdb->prepare("SELECT 1 FROM {$omnify_products_table} WHERE id = %d AND deleted_at IS NULL", $omnify_product_id)
+		);
+		if (! $omnify_product_exists) {
 			return false;
 		}
 
@@ -140,9 +181,9 @@ class Omnify_Wishlist_Repository {
 			return ['wishlisted' => false];
 		}
 
-		$this->add($omnify_user_id, $omnify_product_id);
+		$omnify_added = $this->add($omnify_user_id, $omnify_product_id);
 
-		return ['wishlisted' => true];
+		return ['wishlisted' => $omnify_added];
 	}
 
 	private function hydrate(array $omnify_row): array {

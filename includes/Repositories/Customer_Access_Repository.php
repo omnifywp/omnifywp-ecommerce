@@ -128,7 +128,7 @@ class Omnify_Customer_Access_Repository {
 			return false;
 		}
 
-		return empty($omnify_row['expires_at']) || strtotime((string) $omnify_row['expires_at']) >= time();
+		return empty($omnify_row['expires_at']) || strtotime((string) $omnify_row['expires_at'] . ' UTC') >= time();
 	}
 
 	/**
@@ -147,19 +147,41 @@ class Omnify_Customer_Access_Repository {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function files_for_customer(int $omnify_customer_id): array {
+		$omnify_access_list = $this->for_customer($omnify_customer_id);
+		$omnify_valid_access = [];
+		$omnify_product_ids = [];
+
+		foreach ($omnify_access_list as $omnify_access) {
+			if ('active' !== $omnify_access['status'] || ! empty($omnify_access['is_expired'])) {
+				continue;
+			}
+			$omnify_pid = (int) $omnify_access['product_id'];
+			$omnify_valid_access[$omnify_pid] = $omnify_access;
+			$omnify_product_ids[] = $omnify_pid;
+		}
+
+		if (empty($omnify_product_ids)) {
+			return [];
+		}
+
+		$omnify_product_ids = array_unique($omnify_product_ids);
+		$omnify_products_map = $this->omnify_products->find_many($omnify_product_ids);
+		$omnify_files_grouped = method_exists($this->omnify_files, 'all_for_products')
+			? $this->omnify_files->all_for_products($omnify_product_ids)
+			: [];
+
 		$omnify_items = [];
-
-		foreach ($this->for_customer($omnify_customer_id) as $omnify_access) {
-			if ('active' !== $omnify_access['status'] || ! $this->has_access($omnify_customer_id, (int) $omnify_access['product_id'])) {
+		foreach ($omnify_product_ids as $omnify_pid) {
+			$omnify_product = $omnify_products_map[$omnify_pid] ?? null;
+			if (! $omnify_product || ! empty($omnify_product['deleted_at'])) {
 				continue;
 			}
 
-			$omnify_product = $this->omnify_products->find((int) $omnify_access['product_id']);
-			if (! $omnify_product || 'published' !== $omnify_product['status']) {
-				continue;
-			}
+			$omnify_access = $omnify_valid_access[$omnify_pid] ?? [];
+			$omnify_raw_files = $omnify_files_grouped[$omnify_pid] ?? $this->omnify_files->active_for_product($omnify_pid);
+			$omnify_active_files = array_values(array_filter($omnify_raw_files, [$this->omnify_files, 'is_downloadable']));
 
-			foreach ($this->omnify_files->active_for_product((int) $omnify_access['product_id']) as $omnify_file) {
+			foreach ($omnify_active_files as $omnify_file) {
 				$omnify_file['product'] = $omnify_product;
 				$omnify_file['access'] = $omnify_access;
 				$omnify_items[] = $omnify_file;
@@ -174,7 +196,7 @@ class Omnify_Customer_Access_Repository {
 		$omnify_row['customer_id'] = (int) $omnify_row['customer_id'];
 		$omnify_row['product_id'] = (int) $omnify_row['product_id'];
 		$omnify_row['granted_by'] = null === $omnify_row['granted_by'] ? null : (int) $omnify_row['granted_by'];
-		$omnify_row['is_expired'] = ! empty($omnify_row['expires_at']) && strtotime((string) $omnify_row['expires_at']) < time();
+		$omnify_row['is_expired'] = ! empty($omnify_row['expires_at']) && strtotime((string) $omnify_row['expires_at'] . ' UTC') < time();
 
 		return $omnify_row;
 	}

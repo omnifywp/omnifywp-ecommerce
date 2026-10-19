@@ -31,7 +31,7 @@ class Omnify_Review_Repository {
 		$omnify_where  = ['deleted_at IS NULL'];
 		$omnify_params = [];
 
-		if (! empty($omnify_args['status'])) {
+		if (! empty($omnify_args['status']) && 'all' !== $omnify_args['status']) {
 			if ($omnify_args['status'] === 'trash') {
 				$omnify_where  = ['deleted_at IS NOT NULL'];
 			} else {
@@ -44,9 +44,28 @@ class Omnify_Review_Repository {
 			$omnify_params[] = (int) $omnify_args['product_id'];
 		}
 
-		$omnify_per_page = min(200, (int) ($omnify_args['per_page'] ?? 100));
-		$omnify_page     = max(1, (int) ($omnify_args['page'] ?? 1));
-		$omnify_offset   = ($omnify_page - 1) * $omnify_per_page;
+		if (! empty($omnify_args['rating'])) {
+			$omnify_where[]  = 'rating = %d';
+			$omnify_params[] = min(5, max(1, absint($omnify_args['rating'])));
+		}
+		if (! empty($omnify_args['search'])) {
+			$omnify_like = '%' . $wpdb->esc_like(sanitize_text_field((string) $omnify_args['search'])) . '%';
+			$omnify_where[]  = '(customer_name LIKE %s OR customer_email LIKE %s OR review_title LIKE %s OR review_content LIKE %s)';
+			array_push($omnify_params, $omnify_like, $omnify_like, $omnify_like, $omnify_like);
+		}
+		if (! empty($omnify_args['date_from'])) {
+			$omnify_where[]  = 'DATE(created_at) >= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
+		}
+		if (! empty($omnify_args['date_to'])) {
+			$omnify_where[]  = 'DATE(created_at) <= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
+		}
+
+		$omnify_per_page = min(200, max(1, absint($omnify_args['per_page'] ?? 100)));
+		$omnify_offset   = isset($omnify_args['offset'])
+			? max(0, absint($omnify_args['offset']))
+			: max(0, (max(1, (int) ($omnify_args['page'] ?? 1)) - 1) * $omnify_per_page);
 
 		$omnify_where_sql = implode(' AND ', $omnify_where);
 		$omnify_sql = "SELECT * FROM {$omnify_table} WHERE {$omnify_where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
@@ -57,6 +76,62 @@ class Omnify_Review_Repository {
 		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params), ARRAY_A);
 		$omnify_reviews = array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
 		return apply_filters('omnify_get_reviews_results', $omnify_reviews, $omnify_args);
+	}
+
+	/**
+	 * Count reviews matching filters.
+	 *
+	 * @param array $args Optional: status, product_id, rating, search, date_from, date_to
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_args = apply_filters('omnify_count_reviews_args', $omnify_args);
+		$omnify_table = $this->table('reviews');
+
+		$omnify_where  = ['deleted_at IS NULL'];
+		$omnify_params = [];
+
+		if (! empty($omnify_args['status']) && 'all' !== $omnify_args['status']) {
+			if ($omnify_args['status'] === 'trash') {
+				$omnify_where  = ['deleted_at IS NOT NULL'];
+			} else {
+				$omnify_where[]  = 'status = %s';
+				$omnify_params[] = sanitize_key($omnify_args['status']);
+			}
+		}
+		if (! empty($omnify_args['product_id'])) {
+			$omnify_where[]  = 'product_id = %d';
+			$omnify_params[] = (int) $omnify_args['product_id'];
+		}
+		if (! empty($omnify_args['rating'])) {
+			$omnify_where[]  = 'rating = %d';
+			$omnify_params[] = min(5, max(1, absint($omnify_args['rating'])));
+		}
+		if (! empty($omnify_args['search'])) {
+			$omnify_like = '%' . $wpdb->esc_like(sanitize_text_field((string) $omnify_args['search'])) . '%';
+			$omnify_where[]  = '(customer_name LIKE %s OR customer_email LIKE %s OR review_title LIKE %s OR review_content LIKE %s)';
+			array_push($omnify_params, $omnify_like, $omnify_like, $omnify_like, $omnify_like);
+		}
+		if (! empty($omnify_args['date_from'])) {
+			$omnify_where[]  = 'DATE(created_at) >= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
+		}
+		if (! empty($omnify_args['date_to'])) {
+			$omnify_where[]  = 'DATE(created_at) <= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
+		}
+
+		$omnify_where_sql = implode(' AND ', $omnify_where);
+		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_table} WHERE {$omnify_where_sql}";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
 	}
 
 	/**
@@ -167,6 +242,28 @@ class Omnify_Review_Repository {
 		if (array_key_exists('review_content', $omnify_data)) {
 			$omnify_update['review_content'] = sanitize_textarea_field(trim((string) $omnify_data['review_content']));
 		}
+		if (array_key_exists('media', $omnify_data)) {
+			$omnify_media = is_array($omnify_data['media']) ? array_values($omnify_data['media']) : [];
+			$omnify_base_content = '';
+			if (array_key_exists('review_content', $omnify_update)) {
+				$omnify_base_content = $omnify_update['review_content'];
+			} else {
+				$omnify_existing_row = $this->find($omnify_id);
+				$omnify_base_content = $omnify_existing_row ? (string) ($omnify_existing_row['content'] ?? '') : '';
+			}
+			$omnify_base_content = trim(preg_replace('/\[media\].*?\[\/media\]/s', '', $omnify_base_content));
+			if (! empty($omnify_media)) {
+				$omnify_base_content .= "\n[media]" . wp_json_encode($omnify_media) . "[/media]";
+			}
+			$omnify_update['review_content'] = $omnify_base_content;
+		} elseif (array_key_exists('review_content', $omnify_update)) {
+			if (! preg_match('/\[media\].*?\[\/media\]/s', $omnify_update['review_content'])) {
+				$omnify_existing_row = $this->find($omnify_id);
+				if ($omnify_existing_row && ! empty($omnify_existing_row['media']) && is_array($omnify_existing_row['media'])) {
+					$omnify_update['review_content'] .= "\n[media]" . wp_json_encode(array_values($omnify_existing_row['media'])) . "[/media]";
+				}
+			}
+		}
 		if (array_key_exists('status', $omnify_data)) {
 			$omnify_update['status'] = sanitize_key((string) $omnify_data['status']);
 		}
@@ -259,6 +356,59 @@ class Omnify_Review_Repository {
 		return $omnify_breakdown;
 	}
 
+	/**
+	 * Retrieve review rating summaries (average rating and total count) for multiple product IDs in a single query.
+	 * Eliminates N+1 queries on catalog/grid displays.
+	 *
+	 * @param array<int> $omnify_product_ids
+	 * @return array<int, array{rating: float, count: int}>
+	 */
+	public function get_rating_summaries(array $omnify_product_ids): array {
+		$omnify_product_ids = array_values(array_filter(array_map('absint', $omnify_product_ids)));
+		if (empty($omnify_product_ids)) {
+			return [];
+		}
+
+		global $wpdb;
+		$omnify_table = $this->table('reviews');
+		$omnify_placeholders = implode(',', array_fill(0, count($omnify_product_ids), '%d'));
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_sql = "SELECT product_id, AVG(rating) as avg_rating, COUNT(*) as review_count 
+			FROM {$omnify_table} 
+			WHERE product_id IN ({$omnify_placeholders}) AND status = 'approved' AND deleted_at IS NULL 
+			GROUP BY product_id";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare($omnify_sql, ...$omnify_product_ids),
+			ARRAY_A
+		);
+
+		$omnify_summaries = [];
+		foreach ($omnify_product_ids as $omnify_pid) {
+			$omnify_summaries[$omnify_pid] = [
+				'rating' => 0.0,
+				'count'  => 0,
+			];
+		}
+
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_row) {
+				$omnify_pid = (int) ($omnify_row['product_id'] ?? 0);
+				if ($omnify_pid > 0) {
+					$omnify_summaries[$omnify_pid] = [
+						'rating' => round((float) ($omnify_row['avg_rating'] ?? 0), 1),
+						'count'  => (int) ($omnify_row['review_count'] ?? 0),
+					];
+				}
+			}
+		}
+
+		return $omnify_summaries;
+	}
+
 	public function update_status(int $omnify_id, string $omnify_status): bool {
 		global $wpdb;
 		$omnify_allowed = ['pending', 'approved', 'rejected'];
@@ -286,13 +436,18 @@ class Omnify_Review_Repository {
 		$omnify_table = $this->table('reviews');
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$omnify_rows  = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, "SELECT status, COUNT(*) as cnt FROM {$omnify_table} WHERE deleted_at IS NULL GROUP BY status", ARRAY_A);
-		$omnify_out   = ['all' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0];
+		$omnify_out   = ['all' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0, 'trash' => 0];
 		foreach (is_array($omnify_rows) ? $omnify_rows : [] as $omnify_row) {
 			$omnify_s = $omnify_row['status'] ?? '';
 			$omnify_c = (int) $omnify_row['cnt'];
 			if (isset($omnify_out[$omnify_s])) $omnify_out[$omnify_s] = $omnify_c;
 			$omnify_out['all'] += $omnify_c;
 		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_trash_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$omnify_table} WHERE deleted_at IS NOT NULL");
+		$omnify_out['trash'] = $omnify_trash_count;
+
 		return $omnify_out;
 	}
 

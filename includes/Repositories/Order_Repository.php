@@ -54,8 +54,18 @@ class Omnify_Order_Repository {
 
 		if (! empty($omnify_args['search'])) {
 			$omnify_search = '%' . $wpdb->esc_like(sanitize_text_field($omnify_args['search'])) . '%';
-			$omnify_where .= " AND (o.order_number LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s)";
-			$omnify_params = array_merge($omnify_params, [$omnify_search, $omnify_search, $omnify_search, $omnify_search]);
+			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s)";
+			$omnify_params = array_merge($omnify_params, [
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+			]);
 		}
 
 		if (! empty($omnify_args['date_from'])) {
@@ -119,7 +129,8 @@ class Omnify_Order_Repository {
 		// Fetch items and notes for these orders in batch (eliminates N+1 queries)
 		$omnify_items_rows = [];
 		$omnify_notes_rows = [];
-		if ( ! empty( $omnify_order_ids ) ) {
+		$omnify_include_relations = ! array_key_exists('include_relations', $omnify_args) || ! empty($omnify_args['include_relations']);
+		if ( ! empty( $omnify_order_ids ) && $omnify_include_relations ) {
 			$omnify_order_items_table = $this->table('order_items');
 			$omnify_order_notes_table = $this->table('order_notes');
 			$omnify_placeholders = implode( ',', array_fill( 0, count( $omnify_order_ids ), '%d' ) );
@@ -167,6 +178,95 @@ class Omnify_Order_Repository {
 
 		$omnify_results = apply_filters('omnify_get_orders_results', $omnify_results, $omnify_args);
 		return $omnify_results;
+	}
+
+	/**
+	 * Count total orders matching criteria for pagination.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_orders_table    = $this->table('orders');
+		$omnify_customers_table = $this->table('customers');
+
+		$omnify_status = sanitize_key((string) ($omnify_args['status'] ?? 'all'));
+		$omnify_where  = 'trash' === $omnify_status ? 'o.deleted_at IS NOT NULL' : 'o.deleted_at IS NULL';
+		$omnify_params = [];
+
+		if ($omnify_status && 'all' !== $omnify_status && 'trash' !== $omnify_status) {
+			$omnify_where .= ' AND o.status = %s';
+			$omnify_params[] = $omnify_status;
+		}
+
+		if (! empty($omnify_args['customer_id'])) {
+			if (is_array($omnify_args['customer_id'])) {
+				$omnify_ids = array_map('intval', $omnify_args['customer_id']);
+				if (! empty($omnify_ids)) {
+					$omnify_placeholders = implode(',', array_fill(0, count($omnify_ids), '%d'));
+					$omnify_where .= " AND o.customer_id IN ($omnify_placeholders)";
+					$omnify_params = array_merge($omnify_params, $omnify_ids);
+				}
+			} else {
+				$omnify_where    .= ' AND o.customer_id = %d';
+				$omnify_params[] = absint($omnify_args['customer_id']);
+			}
+		}
+
+		if (! empty($omnify_args['search'])) {
+			$omnify_search = '%' . $wpdb->esc_like(sanitize_text_field($omnify_args['search'])) . '%';
+			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s)";
+			$omnify_params = array_merge($omnify_params, [
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+				$omnify_search,
+			]);
+		}
+
+		if (! empty($omnify_args['date_from'])) {
+			$omnify_where .= " AND DATE(o.created_at) >= %s";
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
+		}
+		if (! empty($omnify_args['date_to'])) {
+			$omnify_where .= " AND DATE(o.created_at) <= %s";
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
+		}
+
+		if (! empty($omnify_args['payment_method'])) {
+			$omnify_where .= " AND o.payment_method = %s";
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['payment_method']);
+		}
+
+		if (! empty($omnify_args['product_type'])) {
+			$omnify_product_type = sanitize_key((string) $omnify_args['product_type']);
+			if ('digital' === $omnify_product_type) {
+				$omnify_product_type = 'download';
+			}
+			$omnify_items_table = $this->table('order_items');
+			$omnify_products_table = $this->table('products');
+			$omnify_where .= " AND o.id IN (SELECT oi_sub.order_id FROM {$omnify_items_table} oi_sub JOIN {$omnify_products_table} p_sub ON oi_sub.product_id = p_sub.id WHERE p_sub.type = %s)";
+			$omnify_params[] = $omnify_product_type;
+		}
+
+		$omnify_sql = "
+			SELECT COUNT(*)
+			FROM {$omnify_orders_table} o
+			LEFT JOIN {$omnify_customers_table} c ON o.customer_id = c.id
+			WHERE {$omnify_where}
+		";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
 	}
 
 	public function find(int $omnify_id): ?array {
@@ -254,6 +354,7 @@ class Omnify_Order_Repository {
 				 WHERE o.customer_id = %d
 				   AND oi.product_id = %d
 				   AND o.status IN ('completed', 'processing', 'shipped')
+				   AND o.deleted_at IS NULL
 				 LIMIT 1",
 				$omnify_items_table,
 				$omnify_orders_table,
@@ -433,99 +534,124 @@ class Omnify_Order_Repository {
 		}
 		// --- End Fraud & Risk Engine ---
 
-		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
-			$this->table('orders'),
-			[
-				'customer_id'          => absint($omnify_data['customer_id'] ?? 0) ?: null,
-				'product_id'           => $omnify_first_product_id ?: null,
-				'status'               => sanitize_key((string) ($omnify_data['status'] ?? 'pending')),
-				'currency'             => strtoupper(substr(sanitize_text_field((string) ($omnify_data['currency'] ?? 'USD')), 0, 3)),
-				'subtotal'             => $omnify_subtotal,
-				'tax'                  => $omnify_tax,
-				'tax_label'            => ! empty($omnify_data['tax_label']) ? sanitize_text_field((string) $omnify_data['tax_label']) : null,
-				'tax_rate'             => (float) ($omnify_data['tax_rate'] ?? 0.0),
-				'tax_reporting_code'   => ! empty($omnify_data['tax_reporting_code']) ? sanitize_text_field((string) $omnify_data['tax_reporting_code']) : null,
-				'tax_inclusive'        => ! empty($omnify_data['tax_inclusive']) ? 1 : 0,
-				'tax_shipping'         => ! empty($omnify_data['tax_shipping']) ? 1 : 0,
-				'customer_tax_exempt'  => ! empty($omnify_data['customer_tax_exempt']) ? 1 : 0,
-				'shipping_total'       => $omnify_shipping,
-				'shipping_method'      => ! empty($omnify_data['shipping_method']) ? sanitize_text_field($omnify_data['shipping_method']) : null,
-				'total'                => $omnify_total,
-				'refunded_amount'      => 0.0,
-				'coupon_code'          => ! empty($omnify_data['coupon_code']) ? sanitize_text_field($omnify_data['coupon_code']) : null,
-				'discount_amount'      => (float) ($omnify_data['discount_amount'] ?? 0.0),
-				'payment_method'       => ! empty($omnify_data['payment_method']) ? sanitize_text_field($omnify_data['payment_method']) : null,
-				'payment_instructions' => ! empty($omnify_data['payment_instructions']) ? sanitize_textarea_field($omnify_data['payment_instructions']) : null,
-				'shipping_first_name'  => ! empty($omnify_data['shipping_first_name']) ? sanitize_text_field($omnify_data['shipping_first_name']) : null,
-				'shipping_last_name'   => ! empty($omnify_data['shipping_last_name']) ? sanitize_text_field($omnify_data['shipping_last_name']) : null,
-				'shipping_address_1'   => ! empty($omnify_data['shipping_address_1']) ? sanitize_text_field($omnify_data['shipping_address_1']) : null,
-				'shipping_address_2'   => ! empty($omnify_data['shipping_address_2']) ? sanitize_text_field($omnify_data['shipping_address_2']) : null,
-				'shipping_city'        => ! empty($omnify_data['shipping_city']) ? sanitize_text_field($omnify_data['shipping_city']) : null,
-				'shipping_state'       => ! empty($omnify_data['shipping_state']) ? sanitize_text_field($omnify_data['shipping_state']) : null,
-				'shipping_postcode'    => ! empty($omnify_data['shipping_postcode']) ? sanitize_text_field($omnify_data['shipping_postcode']) : null,
-				'shipping_country'     => ! empty($omnify_data['shipping_country']) ? sanitize_text_field($omnify_data['shipping_country']) : null,
-				'shipping_phone'       => ! empty($omnify_data['shipping_phone']) ? sanitize_text_field($omnify_data['shipping_phone']) : null,
-				'billing_first_name'   => ! empty($omnify_data['billing_first_name']) ? sanitize_text_field($omnify_data['billing_first_name']) : null,
-				'billing_last_name'    => ! empty($omnify_data['billing_last_name']) ? sanitize_text_field($omnify_data['billing_last_name']) : null,
-				'billing_company'      => ! empty($omnify_data['billing_company']) ? sanitize_text_field($omnify_data['billing_company']) : null,
-				'billing_phone'        => ! empty($omnify_data['billing_phone']) ? sanitize_text_field($omnify_data['billing_phone']) : null,
-				'billing_address_1'    => ! empty($omnify_data['billing_address_1']) ? sanitize_text_field($omnify_data['billing_address_1']) : null,
-				'billing_address_2'    => ! empty($omnify_data['billing_address_2']) ? sanitize_text_field($omnify_data['billing_address_2']) : null,
-				'billing_city'         => ! empty($omnify_data['billing_city']) ? sanitize_text_field($omnify_data['billing_city']) : null,
-				'billing_state'        => ! empty($omnify_data['billing_state']) ? sanitize_text_field($omnify_data['billing_state']) : null,
-				'billing_postcode'     => ! empty($omnify_data['billing_postcode']) ? sanitize_text_field($omnify_data['billing_postcode']) : null,
-				'billing_country'      => ! empty($omnify_data['billing_country']) ? sanitize_text_field($omnify_data['billing_country']) : null,
-				'billing_same_as_shipping' => isset($omnify_data['billing_same_as_shipping']) ? (int) $omnify_data['billing_same_as_shipping'] : 1,
-				'transaction_id'       => ! empty($omnify_data['transaction_id']) ? sanitize_text_field($omnify_data['transaction_id']) : null,
-				'order_number'         => ! empty($omnify_data['order_number']) ? sanitize_text_field($omnify_data['order_number']) : null,
-				'fulfillment_status'   => ! empty($omnify_data['fulfillment_status']) ? sanitize_key($omnify_data['fulfillment_status']) : 'none',
-				'tracking_number'      => ! empty($omnify_data['tracking_number']) ? sanitize_text_field($omnify_data['tracking_number']) : null,
-				'tracking_carrier'     => ! empty($omnify_data['tracking_carrier']) ? sanitize_text_field($omnify_data['tracking_carrier']) : null,
-				'fraud_status'         => $omnify_fraud_status,
-				'fraud_score'          => $omnify_fraud_score,
-				'fraud_flags'          => ! empty($omnify_fraud_flags) ? wp_json_encode($omnify_fraud_flags) : null,
-				'ip_address'           => ! empty($omnify_ip_address) ? $omnify_ip_address : null,
-				'created_at'           => $omnify_now,
-				'updated_at'           => $omnify_now,
-			]
-		);
-
-		$omnify_order_id = (int) $wpdb->insert_id;
-
-		if ($omnify_order_id > 0 && empty($omnify_data['order_number'])) {
-			$omnify_settings = get_option('omnify_settings', []);
-			$omnify_prefix   = sanitize_text_field((string) ($omnify_settings['order_number_prefix'] ?? 'OMN-'));
-			$omnify_suffix   = sanitize_text_field((string) ($omnify_settings['order_number_suffix'] ?? ''));
-			$omnify_padding  = max(1, min(10, absint($omnify_settings['order_number_padding'] ?? 4)));
-			$omnify_order_number = $omnify_prefix . str_pad((string) $omnify_order_id, $omnify_padding, '0', STR_PAD_LEFT) . $omnify_suffix;
-
-			\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
+		$this->begin_transaction();
+		try {
+			$omnify_inserted = \Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
 				$this->table('orders'),
-				['order_number' => $omnify_order_number],
-				['id' => $omnify_order_id]
+				[
+					'customer_id'          => absint($omnify_data['customer_id'] ?? 0) ?: null,
+					'product_id'           => $omnify_first_product_id ?: null,
+					'status'               => sanitize_key((string) ($omnify_data['status'] ?? 'pending')),
+					'currency'             => strtoupper(substr(sanitize_text_field((string) ($omnify_data['currency'] ?? 'USD')), 0, 3)),
+					'subtotal'             => $omnify_subtotal,
+					'tax'                  => $omnify_tax,
+					'tax_label'            => ! empty($omnify_data['tax_label']) ? sanitize_text_field((string) $omnify_data['tax_label']) : null,
+					'tax_rate'             => (float) ($omnify_data['tax_rate'] ?? 0.0),
+					'tax_reporting_code'   => ! empty($omnify_data['tax_reporting_code']) ? sanitize_text_field((string) $omnify_data['tax_reporting_code']) : null,
+					'tax_inclusive'        => ! empty($omnify_data['tax_inclusive']) ? 1 : 0,
+					'tax_shipping'         => ! empty($omnify_data['tax_shipping']) ? 1 : 0,
+					'customer_tax_exempt'  => ! empty($omnify_data['customer_tax_exempt']) ? 1 : 0,
+					'shipping_total'       => $omnify_shipping,
+					'shipping_method'      => ! empty($omnify_data['shipping_method']) ? sanitize_text_field($omnify_data['shipping_method']) : null,
+					'total'                => $omnify_total,
+					'refunded_amount'      => 0.0,
+					'coupon_code'          => ! empty($omnify_data['coupon_code']) ? sanitize_text_field($omnify_data['coupon_code']) : null,
+					'discount_amount'      => (float) ($omnify_data['discount_amount'] ?? 0.0),
+					'payment_method'       => ! empty($omnify_data['payment_method']) ? sanitize_text_field($omnify_data['payment_method']) : null,
+					'payment_instructions' => ! empty($omnify_data['payment_instructions']) ? sanitize_textarea_field($omnify_data['payment_instructions']) : null,
+					'shipping_first_name'  => ! empty($omnify_data['shipping_first_name']) ? sanitize_text_field($omnify_data['shipping_first_name']) : null,
+					'shipping_last_name'   => ! empty($omnify_data['shipping_last_name']) ? sanitize_text_field($omnify_data['shipping_last_name']) : null,
+					'shipping_address_1'   => ! empty($omnify_data['shipping_address_1']) ? sanitize_text_field($omnify_data['shipping_address_1']) : null,
+					'shipping_address_2'   => ! empty($omnify_data['shipping_address_2']) ? sanitize_text_field($omnify_data['shipping_address_2']) : null,
+					'shipping_city'        => ! empty($omnify_data['shipping_city']) ? sanitize_text_field($omnify_data['shipping_city']) : null,
+					'shipping_state'       => ! empty($omnify_data['shipping_state']) ? sanitize_text_field($omnify_data['shipping_state']) : null,
+					'shipping_postcode'    => ! empty($omnify_data['shipping_postcode']) ? sanitize_text_field($omnify_data['shipping_postcode']) : null,
+					'shipping_country'     => ! empty($omnify_data['shipping_country']) ? sanitize_text_field($omnify_data['shipping_country']) : null,
+					'shipping_phone'       => ! empty($omnify_data['shipping_phone']) ? sanitize_text_field($omnify_data['shipping_phone']) : null,
+					'billing_first_name'   => ! empty($omnify_data['billing_first_name']) ? sanitize_text_field($omnify_data['billing_first_name']) : null,
+					'billing_last_name'    => ! empty($omnify_data['billing_last_name']) ? sanitize_text_field($omnify_data['billing_last_name']) : null,
+					'billing_company'      => ! empty($omnify_data['billing_company']) ? sanitize_text_field($omnify_data['billing_company']) : null,
+					'billing_phone'        => ! empty($omnify_data['billing_phone']) ? sanitize_text_field($omnify_data['billing_phone']) : null,
+					'billing_address_1'    => ! empty($omnify_data['billing_address_1']) ? sanitize_text_field($omnify_data['billing_address_1']) : null,
+					'billing_address_2'    => ! empty($omnify_data['billing_address_2']) ? sanitize_text_field($omnify_data['billing_address_2']) : null,
+					'billing_city'         => ! empty($omnify_data['billing_city']) ? sanitize_text_field($omnify_data['billing_city']) : null,
+					'billing_state'        => ! empty($omnify_data['billing_state']) ? sanitize_text_field($omnify_data['billing_state']) : null,
+					'billing_postcode'     => ! empty($omnify_data['billing_postcode']) ? sanitize_text_field($omnify_data['billing_postcode']) : null,
+					'billing_country'      => ! empty($omnify_data['billing_country']) ? sanitize_text_field($omnify_data['billing_country']) : null,
+					'billing_same_as_shipping' => isset($omnify_data['billing_same_as_shipping']) ? (int) $omnify_data['billing_same_as_shipping'] : 1,
+					'transaction_id'       => ! empty($omnify_data['transaction_id']) ? sanitize_text_field($omnify_data['transaction_id']) : null,
+					'order_number'         => ! empty($omnify_data['order_number']) ? sanitize_text_field($omnify_data['order_number']) : null,
+					'fulfillment_status'   => ! empty($omnify_data['fulfillment_status']) ? sanitize_key($omnify_data['fulfillment_status']) : 'none',
+					'tracking_number'      => ! empty($omnify_data['tracking_number']) ? sanitize_text_field($omnify_data['tracking_number']) : null,
+					'tracking_carrier'     => ! empty($omnify_data['tracking_carrier']) ? sanitize_text_field($omnify_data['tracking_carrier']) : null,
+					'fraud_status'         => $omnify_fraud_status,
+					'fraud_score'          => $omnify_fraud_score,
+					'fraud_flags'          => ! empty($omnify_fraud_flags) ? wp_json_encode($omnify_fraud_flags) : null,
+					'ip_address'           => ! empty($omnify_ip_address) ? $omnify_ip_address : null,
+					'created_at'           => $omnify_now,
+					'updated_at'           => $omnify_now,
+				]
 			);
-		}
 
-		// Insert order items
-		if ($omnify_order_id > 0 && ! empty($omnify_items)) {
-			foreach ($omnify_items as $omnify_item) {
-				\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
-					$this->table('order_items'),
-					[
-						'order_id'     => $omnify_order_id,
-						'product_id'   => absint($omnify_item['product_id'] ?? 0),
-						'variation_id' => ! empty($omnify_item['variation_id']) ? absint($omnify_item['variation_id']) : null,
-						'product_name' => sanitize_text_field((string) ($omnify_item['product_name'] ?? 'Product')),
-						'price'        => (float) ($omnify_item['price'] ?? 0),
-						'tax'          => (float) ($omnify_item['tax'] ?? 0),
-						'quantity'     => max(1, intval($omnify_item['quantity'] ?? 1)),
-						'created_at'   => $omnify_now,
-					]
+			if (false === $omnify_inserted) {
+				$this->rollback_transaction();
+				return 0;
+			}
+
+			$omnify_order_id = (int) $wpdb->insert_id;
+			if ($omnify_order_id <= 0) {
+				$this->rollback_transaction();
+				return 0;
+			}
+
+			if (empty($omnify_data['order_number'])) {
+				$omnify_settings = get_option('omnify_settings', []);
+				$omnify_prefix   = sanitize_text_field((string) ($omnify_settings['order_number_prefix'] ?? 'OMN-'));
+				$omnify_suffix   = sanitize_text_field((string) ($omnify_settings['order_number_suffix'] ?? ''));
+				$omnify_padding  = max(1, min(10, absint($omnify_settings['order_number_padding'] ?? 4)));
+				$omnify_order_number = $omnify_prefix . str_pad((string) $omnify_order_id, $omnify_padding, '0', STR_PAD_LEFT) . $omnify_suffix;
+
+				\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
+					$this->table('orders'),
+					['order_number' => $omnify_order_number],
+					['id' => $omnify_order_id]
 				);
 			}
+
+			// Insert order items
+			if (! empty($omnify_items)) {
+				foreach ($omnify_items as $omnify_item) {
+					$omnify_item_inserted = \Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
+						$this->table('order_items'),
+						[
+							'order_id'     => $omnify_order_id,
+							'product_id'   => absint($omnify_item['product_id'] ?? 0),
+							'variation_id' => ! empty($omnify_item['variation_id']) ? absint($omnify_item['variation_id']) : null,
+							'product_name' => sanitize_text_field((string) ($omnify_item['product_name'] ?? 'Product')),
+							'price'        => (float) ($omnify_item['price'] ?? 0),
+							'tax'          => (float) ($omnify_item['tax'] ?? 0),
+							'quantity'     => max(1, intval($omnify_item['quantity'] ?? 1)),
+							'item_meta'    => ! empty($omnify_item['item_meta']) ? (is_string($omnify_item['item_meta']) ? $omnify_item['item_meta'] : wp_json_encode($omnify_item['item_meta'])) : null,
+							'created_at'   => $omnify_now,
+						]
+					);
+					if (false === $omnify_item_inserted) {
+						$this->rollback_transaction();
+						return 0;
+					}
+				}
+			}
+
+			$this->commit_transaction();
+		} catch (\Throwable $omnify_e) {
+			$this->rollback_transaction();
+			return 0;
 		}
 
 		if ($omnify_order_id > 0) {
+			if (! empty($omnify_data['customer_id'])) {
+				$this->invalidate_customer_stats_for_order($omnify_order_id, (int) $omnify_data['customer_id']);
+			}
 			do_action('omnify_order_created', $omnify_order_id, $omnify_data);
 		}
 
@@ -553,6 +679,7 @@ class Omnify_Order_Repository {
 
 		$omnify_success = $omnify_updated !== false;
 		if ($omnify_success && $omnify_old_status !== $omnify_status) {
+			$this->invalidate_customer_stats_for_order($omnify_order_id);
 			do_action('omnify_order_status_changed', $omnify_order_id, $omnify_status, $omnify_old_status);
 		}
 
@@ -587,6 +714,8 @@ class Omnify_Order_Repository {
 			'shipping_total'     => 'floatval',
 			'discount_amount'    => 'floatval',
 			'total'              => 'floatval',
+			'stock_reduced'      => 'intval',
+			'restocked'          => 'intval',
 		];
 
 		foreach ($omnify_fields as $omnify_field => $omnify_sanitize_fn) {
@@ -609,6 +738,7 @@ class Omnify_Order_Repository {
 		$omnify_updated = false !== \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('orders'), $omnify_row, ['id' => $omnify_id]);
 
 		if ($omnify_updated) {
+			$this->invalidate_customer_stats_for_order($omnify_id, isset($omnify_row['customer_id']) ? (int) $omnify_row['customer_id'] : null);
 			do_action('omnify_order_updated', $omnify_id, $omnify_data);
 			if (isset($omnify_row['status']) && $omnify_old_order && $omnify_old_order['status'] !== $omnify_row['status']) {
 				do_action('omnify_order_status_changed', $omnify_id, $omnify_row['status'], $omnify_old_order['status']);
@@ -630,10 +760,16 @@ class Omnify_Order_Repository {
 		\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, 'COMMIT');
 	}
 
+	public function rollback_transaction(): void {
+		global $wpdb;
+
+		\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, 'ROLLBACK');
+	}
+
 	public function update_refund_summary(int $omnify_id, float $omnify_refunded_amount, string $omnify_status): bool {
 		global $wpdb;
 
-		return false !== \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
+		$omnify_updated = false !== \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
 			$this->table('orders'),
 			[
 				'refunded_amount' => $omnify_refunded_amount,
@@ -642,6 +778,12 @@ class Omnify_Order_Repository {
 			],
 			['id' => $omnify_id]
 		);
+
+		if ($omnify_updated) {
+			$this->invalidate_customer_stats_for_order($omnify_id);
+		}
+
+		return $omnify_updated;
 	}
 
 	public function increment_item_refunded_qty(int $omnify_item_id, int $omnify_qty): void {
@@ -717,6 +859,7 @@ class Omnify_Order_Repository {
 				);
 			}
 			$this->add_note($omnify_order_id, $omnify_note);
+			do_action('omnify_order_fulfilled', $omnify_order_id, $omnify_carrier, $omnify_tracking, $omnify_status);
 			return true;
 		}
 
@@ -740,6 +883,10 @@ class Omnify_Order_Repository {
 			['id' => $omnify_order_id]
 		);
 
+		if ($omnify_updated) {
+			do_action('omnify_order_fraud_flagged', $omnify_order_id, $omnify_status, $omnify_score, $omnify_flags);
+		}
+
 		return $omnify_updated !== false;
 	}
 
@@ -759,9 +906,12 @@ class Omnify_Order_Repository {
 			$omnify_new_refunded = (float) $omnify_order['total'];
 		}
 
-		$omnify_status = $omnify_order['status'];
+		$omnify_old_status = (string) ($omnify_order['status'] ?? '');
+		$omnify_status     = $omnify_old_status;
 		if ($omnify_new_refunded >= (float) $omnify_order['total']) {
 			$omnify_status = 'refunded';
+		} elseif ($omnify_new_refunded > 0) {
+			$omnify_status = 'partially_refunded';
 		}
 
 		$omnify_updated = \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
@@ -775,6 +925,12 @@ class Omnify_Order_Repository {
 		);
 
 		if ($omnify_updated !== false) {
+			if ($omnify_old_status !== $omnify_status) {
+				do_action('omnify_order_status_changed', $omnify_order_id, $omnify_status, $omnify_old_status);
+			}
+
+			do_action('omnify_order_refunded', $omnify_order_id, $omnify_amount, $omnify_new_refunded);
+
 			// Add order note about the refund
 			$this->add_note(
 				$omnify_order_id,
@@ -795,12 +951,17 @@ class Omnify_Order_Repository {
 	 */
 	public function trash(int $omnify_id): bool {
 		global $wpdb;
+		$omnify_order = $this->find($omnify_id);
 		$omnify_updated = \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
 			$this->table('orders'),
 			['deleted_at' => current_time('mysql', 1)],
 			['id' => $omnify_id]
 		);
 		if ($omnify_updated) {
+			if ($omnify_order && ! empty($omnify_order['order_number'])) {
+				wp_cache_delete('omnify_order_id_by_number_' . md5((string) $omnify_order['order_number']), 'omnifywp-ecommerce');
+			}
+			$this->invalidate_customer_stats_for_order($omnify_id, $omnify_order && ! empty($omnify_order['customer_id']) ? (int) $omnify_order['customer_id'] : null);
 			do_action('omnify_order_trashed', $omnify_id);
 		}
 		return (bool) $omnify_updated;
@@ -808,12 +969,17 @@ class Omnify_Order_Repository {
 
 	public function restore(int $omnify_id): bool {
 		global $wpdb;
+		$omnify_order = $this->find($omnify_id);
 		$omnify_updated = \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, 
 			$this->table('orders'),
 			['deleted_at' => null],
 			['id' => $omnify_id]
 		);
 		if ($omnify_updated) {
+			if ($omnify_order && ! empty($omnify_order['order_number'])) {
+				wp_cache_delete('omnify_order_id_by_number_' . md5((string) $omnify_order['order_number']), 'omnifywp-ecommerce');
+			}
+			$this->invalidate_customer_stats_for_order($omnify_id, $omnify_order && ! empty($omnify_order['customer_id']) ? (int) $omnify_order['customer_id'] : null);
 			do_action('omnify_order_restored', $omnify_id);
 		}
 		return (bool) $omnify_updated;
@@ -825,15 +991,45 @@ class Omnify_Order_Repository {
 	public function delete(int $omnify_id): bool {
 		global $wpdb;
 
+		$omnify_order = $this->find($omnify_id);
+
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('order_notes'), ['order_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('order_items'), ['order_id' => $omnify_id]);
 		$omnify_deleted = false !== \Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('orders'), ['id' => $omnify_id]);
 
 		if ($omnify_deleted) {
+			if ($omnify_order && ! empty($omnify_order['order_number'])) {
+				wp_cache_delete('omnify_order_id_by_number_' . md5((string) $omnify_order['order_number']), 'omnifywp-ecommerce');
+			}
+			$this->invalidate_customer_stats_for_order($omnify_id, $omnify_order && ! empty($omnify_order['customer_id']) ? (int) $omnify_order['customer_id'] : null);
+
+			// Clean up or disassociate dependent records.
+			\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('email_logs'), ['order_id' => null], ['order_id' => $omnify_id]);
+			\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('abandoned_carts'), ['recovered_order_id' => null], ['recovered_order_id' => $omnify_id]);
+
+			// Clean up stock tracking and coupon restoration options
+			delete_option('_omnify_stock_reduced_' . $omnify_id);
+			delete_option('_omnify_restocked_' . $omnify_id);
+			delete_option('_omnify_coupon_restored_' . $omnify_id);
+
 			do_action('omnify_order_deleted', $omnify_id);
 		}
 
 		return $omnify_deleted;
+	}
+
+	/**
+	 * Invalidate customer stats cache associated with an order.
+	 */
+	public function invalidate_customer_stats_for_order(int $omnify_order_id, ?int $omnify_customer_id = null): void {
+		if ($omnify_customer_id === null || $omnify_customer_id <= 0) {
+			global $wpdb;
+			$omnify_orders_table = $this->table('orders');
+			$omnify_customer_id = (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare('SELECT customer_id FROM %i WHERE id = %d', $omnify_orders_table, $omnify_order_id));
+		}
+		if ($omnify_customer_id > 0) {
+			wp_cache_delete('omnify_customer_stats_' . $omnify_customer_id, 'omnifywp-ecommerce');
+		}
 	}
 
 	/**
@@ -863,7 +1059,12 @@ class Omnify_Order_Repository {
 			]
 		);
 
-		return (int) $wpdb->insert_id;
+		$omnify_inserted_id = (int) $wpdb->insert_id;
+		if ($omnify_inserted_id && ($omnify_customer_visible || 'customer' === $omnify_note_type)) {
+			do_action('omnify_customer_note_added', $omnify_order_id, $omnify_note, $omnify_inserted_id);
+		}
+
+		return $omnify_inserted_id;
 	}
 
 	/**

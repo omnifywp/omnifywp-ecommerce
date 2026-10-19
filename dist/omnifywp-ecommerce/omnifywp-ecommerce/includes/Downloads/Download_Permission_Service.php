@@ -41,7 +41,7 @@ class Omnify_Download_Permission_Service {
 			return false;
 		}
 
-		if (current_user_can('manage_options')) {
+		if (current_user_can('manage_omnify') || current_user_can('manage_options')) {
 			return true;
 		}
 
@@ -76,7 +76,7 @@ class Omnify_Download_Permission_Service {
 	/**
 	 * Verify file path is within allowed uploads directory.
 	 */
-	private function get_safe_file_path(string $omnify_path): ?string {
+	public function get_safe_file_path(string $omnify_path): ?string {
 		if ('' === $omnify_path || ! is_readable($omnify_path)) {
 			return null;
 		}
@@ -92,10 +92,20 @@ class Omnify_Download_Permission_Service {
 			return null;
 		}
 
-		$omnify_norm_path    = wp_normalize_path($omnify_real_path);
-		$omnify_norm_basedir = wp_normalize_path($omnify_basedir);
+		$omnify_norm_path    = function_exists('wp_normalize_path') ? wp_normalize_path($omnify_real_path) : str_replace('\\', '/', $omnify_real_path);
+		$omnify_norm_basedir = function_exists('wp_normalize_path') ? wp_normalize_path($omnify_basedir) : str_replace('\\', '/', $omnify_basedir);
 
-		if (0 !== stripos($omnify_norm_path, $omnify_norm_basedir)) {
+		$omnify_allowed_dirs = (array) apply_filters('omnify_safe_download_directories', [$omnify_norm_basedir]);
+		$omnify_is_inside = false;
+		foreach ($omnify_allowed_dirs as $omnify_dir) {
+			$omnify_norm_dir = function_exists('wp_normalize_path') ? wp_normalize_path((string) $omnify_dir) : str_replace('\\', '/', (string) $omnify_dir);
+			if ('' !== $omnify_norm_dir && 0 === stripos($omnify_norm_path, $omnify_norm_dir)) {
+				$omnify_is_inside = true;
+				break;
+			}
+		}
+
+		if (! $omnify_is_inside) {
 			return null;
 		}
 

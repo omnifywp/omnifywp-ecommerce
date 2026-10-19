@@ -30,48 +30,167 @@ class Omnify_Customer_Repository {
 		$omnify_limit  = min(100, max(1, absint($omnify_args['per_page'] ?? 20)));
 		$omnify_offset = max(0, absint($omnify_args['offset'] ?? 0));
 
-		$omnify_where = 'deleted_at IS NULL';
+		$omnify_where = 'c.deleted_at IS NULL';
 		$omnify_params = [];
 
 		if ('trash' === $omnify_status) {
-			$omnify_where = 'deleted_at IS NOT NULL';
+			$omnify_where = 'c.deleted_at IS NOT NULL';
 		} elseif ('all' !== $omnify_status) {
-			$omnify_where .= ' AND status = %s';
+			$omnify_where .= ' AND c.status = %s';
 			$omnify_params[] = $this->status($omnify_status);
 		}
 
 		if ('' !== $omnify_search) {
-			$omnify_where .= ' AND (email LIKE %s OR first_name LIKE %s OR last_name LIKE %s OR company LIKE %s)';
+			$omnify_where .= ' AND (c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR c.company LIKE %s OR c.phone LIKE %s OR c.billing_phone LIKE %s OR c.shipping_phone LIKE %s)';
 			$omnify_like = '%' . $wpdb->esc_like($omnify_search) . '%';
-			array_push($omnify_params, $omnify_like, $omnify_like, $omnify_like, $omnify_like);
+			array_push($omnify_params, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like);
 		}
 
 		if (! empty($omnify_args['date_from'])) {
-			$omnify_where .= ' AND DATE(created_at) >= %s';
+			$omnify_where .= ' AND DATE(c.created_at) >= %s';
 			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
 		}
 		if (! empty($omnify_args['date_to'])) {
-			$omnify_where .= ' AND DATE(created_at) <= %s';
+			$omnify_where .= ' AND DATE(c.created_at) <= %s';
 			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
 		}
 
-		$omnify_order_by = 'updated_at DESC';
+		$omnify_order_by = 'c.updated_at DESC';
 		$omnify_sort = sanitize_key((string) ($omnify_args['sort'] ?? 'created_desc'));
 		switch ($omnify_sort) {
-			case 'created_asc': $omnify_order_by = 'created_at ASC'; break;
-			case 'name_asc': $omnify_order_by = 'first_name ASC, last_name ASC'; break;
-			case 'name_desc': $omnify_order_by = 'first_name DESC, last_name DESC'; break;
+			case 'created_asc': $omnify_order_by = 'c.created_at ASC'; break;
+			case 'created_desc': $omnify_order_by = 'c.created_at DESC'; break;
+			case 'name_asc': $omnify_order_by = 'c.first_name ASC, c.last_name ASC'; break;
+			case 'name_desc': $omnify_order_by = 'c.first_name DESC, c.last_name DESC'; break;
+			case 'spent_desc': $omnify_order_by = 'total_spent DESC, c.id DESC'; break;
+			case 'spent_asc': $omnify_order_by = 'total_spent ASC, c.id ASC'; break;
+			case 'orders_desc': $omnify_order_by = 'order_count DESC, c.id DESC'; break;
+			case 'orders_asc': $omnify_order_by = 'order_count ASC, c.id ASC'; break;
 		}
 
-		$omnify_params[] = $omnify_limit;
-		$omnify_params[] = $omnify_offset;
+		$omnify_cust_table = $this->table('customers');
+		$omnify_orders_table = $this->table('orders');
+		$omnify_needs_stats_sort = in_array($omnify_sort, ['spent_desc', 'spent_asc', 'orders_desc', 'orders_asc'], true);
 
-		$omnify_sql = "SELECT * FROM {$this->table('customers')} WHERE {$omnify_where} ORDER BY {$omnify_order_by} LIMIT %d OFFSET %d";
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, $omnify_params), ARRAY_A);
+		if ($omnify_needs_stats_sort) {
+			$omnify_params[] = $omnify_limit;
+			$omnify_params[] = $omnify_offset;
+
+			$omnify_sql = "SELECT c.*,
+				COALESCE(s.order_count, 0) AS order_count,
+				COALESCE(s.total_spent, 0.0) AS total_spent
+			FROM {$omnify_cust_table} c
+			LEFT JOIN (
+				SELECT customer_id,
+					COUNT(*) AS order_count,
+					COALESCE(SUM(total - refunded_amount), 0) AS total_spent
+				FROM {$omnify_orders_table}
+				WHERE status NOT IN ('cancelled', 'failed', 'refunded', 'returned')
+					AND deleted_at IS NULL
+				GROUP BY customer_id
+			) s ON s.customer_id = c.id
+			WHERE {$omnify_where}
+			ORDER BY {$omnify_order_by}
+			LIMIT %d OFFSET %d";
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, $omnify_params), ARRAY_A);
+		} else {
+			$omnify_params[] = $omnify_limit;
+			$omnify_params[] = $omnify_offset;
+
+			$omnify_sql = "SELECT c.*
+			FROM {$omnify_cust_table} c
+			WHERE {$omnify_where}
+			ORDER BY {$omnify_order_by}
+			LIMIT %d OFFSET %d";
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, $omnify_params), ARRAY_A);
+
+			if (is_array($omnify_rows) && ! empty($omnify_rows)) {
+				$omnify_page_cids = array_map('intval', array_column($omnify_rows, 'id'));
+				$omnify_placeholders = implode(',', array_fill(0, count($omnify_page_cids), '%d'));
+
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				$omnify_stats_sql = "SELECT customer_id,
+					COUNT(*) AS order_count,
+					COALESCE(SUM(total - refunded_amount), 0) AS total_spent
+				FROM {$omnify_orders_table}
+				WHERE customer_id IN ({$omnify_placeholders})
+					AND status NOT IN ('cancelled', 'failed', 'refunded', 'returned')
+					AND deleted_at IS NULL
+				GROUP BY customer_id";
+
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				$omnify_stats_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_stats_sql, ...$omnify_page_cids), ARRAY_A);
+				$omnify_stats_map = [];
+				if (is_array($omnify_stats_rows)) {
+					foreach ($omnify_stats_rows as $omnify_s) {
+						$omnify_stats_map[(int) $omnify_s['customer_id']] = [
+							'order_count' => (int) $omnify_s['order_count'],
+							'total_spent' => (float) $omnify_s['total_spent'],
+						];
+					}
+				}
+
+				foreach ($omnify_rows as &$omnify_row) {
+					$omnify_cid = (int) $omnify_row['id'];
+					$omnify_row['order_count'] = $omnify_stats_map[$omnify_cid]['order_count'] ?? 0;
+					$omnify_row['total_spent'] = $omnify_stats_map[$omnify_cid]['total_spent'] ?? 0.0;
+				}
+				unset($omnify_row);
+			}
+		}
 
 		$omnify_customers = array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
 		return apply_filters('omnify_get_customers_results', $omnify_customers, $omnify_args);
+	}
+
+	/**
+	 * Count total customers matching criteria for pagination.
+	 */
+	public function count(array $omnify_args = []): int {
+		global $wpdb;
+
+		$omnify_status = sanitize_key((string) ($omnify_args['status'] ?? 'all'));
+		$omnify_search = sanitize_text_field((string) ($omnify_args['search'] ?? ''));
+
+		$omnify_where = 'c.deleted_at IS NULL';
+		$omnify_params = [];
+
+		if ('trash' === $omnify_status) {
+			$omnify_where = 'c.deleted_at IS NOT NULL';
+		} elseif ('all' !== $omnify_status) {
+			$omnify_where .= ' AND c.status = %s';
+			$omnify_params[] = $this->status($omnify_status);
+		}
+
+		if ('' !== $omnify_search) {
+			$omnify_where .= ' AND (c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR c.company LIKE %s OR c.phone LIKE %s OR c.billing_phone LIKE %s OR c.shipping_phone LIKE %s)';
+			$omnify_like = '%' . $wpdb->esc_like($omnify_search) . '%';
+			array_push($omnify_params, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like, $omnify_like);
+		}
+
+		if (! empty($omnify_args['date_from'])) {
+			$omnify_where .= ' AND DATE(c.created_at) >= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_from']);
+		}
+		if (! empty($omnify_args['date_to'])) {
+			$omnify_where .= ' AND DATE(c.created_at) <= %s';
+			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
+		}
+
+		$omnify_cust_table = $this->table('customers');
+		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_cust_table} c WHERE {$omnify_where}";
+
+		if (! empty($omnify_params)) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params));
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $omnify_sql);
 	}
 
 	public function find(int $omnify_id): ?array {
@@ -80,7 +199,15 @@ class Omnify_Customer_Repository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('customers')} WHERE id = %d", $omnify_id), ARRAY_A);
 
-		$omnify_customer = is_array($omnify_row) ? $this->hydrate($omnify_row) : null;
+		if (! is_array($omnify_row)) {
+			return null;
+		}
+
+		$omnify_stats = $this->get_stats($omnify_id);
+		$omnify_row['order_count'] = $omnify_stats['order_count'];
+		$omnify_row['total_spent'] = $omnify_stats['total_spent'];
+
+		$omnify_customer = $this->hydrate($omnify_row);
 		return apply_filters('omnify_get_customer', $omnify_customer, $omnify_id);
 	}
 
@@ -88,16 +215,36 @@ class Omnify_Customer_Repository {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('customers')} WHERE email = %s", sanitize_email($omnify_email)), ARRAY_A);
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('customers')} WHERE email = %s AND deleted_at IS NULL", sanitize_email($omnify_email)), ARRAY_A);
 
-		return is_array($omnify_row) ? $this->hydrate($omnify_row) : null;
+		if (! is_array($omnify_row)) {
+			return null;
+		}
+
+		$omnify_stats = $this->get_stats((int) $omnify_row['id']);
+		$omnify_row['order_count'] = $omnify_stats['order_count'];
+		$omnify_row['total_spent'] = $omnify_stats['total_spent'];
+
+		return $this->hydrate($omnify_row);
 	}
 
 	public function find_by_user_id(int $omnify_user_id): ?array {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('customers')} WHERE user_id = %d", $omnify_user_id), ARRAY_A);
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row($wpdb, $wpdb->prepare("SELECT * FROM {$this->table('customers')} WHERE user_id = %d AND deleted_at IS NULL", $omnify_user_id), ARRAY_A);
+
+		if (! $omnify_row && $omnify_user_id > 0) {
+			$omnify_wp_user = get_userdata($omnify_user_id);
+			if ($omnify_wp_user && ! empty($omnify_wp_user->user_email)) {
+				$omnify_by_email = $this->find_by_email($omnify_wp_user->user_email);
+				if ($omnify_by_email && empty($omnify_by_email['user_id'])) {
+					$this->update((int) $omnify_by_email['id'], ['user_id' => $omnify_user_id]);
+					$omnify_by_email['user_id'] = $omnify_user_id;
+					return $omnify_by_email;
+				}
+			}
+		}
 
 		return is_array($omnify_row) ? $this->hydrate($omnify_row) : null;
 	}
@@ -211,9 +358,16 @@ class Omnify_Customer_Repository {
 			$omnify_row['status'] = $this->status((string) $omnify_data['status']);
 		}
 
+		$omnify_old_customer = $this->find($omnify_id);
+
 		$omnify_updated = false !== \Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('customers'), $omnify_row, ['id' => $omnify_id]);
 
 		if ($omnify_updated) {
+			if ($omnify_old_customer) {
+				$omnify_old_user_id = isset($omnify_old_customer['user_id']) ? (int) $omnify_old_customer['user_id'] : 0;
+				$omnify_old_email   = isset($omnify_old_customer['email']) ? $omnify_old_customer['email'] : '';
+				wp_cache_delete('omnify_cust_ids_' . $omnify_old_user_id . '_' . md5($omnify_old_email), 'omnifywp-ecommerce');
+			}
 			$this->clean_customer_caches_by_id($omnify_id);
 			$this->record_activity($omnify_id, 'updated', __('Customer profile updated.', 'omnifywp-ecommerce'));
 			do_action('omnify_customer_updated', $omnify_id, $omnify_data);
@@ -253,9 +407,21 @@ class Omnify_Customer_Repository {
 	public function delete(int $omnify_id): bool {
 		global $wpdb;
 
+		$omnify_customer = $this->find($omnify_id);
+
 		$this->clean_customer_caches_by_id($omnify_id);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('customer_notes'), ['customer_id' => $omnify_id]);
 		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('customer_activity'), ['customer_id' => $omnify_id]);
+		\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('customer_access'), ['customer_id' => $omnify_id]);
+		\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('orders'), ['customer_id' => null], ['customer_id' => $omnify_id]);
+		\Omnify\eCommerce\Support\Omnify_DB::update($wpdb, $this->table('downloads'), ['customer_id' => null], ['customer_id' => $omnify_id]);
+
+		if ($omnify_customer && ! empty($omnify_customer['email'])) {
+			\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('abandoned_carts'), ['email' => $omnify_customer['email']]);
+		}
+		if ($omnify_customer && ! empty($omnify_customer['user_id'])) {
+			\Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('wishlists'), ['user_id' => (int) $omnify_customer['user_id']]);
+		}
 
 		$omnify_deleted = false !== \Omnify\eCommerce\Support\Omnify_DB::delete($wpdb, $this->table('customers'), ['id' => $omnify_id]);
 		if ($omnify_deleted) {
@@ -355,6 +521,8 @@ class Omnify_Customer_Repository {
 		$omnify_row['id'] = (int) $omnify_row['id'];
 		$omnify_row['user_id'] = null === $omnify_row['user_id'] ? null : (int) $omnify_row['user_id'];
 		$omnify_row['tax_exempt'] = ! empty($omnify_row['tax_exempt']);
+		$omnify_row['order_count'] = isset($omnify_row['order_count']) ? (int) $omnify_row['order_count'] : 0;
+		$omnify_row['total_spent'] = isset($omnify_row['total_spent']) ? (float) $omnify_row['total_spent'] : 0.0;
 		$omnify_row['name'] = trim((string) $omnify_row['first_name'] . ' ' . (string) $omnify_row['last_name']);
 
 		$omnify_address_fields = [
@@ -403,6 +571,58 @@ class Omnify_Customer_Repository {
 			$omnify_email = isset($omnify_customer['email']) ? $omnify_customer['email'] : '';
 			wp_cache_delete('omnify_cust_ids_' . $omnify_user_id . '_' . md5($omnify_email), 'omnifywp-ecommerce');
 		}
+		$this->clear_stats_cache($omnify_id);
+	}
+
+	/**
+	 * Get calculated spend and order count stats for a customer.
+	 *
+	 * Excludes cancelled, failed, refunded, and returned orders as well as trashed orders.
+	 * Deducts any refunded amount from total spent.
+	 *
+	 * @param int $omnify_customer_id
+	 * @return array{order_count: int, total_spent: float}
+	 */
+	public function get_stats(int $omnify_customer_id): array {
+		if ($omnify_customer_id <= 0) {
+			return ['order_count' => 0, 'total_spent' => 0.0];
+		}
+
+		global $wpdb;
+		$omnify_cache_key = 'omnify_customer_stats_' . $omnify_customer_id;
+		$omnify_stats     = wp_cache_get($omnify_cache_key, 'omnifywp-ecommerce');
+
+		if (false === $omnify_stats) {
+			$omnify_orders_table = $this->table('orders');
+			$omnify_row          = \Omnify\eCommerce\Support\Omnify_DB::get_row(
+				$wpdb,
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					"SELECT COUNT(*) as order_count, COALESCE(SUM(total - refunded_amount), 0) as total_spent FROM {$omnify_orders_table} WHERE customer_id = %d AND status NOT IN ('cancelled', 'failed', 'refunded', 'returned') AND deleted_at IS NULL",
+					$omnify_customer_id
+				),
+				ARRAY_A
+			);
+
+			$omnify_stats = [
+				'order_count' => (int) ($omnify_row['order_count'] ?? 0),
+				'total_spent' => max(0.0, (float) ($omnify_row['total_spent'] ?? 0)),
+			];
+			wp_cache_set($omnify_cache_key, $omnify_stats, 'omnifywp-ecommerce', 10 * MINUTE_IN_SECONDS);
+		}
+
+		return is_array($omnify_stats) ? $omnify_stats : ['order_count' => 0, 'total_spent' => 0.0];
+	}
+
+	/**
+	 * Invalidate customer stats cache.
+	 *
+	 * @param int $omnify_customer_id
+	 */
+	public function clear_stats_cache(int $omnify_customer_id): void {
+		if ($omnify_customer_id > 0) {
+			wp_cache_delete('omnify_customer_stats_' . $omnify_customer_id, 'omnifywp-ecommerce');
+		}
 	}
 
 	/**
@@ -410,16 +630,39 @@ class Omnify_Customer_Repository {
 	 */
 	public function find_ids_by_user_id_or_email(int $omnify_user_id, string $omnify_email): array {
 		global $wpdb;
+
+		$omnify_user_id = max(0, $omnify_user_id);
+		$omnify_email   = sanitize_email($omnify_email);
+
+		if ($omnify_user_id <= 0 && '' === $omnify_email) {
+			return [];
+		}
+
 		$omnify_cache_key = 'omnify_cust_ids_' . $omnify_user_id . '_' . md5($omnify_email);
 		$omnify_ids = wp_cache_get($omnify_cache_key, 'omnifywp-ecommerce');
 		if (false === $omnify_ids) {
 			$omnify_customers_table = $this->table('customers');
-			$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare(
-				'SELECT id FROM %i WHERE (user_id = %d OR email = %s) AND deleted_at IS NULL',
-				$omnify_customers_table,
-				$omnify_user_id,
-				$omnify_email
-			), ARRAY_A);
+			if ($omnify_user_id > 0 && '' !== $omnify_email) {
+				$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare(
+					'SELECT id FROM %i WHERE (user_id = %d OR email = %s) AND deleted_at IS NULL',
+					$omnify_customers_table,
+					$omnify_user_id,
+					$omnify_email
+				), ARRAY_A);
+			} elseif ($omnify_user_id > 0) {
+				$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare(
+					'SELECT id FROM %i WHERE user_id = %d AND deleted_at IS NULL',
+					$omnify_customers_table,
+					$omnify_user_id
+				), ARRAY_A);
+			} else {
+				$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare(
+					'SELECT id FROM %i WHERE email = %s AND deleted_at IS NULL',
+					$omnify_customers_table,
+					$omnify_email
+				), ARRAY_A);
+			}
+
 			$omnify_ids = [];
 			if (is_array($omnify_rows)) {
 				foreach ($omnify_rows as $omnify_row) {

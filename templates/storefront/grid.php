@@ -67,6 +67,7 @@ $omnify_product_compare_summary = $omnify_template_vars['omnify_product_compare_
 $omnify_product_url = $omnify_template_vars['omnify_product_url'] ?? null;
 $omnify_products = $omnify_template_vars['omnify_products'] ?? null;
 $omnify_products_limit = $omnify_template_vars['omnify_products_limit'] ?? null;
+$omnify_rating_summaries = $omnify_template_vars['omnify_rating_summaries'] ?? [];
 $omnify_review_count = $omnify_template_vars['omnify_review_count'] ?? null;
 $omnify_search_text = $omnify_template_vars['omnify_search_text'] ?? null;
 $omnify_settings = $omnify_template_vars['omnify_settings'] ?? null;
@@ -368,6 +369,13 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 		</div>
 	</div>
 
+	<?php if (! empty($omnify_storefront_product_notice)) : ?>
+		<div class="omnify-storefront-alert omnify-storefront-alert--warning" style="margin: 0 auto 24px auto; max-width: 1200px; padding: 14px 20px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; color: #92400e; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+			<span class="dashicons dashicons-warning" style="font-size: 20px; width: 20px; height: 20px; color: #d97706; line-height: 1;"></span>
+			<span><?php echo esc_html($omnify_storefront_product_notice); ?></span>
+		</div>
+	<?php endif; ?>
+
 	<div class="omnify-storefront-shell">
 		<div class="omnify-storefront-layout-grid">
 			<!-- Left Column: Streamlined Sidebar Filters -->
@@ -492,49 +500,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 
 			<!-- Right Column: Products Content Area -->
 			<div class="omnify-storefront-content">
-				<!-- Interactive Quick Filter Pills Strip -->
-				<div class="omnify-quick-filter-strip" role="tablist" aria-label="<?php esc_attr_e('Quick filters', 'omnifywp-ecommerce'); ?>">
-					<button type="button" class="omnify-quick-filter-pill is-active" data-filter-type="all">
-						<span><?php esc_html_e('All Products', 'omnifywp-ecommerce'); ?></span>
-						<span class="pill-count"><?php echo count($omnify_products); ?></span>
-					</button>
-					<button type="button" class="omnify-quick-filter-pill" data-filter-type="sale">
-						<span class="pill-icon">⚡</span>
-						<span><?php esc_html_e('Flash Deals', 'omnifywp-ecommerce'); ?></span>
-						<?php if ($omnify_sale_count > 0) : ?>
-							<span class="pill-count"><?php echo (int) $omnify_sale_count; ?></span>
-						<?php endif; ?>
-					</button>
-					<button type="button" class="omnify-quick-filter-pill" data-filter-type="hot">
-						<span class="pill-icon">🔥</span>
-						<span><?php esc_html_e('Bestsellers', 'omnifywp-ecommerce'); ?></span>
-						<?php if ($omnify_hot_count > 0) : ?>
-							<span class="pill-count"><?php echo (int) $omnify_hot_count; ?></span>
-						<?php endif; ?>
-					</button>
-					<button type="button" class="omnify-quick-filter-pill" data-filter-type="new">
-						<span class="pill-icon">✨</span>
-						<span><?php esc_html_e('New In', 'omnifywp-ecommerce'); ?></span>
-						<?php if ($omnify_new_count > 0) : ?>
-							<span class="pill-count"><?php echo (int) $omnify_new_count; ?></span>
-						<?php endif; ?>
-					</button>
-					<?php 
-					// Display top categories as quick pills
-					$omnify_top_cats = array_slice($omnify_all_categories, 0, 4);
-					foreach ($omnify_top_cats as $omnify_top_cat) : 
-						$omnify_top_cat_slug = sanitize_title($omnify_top_cat);
-						$omnify_top_cat_count = $omnify_cat_counts[$omnify_top_cat_slug] ?? 0;
-					?>
-						<button type="button" class="omnify-quick-filter-pill" data-filter-type="category" data-filter-value="<?php echo esc_attr($omnify_top_cat_slug); ?>">
-							<span><?php echo esc_html($omnify_top_cat); ?></span>
-							<?php if ($omnify_top_cat_count > 0) : ?>
-								<span class="pill-count"><?php echo (int) $omnify_top_cat_count; ?></span>
-							<?php endif; ?>
-						</button>
-					<?php endforeach; ?>
-				</div>
-
 				<?php if ($omnify_show_filters) : ?>
 				<!-- Storefront catalog toolbar -->
 				<div class="omnify-horizontal-filter-bar">
@@ -553,9 +518,10 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 
 					<div class="omnify-filter-right">
 						<?php if ($omnify_show_search) : ?>
-							<form method="get" class="omnify-filter-search-box" onsubmit="return false;">
+							<form method="get" class="omnify-filter-search-box" onsubmit="return false;" style="position: relative;">
 								<svg class="omnify-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 								<input type="text" id="omnify-product-search" name="search" autocomplete="off" value="<?php echo esc_attr($omnify_current_filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search products...', 'omnifywp-ecommerce'); ?>" />
+								<div id="omnify-search-autocomplete" class="omnify-search-autocomplete" style="display: none;"></div>
 							</form>
 						<?php endif; ?>
 
@@ -599,6 +565,11 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 							</button>
 						</div>
 
+						<!-- Currency Switcher Widget -->
+						<div class="omnify-filter-currency-wrap">
+							<?php echo do_shortcode('[omnify_currency_switcher]'); ?>
+						</div>
+
 						<!-- Cart Link -->
 						<div class="omnify-filter-cart-wrap">
 							<a href="<?php echo esc_url($omnify_cart_url ?? '#'); ?>" class="omnify-cart-link">
@@ -640,8 +611,13 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 			</div>
 		<?php else : ?>
 			<?php foreach ($omnify_products as $omnify_product) : 
-				$omnify_avg_rating = $this->omnify_reviews->get_average_rating((int) $omnify_product['id']);
-				$omnify_review_count = $this->omnify_reviews->get_total_count((int) $omnify_product['id']);
+				$omnify_pid = (int) ($omnify_product['id'] ?? 0);
+				$omnify_avg_rating = isset($omnify_rating_summaries[$omnify_pid])
+					? (float) ($omnify_rating_summaries[$omnify_pid]['rating'] ?? 0.0)
+					: $this->omnify_reviews->get_average_rating($omnify_pid);
+				$omnify_review_count = isset($omnify_rating_summaries[$omnify_pid])
+					? (int) ($omnify_rating_summaries[$omnify_pid]['count'] ?? 0)
+					: $this->omnify_reviews->get_total_count($omnify_pid);
 				$omnify_actual_price = (null !== ($omnify_product['sale_price'] ?? null) && '' !== (string) $omnify_product['sale_price']) ? (float) $omnify_product['sale_price'] : (float) $omnify_product['price'];
 				$omnify_category_slugs = implode(' ', array_map('sanitize_title', (array) ($omnify_product['categories'] ?? [])));
 				$omnify_product_brand_values = (array) ($omnify_product['brands'] ?? []);
@@ -662,7 +638,15 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				<?php
 				$omnify_variations = [];
 				if ('variable' === ($omnify_product['type'] ?? '')) {
-					$omnify_variations = $this->omnify_products->get_variations((int) $omnify_product['id']);
+					$omnify_variations = isset($omnify_grid_variations[$omnify_pid])
+						? $omnify_grid_variations[$omnify_pid]
+						: $this->omnify_products->get_variations((int) $omnify_product['id']);
+				}
+				$omnify_var_range = ('variable' === ($omnify_product['type'] ?? '') && ! empty($omnify_variations))
+					? $this->omnify_products->get_variation_price_range($omnify_variations)
+					: null;
+				if ($omnify_var_range) {
+					$omnify_actual_price = (float) $omnify_var_range['min'];
 				}
 				$omnify_discount_pct = 0;
 				if (! empty($omnify_product['sale_price']) && (float) $omnify_product['price'] > 0) {
@@ -687,7 +671,11 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				$omnify_pname_lc = strtolower((string) ($omnify_product['name'] ?? ''));
 				$omnify_is_wearable = (strpos($omnify_pname_lc, 'hoodie') !== false || strpos($omnify_pname_lc, 'shirt') !== false || strpos($omnify_pname_lc, 't-shirt') !== false || strpos($omnify_pname_lc, 'apparel') !== false || strpos($omnify_pname_lc, 'clothing') !== false || strpos($omnify_pname_lc, 'jacket') !== false);
 
-				$omnify_stock_qty = isset($omnify_product['stock_quantity']) && is_numeric($omnify_product['stock_quantity']) ? (int) $omnify_product['stock_quantity'] : (isset($omnify_product['stock']) && is_numeric($omnify_product['stock']) ? (int) $omnify_product['stock'] : 0);
+				$omnify_stock_qty = isset($omnify_product['stock_qty']) && is_numeric($omnify_product['stock_qty'])
+					? (int) $omnify_product['stock_qty']
+					: (isset($omnify_product['stock_quantity']) && is_numeric($omnify_product['stock_quantity'])
+						? (int) $omnify_product['stock_quantity']
+						: (isset($omnify_product['stock']) && is_numeric($omnify_product['stock']) ? (int) $omnify_product['stock'] : 0));
 
 				$omnify_thumb = ! empty($omnify_product['thumbnail_url']) ? $omnify_product['thumbnail_url'] : '';
 				if (empty($omnify_thumb) && ! empty($omnify_product['thumbnail_id'])) {
@@ -695,16 +683,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				}
 				if (empty($omnify_thumb) && ! empty($omnify_product['gallery_urls'][0])) {
 					$omnify_thumb = (string) $omnify_product['gallery_urls'][0];
-				}
-				if (empty($omnify_thumb)) {
-					$omnify_assets_img = defined('OMNIFY_URL') ? rtrim(OMNIFY_URL, '/') . '/assets/storefront/images/' : plugins_url('assets/storefront/images/', dirname(__DIR__, 1) . '/omnifywp-ecommerce.php');
-					if ($omnify_is_wearable || 'physical' === $omnify_ptype) {
-						$omnify_thumb = $omnify_assets_img . 'product-merch-hoodie.jpg';
-					} elseif (strpos($omnify_pname_lc, 'bundle') !== false || strpos($omnify_pname_lc, 'kit') !== false || strpos($omnify_pname_lc, 'pack') !== false || 'bundle' === $omnify_ptype) {
-						$omnify_thumb = $omnify_assets_img . 'product-bundle-kit.jpg';
-					} else {
-						$omnify_thumb = $omnify_assets_img . 'product-digital-suite.jpg';
-					}
 				}
 
 				// 1. Top-Left Type Badge
@@ -851,7 +829,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						<div class="omnify-product-card__info">
 							<!-- Rating & Reviews Row -->
 							<div class="omnify-product-card__rating">
-								<span class="omnify-stars">★★★★★</span>
+								<span class="omnify-stars"><span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-star-filled"></span></span>
 								<span class="omnify-review-count">(<?php echo esc_html($omnify_card_reviews); ?>)</span>
 							</div>
 
@@ -879,7 +857,13 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 						<!-- Mockup Meta Row: Price on left, pill action button on right, with top border divider -->
 						<div class="omnify-product-card__meta-row">
 							<div class="omnify-product-card__price">
-								<?php if (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
+								<?php if ($omnify_var_range) : ?>
+									<span class="current-price">
+										<?php echo esc_html($omnify_var_range['min'] === $omnify_var_range['max']
+											? $omnify_format_price((float) $omnify_var_range['min'])
+											: $omnify_format_price((float) $omnify_var_range['min']) . ' – ' . $omnify_format_price((float) $omnify_var_range['max'])); ?>
+									</span>
+								<?php elseif (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
 									<span class="current-price sale"><?php echo esc_html($omnify_format_price((float) $omnify_product['sale_price'])); ?></span>
 									<span class="original-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
 								<?php else : ?>
@@ -904,7 +888,13 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					<!-- List view right panel (Pricing, Stock, Button & Vertical links) -->
 					<div class="omnify-product-card__list-panel">
 						<div class="omnify-product-card__list-price">
-							<?php if (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
+							<?php if ($omnify_var_range) : ?>
+								<span class="current-price">
+									<?php echo esc_html($omnify_var_range['min'] === $omnify_var_range['max']
+										? $omnify_format_price((float) $omnify_var_range['min'])
+										: $omnify_format_price((float) $omnify_var_range['min']) . ' – ' . $omnify_format_price((float) $omnify_var_range['max'])); ?>
+								</span>
+							<?php elseif (! empty($omnify_product['sale_price']) && (float) $omnify_product['sale_price'] < (float) $omnify_product['price']) : ?>
 								<span class="current-price sale"><?php echo esc_html($omnify_format_price((float) $omnify_product['sale_price'])); ?></span>
 								<span class="original-price"><?php echo esc_html($omnify_format_price((float) $omnify_product['price'])); ?></span>
 							<?php else : ?>
@@ -973,7 +963,6 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 		<?php endif; ?>
 
 		</div>
-		<?php endif; ?>
 	</div>
 
 	<!-- Load More and Swatches are handled via storefront.js -->

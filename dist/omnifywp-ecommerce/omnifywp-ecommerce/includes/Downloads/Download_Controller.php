@@ -13,7 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 use Omnify\eCommerce\Repositories\Omnify_Download_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Customer_Access_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Customer_Repository;
+use Omnify\eCommerce\Repositories\Omnify_Order_Repository;
 use Omnify\eCommerce\Repositories\Omnify_Product_File_Repository;
+use Omnify\eCommerce\Support\Omnify_Email_Service;
 
 class Omnify_Download_Controller {
 	public function __construct(
@@ -22,7 +24,9 @@ class Omnify_Download_Controller {
 		private Omnify_Signed_Url_Service $omnify_signed_urls,
 		private Omnify_Download_Permission_Service $omnify_permissions,
 		private Omnify_Customer_Repository $omnify_customers,
-		private Omnify_Customer_Access_Repository $omnify_access
+		private Omnify_Customer_Access_Repository $omnify_access,
+		private ?Omnify_Order_Repository $omnify_orders = null,
+		private ?Omnify_Email_Service $omnify_emails = null
 	) {}
 
 	public function register(): void {
@@ -53,7 +57,20 @@ class Omnify_Download_Controller {
 			wp_die(esc_html__('File not found.', 'omnifywp-ecommerce'), esc_html__('Download unavailable', 'omnifywp-ecommerce'), ['response' => 404]);
 		}
 
-		$this->omnify_downloads->log((int) $omnify_file['product_id'], (int) $omnify_file['id'], 'delivered', $omnify_customer_id);
+		// Only count download attempts that start from the beginning (prevent RFC 7233 chunk/resumed requests from exhausting download limits)
+		$omnify_is_resume = false;
+		if (isset($_SERVER['HTTP_RANGE'])) {
+			$omnify_http_range = sanitize_text_field(wp_unslash((string) $_SERVER['HTTP_RANGE']));
+			if (preg_match('/bytes=\s*(\d+)/i', $omnify_http_range, $omnify_matches)) {
+				if ((int) $omnify_matches[1] > 0) {
+					$omnify_is_resume = true;
+				}
+			}
+		}
+
+		if (! $omnify_is_resume) {
+			$this->omnify_downloads->log((int) $omnify_file['product_id'], (int) $omnify_file['id'], 'delivered', $omnify_customer_id);
+		}
 
 		// If the file path is an external cloud/CDN URL, redirect securely
 		$omnify_file_path = (string) ($omnify_file['file_path'] ?? '');
@@ -81,10 +98,79 @@ class Omnify_Download_Controller {
 	public function render_customer_downloads(): string {
 		$omnify_customer = is_user_logged_in() ? $this->omnify_customers->find_by_user_id(get_current_user_id()) : null;
 		$omnify_files = [];
+		$omnify_guest_error = '';
+		$omnify_guest_success = '';
+		$omnify_guest_lookup = false;
 
-		if ($omnify_customer) {
+		// Handle guest lookup submission
+		if (! is_user_logged_in() && ! empty($_POST['omnify_guest_download_lookup'])) {
+			if (! isset($_POST['omnify_guest_nonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['omnify_guest_nonce'])), 'omnify_guest_downloads')) {
+				$omnify_guest_error = __('Security check failed. Please refresh the page and try again.', 'omnifywp-ecommerce');
+			} else {
+				$omnify_raw_number = sanitize_text_field(wp_unslash((string) ($_POST['omnify_order_number'] ?? '')));
+				$omnify_clean_email = sanitize_email(wp_unslash((string) ($_POST['omnify_order_email'] ?? '')));
+
+				if ('' === $omnify_raw_number || '' === $omnify_clean_email) {
+					$omnify_guest_error = __('Please enter both your order number and billing email.', 'omnifywp-ecommerce');
+				} else {
+					$omnify_order_id = $this->omnify_orders ? $this->omnify_orders->find_id_by_order_number($omnify_raw_number) : 0;
+					if (! $omnify_order_id && $this->omnify_orders) {
+						$omnify_trimmed_num = ltrim($omnify_raw_number, '#');
+						$omnify_order_id = $this->omnify_orders->find_id_by_order_number($omnify_trimmed_num);
+						if (! $omnify_order_id && is_numeric($omnify_trimmed_num)) {
+							$omnify_order_id = absint($omnify_trimmed_num);
+						}
+					}
+
+					$omnify_order = ($omnify_order_id && $this->omnify_orders) ? $this->omnify_orders->find($omnify_order_id) : null;
+					$omnify_order_email = $omnify_order ? (string) ($omnify_order['customer_email'] ?? ($omnify_order['billing_email'] ?? '')) : '';
+
+					if (! $omnify_order || 0 !== strcasecmp(trim($omnify_order_email), trim($omnify_clean_email))) {
+						$omnify_guest_error = __('No matching order found for the provided details. Please check your order number and email address.', 'omnifywp-ecommerce');
+					} elseif (! in_array((string) ($omnify_order['status'] ?? ''), ['completed', 'processing', 'delivered'], true)) {
+						$omnify_guest_error = __('Digital downloads are not available because this order has not been completed or is cancelled.', 'omnifywp-ecommerce');
+					} else {
+						$omnify_guest_customer_id = absint($omnify_order['customer_id'] ?? 0);
+						if (! $omnify_guest_customer_id) {
+							$omnify_cust_row = $this->omnify_customers->find_by_email($omnify_clean_email);
+							$omnify_guest_customer_id = $omnify_cust_row ? (int) $omnify_cust_row['id'] : 0;
+						}
+
+						if ($omnify_guest_customer_id > 0) {
+							$omnify_ttl = (int) apply_filters('omnify_download_url_ttl', DAY_IN_SECONDS * 7, 'guest_lookup');
+							$omnify_order_product_ids = [];
+							if (! empty($omnify_order['items']) && is_array($omnify_order['items'])) {
+								foreach ($omnify_order['items'] as $omnify_oi) {
+									$omnify_order_product_ids[] = absint($omnify_oi['product_id'] ?? 0);
+								}
+							}
+
+							foreach ($this->omnify_access->files_for_customer($omnify_guest_customer_id) as $omnify_file) {
+								if (empty($omnify_order_product_ids) || in_array((int) $omnify_file['product_id'], $omnify_order_product_ids, true)) {
+									$omnify_file['download_url'] = $this->omnify_signed_urls->create((int) $omnify_file['id'], $omnify_ttl, $omnify_guest_customer_id);
+									$omnify_files[] = $omnify_file;
+								}
+							}
+
+							$omnify_guest_lookup = true;
+							if (empty($omnify_files)) {
+								$omnify_guest_error = __('This order does not contain downloadable digital files.', 'omnifywp-ecommerce');
+							} else {
+								// translators: %s: Order number.
+								$omnify_guest_success = sprintf(__('Verified Order #%s. Fresh download links generated below.', 'omnifywp-ecommerce'), esc_html((string) ($omnify_order['order_number'] ?? $omnify_order_id)));
+							}
+						} else {
+							$omnify_guest_error = __('Unable to locate customer download permissions for this order.', 'omnifywp-ecommerce');
+						}
+					}
+				}
+			}
+		}
+
+		if (is_user_logged_in() && $omnify_customer) {
+			$omnify_ttl = (int) apply_filters('omnify_download_url_ttl', DAY_IN_SECONDS, 'shortcode');
 			foreach ($this->omnify_access->files_for_customer((int) $omnify_customer['id']) as $omnify_file) {
-				$omnify_file['download_url'] = $this->omnify_signed_urls->create((int) $omnify_file['id'], 900, (int) $omnify_customer['id']);
+				$omnify_file['download_url'] = $this->omnify_signed_urls->create((int) $omnify_file['id'], $omnify_ttl, (int) $omnify_customer['id']);
 				$omnify_files[] = $omnify_file;
 			}
 		}
@@ -101,6 +187,9 @@ class Omnify_Download_Controller {
 		}
 
 		$omnify_filesize = filesize( $omnify_path );
+		if ( false === $omnify_filesize || $omnify_filesize < 0 ) {
+			wp_die( esc_html__( 'Unable to determine download file size.', 'omnifywp-ecommerce' ), esc_html__( 'Download unavailable', 'omnifywp-ecommerce' ), [ 'response' => 500 ] );
+		}
 
 		// Clean all active output buffers to prevent memory exhaustion on large files
 		while ( ob_get_level() > 0 ) {
@@ -110,63 +199,79 @@ class Omnify_Download_Controller {
 		nocache_headers();
 		header( 'Content-Type: ' . (string) ( $omnify_file['file_type'] ?: 'application/octet-stream' ) );
 		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( (string) $omnify_file['file_name'] ) . '"' );
-		if ( false !== $omnify_filesize ) {
-			header( 'Content-Length: ' . (string) $omnify_filesize );
-		}
+		header( 'Accept-Ranges: bytes' );
 		header( 'X-Content-Type-Options: nosniff' );
 
-		// Stream file in 8KB chunks to handle large files efficiently
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 		$omnify_handle = fopen( $omnify_path, 'rb' );
-		if ( false !== $omnify_handle ) {
-			while ( ! feof( $omnify_handle ) ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
-				$omnify_buffer = fread( $omnify_handle, 8192 );
-				if ( false === $omnify_buffer ) {
-					break;
-				}
-				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo $omnify_buffer;
-				flush();
-			}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-			fclose( $omnify_handle );
-		} else {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
-			readfile( $omnify_path );
+		if ( false === $omnify_handle ) {
+			wp_die( esc_html__( 'Failed to open file for streaming.', 'omnifywp-ecommerce' ), esc_html__( 'Download error', 'omnifywp-ecommerce' ), [ 'response' => 500 ] );
 		}
+
+		// Support HTTP Range requests (resumable downloads RFC 7233)
+		$omnify_start  = 0;
+		$omnify_end    = $omnify_filesize - 1;
+		$omnify_length = $omnify_filesize;
+
+		if ( isset( $_SERVER['HTTP_RANGE'] ) ) {
+			$omnify_http_range = sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_RANGE'] ) );
+			if ( preg_match( '/bytes=\s*(\d*)\s*-\s*(\d*)/i', $omnify_http_range, $omnify_matches ) ) {
+				$omnify_range_start = '' !== $omnify_matches[1] ? (float) $omnify_matches[1] : null;
+				$omnify_range_end   = '' !== $omnify_matches[2] ? (float) $omnify_matches[2] : null;
+
+				if ( null === $omnify_range_start ) {
+					$omnify_start = max( 0.0, (float) ( $omnify_filesize - (float) $omnify_range_end ) );
+				} else {
+					$omnify_start = (float) $omnify_range_start;
+					if ( null !== $omnify_range_end && $omnify_range_end >= $omnify_start ) {
+						$omnify_end = min( (float) ( $omnify_filesize - 1 ), (float) $omnify_range_end );
+					}
+				}
+
+				if ( $omnify_start > $omnify_end || $omnify_start >= $omnify_filesize ) {
+					header( 'HTTP/1.1 416 Range Not Satisfiable' );
+					header( "Content-Range: bytes */{$omnify_filesize}" );
+					fclose( $omnify_handle );
+					exit;
+				}
+
+				$omnify_length = ( $omnify_end - $omnify_start ) + 1;
+				header( 'HTTP/1.1 206 Partial Content' );
+				header( sprintf( 'Content-Range: bytes %.0f-%.0f/%.0f', $omnify_start, $omnify_end, $omnify_filesize ) );
+			}
+		}
+
+		header( sprintf( 'Content-Length: %.0f', $omnify_length ) );
+
+		if ( $omnify_start > 0 ) {
+			fseek( $omnify_handle, (int) $omnify_start );
+		}
+
+		// Stream requested range in 8KB chunks
+		$omnify_bytes_remaining = $omnify_length;
+		while ( ! feof( $omnify_handle ) && $omnify_bytes_remaining > 0 ) {
+			$omnify_chunk_size = (int) min( 8192, $omnify_bytes_remaining );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
+			$omnify_buffer = fread( $omnify_handle, $omnify_chunk_size );
+			if ( false === $omnify_buffer || '' === $omnify_buffer ) {
+				break;
+			}
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo $omnify_buffer;
+			flush();
+			$omnify_bytes_remaining -= strlen( $omnify_buffer );
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $omnify_handle );
 		exit;
 	}
 
 	/**
 	 * Return a verified safe absolute file path, or null if unsafe.
-	 * Ensures path is inside the WordPress uploads directory (prevents path traversal).
+	 * Delegates to Omnify_Download_Permission_Service for centralized verification.
 	 */
 	private function get_safe_file_path( string $omnify_path ): ?string {
-		if ( '' === $omnify_path || ! is_readable( $omnify_path ) ) {
-			return null;
-		}
-
-		$omnify_real_path = realpath( $omnify_path );
-		if ( ! $omnify_real_path ) {
-			return null;
-		}
-
-		$omnify_upload_dir = wp_upload_dir();
-		$omnify_basedir    = isset( $omnify_upload_dir['basedir'] ) ? realpath( $omnify_upload_dir['basedir'] ) : false;
-		if ( ! $omnify_basedir ) {
-			return null;
-		}
-
-		// Normalize both paths (forward slashes and case) to prevent false 403 on Windows environments
-		$omnify_norm_path    = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( $omnify_real_path ) : str_replace( '\\', '/', $omnify_real_path );
-		$omnify_norm_basedir = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( $omnify_basedir ) : str_replace( '\\', '/', $omnify_basedir );
-
-		// Ensure the resolved path is inside the uploads base dir
-		if ( 0 !== stripos( $omnify_norm_path, $omnify_norm_basedir ) ) {
-			return null;
-		}
-
-		return $omnify_real_path;
+		return $this->omnify_permissions->get_safe_file_path( $omnify_path );
 	}
 }

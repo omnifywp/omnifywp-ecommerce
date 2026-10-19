@@ -44,9 +44,10 @@ $omnify_align = isset($omnify_atts['align']) && in_array((string) $omnify_atts['
 		</div>
 
 		<!-- Free Shipping Progress Bar -->
-		<div class="omnify-mini-cart-shipping-meter" id="omnify-mini-cart-shipping-meter">
+		<?php $omnify_free_shipping_min = (float) ($omnify_template_vars['omnify_free_shipping_min'] ?? 50.0); ?>
+		<div class="omnify-mini-cart-shipping-meter" id="omnify-mini-cart-shipping-meter" data-threshold="<?php echo esc_attr((string) $omnify_free_shipping_min); ?>">
 			<div class="omnify-mini-cart-shipping-text">
-				<span class="omnify-mini-shipping-msg"><?php esc_html_e('Free shipping unlocked on orders over $50', 'omnifywp-ecommerce'); ?></span>
+				<span class="omnify-mini-shipping-msg"><?php printf(esc_html__('Free shipping unlocked on orders over %s', 'omnifywp-ecommerce'), esc_html($omnify_format_price($omnify_free_shipping_min))); ?></span>
 			</div>
 			<div class="omnify-mini-cart-shipping-bar">
 				<div class="omnify-mini-cart-shipping-fill" style="width: 100%;"></div>
