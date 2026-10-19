@@ -17,10 +17,21 @@ $omnify_store_email = $omnify_settings['store_email'] ?? get_option('admin_email
 $omnify_currency = $omnify_settings['default_currency'] ?? 'USD';
 $omnify_country = $omnify_settings['default_country'] ?? 'US';
 
-$omnify_cod_enabled = ($omnify_settings['enable_cod'] ?? 'no') === 'yes';
-$omnify_bacs_enabled = ($omnify_settings['enable_bacs'] ?? 'no') === 'yes';
-$omnify_stripe_enabled = ($omnify_settings['enable_stripe'] ?? 'no') === 'yes';
-$omnify_paypal_enabled = ($omnify_settings['enable_paypal'] ?? 'no') === 'yes';
+$omnify_methods_by_id = [];
+foreach (($omnify_settings['payment_methods'] ?? []) as $omnify_m) {
+	if (! empty($omnify_m['id'])) {
+		$omnify_methods_by_id[$omnify_m['id']] = $omnify_m;
+	}
+}
+
+$omnify_cod_enabled = (! empty($omnify_settings['enable_cod']) && 'yes' === $omnify_settings['enable_cod'])
+	|| ! empty($omnify_methods_by_id['cod']['enabled']) || ! empty($omnify_methods_by_id['cash_on_delivery']['enabled']);
+$omnify_bacs_enabled = (! empty($omnify_settings['enable_bacs']) && 'yes' === $omnify_settings['enable_bacs'])
+	|| ! empty($omnify_methods_by_id['bacs']['enabled']) || ! empty($omnify_methods_by_id['bank_transfer']['enabled']);
+$omnify_stripe_enabled = (! empty($omnify_settings['enable_stripe']) && 'yes' === $omnify_settings['enable_stripe'])
+	|| ! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled']);
+$omnify_paypal_enabled = (! empty($omnify_settings['enable_paypal']) && 'yes' === $omnify_settings['enable_paypal'])
+	|| ! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled']);
 
 $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 

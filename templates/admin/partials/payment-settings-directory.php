@@ -24,37 +24,89 @@ if (isset($omnify_pm_map['cash_on_delivery']) && ! isset($omnify_pm_map['cod']))
 if (isset($omnify_pm_map['cod']) && ! isset($omnify_pm_map['cash_on_delivery'])) {
 	$omnify_pm_map['cash_on_delivery'] = $omnify_pm_map['cod'];
 }
+$omnify_cod_active_state = ! empty($omnify_pm_map['cod']['enabled']) || ! empty($omnify_pm_map['cash_on_delivery']['enabled']);
+if (isset($omnify_pm_map['cod'])) {
+	$omnify_pm_map['cod']['enabled'] = $omnify_cod_active_state;
+}
+if (isset($omnify_pm_map['cash_on_delivery'])) {
+	$omnify_pm_map['cash_on_delivery']['enabled'] = $omnify_cod_active_state;
+}
+
 if (isset($omnify_pm_map['bacs']) && ! isset($omnify_pm_map['bank_transfer'])) {
 	$omnify_pm_map['bank_transfer'] = $omnify_pm_map['bacs'];
 }
+if (isset($omnify_pm_map['bank_transfer']) && ! isset($omnify_pm_map['bacs'])) {
+	$omnify_pm_map['bacs'] = $omnify_pm_map['bank_transfer'];
+}
+$omnify_bacs_active_state = ! empty($omnify_pm_map['bank_transfer']['enabled']) || ! empty($omnify_pm_map['bacs']['enabled']);
+if (isset($omnify_pm_map['bank_transfer'])) {
+	$omnify_pm_map['bank_transfer']['enabled'] = $omnify_bacs_active_state;
+}
+if (isset($omnify_pm_map['bacs'])) {
+	$omnify_pm_map['bacs']['enabled'] = $omnify_bacs_active_state;
+}
+
 if (isset($omnify_pm_map['check']) && ! isset($omnify_pm_map['cheque'])) {
 	$omnify_pm_map['cheque'] = $omnify_pm_map['check'];
+}
+if (isset($omnify_pm_map['cheque']) && ! isset($omnify_pm_map['check'])) {
+	$omnify_pm_map['check'] = $omnify_pm_map['cheque'];
+}
+$omnify_cheque_active_state = ! empty($omnify_pm_map['cheque']['enabled']) || ! empty($omnify_pm_map['check']['enabled']);
+if (isset($omnify_pm_map['cheque'])) {
+	$omnify_pm_map['cheque']['enabled'] = $omnify_cheque_active_state;
+}
+if (isset($omnify_pm_map['check'])) {
+	$omnify_pm_map['check']['enabled'] = $omnify_cheque_active_state;
 }
 
 // Calculate active gateways count
 $omnify_active_count = 0;
-$omnify_gateway_flags = [
-	'stripe_checkout_enabled',
-	'paypal_checkout_enabled',
-	'razorpay_checkout_enabled',
-	'mollie_checkout_enabled',
-	'paddle_checkout_enabled',
-	'paystack_checkout_enabled',
-	'tap_checkout_enabled',
-	'sslcommerz_checkout_enabled',
-	'alipay_checkout_enabled',
-	'wechat_checkout_enabled',
-	'khalti_checkout_enabled',
-	'esewa_checkout_enabled',
+$omnify_gateway_flag_groups = [
+	['stripe_checkout_enabled', 'stripe_enabled'],
+	['paypal_checkout_enabled', 'paypal_enabled'],
+	['razorpay_checkout_enabled', 'razorpay_enabled'],
+	['mollie_checkout_enabled', 'mollie_enabled'],
+	['paddle_checkout_enabled', 'paddle_enabled'],
+	['paystack_checkout_enabled', 'paystack_enabled'],
+	['tap_checkout_enabled', 'tap_enabled'],
+	['sslcommerz_checkout_enabled', 'sslcommerz_enabled'],
+	['alipay_checkout_enabled', 'alipay_enabled'],
+	['wechat_checkout_enabled', 'wechat_enabled'],
+	['khalti_checkout_enabled', 'khalti_enabled'],
+	['esewa_checkout_enabled', 'esewa_enabled'],
 ];
-foreach ($omnify_gateway_flags as $omnify_flag) {
-	if (! empty($omnify_settings[$omnify_flag])) {
+foreach ($omnify_gateway_flag_groups as $omnify_flags) {
+	$is_active = false;
+	foreach ($omnify_flags as $omnify_flag) {
+		if (! empty($omnify_settings[$omnify_flag])) {
+			$is_active = true;
+			break;
+		}
+	}
+	if ($is_active) {
 		$omnify_active_count++;
 	}
 }
-if (! empty($omnify_pm_map['bank_transfer']['enabled'])) $omnify_active_count++;
-if (! empty($omnify_pm_map['cheque']['enabled'])) $omnify_active_count++;
-if (! empty($omnify_pm_map['cod']['enabled'])) $omnify_active_count++;
+if ($omnify_bacs_active_state) {
+	$omnify_active_count++;
+}
+if ($omnify_cheque_active_state) {
+	$omnify_active_count++;
+}
+if ($omnify_cod_active_state) {
+	$omnify_active_count++;
+}
+if (! empty($omnify_payment_methods)) {
+	foreach ($omnify_payment_methods as $omnify_custom_m) {
+		if (! is_array($omnify_custom_m) || empty($omnify_custom_m['id']) || in_array($omnify_custom_m['id'], ['bank_transfer', 'bacs', 'cheque', 'check', 'cod', 'cash_on_delivery'], true)) {
+			continue;
+		}
+		if (! empty($omnify_custom_m['enabled'])) {
+			$omnify_active_count++;
+		}
+	}
+}
 
 $omnify_webhook_base = home_url('/wp-json/omnify/v1/webhook/');
 
@@ -179,7 +231,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 1. Stripe -->
 		<?php
-		$omnify_stripe_active = ! empty($omnify_settings['stripe_checkout_enabled']);
+		$omnify_stripe_active = ! empty($omnify_settings['stripe_checkout_enabled']) || ! empty($omnify_settings['stripe_enabled']);
 		$omnify_stripe_mode = $omnify_settings['stripe_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_stripe_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="stripe" data-category="global" data-group="global">
@@ -271,7 +323,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 2. PayPal -->
 		<?php
-		$omnify_paypal_active = ! empty($omnify_settings['paypal_checkout_enabled']);
+		$omnify_paypal_active = ! empty($omnify_settings['paypal_checkout_enabled']) || ! empty($omnify_settings['paypal_enabled']);
 		$omnify_paypal_mode = $omnify_settings['paypal_mode'] ?? 'sandbox';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_paypal_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="paypal" data-category="global" data-group="global">
@@ -343,7 +395,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 3. Razorpay -->
 		<?php
-		$omnify_razorpay_active = ! empty($omnify_settings['razorpay_checkout_enabled']);
+		$omnify_razorpay_active = ! empty($omnify_settings['razorpay_checkout_enabled']) || ! empty($omnify_settings['razorpay_enabled']);
 		$omnify_razorpay_mode = $omnify_settings['razorpay_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_razorpay_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="razorpay" data-category="regional" data-group="regional">
@@ -418,7 +470,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 4. Mollie -->
 		<?php
-		$omnify_mollie_active = ! empty($omnify_settings['mollie_checkout_enabled']);
+		$omnify_mollie_active = ! empty($omnify_settings['mollie_checkout_enabled']) || ! empty($omnify_settings['mollie_enabled']);
 		$omnify_mollie_mode = $omnify_settings['mollie_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_mollie_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="mollie" data-category="regional" data-group="regional">
@@ -479,7 +531,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 5. Paddle -->
 		<?php
-		$omnify_paddle_active = ! empty($omnify_settings['paddle_checkout_enabled']);
+		$omnify_paddle_active = ! empty($omnify_settings['paddle_checkout_enabled']) || ! empty($omnify_settings['paddle_enabled']);
 		$omnify_paddle_mode = $omnify_settings['paddle_mode'] ?? 'sandbox';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_paddle_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="paddle" data-category="global" data-group="global">
@@ -557,7 +609,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 6. Paystack -->
 		<?php
-		$omnify_paystack_active = ! empty($omnify_settings['paystack_checkout_enabled']);
+		$omnify_paystack_active = ! empty($omnify_settings['paystack_checkout_enabled']) || ! empty($omnify_settings['paystack_enabled']);
 		$omnify_paystack_mode = $omnify_settings['paystack_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_paystack_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="paystack" data-category="regional" data-group="regional">
@@ -629,7 +681,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 7. Tap Payments -->
 		<?php
-		$omnify_tap_active = ! empty($omnify_settings['tap_checkout_enabled']);
+		$omnify_tap_active = ! empty($omnify_settings['tap_checkout_enabled']) || ! empty($omnify_settings['tap_enabled']);
 		$omnify_tap_mode = $omnify_settings['tap_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_tap_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="tap" data-category="regional" data-group="regional">
@@ -692,7 +744,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 8. SSLCommerz -->
 		<?php
-		$omnify_sslcommerz_active = ! empty($omnify_settings['sslcommerz_checkout_enabled']);
+		$omnify_sslcommerz_active = ! empty($omnify_settings['sslcommerz_checkout_enabled']) || ! empty($omnify_settings['sslcommerz_enabled']);
 		$omnify_sslcommerz_mode = $omnify_settings['sslcommerz_mode'] ?? 'sandbox';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_sslcommerz_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="sslcommerz" data-category="regional" data-group="regional">
@@ -748,7 +800,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 9. Alipay -->
 		<?php
-		$omnify_alipay_active = ! empty($omnify_settings['alipay_checkout_enabled']);
+		$omnify_alipay_active = ! empty($omnify_settings['alipay_checkout_enabled']) || ! empty($omnify_settings['alipay_enabled']);
 		$omnify_alipay_mode = $omnify_settings['alipay_mode'] ?? 'sandbox';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_alipay_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="alipay" data-category="regional" data-group="regional">
@@ -792,7 +844,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 10. WeChat Pay -->
 		<?php
-		$omnify_wechat_active = ! empty($omnify_settings['wechat_checkout_enabled']);
+		$omnify_wechat_active = ! empty($omnify_settings['wechat_checkout_enabled']) || ! empty($omnify_settings['wechat_enabled']);
 		$omnify_wechat_mode = $omnify_settings['wechat_mode'] ?? 'sandbox';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_wechat_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="wechat" data-category="regional" data-group="regional">
@@ -859,7 +911,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 11. Khalti -->
 		<?php
-		$omnify_khalti_active = ! empty($omnify_settings['khalti_checkout_enabled']);
+		$omnify_khalti_active = ! empty($omnify_settings['khalti_checkout_enabled']) || ! empty($omnify_settings['khalti_enabled']);
 		$omnify_khalti_mode = $omnify_settings['khalti_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_khalti_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="khalti" data-category="regional" data-group="regional">
@@ -915,7 +967,7 @@ if (! function_exists('omnify_render_pm_header')) {
 
 		<!-- 12. eSewa -->
 		<?php
-		$omnify_esewa_active = ! empty($omnify_settings['esewa_checkout_enabled']);
+		$omnify_esewa_active = ! empty($omnify_settings['esewa_checkout_enabled']) || ! empty($omnify_settings['esewa_enabled']);
 		$omnify_esewa_mode = $omnify_settings['esewa_mode'] ?? 'test';
 		?>
 		<div class="omnify-pm-card <?php echo $omnify_esewa_active ? 'is-active-gateway is-enabled' : ''; ?>" data-gateway="esewa" data-category="regional" data-group="regional">

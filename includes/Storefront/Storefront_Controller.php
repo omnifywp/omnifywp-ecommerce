@@ -2043,45 +2043,57 @@ class Omnify_Storefront_Controller {
 			}
 		}
 
-		$omnify_is_redirect_success = (isset($_GET['omnify_stripe']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_stripe'])))
-			|| (isset($_GET['omnify_paypal']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paypal'])))
-			|| (isset($_GET['omnify_razorpay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_razorpay'])))
-			|| (isset($_GET['omnify_alipay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_alipay'])))
-			|| (isset($_GET['omnify_wechat']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_wechat'])))
-			|| (isset($_GET['omnify_sslcommerz']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_sslcommerz'])))
-			|| (isset($_GET['omnify_paystack']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paystack'])))
-			|| (isset($_GET['omnify_tap']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_tap'])))
-			|| (isset($_GET['omnify_mollie']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_mollie'])))
-			|| (isset($_GET['omnify_khalti']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_khalti'])))
-			|| (isset($_GET['omnify_esewa']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_esewa'])))
-			|| (isset($_GET['omnify_paddle']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paddle'])));
+		$omnify_is_redirect_success = (isset($_REQUEST['omnify_stripe']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_stripe'])))
+			|| (isset($_REQUEST['omnify_paypal']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_paypal'])))
+			|| (isset($_REQUEST['omnify_razorpay']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_razorpay'])))
+			|| (isset($_REQUEST['omnify_alipay']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_alipay'])))
+			|| (isset($_REQUEST['omnify_wechat']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_wechat'])))
+			|| (isset($_REQUEST['omnify_sslcommerz']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_sslcommerz'])))
+			|| (isset($_REQUEST['omnify_paystack']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_paystack'])))
+			|| (isset($_REQUEST['omnify_tap']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_tap'])))
+			|| (isset($_REQUEST['omnify_mollie']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_mollie'])))
+			|| (isset($_REQUEST['omnify_khalti']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_khalti'])))
+			|| (isset($_REQUEST['omnify_esewa']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_esewa'])))
+			|| (isset($_REQUEST['omnify_paddle']) && 'success' === sanitize_key(wp_unslash($_REQUEST['omnify_paddle'])));
 
-		$omnify_redirect_order_id = isset($_GET['order_id']) ? absint(wp_unslash($_GET['order_id'])) : 0;
+		$omnify_redirect_order_id = isset($_REQUEST['order_id']) ? absint(wp_unslash($_REQUEST['order_id'])) : (isset($_REQUEST['value_a']) ? absint(wp_unslash($_REQUEST['value_a'])) : 0);
+		if (! $omnify_redirect_order_id) {
+			foreach (['out_trade_no', 'tran_id', 'reference', 'trxref', 'transaction_id', 'pidx'] as $omnify_rk) {
+				if (! empty($_REQUEST[$omnify_rk])) {
+					$omnify_raw_ref = sanitize_text_field(wp_unslash((string) $_REQUEST[$omnify_rk]));
+					if (preg_match('/(?:ssl|alipay|wechat|pstk|tap|esewa|khalti|txn|order)_(\d+)/i', $omnify_raw_ref, $omnify_m)) {
+						$omnify_redirect_order_id = absint($omnify_m[1]);
+						break;
+					}
+				}
+			}
+		}
+
 		$omnify_success_order = $omnify_redirect_order_id ? $this->omnify_orders->find($omnify_redirect_order_id) : null;
 		$omnify_success_files = [];
 		if ($omnify_is_redirect_success && $omnify_success_order) {
 			if ('completed' !== ($omnify_success_order['status'] ?? '')) {
 				$omnify_gw_name = 'online';
 				foreach (['stripe', 'paypal', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'] as $gwn) {
-					if (isset($_GET['omnify_' . $gwn])) {
+					if (isset($_REQUEST['omnify_' . $gwn])) {
 						$omnify_gw_name = $gwn;
 						break;
 					}
 				}
 				$omnify_txn = sanitize_text_field((string) (
-					$_GET['payment_id'] ??
-					$_GET['session_id'] ??
-					$_GET['charge_id'] ??
-					$_GET['tap_id'] ??
-					$_GET['pidx'] ??
-					$_GET['transaction_id'] ??
-					$_GET['reference'] ??
-					$_GET['trxref'] ??
-					$_GET['val_id'] ??
-					$_GET['tran_id'] ??
-					$_GET['token'] ??
-					$_GET['out_trade_no'] ??
-					$_GET['p_txn'] ??
+					$_REQUEST['payment_id'] ??
+					$_REQUEST['session_id'] ??
+					$_REQUEST['charge_id'] ??
+					$_REQUEST['tap_id'] ??
+					$_REQUEST['pidx'] ??
+					$_REQUEST['transaction_id'] ??
+					$_REQUEST['reference'] ??
+					$_REQUEST['trxref'] ??
+					$_REQUEST['val_id'] ??
+					$_REQUEST['tran_id'] ??
+					$_REQUEST['token'] ??
+					$_REQUEST['out_trade_no'] ??
+					$_REQUEST['p_txn'] ??
 					''
 				));
 				$this->complete_order_payment_by_storefront($omnify_redirect_order_id, $omnify_gw_name, $omnify_txn ?: null);

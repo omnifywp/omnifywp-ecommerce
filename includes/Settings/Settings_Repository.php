@@ -27,39 +27,41 @@ class Omnify_Settings_Repository {
 		// Ensure unconfigured payment gateways are disabled by default
 		if (! get_option('omnify_payment_gateways_default_disabled_v2')) {
 			$omnify_gateway_keys = [
-				'stripe_checkout_enabled'     => ['stripe_test_secret_key', 'stripe_live_secret_key'],
-				'paypal_checkout_enabled'     => ['paypal_sandbox_secret', 'paypal_live_secret'],
-				'razorpay_checkout_enabled'   => ['razorpay_test_key_secret', 'razorpay_live_key_secret'],
+				'stripe_checkout_enabled'     => ['stripe_test_secret_key', 'stripe_live_secret_key', 'stripe_secret_key'],
+				'paypal_checkout_enabled'     => ['paypal_sandbox_secret', 'paypal_live_secret', 'paypal_sandbox_client_id', 'paypal_live_client_id', 'paypal_client_id', 'paypal_secret'],
+				'razorpay_checkout_enabled'   => ['razorpay_test_key_secret', 'razorpay_live_key_secret', 'razorpay_test_key_id', 'razorpay_live_key_id'],
 				'alipay_checkout_enabled'     => ['alipay_app_id', 'alipay_merchant_private_key'],
-				'wechat_checkout_enabled'     => ['wechat_mchid', 'wechat_key'],
-				'sslcommerz_checkout_enabled' => ['sslcommerz_store_id', 'sslcommerz_store_password'],
-				'paystack_checkout_enabled'   => ['paystack_test_secret_key', 'paystack_live_secret_key'],
+				'wechat_checkout_enabled'     => ['wechat_mchid', 'wechat_mch_id', 'wechat_key', 'wechat_api_v3_key'],
+				'sslcommerz_checkout_enabled' => ['sslcommerz_store_id', 'sslcommerz_test_store_id', 'sslcommerz_store_password', 'sslcommerz_store_passwd', 'sslcommerz_test_store_passwd', 'sslcommerz_test_store_password'],
+				'paystack_checkout_enabled'   => ['paystack_test_secret_key', 'paystack_live_secret_key', 'paystack_test_public_key', 'paystack_live_public_key'],
 				'tap_checkout_enabled'        => ['tap_test_secret_key', 'tap_live_secret_key'],
 				'mollie_checkout_enabled'     => ['mollie_test_api_key', 'mollie_live_api_key'],
-				'khalti_checkout_enabled'     => ['khalti_test_secret_key', 'khalti_live_secret_key'],
-				'esewa_checkout_enabled'      => ['esewa_live_secret_key'],
-				'paddle_checkout_enabled'     => ['paddle_sandbox_api_key', 'paddle_live_api_key'],
+				'khalti_checkout_enabled'     => ['khalti_test_secret_key', 'khalti_live_secret_key', 'khalti_test_public_key', 'khalti_live_public_key'],
+				'esewa_checkout_enabled'      => ['esewa_live_secret_key', 'esewa_test_secret_key', 'esewa_live_product_code', 'esewa_test_product_code'],
+				'paddle_checkout_enabled'     => ['paddle_sandbox_api_key', 'paddle_live_api_key', 'paddle_sandbox_client_token', 'paddle_live_client_token'],
 			];
 
 			$omnify_needs_db_update = false;
-			foreach ($omnify_gateway_keys as $omnify_en_key => $omnify_req_keys) {
-				$omnify_has_keys = false;
-				foreach ($omnify_req_keys as $omnify_k) {
-					if (! empty($omnify_settings[$omnify_k])) {
-						$omnify_has_keys = true;
-						break;
+			if (empty($omnify_settings['test_mode'])) {
+				foreach ($omnify_gateway_keys as $omnify_en_key => $omnify_req_keys) {
+					$omnify_has_keys = false;
+					foreach ($omnify_req_keys as $omnify_k) {
+						if (! empty($omnify_settings[$omnify_k])) {
+							$omnify_has_keys = true;
+							break;
+						}
 					}
-				}
-				if (! $omnify_has_keys) {
-					$omnify_parsed[$omnify_en_key] = false;
-					if (is_array($omnify_settings) && isset($omnify_settings[$omnify_en_key]) && $omnify_settings[$omnify_en_key]) {
-						$omnify_settings[$omnify_en_key] = false;
+					if (! $omnify_has_keys) {
+						$omnify_parsed[$omnify_en_key] = false;
+						if (is_array($omnify_settings) && isset($omnify_settings[$omnify_en_key]) && $omnify_settings[$omnify_en_key]) {
+							$omnify_settings[$omnify_en_key] = false;
+							$omnify_prefix = str_replace('_checkout_enabled', '', $omnify_en_key);
+							$omnify_settings[$omnify_prefix . '_enabled'] = false;
+							$omnify_needs_db_update = true;
+						}
 						$omnify_prefix = str_replace('_checkout_enabled', '', $omnify_en_key);
-						$omnify_settings[$omnify_prefix . '_enabled'] = false;
-						$omnify_needs_db_update = true;
+						$omnify_parsed[$omnify_prefix . '_enabled'] = false;
 					}
-					$omnify_prefix = str_replace('_checkout_enabled', '', $omnify_en_key);
-					$omnify_parsed[$omnify_prefix . '_enabled'] = false;
 				}
 			}
 
@@ -258,6 +260,10 @@ class Omnify_Settings_Repository {
 			'fraud_disposable_email_flag' => true,
 			'fraud_max_value'             => 500.00,
 			'fraud_max_attempts_limit'    => 3,
+			'enable_stripe'               => 'no',
+			'enable_paypal'               => 'no',
+			'enable_cod'                  => 'no',
+			'enable_bacs'                 => 'no',
 			'payment_methods'             => [
 				[
 					'id'           => 'bank_transfer',
@@ -478,17 +484,57 @@ class Omnify_Settings_Repository {
 			}
 		}
 
-		// Normalize aliases
+		// Normalize aliases and synchronize wizard toggles
+		if (isset($omnify_settings['enable_cod'])) {
+			$cod_val = ('yes' === $omnify_settings['enable_cod'] || true === $omnify_settings['enable_cod'] || 1 === $omnify_settings['enable_cod']);
+			if (isset($omnify_methods_by_id['cod'])) {
+				$omnify_methods_by_id['cod']['enabled'] = $cod_val;
+			}
+			if (isset($omnify_methods_by_id['cash_on_delivery'])) {
+				$omnify_methods_by_id['cash_on_delivery']['enabled'] = $cod_val;
+			}
+		}
+		if (isset($omnify_settings['enable_bacs'])) {
+			$bacs_val = ('yes' === $omnify_settings['enable_bacs'] || true === $omnify_settings['enable_bacs'] || 1 === $omnify_settings['enable_bacs']);
+			if (isset($omnify_methods_by_id['bacs'])) {
+				$omnify_methods_by_id['bacs']['enabled'] = $bacs_val;
+			}
+			if (isset($omnify_methods_by_id['bank_transfer'])) {
+				$omnify_methods_by_id['bank_transfer']['enabled'] = $bacs_val;
+			}
+		}
+
 		if (isset($omnify_methods_by_id['cod']) && ! isset($omnify_methods_by_id['cash_on_delivery'])) {
 			$omnify_methods_by_id['cash_on_delivery'] = $omnify_methods_by_id['cod'];
 		} elseif (isset($omnify_methods_by_id['cash_on_delivery']) && ! isset($omnify_methods_by_id['cod'])) {
 			$omnify_methods_by_id['cod'] = $omnify_methods_by_id['cash_on_delivery'];
 		}
+		if (isset($omnify_methods_by_id['cod'], $omnify_methods_by_id['cash_on_delivery'])) {
+			$cod_enabled = ! empty($omnify_methods_by_id['cod']['enabled']) || ! empty($omnify_methods_by_id['cash_on_delivery']['enabled']);
+			$omnify_methods_by_id['cod']['enabled'] = $cod_enabled;
+			$omnify_methods_by_id['cash_on_delivery']['enabled'] = $cod_enabled;
+		}
+
 		if (isset($omnify_methods_by_id['bacs']) && ! isset($omnify_methods_by_id['bank_transfer'])) {
 			$omnify_methods_by_id['bank_transfer'] = $omnify_methods_by_id['bacs'];
+		} elseif (isset($omnify_methods_by_id['bank_transfer']) && ! isset($omnify_methods_by_id['bacs'])) {
+			$omnify_methods_by_id['bacs'] = $omnify_methods_by_id['bank_transfer'];
 		}
+		if (isset($omnify_methods_by_id['bacs'], $omnify_methods_by_id['bank_transfer'])) {
+			$bacs_enabled = ! empty($omnify_methods_by_id['bacs']['enabled']) || ! empty($omnify_methods_by_id['bank_transfer']['enabled']);
+			$omnify_methods_by_id['bacs']['enabled'] = $bacs_enabled;
+			$omnify_methods_by_id['bank_transfer']['enabled'] = $bacs_enabled;
+		}
+
 		if (isset($omnify_methods_by_id['check']) && ! isset($omnify_methods_by_id['cheque'])) {
 			$omnify_methods_by_id['cheque'] = $omnify_methods_by_id['check'];
+		} elseif (isset($omnify_methods_by_id['cheque']) && ! isset($omnify_methods_by_id['check'])) {
+			$omnify_methods_by_id['check'] = $omnify_methods_by_id['cheque'];
+		}
+		if (isset($omnify_methods_by_id['check'], $omnify_methods_by_id['cheque'])) {
+			$cheque_enabled = ! empty($omnify_methods_by_id['check']['enabled']) || ! empty($omnify_methods_by_id['cheque']['enabled']);
+			$omnify_methods_by_id['check']['enabled'] = $cheque_enabled;
+			$omnify_methods_by_id['cheque']['enabled'] = $cheque_enabled;
 		}
 
 		$omnify_methods = [];
@@ -570,25 +616,25 @@ class Omnify_Settings_Repository {
 			'tax_reporting_enabled'       => ! empty($omnify_settings['tax_reporting_enabled']),
 			'tax_rules'                   => $this->sanitize_tax_rules($omnify_settings['tax_rules'] ?? []),
 			'delivery_zones'              => $this->sanitize_delivery_zones($omnify_settings['delivery_zones'] ?? []),
-			'stripe_enabled'              => (! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled'])),
+			'stripe_enabled'              => (! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled']) || (! empty($omnify_settings['enable_stripe']) && 'yes' === $omnify_settings['enable_stripe'])),
 			'stripe_mode'                 => in_array($omnify_settings['stripe_mode'] ?? '', ['test', 'live'], true) ? $omnify_settings['stripe_mode'] : 'test',
 			'stripe_test_publishable_key' => sanitize_text_field((string) ($omnify_settings['stripe_test_publishable_key'] ?? '')),
 			'stripe_test_secret_key'      => sanitize_text_field((string) ($omnify_settings['stripe_test_secret_key'] ?? '')),
 			'stripe_live_publishable_key' => sanitize_text_field((string) ($omnify_settings['stripe_live_publishable_key'] ?? '')),
 			'stripe_live_secret_key'      => sanitize_text_field((string) ($omnify_settings['stripe_live_secret_key'] ?? '')),
 			'stripe_webhook_secret'       => sanitize_text_field((string) ($omnify_settings['stripe_webhook_secret'] ?? '')),
-			'stripe_checkout_enabled'     => (! empty($omnify_settings['stripe_checkout_enabled']) || ! empty($omnify_settings['stripe_enabled'])),
+			'stripe_checkout_enabled'     => (! empty($omnify_settings['stripe_checkout_enabled']) || ! empty($omnify_settings['stripe_enabled']) || (! empty($omnify_settings['enable_stripe']) && 'yes' === $omnify_settings['enable_stripe'])),
 			'stripe_payment_intents_enabled' => ! empty($omnify_settings['stripe_payment_intents_enabled']),
 			'stripe_apple_pay_enabled'    => ! empty($omnify_settings['stripe_apple_pay_enabled']),
 			'stripe_google_pay_enabled'   => ! empty($omnify_settings['stripe_google_pay_enabled']),
-			'paypal_enabled'              => (! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled'])),
+			'paypal_enabled'              => (! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled']) || (! empty($omnify_settings['enable_paypal']) && 'yes' === $omnify_settings['enable_paypal'])),
 			'paypal_mode'                 => in_array($omnify_settings['paypal_mode'] ?? '', ['sandbox', 'live'], true) ? $omnify_settings['paypal_mode'] : 'sandbox',
 			'paypal_sandbox_client_id'    => sanitize_text_field((string) ($omnify_settings['paypal_sandbox_client_id'] ?? '')),
 			'paypal_sandbox_secret'       => sanitize_text_field((string) ($omnify_settings['paypal_sandbox_secret'] ?? '')),
 			'paypal_live_client_id'       => sanitize_text_field((string) ($omnify_settings['paypal_live_client_id'] ?? '')),
 			'paypal_live_secret'          => sanitize_text_field((string) ($omnify_settings['paypal_live_secret'] ?? '')),
 			'paypal_webhook_id'           => sanitize_text_field((string) ($omnify_settings['paypal_webhook_id'] ?? '')),
-			'paypal_checkout_enabled'     => (! empty($omnify_settings['paypal_checkout_enabled']) || ! empty($omnify_settings['paypal_enabled'])),
+			'paypal_checkout_enabled'     => (! empty($omnify_settings['paypal_checkout_enabled']) || ! empty($omnify_settings['paypal_enabled']) || (! empty($omnify_settings['enable_paypal']) && 'yes' === $omnify_settings['enable_paypal'])),
 			'razorpay_enabled'            => (! empty($omnify_settings['razorpay_enabled']) || ! empty($omnify_settings['razorpay_checkout_enabled'])),
 			'razorpay_mode'               => in_array($omnify_settings['razorpay_mode'] ?? '', ['test', 'live'], true) ? $omnify_settings['razorpay_mode'] : 'test',
 			'razorpay_test_key_id'        => sanitize_text_field((string) ($omnify_settings['razorpay_test_key_id'] ?? '')),
@@ -688,6 +734,10 @@ class Omnify_Settings_Repository {
 			'fraud_max_attempts_limit'    => max(1, (int) ($omnify_settings['fraud_max_attempts_limit'] ?? 3)),
 			// Payments
 			'payment_methods'             => $omnify_methods,
+			'enable_stripe'               => (! empty($omnify_settings['enable_stripe']) && 'yes' === $omnify_settings['enable_stripe']) || (! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled'])) ? 'yes' : 'no',
+			'enable_paypal'               => (! empty($omnify_settings['enable_paypal']) && 'yes' === $omnify_settings['enable_paypal']) || (! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled'])) ? 'yes' : 'no',
+			'enable_cod'                  => (! empty($omnify_settings['enable_cod']) && 'yes' === $omnify_settings['enable_cod']) || (! empty($omnify_methods_by_id['cod']['enabled']) || ! empty($omnify_methods_by_id['cash_on_delivery']['enabled'])) ? 'yes' : 'no',
+			'enable_bacs'                 => (! empty($omnify_settings['enable_bacs']) && 'yes' === $omnify_settings['enable_bacs']) || (! empty($omnify_methods_by_id['bacs']['enabled']) || ! empty($omnify_methods_by_id['bank_transfer']['enabled'])) ? 'yes' : 'no',
 			// Checkout
 				'allow_guest_checkout'        => ! empty($omnify_settings['allow_guest_checkout']),
 				'require_account_on_checkout' => ! empty($omnify_settings['require_account_on_checkout']),

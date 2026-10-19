@@ -7359,10 +7359,36 @@ class Omnify_Admin_Page {
 		$omnify_current_settings['default_country'] = $omnify_country;
 
 		// Gateways
-		$omnify_current_settings['enable_cod'] = !empty($_POST['enable_cod']) ? 'yes' : 'no';
-		$omnify_current_settings['enable_bacs'] = !empty($_POST['enable_bacs']) ? 'yes' : 'no';
-		$omnify_current_settings['enable_stripe'] = !empty($_POST['enable_stripe']) ? 'yes' : 'no';
-		$omnify_current_settings['enable_paypal'] = !empty($_POST['enable_paypal']) ? 'yes' : 'no';
+		$enable_cod    = !empty($_POST['enable_cod']);
+		$enable_bacs   = !empty($_POST['enable_bacs']);
+		$enable_stripe = !empty($_POST['enable_stripe']);
+		$enable_paypal = !empty($_POST['enable_paypal']);
+
+		$omnify_current_settings['enable_cod'] = $enable_cod ? 'yes' : 'no';
+		$omnify_current_settings['enable_bacs'] = $enable_bacs ? 'yes' : 'no';
+		$omnify_current_settings['enable_stripe'] = $enable_stripe ? 'yes' : 'no';
+		$omnify_current_settings['enable_paypal'] = $enable_paypal ? 'yes' : 'no';
+
+		$omnify_current_settings['stripe_enabled'] = $enable_stripe;
+		$omnify_current_settings['stripe_checkout_enabled'] = $enable_stripe;
+		$omnify_current_settings['paypal_enabled'] = $enable_paypal;
+		$omnify_current_settings['paypal_checkout_enabled'] = $enable_paypal;
+
+		$omnify_pms = $omnify_current_settings['payment_methods'] ?? [];
+		if (is_array($omnify_pms)) {
+			foreach ($omnify_pms as &$pm) {
+				if (!empty($pm['id'])) {
+					if ($pm['id'] === 'cash_on_delivery' || $pm['id'] === 'cod') {
+						$pm['enabled'] = $enable_cod;
+					}
+					if ($pm['id'] === 'bank_transfer' || $pm['id'] === 'bacs') {
+						$pm['enabled'] = $enable_bacs;
+					}
+				}
+			}
+			unset($pm);
+			$omnify_current_settings['payment_methods'] = $omnify_pms;
+		}
 
 		$omnify_success = $this->omnify_settings->update($omnify_current_settings);
 

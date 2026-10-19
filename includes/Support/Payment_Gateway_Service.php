@@ -1242,11 +1242,11 @@ class Omnify_Payment_Gateway_Service {
 	private function verify_sslcommerz_credentials(array $omnify_settings): array|WP_Error {
 		$omnify_mode = 'live' === ($omnify_settings['sslcommerz_mode'] ?? 'sandbox') ? 'live' : 'sandbox';
 		if ('live' === $omnify_mode) {
-			$omnify_store_id = trim((string) ($omnify_settings['sslcommerz_store_id'] ?? ''));
-			$omnify_passwd   = trim((string) ($omnify_settings['sslcommerz_store_passwd'] ?? ($omnify_settings['sslcommerz_store_password'] ?? '')));
+			$omnify_store_id = trim((string) ($omnify_settings['sslcommerz_store_id'] ?? ($omnify_settings['sslcommerz_test_store_id'] ?? '')));
+			$omnify_passwd   = trim((string) ($omnify_settings['sslcommerz_store_passwd'] ?? ($omnify_settings['sslcommerz_store_password'] ?? ($omnify_settings['sslcommerz_test_store_passwd'] ?? ($omnify_settings['sslcommerz_test_store_password'] ?? '')))));
 		} else {
-			$omnify_store_id = trim((string) ($omnify_settings['sslcommerz_test_store_id'] ?? ''));
-			$omnify_passwd   = trim((string) ($omnify_settings['sslcommerz_test_store_passwd'] ?? ''));
+			$omnify_store_id = trim((string) ($omnify_settings['sslcommerz_test_store_id'] ?? ($omnify_settings['sslcommerz_store_id'] ?? '')));
+			$omnify_passwd   = trim((string) ($omnify_settings['sslcommerz_test_store_passwd'] ?? ($omnify_settings['sslcommerz_test_store_password'] ?? ($omnify_settings['sslcommerz_store_passwd'] ?? ($omnify_settings['sslcommerz_store_password'] ?? '')))));
 		}
 
 		if ('' === $omnify_store_id || '' === $omnify_passwd) {

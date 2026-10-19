@@ -814,6 +814,10 @@ if ($omnify_success_order) {
 						$omnify_wechat_enabled ? ['wechat'] : [],
 						array_map(static fn($omnify_method) => (string) $omnify_method['id'], $omnify_enabled_methods)
 					);
+					if (empty($omnify_available_payment_ids)) {
+						$omnify_available_payment_ids = ['card'];
+						$omnify_stripe_enabled = true;
+					}
 					if (! in_array($omnify_default_payment_method, $omnify_available_payment_ids, true)) {
 						$omnify_default_payment_method = $omnify_available_payment_ids[0] ?? '';
 					}

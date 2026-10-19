@@ -3960,10 +3960,11 @@ function initCheckoutPageForm() {
 				document.querySelectorAll('.omnify-checkout-gateway-note').forEach(sec => sec.style.display = 'none');
 
 				// Show contextual note if available
-				let noteEl = document.getElementById(`omnify-note-${val}`);
-				if (!noteEl && (val === 'stripe' || val === 'stripe_checkout')) {
+				const cleanVal = val.replace('_checkout', '');
+				let noteEl = document.getElementById(`omnify-note-${val}`) || document.getElementById(`omnify-note-${cleanVal}`);
+				if (!noteEl && (cleanVal === 'stripe' || cleanVal === 'card')) {
 					noteEl = document.getElementById('omnify-note-card');
-				} else if (!noteEl && val === 'paypal_checkout') {
+				} else if (!noteEl && cleanVal === 'paypal') {
 					noteEl = document.getElementById('omnify-note-paypal');
 				}
 				if (noteEl) {
@@ -4537,9 +4538,10 @@ function initCheckoutPageForm() {
 					form.submit();
 					return;
 				}
-				if (res.redirect_url) {
+				const targetRedirectUrl = res.redirect_url || res.url || res.redirectUrl || res.payment_url;
+				if (targetRedirectUrl) {
 					clearPurchasedCartItems();
-					window.location.href = res.redirect_url;
+					window.location.href = targetRedirectUrl;
 					return;
 				}
 				throw new Error('Gateway did not return a redirect URL.');

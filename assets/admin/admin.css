@@ -3360,19 +3360,29 @@ select.omnify-searchable-select {
 	display: none;
 }
 
-/* Table stacking context fix for custom select dropdowns */
+/* Table and card stacking context fix for custom select dropdowns */
 tr:has(.omnify-custom-select-wrapper.open),
 .omnify-tax-table tr:has(.omnify-custom-select-wrapper.open),
-.omnify-settings-page tr:has(.omnify-custom-select-wrapper.open) {
+.omnify-settings-page tr:has(.omnify-custom-select-wrapper.open),
+.omnify-delivery-zone-card:has(.omnify-custom-select-wrapper.open),
+.omnify-settings-page .omnify-delivery-zone-card:has(.omnify-custom-select-wrapper.open),
+.omnify-settings-section-block:has(.omnify-custom-select-wrapper.open),
+.omnify-card:has(.omnify-custom-select-wrapper.open) {
 	position: relative !important;
 	z-index: 99999 !important;
+	overflow: visible !important;
 }
 
 td:has(.omnify-custom-select-wrapper.open),
 .omnify-tax-table td:has(.omnify-custom-select-wrapper.open),
-.omnify-settings-page td:has(.omnify-custom-select-wrapper.open) {
+.omnify-settings-page td:has(.omnify-custom-select-wrapper.open),
+.omnify-zone-card-body:has(.omnify-custom-select-wrapper.open),
+.omnify-settings-page .omnify-zone-card-body:has(.omnify-custom-select-wrapper.open),
+.omnify-zone-field-grid:has(.omnify-custom-select-wrapper.open),
+.omnify-modern-form-group:has(.omnify-custom-select-wrapper.open) {
 	position: relative !important;
 	z-index: 99999 !important;
+	overflow: visible !important;
 }
 
 /* Prevent overflow clipping in settings page forms and tables containing searchable selects */
@@ -3767,7 +3777,7 @@ td:has(.omnify-custom-select-wrapper.open),
 	border: 1px solid #e2e8f0 !important;
 	border-radius: 14px !important;
 	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-	overflow: hidden !important;
+	overflow: visible !important;
 	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .omnify-settings-page .omnify-delivery-zone-card:hover {
@@ -3787,6 +3797,8 @@ td:has(.omnify-custom-select-wrapper.open),
 	padding: 14px 20px !important;
 	background: #f8fafc !important;
 	border-bottom: 1px solid #e2e8f0 !important;
+	border-top-left-radius: 13px !important;
+	border-top-right-radius: 13px !important;
 	min-height: 54px !important;
 	margin: 0 !important;
 	box-sizing: border-box !important;
