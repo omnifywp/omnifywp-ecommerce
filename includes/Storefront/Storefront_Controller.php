@@ -2068,7 +2068,22 @@ class Omnify_Storefront_Controller {
 						break;
 					}
 				}
-				$omnify_txn = sanitize_text_field((string) ($_GET['payment_id'] ?? ($_GET['charge_id'] ?? ($_GET['tap_id'] ?? ($_GET['pidx'] ?? ($_GET['transaction_id'] ?? ($_GET['p_txn'] ?? '')))))));
+				$omnify_txn = sanitize_text_field((string) (
+					$_GET['payment_id'] ??
+					$_GET['session_id'] ??
+					$_GET['charge_id'] ??
+					$_GET['tap_id'] ??
+					$_GET['pidx'] ??
+					$_GET['transaction_id'] ??
+					$_GET['reference'] ??
+					$_GET['trxref'] ??
+					$_GET['val_id'] ??
+					$_GET['tran_id'] ??
+					$_GET['token'] ??
+					$_GET['out_trade_no'] ??
+					$_GET['p_txn'] ??
+					''
+				));
 				$this->complete_order_payment_by_storefront($omnify_redirect_order_id, $omnify_gw_name, $omnify_txn ?: null);
 				$omnify_success_order = $this->omnify_orders->find($omnify_redirect_order_id);
 			}

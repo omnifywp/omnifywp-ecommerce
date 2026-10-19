@@ -5080,7 +5080,7 @@ class Omnify_Admin_Page {
 		$omnify_payment_method = $omnify_order['payment_method'] ?? 'manual';
 		$omnify_transaction_id = $omnify_order['transaction_id'] ?? '';
 
-		$omnify_supported_gateways = ['card', 'paypal', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'];
+		$omnify_supported_gateways = ['card', 'stripe', 'stripe_checkout', 'paypal', 'paypal_checkout', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'];
 		if (in_array($omnify_payment_method, $omnify_supported_gateways, true)) {
 			if (empty($omnify_transaction_id)) {
 				wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=refund_failed&err=' . urlencode(__('Live refund failed: No transaction ID associated with this order.', 'omnifywp-ecommerce'))));
@@ -5092,10 +5092,13 @@ class Omnify_Admin_Page {
 
 			switch ($omnify_payment_method) {
 				case 'card':
+				case 'stripe':
+				case 'stripe_checkout':
 					$omnify_res = $this->omnify_payment_gateways->refund_stripe_payment($omnify_transaction_id, $omnify_total_refund, $omnify_order['currency'] ?? 'USD');
 					$omnify_error_prefix = 'Stripe';
 					break;
 				case 'paypal':
+				case 'paypal_checkout':
 					$omnify_res = $this->omnify_payment_gateways->refund_paypal_payment($omnify_transaction_id, $omnify_total_refund, $omnify_order['currency'] ?? 'USD');
 					$omnify_error_prefix = 'PayPal';
 					break;

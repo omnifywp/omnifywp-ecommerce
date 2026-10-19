@@ -18,6 +18,19 @@ foreach ($omnify_payment_methods as $omnify_m) {
 	$omnify_pm_map[$omnify_m['id']] = $omnify_m;
 }
 
+if (isset($omnify_pm_map['cash_on_delivery']) && ! isset($omnify_pm_map['cod'])) {
+	$omnify_pm_map['cod'] = $omnify_pm_map['cash_on_delivery'];
+}
+if (isset($omnify_pm_map['cod']) && ! isset($omnify_pm_map['cash_on_delivery'])) {
+	$omnify_pm_map['cash_on_delivery'] = $omnify_pm_map['cod'];
+}
+if (isset($omnify_pm_map['bacs']) && ! isset($omnify_pm_map['bank_transfer'])) {
+	$omnify_pm_map['bank_transfer'] = $omnify_pm_map['bacs'];
+}
+if (isset($omnify_pm_map['check']) && ! isset($omnify_pm_map['cheque'])) {
+	$omnify_pm_map['cheque'] = $omnify_pm_map['check'];
+}
+
 // Calculate active gateways count
 $omnify_active_count = 0;
 $omnify_gateway_flags = [

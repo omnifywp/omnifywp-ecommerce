@@ -3333,7 +3333,7 @@ function initCheckoutPageForm() {
 	const recoveryParams = new URLSearchParams(window.location.search);
 	const recoveredToken = recoveryParams.get('omnify_recover_cart') || '';
 	const isRedirectSuccess = [
-		'omnify_stripe', 'omnify_paypal', 'omnify_alipay', 'omnify_wechat',
+		'omnify_stripe', 'omnify_paypal', 'omnify_razorpay', 'omnify_alipay', 'omnify_wechat',
 		'omnify_sslcommerz', 'omnify_paystack', 'omnify_tap', 'omnify_mollie',
 		'omnify_khalti', 'omnify_esewa', 'omnify_paddle'
 	].some((param) => recoveryParams.get(param) === 'success');
@@ -3960,13 +3960,25 @@ function initCheckoutPageForm() {
 				document.querySelectorAll('.omnify-checkout-gateway-note').forEach(sec => sec.style.display = 'none');
 
 				// Show contextual note if available
-				const noteEl = document.getElementById(`omnify-note-${val}`);
+				let noteEl = document.getElementById(`omnify-note-${val}`);
+				if (!noteEl && (val === 'stripe' || val === 'stripe_checkout')) {
+					noteEl = document.getElementById('omnify-note-card');
+				} else if (!noteEl && val === 'paypal_checkout') {
+					noteEl = document.getElementById('omnify-note-paypal');
+				}
 				if (noteEl) {
 					noteEl.style.display = 'block';
 				}
 
 				// Show manual instructions if available
-				const instrEl = document.getElementById(`omnify-instructions-${val}`);
+				let instrEl = document.getElementById(`omnify-instructions-${val}`);
+				if (!instrEl && (val === 'cod' || val === 'cash_on_delivery')) {
+					instrEl = document.getElementById('omnify-instructions-cod') || document.getElementById('omnify-instructions-cash_on_delivery');
+				} else if (!instrEl && (val === 'bacs' || val === 'bank_transfer')) {
+					instrEl = document.getElementById('omnify-instructions-bacs') || document.getElementById('omnify-instructions-bank_transfer');
+				} else if (!instrEl && (val === 'cheque' || val === 'check')) {
+					instrEl = document.getElementById('omnify-instructions-cheque') || document.getElementById('omnify-instructions-check');
+				}
 				if (instrEl) {
 					instrEl.style.display = 'block';
 				}
@@ -4082,18 +4094,18 @@ function initCheckoutPageForm() {
 		// Get selected payment method
 		const selectedPaymentMethodEl = document.querySelector('input[name="payment_method"]:checked');
 		const selectedPaymentMethod = selectedPaymentMethodEl ? selectedPaymentMethodEl.value : 'card';
-		const shouldUseStripeCheckout = selectedPaymentMethod === 'card';
-		const shouldUsePayPalCheckout = selectedPaymentMethod === 'paypal';
-		const shouldUseRazorpayCheckout = selectedPaymentMethod === 'razorpay';
-		const shouldUseAlipayCheckout = selectedPaymentMethod === 'alipay';
-		const shouldUseWechatCheckout = selectedPaymentMethod === 'wechat';
-		const shouldUseSslcommerzCheckout = selectedPaymentMethod === 'sslcommerz';
-		const shouldUsePaystackCheckout = selectedPaymentMethod === 'paystack';
-		const shouldUseTapCheckout = selectedPaymentMethod === 'tap';
-		const shouldUseMollieCheckout = selectedPaymentMethod === 'mollie';
-		const shouldUseKhaltiCheckout = selectedPaymentMethod === 'khalti';
-		const shouldUseEsewaCheckout = selectedPaymentMethod === 'esewa';
-		const shouldUsePaddleCheckout = selectedPaymentMethod === 'paddle';
+		const shouldUseStripeCheckout = selectedPaymentMethod === 'card' || selectedPaymentMethod === 'stripe' || selectedPaymentMethod === 'stripe_checkout';
+		const shouldUsePayPalCheckout = selectedPaymentMethod === 'paypal' || selectedPaymentMethod === 'paypal_checkout';
+		const shouldUseRazorpayCheckout = selectedPaymentMethod === 'razorpay' || selectedPaymentMethod === 'razorpay_checkout';
+		const shouldUseAlipayCheckout = selectedPaymentMethod === 'alipay' || selectedPaymentMethod === 'alipay_checkout';
+		const shouldUseWechatCheckout = selectedPaymentMethod === 'wechat' || selectedPaymentMethod === 'wechat_checkout';
+		const shouldUseSslcommerzCheckout = selectedPaymentMethod === 'sslcommerz' || selectedPaymentMethod === 'sslcommerz_checkout';
+		const shouldUsePaystackCheckout = selectedPaymentMethod === 'paystack' || selectedPaymentMethod === 'paystack_checkout';
+		const shouldUseTapCheckout = selectedPaymentMethod === 'tap' || selectedPaymentMethod === 'tap_checkout';
+		const shouldUseMollieCheckout = selectedPaymentMethod === 'mollie' || selectedPaymentMethod === 'mollie_checkout';
+		const shouldUseKhaltiCheckout = selectedPaymentMethod === 'khalti' || selectedPaymentMethod === 'khalti_checkout';
+		const shouldUseEsewaCheckout = selectedPaymentMethod === 'esewa' || selectedPaymentMethod === 'esewa_checkout';
+		const shouldUsePaddleCheckout = selectedPaymentMethod === 'paddle' || selectedPaymentMethod === 'paddle_checkout';
 
 		// Terms acceptance check
 		const termsCheckbox = document.getElementById('omnify-agree-terms');
@@ -4295,6 +4307,12 @@ function initCheckoutPageForm() {
 				return data;
 			}))
 			.then((res) => {
+				if (res.redirect_url) {
+					clearPurchasedCartItems();
+					window.location.href = res.redirect_url;
+					return;
+				}
+
 				if (!res.razorpay_order_id || !res.key) {
 					throw new Error('Razorpay did not return required order data.');
 				}
@@ -4414,7 +4432,7 @@ function initCheckoutPageForm() {
 		}
 
 		if (shouldUseAlipayCheckout || shouldUseWechatCheckout || shouldUseSslcommerzCheckout || shouldUsePaystackCheckout || shouldUseTapCheckout || shouldUseMollieCheckout || shouldUseKhaltiCheckout || shouldUseEsewaCheckout || shouldUsePaddleCheckout) {
-			const gateway = selectedPaymentMethod;
+			const gateway = selectedPaymentMethod.replace('_checkout', '');
 			window.fetch(`${omnifyStorefront.restUrl}/${gateway}/order`, {
 				method: 'POST',
 				headers: {
@@ -4473,6 +4491,8 @@ function initCheckoutPageForm() {
 						window.location.href = res.redirect_url;
 						return;
 					}
+				}
+
 				if (gateway === 'wechat' && (res.code_url || res.qr_code_url)) {
 					const qrUrl = res.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(res.code_url)}`;
 					const wechatModal = document.getElementById('omnify-wechat-modal');

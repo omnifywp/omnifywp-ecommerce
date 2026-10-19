@@ -666,7 +666,7 @@ final class Omnify_Rest_Server {
 			self::NAMESPACE,
 			'/alipay/verify',
 			[
-				'methods'             => 'POST',
+				'methods'             => ['GET', 'POST'],
 				'callback'            => [$this, 'verify_alipay_payment'],
 				'permission_callback' => '__return_true',
 			]
@@ -695,7 +695,7 @@ final class Omnify_Rest_Server {
 			self::NAMESPACE,
 			'/wechat/verify',
 			[
-				'methods'             => 'POST',
+				'methods'             => ['GET', 'POST'],
 				'callback'            => [$this, 'verify_wechat_payment'],
 				'permission_callback' => [$this, 'can_process_wechat_verify'],
 			]
@@ -724,7 +724,7 @@ final class Omnify_Rest_Server {
 			self::NAMESPACE,
 			'/sslcommerz/verify',
 			[
-				'methods'             => 'GET',
+				'methods'             => ['GET', 'POST'],
 				'callback'            => [$this, 'verify_sslcommerz_payment'],
 				'permission_callback' => '__return_true',
 			]
@@ -1970,7 +1970,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_razorpay_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['razorpay_enabled'])) {
+		if (empty($omnify_settings['razorpay_enabled']) && empty($omnify_settings['razorpay_checkout_enabled'])) {
 			return new WP_Error('omnify_razorpay_disabled', __('Razorpay is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -1994,7 +1994,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_stripe_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['stripe_enabled'])) {
+		if (empty($omnify_settings['stripe_enabled']) && empty($omnify_settings['stripe_checkout_enabled'])) {
 			return new WP_Error('omnify_stripe_disabled', __('Stripe is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2013,7 +2013,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_paypal_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['paypal_enabled'])) {
+		if (empty($omnify_settings['paypal_enabled']) && empty($omnify_settings['paypal_checkout_enabled'])) {
 			return new WP_Error('omnify_paypal_disabled', __('PayPal is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2022,7 +2022,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_alipay_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['alipay_enabled'])) {
+		if (empty($omnify_settings['alipay_enabled']) && empty($omnify_settings['alipay_checkout_enabled'])) {
 			return new WP_Error('omnify_alipay_disabled', __('Alipay is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2031,12 +2031,15 @@ final class Omnify_Rest_Server {
 
 	public function can_process_wechat_verify(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['wechat_enabled'])) {
+		if (empty($omnify_settings['wechat_enabled']) && empty($omnify_settings['wechat_checkout_enabled'])) {
 			return new WP_Error('omnify_wechat_disabled', __('WeChat Pay is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
 		$omnify_api_key = trim((string) ($omnify_settings['wechat_api_v3_key'] ?? ($omnify_settings['wechat_key'] ?? '')));
 		if ('' === $omnify_api_key) {
+			if (! empty($omnify_settings['test_mode']) || 'sandbox' === ($omnify_settings['wechat_mode'] ?? 'sandbox')) {
+				return true;
+			}
 			return new WP_Error('omnify_wechat_unconfigured', __('WeChat Pay credentials are not configured.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2045,17 +2048,23 @@ final class Omnify_Rest_Server {
 
 	public function can_process_wechat_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['wechat_enabled'])) {
+		if (empty($omnify_settings['wechat_enabled']) && empty($omnify_settings['wechat_checkout_enabled'])) {
 			return new WP_Error('omnify_wechat_disabled', __('WeChat Pay is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
 		$omnify_api_key = trim((string) ($omnify_settings['wechat_api_v3_key'] ?? ($omnify_settings['wechat_key'] ?? '')));
 		if ('' === $omnify_api_key) {
+			if (! empty($omnify_settings['test_mode']) || 'sandbox' === ($omnify_settings['wechat_mode'] ?? 'sandbox')) {
+				return true;
+			}
 			return new WP_Error('omnify_wechat_unconfigured', __('WeChat Pay credentials are not configured.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
 		$omnify_signature = sanitize_text_field(wp_unslash((string) ($omnify_request->get_header('wechatpay-signature') ?? ($omnify_request->get_header('wechat-signature') ?? ''))));
 		if ('' === $omnify_signature) {
+			if (! empty($omnify_settings['test_mode']) || 'sandbox' === ($omnify_settings['wechat_mode'] ?? 'sandbox')) {
+				return true;
+			}
 			$omnify_params = (array) ($omnify_request->get_json_params() ?: $omnify_request->get_body_params());
 			if (empty($omnify_params['sign'])) {
 				return new WP_Error('omnify_missing_signature', __('Missing WeChat signature header or sign parameter.', 'omnifywp-ecommerce'), ['status' => 401]);
@@ -2067,7 +2076,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_sslcommerz_ipn(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['sslcommerz_enabled'])) {
+		if (empty($omnify_settings['sslcommerz_enabled']) && empty($omnify_settings['sslcommerz_checkout_enabled'])) {
 			return new WP_Error('omnify_sslcommerz_disabled', __('SSLCommerz is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2099,7 +2108,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_paystack_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['paystack_enabled'])) {
+		if (empty($omnify_settings['paystack_enabled']) && empty($omnify_settings['paystack_checkout_enabled'])) {
 			return new WP_Error('omnify_paystack_disabled', __('Paystack is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2114,7 +2123,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_tap_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['tap_enabled'])) {
+		if (empty($omnify_settings['tap_enabled']) && empty($omnify_settings['tap_checkout_enabled'])) {
 			return new WP_Error('omnify_tap_disabled', __('Tap Payments is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2123,7 +2132,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_mollie_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['mollie_enabled'])) {
+		if (empty($omnify_settings['mollie_enabled']) && empty($omnify_settings['mollie_checkout_enabled'])) {
 			return new WP_Error('omnify_mollie_disabled', __('Mollie is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2132,7 +2141,7 @@ final class Omnify_Rest_Server {
 
 	public function can_process_paddle_webhook(WP_REST_Request $omnify_request): bool|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
-		if (empty($omnify_settings['paddle_enabled'])) {
+		if (empty($omnify_settings['paddle_enabled']) && empty($omnify_settings['paddle_checkout_enabled'])) {
 			return new WP_Error('omnify_paddle_disabled', __('Paddle is not enabled.', 'omnifywp-ecommerce'), ['status' => 403]);
 		}
 
@@ -2845,12 +2854,12 @@ final class Omnify_Rest_Server {
 		$omnify_is_manual   = false;
 		$omnify_payment_instructions = '';
 
-		if ($omnify_payment_method_id === 'card') {
+		if ($omnify_payment_method_id === 'card' || $omnify_payment_method_id === 'stripe' || $omnify_payment_method_id === 'stripe_checkout') {
 			$omnify_stripe_enabled = ! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled']);
 			if (! $omnify_stripe_enabled) {
 				return new WP_Error('omnify_checkout_payment_method_invalid', __('Card payments are not configured.', 'omnifywp-ecommerce'), ['status' => 422]);
 			}
-		} elseif ($omnify_payment_method_id === 'paypal') {
+		} elseif ($omnify_payment_method_id === 'paypal' || $omnify_payment_method_id === 'paypal_checkout') {
 			$omnify_paypal_enabled = ! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled']);
 			if (! $omnify_paypal_enabled) {
 				return new WP_Error('omnify_checkout_payment_method_invalid', __('PayPal is not enabled.', 'omnifywp-ecommerce'), ['status' => 422]);
@@ -3176,12 +3185,12 @@ final class Omnify_Rest_Server {
 		$omnify_payment_method_id    = sanitize_text_field((string) ($omnify_data['payment_method'] ?? 'card'));
 		$omnify_is_manual           = false;
 		$omnify_payment_instructions = '';
-		if ('card' === $omnify_payment_method_id) {
+		if ('card' === $omnify_payment_method_id || 'stripe' === $omnify_payment_method_id || 'stripe_checkout' === $omnify_payment_method_id) {
 			$omnify_stripe_enabled = ! empty($omnify_settings['stripe_enabled']) || ! empty($omnify_settings['stripe_checkout_enabled']);
 			if (! $omnify_stripe_enabled) {
 				return new WP_Error('omnify_checkout_payment_method_invalid', __('Card payments are not configured.', 'omnifywp-ecommerce'), ['status' => 422]);
 			}
-		} elseif ('paypal' === $omnify_payment_method_id) {
+		} elseif ('paypal' === $omnify_payment_method_id || 'paypal_checkout' === $omnify_payment_method_id) {
 			$omnify_paypal_enabled = ! empty($omnify_settings['paypal_enabled']) || ! empty($omnify_settings['paypal_checkout_enabled']);
 			if (! $omnify_paypal_enabled) {
 				return new WP_Error('omnify_checkout_payment_method_invalid', __('PayPal is not enabled.', 'omnifywp-ecommerce'), ['status' => 422]);
@@ -3820,6 +3829,17 @@ final class Omnify_Rest_Server {
 		);
 		$omnify_cancel_url = add_query_arg(['omnify_stripe' => 'cancelled', 'order_id' => $omnify_context['order_id'], 'order_key' => $omnify_order_key], $omnify_checkout_url);
 
+		if ((float) ($omnify_context['total'] ?? 0) <= 0.0) {
+			$this->complete_order_payment((int) $omnify_context['order_id'], 'free', 'free_' . $omnify_context['order_id']);
+			$omnify_sim_url = str_replace('{CHECKOUT_SESSION_ID}', 'free_' . $omnify_context['order_id'], $omnify_success_url);
+			return rest_ensure_response([
+				'success'    => true,
+				'order_id'   => $omnify_context['order_id'],
+				'session_id' => 'free_' . $omnify_context['order_id'],
+				'url'        => $omnify_sim_url,
+			]);
+		}
+
 		$omnify_secret_key = $this->stripe_secret_key($omnify_settings);
 		if ('' === $omnify_secret_key) {
 			if (! empty($omnify_settings['test_mode']) || 'test' === ($omnify_settings['stripe_mode'] ?? 'test')) {
@@ -4047,6 +4067,16 @@ final class Omnify_Rest_Server {
 			['omnify_paypal' => 'cancelled', 'order_id' => $omnify_context['order_id'], 'order_key' => $omnify_order_key],
 			$omnify_checkout_url
 		);
+
+		if ((float) ($omnify_context['total'] ?? 0) <= 0.0) {
+			$this->complete_order_payment((int) $omnify_context['order_id'], 'free', 'free_' . $omnify_context['order_id']);
+			return rest_ensure_response([
+				'success'         => true,
+				'order_id'        => $omnify_context['order_id'],
+				'paypal_order_id' => 'free_' . $omnify_context['order_id'],
+				'url'             => $omnify_return_url,
+			]);
+		}
 
 		$omnify_access_token = $this->paypal_access_token($omnify_settings);
 		if (is_wp_error($omnify_access_token)) {
@@ -4298,6 +4328,16 @@ final class Omnify_Rest_Server {
 		}
 		$omnify_context = $omnify_order_creation;
 
+		if (! empty($omnify_context['is_free'])) {
+			$omnify_checkout_page_id = absint($omnify_settings['page_checkout'] ?? 0);
+			$omnify_checkout_url = $omnify_checkout_page_id ? (string) get_permalink($omnify_checkout_page_id) : home_url('/checkout/');
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => (int) $omnify_context['order_id'],
+				'redirect_url' => add_query_arg(['omnify_razorpay' => 'success', 'order_id' => (int) $omnify_context['order_id']], $omnify_checkout_url),
+			]);
+		}
+
 		if ('' === $omnify_key_id || '' === $omnify_key_secret) {
 			if (! empty($omnify_settings['test_mode']) || 'test' === $omnify_mode) {
 				$omnify_mock_key = 'rzp_test_omnify';
@@ -4531,6 +4571,15 @@ final class Omnify_Rest_Server {
 		$omnify_checkout_page_id = absint($omnify_settings['page_checkout'] ?? 0);
 		$omnify_checkout_url = $omnify_checkout_page_id ? (string) get_permalink($omnify_checkout_page_id) : home_url('/checkout/');
 
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'out_trade_no' => $omnify_out_trade_no,
+				'redirect_url' => add_query_arg(['omnify_alipay' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+			]);
+		}
+
 		$omnify_app_id = trim((string) ($omnify_settings['alipay_app_id'] ?? ''));
 		$omnify_private_key = trim((string) ($omnify_settings['alipay_merchant_private_key'] ?? ''));
 		if ('' === $omnify_app_id || '' === $omnify_private_key) {
@@ -4683,6 +4732,15 @@ final class Omnify_Rest_Server {
 			'out_trade_no'  => $omnify_out_trade_no,
 		], $omnify_checkout_url);
 
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'out_trade_no' => $omnify_out_trade_no,
+				'redirect_url' => $omnify_qr_url,
+			]);
+		}
+
 		if ('' === $omnify_app_id || '' === $omnify_mch_id || '' === $omnify_api_key) {
 			if (! empty($omnify_settings['test_mode']) || 'sandbox' === ($omnify_settings['wechat_mode'] ?? 'sandbox')) {
 				return rest_ensure_response([
@@ -4813,6 +4871,14 @@ final class Omnify_Rest_Server {
 
 		$omnify_checkout_page_id = absint($omnify_settings['page_checkout'] ?? 0);
 		$omnify_checkout_url = $omnify_checkout_page_id ? (string) get_permalink($omnify_checkout_page_id) : home_url('/checkout/');
+
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => add_query_arg(['omnify_sslcommerz' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+			]);
+		}
 
 		$omnify_creds        = $this->sslcommerz_credentials($omnify_settings);
 		$omnify_mode         = $omnify_creds['mode'];
@@ -4986,6 +5052,15 @@ final class Omnify_Rest_Server {
 
 		$omnify_checkout_page_id = absint($omnify_settings['page_checkout'] ?? 0);
 		$omnify_checkout_url = $omnify_checkout_page_id ? (string) get_permalink($omnify_checkout_page_id) : home_url('/checkout/');
+
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => add_query_arg(['omnify_paystack' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+				'reference'    => $omnify_reference,
+			]);
+		}
 
 		$omnify_mode = 'live' === ($omnify_settings['paystack_mode'] ?? 'test') ? 'live' : 'test';
 		$omnify_secret_key = trim((string) ($omnify_settings["paystack_{$omnify_mode}_secret_key"] ?? ''));
@@ -5240,6 +5315,14 @@ final class Omnify_Rest_Server {
 
 		$omnify_order_id = (int) $omnify_context['order_id'];
 		$omnify_currency = strtoupper((string) $omnify_context['currency']);
+
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => add_query_arg(['omnify_tap' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+			]);
+		}
 
 		if ('' === $omnify_secret_key) {
 			if (! empty($omnify_settings['test_mode']) || 'test' === $omnify_mode) {
@@ -5526,6 +5609,14 @@ final class Omnify_Rest_Server {
 			'order_id'      => $omnify_order_id,
 		], $omnify_checkout_url);
 
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => $omnify_redirect_url,
+			]);
+		}
+
 		if ('' === $omnify_api_key) {
 			if (! empty($omnify_settings['test_mode']) || 'test' === $omnify_mode) {
 				$mock_payment_id = 'tr_test_' . $omnify_order_id . '_' . wp_generate_password(6, false);
@@ -5678,6 +5769,14 @@ final class Omnify_Rest_Server {
 		}
 
 		$omnify_order_id = (int) $omnify_context['order_id'];
+
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => add_query_arg(['omnify_khalti' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+			]);
+		}
 
 		if ('' === $omnify_secret_key) {
 			if (! empty($omnify_settings['test_mode']) || ! $omnify_is_live) {
@@ -5913,6 +6012,16 @@ final class Omnify_Rest_Server {
 		}
 
 		$omnify_order_id = (int) $omnify_context['order_id'];
+
+		if (! empty($omnify_context['is_free'])) {
+			$omnify_checkout_page_id = absint($omnify_settings['page_checkout'] ?? 0);
+			$omnify_checkout_url = $omnify_checkout_page_id ? (string) get_permalink($omnify_checkout_page_id) : home_url('/checkout/');
+			return rest_ensure_response([
+				'success'      => true,
+				'order_id'     => $omnify_order_id,
+				'redirect_url' => add_query_arg(['omnify_esewa' => 'success', 'order_id' => $omnify_order_id], $omnify_checkout_url),
+			]);
+		}
 		$omnify_total_npr = $this->convert_currency((float) $omnify_context['total'], $omnify_currency, 'NPR', $omnify_settings);
 		$omnify_amount = number_format($omnify_total_npr, 2, '.', '');
 		$omnify_uuid   = 'esewa_' . $omnify_order_id . '_' . time();
@@ -6067,6 +6176,18 @@ final class Omnify_Rest_Server {
 		$omnify_currency = strtoupper((string) $omnify_context['currency']);
 		$omnify_total = (float) $omnify_context['total'];
 		$omnify_email = sanitize_email((string) $omnify_context['email']);
+
+		if (! empty($omnify_context['is_free'])) {
+			return rest_ensure_response([
+				'success'        => true,
+				'order_id'       => $omnify_order_id,
+				'order_number'   => (string) ($omnify_context['order_number'] ?? $omnify_order_id),
+				'transaction_id' => 'free_' . $omnify_order_id,
+				'redirect_url'   => add_query_arg(['omnify_paddle' => 'success', 'order_id' => $omnify_order_id, 'transaction_id' => 'free_' . $omnify_order_id], $omnify_checkout_url),
+				'client_token'   => 'free',
+				'customer_email' => $omnify_email,
+			]);
+		}
 
 		if ('' === $omnify_api_key) {
 			if (! empty($omnify_settings['test_mode']) || 'sandbox' === $omnify_mode) {
@@ -6611,11 +6732,17 @@ final class Omnify_Rest_Server {
 
 		$this->mark_abandoned_cart_recovered_from_payload($omnify_data, (int) $omnify_order_id);
 
+		$omnify_is_free = ((float) $omnify_totals['total'] <= 0.0);
+		if ($omnify_is_free) {
+			$this->complete_order_payment((int) $omnify_order_id, 'free', 'free_' . $omnify_order_id);
+		}
+
 		$omnify_order = $this->omnify_orders->find((int) $omnify_order_id);
 
 		return [
 			'order_id'       => (int) $omnify_order_id,
 			'order_number'   => $omnify_order ? ($omnify_order['order_number'] ?? '#' . $omnify_order_id) : '#' . $omnify_order_id,
+			'is_free'        => $omnify_is_free,
 			'order'          => $omnify_order ?: [
 				'id'       => $omnify_order_id,
 				'total'    => $omnify_totals['total'],
