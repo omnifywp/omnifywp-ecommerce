@@ -1026,6 +1026,14 @@ class Omnify_Payment_Gateway_Service {
 				return $this->verify_khalti_credentials($omnify_settings);
 			case 'esewa':
 				return $this->verify_esewa_credentials($omnify_settings);
+			case 'bank_transfer':
+			case 'bacs':
+			case 'cheque':
+			case 'check':
+			case 'cod':
+			case 'cash_on_delivery':
+			case 'custom':
+				return ['message' => __('Offline payment method is configured and ready.', 'omnifywp-ecommerce'), 'latency' => 0, 'mode' => 'offline', 'detail' => []];
 		}
 
 		return new WP_Error('omnify_gateway_unknown', __('Unknown payment gateway.', 'omnifywp-ecommerce'));

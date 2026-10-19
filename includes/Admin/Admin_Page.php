@@ -5083,8 +5083,13 @@ class Omnify_Admin_Page {
 		$omnify_supported_gateways = ['card', 'stripe', 'stripe_checkout', 'paypal', 'paypal_checkout', 'razorpay', 'alipay', 'wechat', 'sslcommerz', 'paystack', 'tap', 'mollie', 'khalti', 'esewa', 'paddle'];
 		if (in_array($omnify_payment_method, $omnify_supported_gateways, true)) {
 			if (empty($omnify_transaction_id)) {
-				wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=refund_failed&err=' . urlencode(__('Live refund failed: No transaction ID associated with this order.', 'omnifywp-ecommerce'))));
-				exit;
+				$omnify_settings = $this->omnify_settings->all();
+				if (! empty($omnify_settings['test_mode'])) {
+					$omnify_transaction_id = 'test_sim_' . $omnify_order_id;
+				} else {
+					wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=refund_failed&err=' . urlencode(__('Live refund failed: No transaction ID associated with this order.', 'omnifywp-ecommerce'))));
+					exit;
+				}
 			}
 
 			$omnify_res = null;
