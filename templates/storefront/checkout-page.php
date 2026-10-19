@@ -142,6 +142,7 @@ $omnify_paypal_token     = isset($_GET['token']) ? sanitize_text_field(wp_unslas
 
 $omnify_is_redirect_success = ('success' === $omnify_stripe_status)
 	|| ('success' === $omnify_paypal_status)
+	|| (isset($_GET['omnify_razorpay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_razorpay'])))
 	|| (isset($_GET['omnify_alipay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_alipay'])))
 	|| (isset($_GET['omnify_wechat']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_wechat'])))
 	|| (isset($_GET['omnify_sslcommerz']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_sslcommerz'])))
@@ -174,6 +175,21 @@ if ($omnify_success_order && ! empty($omnify_success_order['customer_id']) && is
 					$omnify_success_files[] = $omnify_f;
 				}
 			}
+		}
+	}
+}
+
+$omnify_success_instructions = '';
+if ($omnify_success_order) {
+	$omnify_pm_id = (string) ($omnify_success_order['payment_method'] ?? '');
+	foreach (($omnify_settings['payment_methods'] ?? []) as $omnify_m) {
+		$omnify_mid = (string) ($omnify_m['id'] ?? '');
+		if ($omnify_mid === $omnify_pm_id ||
+			(('cod' === $omnify_pm_id || 'cash_on_delivery' === $omnify_pm_id) && ('cod' === $omnify_mid || 'cash_on_delivery' === $omnify_mid)) ||
+			(('bank_transfer' === $omnify_pm_id || 'bacs' === $omnify_pm_id) && ('bank_transfer' === $omnify_mid || 'bacs' === $omnify_mid)) ||
+			(('cheque' === $omnify_pm_id || 'check' === $omnify_pm_id) && ('cheque' === $omnify_mid || 'check' === $omnify_mid))) {
+			$omnify_success_instructions = (string) ($omnify_m['instructions'] ?? '');
+			break;
 		}
 	}
 }
@@ -787,13 +803,13 @@ if ($omnify_success_order && ! empty($omnify_success_order['customer_id']) && is
 						$omnify_stripe_enabled ? ['card'] : [],
 						$omnify_paypal_enabled ? ['paypal'] : [],
 						$omnify_razorpay_enabled ? ['razorpay'] : [],
-						($omnify_paystack_enabled && $omnify_paystack_compatible) ? ['paystack'] : [],
-						($omnify_tap_enabled && $omnify_tap_compatible) ? ['tap'] : [],
-						($omnify_mollie_enabled && $omnify_mollie_compatible) ? ['mollie'] : [],
+						$omnify_paystack_enabled ? ['paystack'] : [],
+						$omnify_tap_enabled ? ['tap'] : [],
+						$omnify_mollie_enabled ? ['mollie'] : [],
 						$omnify_paddle_enabled ? ['paddle'] : [],
-						($omnify_khalti_enabled && $omnify_khalti_compatible) ? ['khalti'] : [],
-						($omnify_esewa_enabled && $omnify_esewa_compatible) ? ['esewa'] : [],
-						($omnify_sslcommerz_enabled && $omnify_sslcommerz_compatible) ? ['sslcommerz'] : [],
+						$omnify_khalti_enabled ? ['khalti'] : [],
+						$omnify_esewa_enabled ? ['esewa'] : [],
+						$omnify_sslcommerz_enabled ? ['sslcommerz'] : [],
 						$omnify_alipay_enabled ? ['alipay'] : [],
 						$omnify_wechat_enabled ? ['wechat'] : [],
 						array_map(static fn($omnify_method) => (string) $omnify_method['id'], $omnify_enabled_methods)
@@ -830,21 +846,21 @@ if ($omnify_success_order && ! empty($omnify_success_order['customer_id']) && is
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_paystack_enabled && $omnify_paystack_compatible) : ?>
+								<?php if ($omnify_paystack_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'paystack' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-paystack" name="payment_method" value="paystack" <?php checked($omnify_default_payment_method, 'paystack'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Paystack (Cards, Mobile Money, Bank Transfer)', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_tap_enabled && $omnify_tap_compatible) : ?>
+								<?php if ($omnify_tap_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'tap' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-tap" name="payment_method" value="tap" <?php checked($omnify_default_payment_method, 'tap'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Tap Payments (mada, KNET, Benefit, Cards)', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_mollie_enabled && $omnify_mollie_compatible) : ?>
+								<?php if ($omnify_mollie_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'mollie' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-mollie" name="payment_method" value="mollie" <?php checked($omnify_default_payment_method, 'mollie'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Mollie (iDEAL, Bancontact, SEPA, Cards)', 'omnifywp-ecommerce'); ?></span>
@@ -858,21 +874,21 @@ if ($omnify_success_order && ! empty($omnify_success_order['customer_id']) && is
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_khalti_enabled && $omnify_khalti_compatible) : ?>
+								<?php if ($omnify_khalti_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'khalti' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-khalti" name="payment_method" value="khalti" <?php checked($omnify_default_payment_method, 'khalti'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('Khalti Digital Wallet (Nepal)', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_esewa_enabled && $omnify_esewa_compatible) : ?>
+								<?php if ($omnify_esewa_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'esewa' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-esewa" name="payment_method" value="esewa" <?php checked($omnify_default_payment_method, 'esewa'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('eSewa ePay (Nepal)', 'omnifywp-ecommerce'); ?></span>
 									</label>
 								<?php endif; ?>
 
-								<?php if ($omnify_sslcommerz_enabled && $omnify_sslcommerz_compatible) : ?>
+								<?php if ($omnify_sslcommerz_enabled) : ?>
 									<label class="omnify-payment-method-label" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 14px 16px; border-radius: 8px; border: 1px solid <?php echo 'sslcommerz' === $omnify_default_payment_method ? 'var(--checkout-primary)' : 'var(--checkout-gray-200)'; ?>; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
 										<input type="radio" id="payment-method-sslcommerz" name="payment_method" value="sslcommerz" <?php checked($omnify_default_payment_method, 'sslcommerz'); ?> style="margin: 0; width: 18px; height: 18px; accent-color: var(--checkout-primary);">
 										<span style="font-size: 14px; font-weight: 600; color: var(--checkout-gray-800);"><?php esc_html_e('SSLCommerz (Cards, Mobile Banking, Net Banking)', 'omnifywp-ecommerce'); ?></span>
@@ -1369,8 +1385,13 @@ if ($omnify_success_order && ! empty($omnify_success_order['customer_id']) && is
 				?>
 			</p>
 			
-			<div style="background: var(--checkout-gray-100); border-radius: 8px; padding: 12px; font-size: 14px; margin-bottom: 30px; display: inline-block;">
+			<div style="background: var(--checkout-gray-100); border-radius: 8px; padding: 12px; font-size: 14px; margin-bottom: 24px; display: inline-block;">
 				<span><?php esc_html_e('Order Number:', 'omnifywp-ecommerce'); ?> <strong id="omnify-page-success-order-id" style="color: var(--checkout-dark);"><?php echo esc_html($omnify_order_num_display); ?></strong></span>
+			</div>
+
+			<div id="omnify-page-success-instructions" style="<?php echo (! empty($omnify_success_instructions)) ? 'display: block;' : 'display: none;'; ?> background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid var(--checkout-primary); border-radius: 8px; padding: 16px; margin: 0 auto 24px auto; text-align: left; max-width: 520px; font-size: 13.5px; line-height: 1.6; color: #334155;">
+				<div style="font-weight: 600; color: #0f172a; margin-bottom: 6px;"><?php esc_html_e('Payment Instructions:', 'omnifywp-ecommerce'); ?></div>
+				<div id="omnify-page-success-instructions-text"><?php echo nl2br(esc_html($omnify_success_instructions ?? '')); ?></div>
 			</div>
 
 			<?php if (! empty($omnify_success_files)) : ?>

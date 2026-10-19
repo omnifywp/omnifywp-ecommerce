@@ -54,6 +54,7 @@ class Omnify_Admin_Page {
 		add_action('wp_ajax_omnify_test_connection', [$this, 'ajax_test_connection']);
 		add_action('wp_ajax_omnify_test_stripe_connection', [$this, 'ajax_test_stripe_connection']);
 		add_action('wp_ajax_omnify_test_paypal_connection', [$this, 'ajax_test_paypal_connection']);
+		add_action('wp_ajax_omnify_test_gateway_connection', [$this, 'ajax_test_gateway_connection']);
 		add_action('wp_ajax_omnify_create_webhook', [$this, 'ajax_create_webhook']);
 		add_action('wp_ajax_omnify_delete_webhook', [$this, 'ajax_delete_webhook']);
 		add_action('wp_ajax_omnify_test_webhook', [$this, 'ajax_test_webhook']);
@@ -2043,6 +2044,37 @@ class Omnify_Admin_Page {
 		}
 	}
 
+	/**
+	 * AJAX: verify saved credentials for any supported payment gateway.
+	 */
+	public function ajax_test_gateway_connection(): void {
+		check_ajax_referer('omnify_api_nonce', 'nonce');
+
+		if (! current_user_can('manage_options')) {
+			wp_send_json_error(['message' => __('Forbidden.', 'omnifywp-ecommerce')]);
+		}
+
+		$omnify_gateway = sanitize_key(wp_unslash($_POST['gateway'] ?? ''));
+		if ('' === $omnify_gateway) {
+			wp_send_json_error(['message' => __('No payment gateway specified.', 'omnifywp-ecommerce')]);
+		}
+
+		$omnify_result = $this->omnify_payment_gateways->verify_connection($omnify_gateway);
+		if (is_wp_error($omnify_result)) {
+			wp_send_json_error([
+				'message' => $omnify_result->get_error_message(),
+				'latency' => 0,
+			]);
+		}
+
+		wp_send_json_success([
+			'status'  => 'success',
+			'message' => (string) ($omnify_result['message'] ?? __('Connection verified.', 'omnifywp-ecommerce')),
+			'latency' => (int) ($omnify_result['latency'] ?? 0),
+			'mode'    => (string) ($omnify_result['mode'] ?? ''),
+		]);
+	}
+
 	public function render_activity(): void {
 		$omnify_settings = $this->omnify_settings->all();
 
@@ -3802,6 +3834,10 @@ class Omnify_Admin_Page {
 			'wechat_serial_no'            => 'payments' === $omnify_section ? sanitize_text_field(wp_unslash($_POST['wechat_serial_no'] ?? '')) : ($omnify_existing['wechat_serial_no'] ?? ''),
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'wechat_merchant_private_key' => 'payments' === $omnify_section ? (string) wp_unslash($_POST['wechat_merchant_private_key'] ?? '') : ($omnify_existing['wechat_merchant_private_key'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			'wechat_client_cert'          => 'payments' === $omnify_section ? (string) wp_unslash($_POST['wechat_client_cert'] ?? '') : ($omnify_existing['wechat_client_cert'] ?? ''),
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			'wechat_client_key'           => 'payments' === $omnify_section ? (string) wp_unslash($_POST['wechat_client_key'] ?? '') : ($omnify_existing['wechat_client_key'] ?? ''),
 			'wechat_checkout_enabled'     => 'payments' === $omnify_section ? ! empty($_POST['wechat_checkout_enabled']) : ! empty($omnify_existing['wechat_checkout_enabled']),
 			// SSLCommerz
 			'sslcommerz_enabled'          => 'payments' === $omnify_section ? ! empty($_POST['sslcommerz_checkout_enabled']) : ! empty($omnify_existing['sslcommerz_enabled']),

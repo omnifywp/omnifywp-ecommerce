@@ -1580,6 +1580,69 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// Generic payment gateway connection tester (Payments settings tab)
+	document.addEventListener('click', function (e) {
+		const testBtn = e.target.closest('.omnify-pm-test-btn');
+		if (!testBtn || testBtn.disabled || typeof jQuery === 'undefined' || !window.omnifyAdmin) {
+			return;
+		}
+		e.preventDefault();
+
+		const gateway = testBtn.getAttribute('data-gateway') || '';
+		if (!gateway) {
+			return;
+		}
+
+		const resultEl = document.querySelector('.omnify-pm-test-result[data-gateway="' + gateway + '"]');
+		const labelEl = testBtn.querySelector('.omnify-pm-test-label');
+		const originalLabel = labelEl ? labelEl.textContent : '';
+		testBtn.disabled = true;
+		if (labelEl) {
+			labelEl.textContent = 'Testing...';
+		}
+		if (resultEl) {
+			resultEl.style.color = '#64748b';
+			resultEl.textContent = 'Contacting gateway...';
+		}
+
+		jQuery.ajax({
+			url: omnifyAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'omnify_test_gateway_connection',
+				nonce: omnifyAdmin.apiNonce,
+				gateway: gateway
+			},
+			success: function (response) {
+				testBtn.disabled = false;
+				if (labelEl) {
+					labelEl.textContent = originalLabel;
+				}
+				if (!resultEl) {
+					return;
+				}
+				if (response.success) {
+					const latency = response.data.latency ? ' (' + response.data.latency + ' ms)' : '';
+					resultEl.style.color = '#059669';
+					resultEl.textContent = (response.data.message || 'Connection verified.') + latency;
+				} else {
+					resultEl.style.color = '#dc2626';
+					resultEl.textContent = (response.data && response.data.message) ? response.data.message : 'Connection failed.';
+				}
+			},
+			error: function () {
+				testBtn.disabled = false;
+				if (labelEl) {
+					labelEl.textContent = originalLabel;
+				}
+				if (resultEl) {
+					resultEl.style.color = '#dc2626';
+					resultEl.textContent = 'Request timed out or failed.';
+				}
+			}
+		});
+	});
+
 	// Arbitrary URL Checker
 	const testUrlForm = document.getElementById('omnify-test-url-form');
 	if (testUrlForm) {

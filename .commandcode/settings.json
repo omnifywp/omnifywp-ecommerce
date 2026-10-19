@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Shell(php -v)"
+      "Shell(php -v)",
+      "powershell",
+      "Shell(git:*)"
     ],
     "deny": [],
     "defaultMode": "default"

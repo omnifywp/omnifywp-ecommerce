@@ -1079,7 +1079,7 @@ class Omnify_Storefront_Controller {
 		);
 
 		$omnify_settings = get_option('omnify_settings', []);
-		if (! empty($omnify_settings['razorpay_enabled']) && ! empty($omnify_settings['razorpay_checkout_enabled'])) {
+		if (! empty($omnify_settings['razorpay_enabled']) || ! empty($omnify_settings['razorpay_checkout_enabled'])) {
 			wp_enqueue_script(
 				'omnify-razorpay-checkout',
 				'https://checkout.razorpay.com/v1/checkout.js',
@@ -1089,7 +1089,7 @@ class Omnify_Storefront_Controller {
 			);
 		}
 
-		if (! empty($omnify_settings['paddle_enabled']) && ! empty($omnify_settings['paddle_checkout_enabled'])) {
+		if (! empty($omnify_settings['paddle_enabled']) || ! empty($omnify_settings['paddle_checkout_enabled'])) {
 			wp_enqueue_script(
 				'omnify-paddle-checkout',
 				'https://cdn.paddle.com/paddle/v2/paddle.js',
@@ -2045,6 +2045,7 @@ class Omnify_Storefront_Controller {
 
 		$omnify_is_redirect_success = (isset($_GET['omnify_stripe']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_stripe'])))
 			|| (isset($_GET['omnify_paypal']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_paypal'])))
+			|| (isset($_GET['omnify_razorpay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_razorpay'])))
 			|| (isset($_GET['omnify_alipay']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_alipay'])))
 			|| (isset($_GET['omnify_wechat']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_wechat'])))
 			|| (isset($_GET['omnify_sslcommerz']) && 'success' === sanitize_key(wp_unslash($_GET['omnify_sslcommerz'])))

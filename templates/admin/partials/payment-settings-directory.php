@@ -91,6 +91,16 @@ if (! function_exists('omnify_render_pm_header')) {
 				</button>
 			</div>
 		</div>
+		<?php if (! $is_offline) : ?>
+			<?php $gateway_id = str_replace('_checkout_enabled', '', (string) $toggle_name); ?>
+			<div class="omnify-pm-test-row" style="display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid #eef2f7; background: #fbfcfe;">
+				<button type="button" class="omnify-pm-test-btn" data-gateway="<?php echo esc_attr($gateway_id); ?>" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #0f766e; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; cursor: pointer;">
+					<span class="dashicons dashicons-update" style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;"></span>
+					<span class="omnify-pm-test-label"><?php esc_html_e('Test Connection', 'omnifywp-ecommerce'); ?></span>
+				</button>
+				<span class="omnify-pm-test-result" data-gateway="<?php echo esc_attr($gateway_id); ?>" style="font-size: 12px; color: #64748b;"></span>
+			</div>
+		<?php endif; ?>
 		<?php
 	}
 }
@@ -819,6 +829,16 @@ if (! function_exists('omnify_render_pm_header')) {
 					<div class="omnify-modern-form-group">
 						<label for="wechat_merchant_private_key"><?php esc_html_e('Merchant Private Key (v3, PEM)', 'omnifywp-ecommerce'); ?></label>
 						<textarea id="wechat_merchant_private_key" name="wechat_merchant_private_key" rows="3" placeholder="-----BEGIN PRIVATE KEY-----"><?php echo esc_textarea($omnify_settings['wechat_merchant_private_key'] ?? ''); ?></textarea>
+					</div>
+				</div>
+				<div class="omnify-modern-form-row">
+					<div class="omnify-modern-form-group">
+						<label for="wechat_client_cert"><?php esc_html_e('API Client Certificate (apiclient_cert.pem)', 'omnifywp-ecommerce'); ?></label>
+						<textarea id="wechat_client_cert" name="wechat_client_cert" rows="3" placeholder="-----BEGIN CERTIFICATE-----"><?php echo esc_textarea($omnify_settings['wechat_client_cert'] ?? ''); ?></textarea>
+					</div>
+					<div class="omnify-modern-form-group">
+						<label for="wechat_client_key"><?php esc_html_e('API Client Key (apiclient_key.pem)', 'omnifywp-ecommerce'); ?></label>
+						<textarea id="wechat_client_key" name="wechat_client_key" rows="3" placeholder="-----BEGIN PRIVATE KEY-----"><?php echo esc_textarea($omnify_settings['wechat_client_key'] ?? ''); ?></textarea>
 					</div>
 				</div>
 			</div>

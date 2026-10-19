@@ -3128,6 +3128,7 @@ final class Omnify_Rest_Server {
 			'status'       => $omnify_order_status,
 			'payment_method' => $omnify_payment_method_id,
 			'is_manual'      => $omnify_is_manual,
+			'payment_instructions' => $omnify_payment_instructions,
 			'is_physical' => $omnify_is_physical,
 			'totals'         => [
 				'subtotal'        => $omnify_subtotal,
@@ -3405,6 +3406,7 @@ final class Omnify_Rest_Server {
 			'status'         => $omnify_order_status,
 			'payment_method' => $omnify_payment_method_id,
 			'is_manual'      => $omnify_is_manual,
+			'payment_instructions' => $omnify_payment_instructions,
 			'is_physical'    => $omnify_has_physical,
 			'totals'         => [
 				'subtotal'        => $omnify_totals['subtotal'],
@@ -4711,27 +4713,10 @@ final class Omnify_Rest_Server {
 			'attach'       => (string) $omnify_order_id,
 		];
 
-		$omnify_endpoint = 'https://api.mch.weixin.qq.com/v3/pay/transactions/native';
-		$omnify_auth_header = $this->build_wechat_v3_auth_header('POST', '/v3/pay/transactions/native', wp_json_encode($omnify_payload), $omnify_settings);
-
 		$omnify_code_url = '';
-		if (! empty($omnify_auth_header)) {
-			$omnify_resp = wp_remote_post($omnify_endpoint, [
-				'timeout' => 20,
-				'headers' => [
-					'Content-Type'  => 'application/json',
-					'Accept'        => 'application/json',
-					'Authorization' => $omnify_auth_header,
-					'User-Agent'    => 'Omnify-eCommerce/' . OMNIFY_VERSION,
-				],
-				'body' => wp_json_encode($omnify_payload),
-			]);
-			if (! is_wp_error($omnify_resp)) {
-				$omnify_resp_body = json_decode(wp_remote_retrieve_body($omnify_resp), true);
-				if (! empty($omnify_resp_body['code_url'])) {
-					$omnify_code_url = (string) $omnify_resp_body['code_url'];
-				}
-			}
+		$omnify_resp = $this->omnify_payment_gateways->wechat_v3_request('POST', '/v3/pay/transactions/native', $omnify_payload, $omnify_settings);
+		if (! is_wp_error($omnify_resp) && ! empty($omnify_resp['code_url'])) {
+			$omnify_code_url = (string) $omnify_resp['code_url'];
 		}
 
 		if ('' === $omnify_code_url) {
@@ -4745,44 +4730,6 @@ final class Omnify_Rest_Server {
 			'code_url'     => $omnify_code_url,
 			'redirect_url' => $omnify_qr_url,
 		]);
-	}
-
-	private function build_wechat_v3_auth_header(string $omnify_method, string $omnify_path, string $omnify_body, array $omnify_settings): string {
-		$omnify_mch_id = trim((string) ($omnify_settings['wechat_mch_id'] ?? ''));
-		$omnify_serial = trim((string) ($omnify_settings['wechat_serial_no'] ?? ''));
-		$omnify_key    = trim((string) ($omnify_settings['wechat_merchant_private_key'] ?? ''));
-
-		if ('' === $omnify_mch_id || '' === $omnify_serial || '' === $omnify_key) {
-			return '';
-		}
-
-		$omnify_nonce     = wp_generate_password(32, false);
-		$omnify_timestamp = (string) time();
-		$omnify_message   = $omnify_method . "\n" . $omnify_path . "\n" . $omnify_timestamp . "\n" . $omnify_nonce . "\n" . $omnify_body . "\n";
-
-		if (! str_contains($omnify_key, '-----BEGIN RSA PRIVATE KEY-----') && ! str_contains($omnify_key, '-----BEGIN PRIVATE KEY-----')) {
-			$omnify_key = "-----BEGIN PRIVATE KEY-----\n" . chunk_split($omnify_key, 64, "\n") . "-----END PRIVATE KEY-----";
-		}
-
-		$omnify_pkey = openssl_pkey_get_private($omnify_key);
-		if (! $omnify_pkey) {
-			return '';
-		}
-
-		$omnify_raw_sig = '';
-		if (! openssl_sign($omnify_message, $omnify_raw_sig, $omnify_pkey, OPENSSL_ALGO_SHA256)) {
-			return '';
-		}
-
-		$omnify_signature = base64_encode($omnify_raw_sig);
-		return sprintf(
-			'WECHATPAY2-SHA256-RSA2048 mchid="%s",nonce_str="%s",timestamp="%s",serial_no="%s",signature="%s"',
-			$omnify_mch_id,
-			$omnify_nonce,
-			$omnify_timestamp,
-			$omnify_serial,
-			$omnify_signature
-		);
 	}
 
 	public function verify_wechat_payment(WP_REST_Request $omnify_request): WP_REST_Response|WP_Error {

@@ -187,6 +187,8 @@ class Omnify_Settings_Repository {
 			'wechat_api_v3_key'           => '',
 			'wechat_serial_no'            => '',
 			'wechat_merchant_private_key' => '',
+			'wechat_client_cert'          => '',
+			'wechat_client_key'           => '',
 			'wechat_checkout_enabled'     => false,
 			// SSLCommerz
 			'sslcommerz_enabled'          => false,
@@ -613,6 +615,8 @@ class Omnify_Settings_Repository {
 			'wechat_api_v3_key'           => sanitize_text_field((string) ($omnify_settings['wechat_api_v3_key'] ?? ($omnify_settings['wechat_key'] ?? ''))),
 			'wechat_serial_no'            => sanitize_text_field((string) ($omnify_settings['wechat_serial_no'] ?? '')),
 			'wechat_merchant_private_key' => (string) ($omnify_settings['wechat_merchant_private_key'] ?? ''),
+			'wechat_client_cert'          => (string) ($omnify_settings['wechat_client_cert'] ?? ''),
+			'wechat_client_key'           => (string) ($omnify_settings['wechat_client_key'] ?? ''),
 			'wechat_checkout_enabled'     => (! empty($omnify_settings['wechat_checkout_enabled']) || ! empty($omnify_settings['wechat_enabled'])),
 			// SSLCommerz
 			'sslcommerz_enabled'          => (! empty($omnify_settings['sslcommerz_enabled']) || ! empty($omnify_settings['sslcommerz_checkout_enabled'])),
