@@ -249,6 +249,20 @@ class Omnify_Admin_Activity_Repository {
 		return $omnify_actors;
 	}
 
+	public function prune_older_than(int $omnify_days): int {
+		global $wpdb;
+		$omnify_days  = max(1, $omnify_days);
+		$omnify_table = $this->omnify_schema->table('admin_activities');
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_deleted = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$omnify_table} WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+				$omnify_days
+			)
+		);
+		return false !== $omnify_deleted ? (int) $omnify_deleted : 0;
+	}
+
 	private function hydrate(array $omnify_row): array {
 		$omnify_row['id']      = (int) $omnify_row['id'];
 		$omnify_row['user_id'] = (int) $omnify_row['user_id'];

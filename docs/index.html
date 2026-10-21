@@ -1522,10 +1522,85 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
+    /* ==========================================================================
+       Docs Polish v1.1 — accessibility, readability & navigation
+       ========================================================================== */
+    :focus-visible {
+      outline: 2px solid var(--brand-emerald, #0f766e);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    ::selection { background: rgba(15, 118, 110, 0.18); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Reading rhythm for tables */
+    table.doc-table td, table.doc-table th { line-height: 1.5; }
+    table.doc-table tbody tr:nth-child(even) { background: rgba(15, 118, 110, 0.035); }
+    table.doc-table tbody tr:hover { background: var(--bg-card-hover, rgba(15, 118, 110, 0.06)); }
+
+    /* Heading anchor links */
+    .heading-anchor {
+      opacity: 0;
+      margin-left: 8px;
+      color: var(--text-dim, #64748b);
+      text-decoration: none;
+      font-weight: 400;
+      transition: opacity 0.15s ease;
+    }
+    h2:hover > .heading-anchor, h3:hover > .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 1; }
+    .heading-anchor:hover { color: var(--brand-emerald, #0f766e); }
+
+    /* Back-to-top button */
+    .to-top-btn {
+      position: fixed; right: 24px; bottom: 24px; z-index: 60;
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--brand-emerald, #0f766e); color: #fff;
+      border: none; cursor: pointer; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+      opacity: 0; visibility: hidden; transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    }
+    .to-top-btn.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    .to-top-btn:hover { filter: brightness(1.08); }
+
+    /* Scroll progress indicator */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--brand-forest-dark, #134e4a), var(--brand-emerald, #0f766e));
+      z-index: 70; pointer-events: none;
+    }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute; left: -9999px; top: 0; z-index: 100;
+      background: var(--brand-emerald, #0f766e); color: #fff;
+      padding: 10px 16px; border-radius: 0 0 8px 0; font-weight: 600;
+    }
+    .skip-link:focus { left: 0; }
+
+    /* Print */
+    @media print {
+      .top-header, .docs-sidebar, .docs-toc, .to-top-btn, .scroll-progress,
+      .search-modal, .omnify-toast-container, .ambient-glow-top { display: none !important; }
+      .docs-main { padding: 0 !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .code-wrapper, .table-container { break-inside: avoid; }
+    }
+
   </style>
 </head>
 <body>
 
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="ambient-glow-top"></div>
 
   <!-- Top Sticky Header -->
@@ -1540,7 +1615,7 @@
         </div>
         <div class="brand-text">
           <span>OmnifyWP</span>
-          <span class="brand-version-pill">v1.4.2</span>
+          <span class="brand-version-pill">v1.4.3</span>
         </div>
       </a>
 
@@ -1607,7 +1682,7 @@
         <div class="sidebar-heading">Database & Schema</div>
         <ul class="sidebar-items">
           <li><a href="#schema-design" class="sidebar-link">Why Custom Relational</a></li>
-          <li><a href="#database-tables" class="sidebar-link">18 SQL Tables <span class="sidebar-tag">InnoDB</span></a></li>
+          <li><a href="#database-tables" class="sidebar-link">27 SQL Tables <span class="sidebar-tag">InnoDB</span></a></li>
           <li><a href="#soft-delete-cache" class="sidebar-link">Soft Deletes & Caching</a></li>
         </ul>
       </div>
@@ -1645,18 +1720,42 @@
       </div>
 
       <div class="sidebar-group">
+        <div class="sidebar-heading">Platform Features</div>
+        <ul class="sidebar-items">
+          <li><a href="#roles-permissions" class="sidebar-link">Roles &amp; Permissions</a></li>
+          <li><a href="#tracking-analytics" class="sidebar-link">GA4 &amp; Meta Tracking</a></li>
+          <li><a href="#privacy-gdpr" class="sidebar-link">Privacy &amp; GDPR</a></li>
+          <li><a href="#shipping-tax-currency" class="sidebar-link">Shipping, Tax &amp; Currency</a></li>
+          <li><a href="#variations-availability" class="sidebar-link">Variations &amp; Preorders</a></li>
+          <li><a href="#background-jobs" class="sidebar-link">Cron &amp; Maintenance</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">Reference</div>
+        <ul class="sidebar-items">
+          <li><a href="#admin-settings" class="sidebar-link">Admin &amp; Settings</a></li>
+          <li><a href="#merge-tags" class="sidebar-link">Email Merge Tags</a></li>
+          <li><a href="#csv-schema" class="sidebar-link">CSV / XML Schema</a></li>
+          <li><a href="#performance" class="sidebar-link">Performance &amp; Scaling</a></li>
+          <li><a href="#security" class="sidebar-link">Security &amp; Hardening</a></li>
+          <li><a href="#glossary" class="sidebar-link">Glossary</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
         <div class="sidebar-heading">Hooks & Extensibility</div>
         <ul class="sidebar-items">
           <li><a href="#hooks-explorer" class="sidebar-link">Hooks Live Explorer <span class="sidebar-tag" style="background:#0f766e;color:#fff;">Searchable</span></a></li>
           <li><a href="#actions-directory" class="sidebar-link">Action Hooks Directory</a></li>
           <li><a href="#filters-directory" class="sidebar-link">Filter Hooks Directory</a></li>
-          <li><a href="#developer-recipes" class="sidebar-link">Developer Recipes <span class="sidebar-tag">6 Guides</span></a></li>
+          <li><a href="#developer-recipes" class="sidebar-link">Developer Recipes <span class="sidebar-tag">12 Guides</span></a></li>
         </ul>
       </div>
     </aside>
 
     <!-- Main Content Area -->
-    <main class="docs-main">
+    <main class="docs-main" id="main-content">
 
       <!-- Creative Minimal Hero -->
       <section id="introduction" class="hero-creative">
@@ -1669,8 +1768,17 @@
           <span class="hero-gradient-text">eCommerce Engine</span> for WordPress
         </h1>
         <p class="hero-desc">
-          Omnify replaces sluggish <code>wp_posts</code> and <code>wp_postmeta</code> overhead with a purpose-built 18-table normalized SQL relational engine, atomic stock management, cryptographic link signing, and complete REST APIs.
+          Omnify replaces sluggish <code>wp_posts</code> and <code>wp_postmeta</code> overhead with a purpose-built 27-table normalized SQL relational engine, atomic stock management, cryptographic link signing, and complete REST APIs.
         </p>
+
+        <nav aria-label="Suggested reading paths" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 22px;">
+          <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);">Start here:</span>
+          <a href="#quickstart" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Quickstart</a>
+          <a href="#schema-design" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">27-Table Schema</a>
+          <a href="#api-simulator" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">REST API Sandbox</a>
+          <a href="#hooks-explorer" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Hooks Explorer</a>
+          <a href="#developer-recipes" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Developer Recipes</a>
+        </nav>
 
         <div class="hero-actions">
           <a href="#quickstart" class="btn-primary">
@@ -1699,7 +1807,7 @@
         <!-- Metric Cards Strip -->
         <div class="metric-strip">
           <div class="metric-card">
-            <div class="metric-val">18</div>
+            <div class="metric-val">27</div>
             <div class="metric-label">Custom Relational SQL Tables</div>
           </div>
           <div class="metric-card">
@@ -1707,7 +1815,7 @@
             <div class="metric-label">Database Index Lookup Time</div>
           </div>
           <div class="metric-card">
-            <div class="metric-val">10+</div>
+            <div class="metric-val">12</div>
             <div class="metric-label">Integrated Payment Gateways</div>
           </div>
           <div class="metric-card">
@@ -1748,7 +1856,7 @@
             <div class="pipeline-step">
               <div class="pipeline-step-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
               <div class="pipeline-step-title">Custom DB Schema</div>
-              <div class="pipeline-step-desc">18 Indexed Tables + Object Cache</div>
+              <div class="pipeline-step-desc">27 Indexed Tables + Object Cache</div>
             </div>
             <div class="pipeline-arrow">&rarr;</div>
             <div class="pipeline-step">
@@ -1790,7 +1898,7 @@
               </button>
               <button type="button" class="sandbox-tab-btn" onclick="switchSandboxView('checkout', this)">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span>Checkout (10+ Gateways)</span>
+                <span>Checkout (12 Gateways)</span>
               </button>
             </div>
 
@@ -2061,7 +2169,7 @@
                 </div>
               </div>
 
-              <!-- VIEW 3: SECURE CHECKOUT WITH 10+ GATEWAYS & VIP BUMP -->
+              <!-- VIEW 3: SECURE CHECKOUT WITH 12 GATEWAYS & VIP BUMP -->
               <div class="sf-view-panel" id="sfViewCheckout">
                 <!-- Express 1-Click Pay -->
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:20px; text-align:center;">
@@ -2084,10 +2192,10 @@
                   <div>
                     <h4 style="margin:0 0 12px; font-size:0.95rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
                       <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--sf-accent); color:#fff; font-size:0.75rem; font-weight:700;">1</span>
-                      Payment Method (10+ Gateways Integrated)
+                      Payment Method (12 Gateways Integrated)
                     </h4>
 
-                    <!-- 10+ Gateway Cards Grid -->
+                    <!-- 12 Gateway Cards Grid -->
                     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; margin-bottom:16px;">
                       <label class="sf-gateway-card active" style="border:2px solid var(--sf-accent); background:var(--sf-accent-light); border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
                         <input type="radio" name="sf_gw" checked style="accent-color:var(--sf-accent);">
@@ -2107,11 +2215,11 @@
                       </label>
                       <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
                         <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
-                        <span style="font-weight:600; font-size:0.8rem;">Square</span>
+                        <span style="font-weight:600; font-size:0.8rem;">Paddle</span>
                       </label>
                       <label class="sf-gateway-card" style="border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="selectGateway(this)">
                         <input type="radio" name="sf_gw" style="accent-color:var(--sf-accent);">
-                        <span style="font-weight:600; font-size:0.8rem;">Authorize.Net</span>
+                        <span style="font-weight:600; font-size:0.8rem;">Paystack</span>
                       </label>
                     </div>
 
@@ -2267,13 +2375,13 @@ node build.js
       <section id="schema-design">
         <h2 class="doc-heading">
           <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-          Database Engine & 18 Relational Tables
+          Database Engine & 27 Relational Tables
         </h2>
         <p>
           Omnify isolates all commercial data from the WordPress post engine. Tables are prefixed with <code>wp_omnify_*</code> and indexed for high-concurrency throughput.
         </p>
 
-        <h3 class="doc-subheading" id="database-tables">The 18 Core Database Tables</h3>
+        <h3 class="doc-subheading" id="database-tables">The 27 Core Database Tables</h3>
         <div class="table-container">
           <table class="doc-table">
             <thead>
@@ -2298,6 +2406,15 @@ node build.js
               <tr><td><code>wp_omnify_reviews</code></td><td>Product ratings, content, and approval states</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (status)</code></td></tr>
               <tr><td><code>wp_omnify_abandoned_carts</code></td><td>Captured checkout inputs, recovery tokens, reminders</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (token)</code>, <code>KEY (email, status)</code></td></tr>
               <tr><td><code>wp_omnify_wishlists</code></td><td>Customer wishlist favorite associations</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (user_id, product_id)</code></td></tr>
+              <tr><td><code>wp_omnify_email_logs</code></td><td>Transactional email dispatch log & retry queue</td><td><code>PRIMARY (id)</code>, <code>KEY (trigger_name)</code>, <code>KEY (status)</code></td></tr>
+              <tr><td><code>wp_omnify_metadata</code></td><td>Extensible key/value metadata for products, orders, customers</td><td><code>PRIMARY (id)</code>, <code>KEY (object_type, object_id)</code></td></tr>
+              <tr><td><code>wp_omnify_webhook_events</code></td><td>Inbound gateway webhook event ledger (dedupe & audit)</td><td><code>PRIMARY (id)</code>, <code>KEY (gateway)</code>, <code>KEY (event_id)</code></td></tr>
+              <tr><td><code>wp_omnify_webhooks</code></td><td>Outbound webhook endpoints & topic subscriptions</td><td><code>PRIMARY (id)</code>, <code>KEY (status)</code></td></tr>
+              <tr><td><code>wp_omnify_webhook_delivery_logs</code></td><td>Outbound delivery attempts, HTTP status & latency</td><td><code>PRIMARY (id)</code>, <code>KEY (webhook_id)</code></td></tr>
+              <tr><td><code>wp_omnify_inventory_logs</code></td><td>Stock movement audit trail (reductions, restocks)</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code>, <code>KEY (variation_id)</code></td></tr>
+              <tr><td><code>wp_omnify_stock_subscribers</code></td><td>Back-in-stock waitlist opt-ins per product/variation</td><td><code>PRIMARY (id)</code>, <code>KEY (product_id)</code></td></tr>
+              <tr><td><code>wp_omnify_admin_activities</code></td><td>Admin action audits & security trace logs</td><td><code>PRIMARY (id)</code>, <code>KEY (user_id)</code>, <code>KEY (action)</code></td></tr>
+              <tr><td><code>wp_omnify_api_keys</code></td><td>REST API consumer keys & permission scopes</td><td><code>PRIMARY (id)</code>, <code>UNIQUE KEY (consumer_key)</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -2415,13 +2532,19 @@ node build.js
             <tbody>
               <tr><td><code>[omnify_storefront]</code></td><td><code>/storefront/</code></td><td>Modern apparel/fashion catalog with interactive Multi-Layout Switcher (4-Col Grid, 2-Col Split, 1-Col List), faceted sidebar filters, slide-in hover tools, and floating social proof conversion widgets.</td></tr>
               <tr><td><code>[omnify_cart]</code></td><td><code>/cart/</code></td><td>Multi-item cart, scarcity countdown timer, shipping zone selector, and coupon application.</td></tr>
+              <tr><td><code>[omnify_mini_cart]</code></td><td>Anywhere</td><td>Floating slide-out AJAX mini-cart drawer/dropdown with live line-item quantity adjustment and subtotal calculation.</td></tr>
               <tr><td><code>[omnify_checkout]</code></td><td><code>/checkout/</code></td><td>Frictionless single-page checkout with country-first address autofill and gateway buttons.</td></tr>
               <tr><td><code>[omnify_customer_portal]</code></td><td><code>/customer-portal/</code></td><td>Customer Portal 2.0 hub with SupportHub emerald theme, 4-col KPI cards, live tab pills, cryptographic download locker, and 2-column balanced settings.</td></tr>
               <tr><td><code>[omnify_customer_downloads]</code></td><td><code>/downloads/</code></td><td>Customer digital locker displaying owned files and cryptographically signed download links.</td></tr>
               <tr><td><code>[omnify_order_tracking]</code></td><td><code>/order-tracking/</code></td><td>Order lookup supporting guest tracking with direct digital downloads for paid items.</td></tr>
+              <tr><td><code>[omnify_currency_switcher]</code></td><td>Anywhere</td><td>Customer-facing multi-currency selector dropdown with real-time conversion rates and 1-year cookie persistence.</td></tr>
+              <tr><td><code>[omnify_download_page]</code></td><td><code>/secure-download/</code></td><td>Dedicated secure template handler for chunked HMAC-SHA256 file delivery.</td></tr>
             </tbody>
           </table>
         </div>
+
+        <h3 class="doc-subheading" id="native-blocks">Native Gutenberg Blocks</h3>
+        <p>Each shortcode is mirrored as a first-party Gutenberg block (registered in <code>Omnify_Storefront_Controller::register_blocks()</code>): <code>omnify/product-grid</code>, <code>omnify/cart</code>, <code>omnify/mini-cart</code>, <code>omnify/checkout</code>, <code>omnify/customer-portal</code>, <code>omnify/order-tracking</code>, <code>omnify/product-card</code>, and <code>omnify/currency-switcher</code>.</p>
 
         <h3 class="doc-subheading" id="catalog-layouts">Storefront Multi-Layout Engine & Floating Widgets</h3>
         <p>
@@ -2471,12 +2594,19 @@ node build.js
           <strong>Secure-by-Default Architecture:</strong> By default, all payment gateways are disabled (<code>'0'</code>) on fresh installations. Gateways are only exposed to shoppers once valid credentials are provided and the gateway toggle is explicitly activated.
         </p>
         <p>Omnify provides native API integrations and automated webhook verification for:</p>
-        <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem;">
+        <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
           <li><strong>Stripe</strong>: Credit/Debit, Apple Pay, Google Pay, SEPA (Webhook: <code>/wp-json/omnify/v1/webhook/stripe</code> — handles <code>payment_intent.succeeded</code>, <code>charge.refunded</code>, <code>charge.dispute.created</code>)</li>
           <li><strong>PayPal Commerce</strong>: Smart Buttons, Pay in 4, Venmo (Webhook: <code>/wp-json/omnify/v1/webhook/paypal</code> — handles <code>PAYMENT.CAPTURE.COMPLETED</code>, <code>PAYMENT.CAPTURE.REFUNDED</code>, <code>CUSTOMER.DISPUTE.CREATED</code>)</li>
+          <li><strong>Paddle (Merchant of Record)</strong>: Automated global tax/VAT compliance across 200+ countries, SaaS billing, Apple Pay, Google Pay, iDEAL, and API refunds (Webhook: <code>/wp-json/omnify/v1/paddle/webhook</code> — handles <code>transaction.paid</code>, <code>adjustment.updated</code>)</li>
+          <li><strong>Paystack</strong>: Cards, Mobile Money (M-Pesa, MTN, Airtel), EFT, USSD (Webhook: <code>/wp-json/omnify/v1/webhook/paystack</code>)</li>
+          <li><strong>Tap Payments</strong>: mada, KNET, Benefit, NAPS, GCC cards (Webhook: <code>/wp-json/omnify/v1/webhook/tap</code>)</li>
+          <li><strong>Mollie</strong>: iDEAL, Bancontact, SEPA Bank Transfer, Klarna (Webhook: <code>/wp-json/omnify/v1/webhook/mollie</code>)</li>
           <li><strong>Razorpay</strong>: UPI, RuPay, NetBanking, Wallets (Webhook: <code>/wp-json/omnify/v1/webhook/razorpay</code>)</li>
+          <li><strong>Khalti</strong>: Khalti Digital Wallet, Mobile &amp; Net Banking via ePayment v2 API</li>
+          <li><strong>eSewa</strong>: eSewa Digital Payment Wallet with HMAC-SHA256 signature verification</li>
+          <li><strong>Alipay &amp; WeChat Pay</strong>: Cross-border mobile QR checkout with callback verification</li>
           <li><strong>SSLCommerz</strong>: bKash, Nagad, Rocket, Bangladeshi cards (Webhook: <code>/wp-json/omnify/v1/webhook/sslcommerz</code>)</li>
-          <li><strong>Manual Methods</strong>: Cash on Delivery (COD), Direct Bank Transfer (BACS), and Cheque Payments.</li>
+          <li><strong>Manual &amp; Custom Methods</strong>: Cash on Delivery (COD), Direct Bank Transfer (BACS), Cheque Payments, and Unlimited Custom Offline Gateways.</li>
         </ul>
         <p>When an admin processes a full refund or a full refund webhook is received, the gateway API is executed, the order transitions to <code>refunded</code>, and all digital file access rights in <code>wp_omnify_customer_access</code> are revoked automatically. For partial refunds, status transitions to <code>partially_refunded</code>, recording refunded amounts while preserving file entitlements for non-refunded line items.</p>
       </section>
@@ -2615,6 +2745,42 @@ node build.js
               <tr><td><span class="badge badge-get">GET</span></td><td><code>/customers/{id}/activity</code></td><td>Retrieves audit timeline events for a customer.</td></tr>
               <tr><td><span class="badge badge-post">POST</span></td><td><code>/access</code></td><td>Manually grants digital file access to a customer.</td></tr>
               <tr><td><span class="badge badge-post">POST</span></td><td><code>/access/revoke</code></td><td>Revokes file download entitlements.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/access/bulk</code></td><td>Grants access to multiple customers/products in one request.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/settings</code></td><td>Read the full store configuration (POST to update).</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/stats</code></td><td>Dashboard sales, AOV, refunds, and analytics aggregates.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/activity-logs</code></td><td>Administrative security audit feed.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span> <span class="badge badge-post">POST</span></td><td><code>/delivery-zones</code></td><td>List or update shipping delivery zones.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span> <span class="badge badge-post">POST</span></td><td><code>/tax-rules</code></td><td>List or update regional tax rate tables.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/downloads</code></td><td>List download audit records.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/customers/{id}/access</code></td><td>List a customer's digital entitlements.</td></tr>
+              <tr><td><span class="badge badge-get">GET</span></td><td><code>/orders/{id}/history</code></td><td>Status and activity history for an order.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/products/{product_id}/files/{file_id}/download-url</code></td><td>Mint an expiring HMAC download URL.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="doc-subheading" id="api-gateways">Checkout, Gateway &amp; Webhook Endpoints</h3>
+        <p>Client-side gateway flows and inbound webhook verification routes (all under <code>/wp-json/omnify/v1</code>).</p>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/checkout</code></td><td>Create an order and initiate payment.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/stripe/checkout-session</code> &bull; <code>/stripe/payment-intent</code></td><td>Create a Stripe Checkout Session or Payment Intent.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/stripe/webhook</code></td><td>Verify <code>Stripe-Signature</code> and sync payment/refund/dispute events.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/paypal/order</code> &bull; <code>/paypal/capture</code> &bull; <code>/paypal/webhook</code></td><td>PayPal order creation, capture, and webhook verification.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/razorpay/order</code> &bull; <code>/razorpay/verify</code> &bull; <code>/razorpay/webhook</code></td><td>Razorpay payment creation, verification, and webhook.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/mollie/order</code> &bull; <code>/mollie/webhook</code></td><td>Mollie payment creation and status webhook.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/paddle/order</code> &bull; <code>/paddle/verify</code> &bull; <code>/paddle/webhook</code></td><td>Paddle transaction creation, verification, and webhook.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/paystack/order</code> &bull; <code>/paystack/verify</code> &bull; <code>/paystack/webhook</code></td><td>Paystack initiation, verification, and HMAC-SHA512 webhook.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/tap/order</code> &bull; <code>/tap/verify</code> &bull; <code>/tap/webhook</code></td><td>Tap Payments charge, verification, and webhook.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/alipay/order</code> &bull; <code>/alipay/verify</code> &bull; <code>/alipay/webhook</code></td><td>Alipay trade creation, verification, and RSA2 notify.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/wechat/order</code> &bull; <code>/wechat/verify</code> &bull; <code>/wechat/webhook</code></td><td>WeChat Pay unified order, verification, and v3 notify.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/sslcommerz/order</code> &bull; <code>/sslcommerz/verify</code> &bull; <code>/sslcommerz/ipn</code></td><td>SSLCommerz session, validation, and IPN.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/khalti/order</code> &bull; <code>/khalti/verify</code></td><td>Khalti ePayment v2 initiation and lookup verification.</td></tr>
+              <tr><td><span class="badge badge-post">POST</span></td><td><code>/esewa/order</code> &bull; <code>/esewa/verify</code></td><td>eSewa ePay v2 initiation and HMAC verification.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2628,7 +2794,7 @@ node build.js
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             Interactive Hooks &amp; Filters Live Explorer
           </h2>
-          <span class="brand-version-pill" style="background:#f0fdfa; color:#0f766e; border-color:#99f6e4;">30+ Hooks Indexed</span>
+          <span class="brand-version-pill" style="background:#f0fdfa; color:#0f766e; border-color:#99f6e4;">55+ Hooks Indexed</span>
         </div>
         <p style="color:var(--text-muted); margin-bottom: 20px;">
           Search and filter all available actions, filters, and public developer helper functions. Click any card to copy the ready-to-paste PHP code snippet directly into your functions.php or custom plugin.
@@ -2639,7 +2805,7 @@ node build.js
           <div class="hooks-filter-bar">
             <input type="text" id="hooksSearchInput" class="hooks-search-input" placeholder="Search by hook name, argument, or description..." oninput="filterHooksLive()">
             <div class="hooks-category-pills">
-              <span class="hook-cat-pill active" onclick="setHookCategory('all', this)">All (32)</span>
+              <span class="hook-cat-pill active" onclick="setHookCategory('all', this)">All (53)</span>
               <span class="hook-cat-pill" onclick="setHookCategory('wizard', this)">Wizard Steps</span>
               <span class="hook-cat-pill" onclick="setHookCategory('lifecycle', this)">Lifecycle</span>
               <span class="hook-cat-pill" onclick="setHookCategory('single', this)">Single Product</span>
@@ -3406,6 +3572,270 @@ node build.js
         </div>
       </section>
 
+      <!-- Roles & Permissions -->
+      <section id="roles-permissions">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          Roles, Capabilities &amp; Staff Permissions
+        </h2>
+        <p>Omnify ships a granular, per-feature permission model so store owners can delegate operations without granting full WordPress administrator rights.</p>
+
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Capability</th><th>Granted To</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>manage_omnify</code></td><td>Administrators + mapped roles</td><td>Master capability gating the entire Omnify admin.</td></tr>
+              <tr><td><code>manage_omnify_{feature}</code></td><td>Roles mapped per feature</td><td>Scoped access to a single feature area (computed dynamically, never persisted).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Feature scopes: <code>dashboard</code>, <code>orders</code>, <code>products</code>, <code>customers</code>, <code>coupons</code>, <code>abandoned_carts</code>, <code>reviews</code>, <code>analytics</code>. Two roles are auto-created on first boot: <code>shop_manager</code> and <code>shop_clerk</code>.</p>
+
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-title">PHP — Grant shop_clerk access to Orders &amp; Reviews</span><button class="copy-btn" onclick="copySnippet(this)">Copy</button></div>
+          <pre><code>$settings = get_option('omnify_settings', []);
+$settings['role_permissions'] = array_merge((array) ($settings['role_permissions'] ?? []), [
+    'orders'  => ['administrator', 'shop_manager', 'shop_clerk'],
+    'reviews' => ['administrator', 'shop_manager', 'shop_clerk'],
+]);
+update_option('omnify_settings', $settings);</code></pre>
+        </div>
+      </section>
+
+      <!-- Tracking & Analytics -->
+      <section id="tracking-analytics">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics &amp; Conversion Tracking (GA4 + Meta Pixel)
+        </h2>
+        <p><code>Omnify_Tracking_Service</code> injects first-party GA4 and Meta Pixel tags, driven by <strong>Settings → Marketing</strong> (keys <code>tracking_ga4_enabled</code>, <code>tracking_ga4_measurement_id</code>, <code>tracking_meta_enabled</code>, <code>tracking_meta_pixel_id</code>, <code>tracking_debug_mode</code>).</p>
+
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Provider</th><th>Events Tracked</th></tr></thead>
+            <tbody>
+              <tr><td><strong>GA4</strong></td><td><code>view_item_list</code>, <code>view_item</code>, <code>add_to_cart</code>, <code>begin_checkout</code>, <code>purchase</code> (with <code>transaction_id</code>, value, currency, items).</td></tr>
+              <tr><td><strong>Meta Pixel</strong></td><td><code>PageView</code>, <code>ViewContent</code>, <code>AddToCart</code>, <code>InitiateCheckout</code>, <code>Purchase</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Runtime hooks: <code>wp_enqueue_scripts</code> (gtag/fbq bootstrap) and <code>wp_body_open</code> (Meta noscript). Values flow to the storefront through <code>window.omnifyStorefront.analytics</code>.</p>
+      </section>
+
+      <!-- Privacy & GDPR -->
+      <section id="privacy-gdpr">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Privacy, GDPR &amp; Data Lifecycle
+        </h2>
+        <p><code>Omnify_Privacy_Service</code> integrates with the WordPress core privacy framework: a Personal Data Exporter and Eraser (friendly name <strong>Omnify</strong>) cover customer profiles, orders, order items, downloads, wishlists, and abandoned carts.</p>
+        <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.7;">
+          <li><strong>Soft deletes</strong>: nullable <code>deleted_at</code> excludes records from storefront &amp; public queries.</li>
+          <li><strong>Automated maintenance</strong>: cron <code>omnify_daily_database_cleanup</code> prunes expired carts and stale sessions.</li>
+          <li><strong>Email logs</strong>: <code>wp_omnify_email_logs</code> retains dispatch history and retry state.</li>
+          <li><strong>Download audit</strong>: <code>wp_omnify_downloads</code> logs IP, user agent, and status per delivery.</li>
+        </ul>
+      </section>
+
+      <!-- Shipping, Tax & Currency -->
+      <section id="shipping-tax-currency">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Shipping Zones, Tax Rules &amp; Multi-Currency
+        </h2>
+        <p>Delivery zones (<code>delivery_zones</code> setting + <code>/delivery-zones</code> REST route) and tax tables (<code>/tax-rules</code> REST route) are fully data-driven. Multi-currency conversion is handled by <code>Omnify_Locations</code> and the <code>[omnify_currency_switcher]</code> shortcode.</p>
+
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Filter</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>omnify_currency_exchange_rates</code></td><td>Override the full FX rate table (e.g. sync from an API).</td></tr>
+              <tr><td><code>omnify_currency_exchange_rate</code></td><td>Override a single from→to rate.</td></tr>
+              <tr><td><code>omnify_converted_currency_amount</code></td><td>Post-process a converted amount before formatting.</td></tr>
+              <tr><td><code>omnify_currency_symbol</code> / <code>omnify_currency_decimals</code></td><td>Override symbol or decimal precision per currency.</td></tr>
+              <tr><td><code>omnify_allowed_countries</code> / <code>omnify_countries</code> / <code>omnify_states</code></td><td>Control storefront selling and address geography.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Variations & Availability -->
+      <section id="variations-availability">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Product Variations, Availability &amp; Preorders
+        </h2>
+        <p>Variable products span <code>wp_omnify_products</code> (parent) and <code>wp_omnify_product_variations</code> (matrix). Availability is column-driven rather than a single stock field.</p>
+
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Column</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>manage_stock</code>, <code>stock_qty</code>, <code>stock_status</code></td><td>Numeric inventory tracking (<code>instock</code> / <code>outofstock</code> / <code>onbackorder</code>).</td></tr>
+              <tr><td><code>allow_backorders</code></td><td>Permit purchases when out of stock.</td></tr>
+              <tr><td><code>preorder_enabled</code>, <code>preorder_release_date</code>, <code>preorder_limit</code>, <code>preorder_message</code></td><td>Preorder scheduling and shopper notices.</td></tr>
+              <tr><td><code>estimated_delivery</code> (variations)</td><td>Per-variation dispatch estimate.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Related hooks: <code>omnify_stock_reduced</code>, <code>omnify_product_restocked</code>, <code>omnify_customer_access_granted</code>, <code>omnify_customer_access_revoked</code>.</p>
+      </section>
+
+      <!-- Background Jobs -->
+      <section id="background-jobs">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Background Jobs, Cron &amp; Maintenance
+        </h2>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Scheduled Hook</th><th>Frequency</th><th>Responsibility</th></tr></thead>
+            <tbody>
+              <tr><td><code>omnify_abandoned_cart_recovery</code></td><td>Hourly</td><td>Scans abandoned carts and dispatches recovery emails.</td></tr>
+              <tr><td><code>omnify_daily_database_cleanup</code></td><td>Daily</td><td>Prunes expired carts, stale checkouts, and optimizes indexes.</td></tr>
+              <tr><td><code>omnify_retry_failed_emails</code></td><td>Hourly</td><td>Re-dispatches failed sends logged in <code>wp_omnify_email_logs</code>.</td></tr>
+              <tr><td><code>omnify_prune_webhook_logs</code></td><td>Daily</td><td>Trims old <code>wp_omnify_webhook_delivery_logs</code> rows.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Both the recovery and webhook-prune events are unscheduled on plugin deactivation (<code>Omnify_Plugin::deactivate()</code>).</p>
+      </section>
+
+      <!-- Admin & Settings Reference -->
+      <section id="admin-settings">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          Admin Pages &amp; Settings Reference
+        </h2>
+        <p>Every screen lives under the top-level <strong>Omnify</strong> menu, gated by <code>manage_omnify</code>. The Settings hub is segmented into the tabs below; the same slug list gates which keys a save request may modify.</p>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Settings Tab</th><th>Notable Settings</th></tr></thead>
+            <tbody>
+              <tr><td><code>general</code></td><td>Store name, base country, selling locations, currency, price formatting, tax defaults, test mode.</td></tr>
+              <tr><td><code>pages</code></td><td>Core page mapping (Storefront/Cart/Checkout/Portal/Download/Tracking) + auto page setup.</td></tr>
+              <tr><td><code>roles</code></td><td>Minimum capability, feature permissions matrix, staff directory.</td></tr>
+              <tr><td><code>payments</code></td><td>12 gateways + offline methods, modes, keys, webhook URLs.</td></tr>
+              <tr><td><code>tax</code></td><td>Tax defaults + regional tax rule table.</td></tr>
+              <tr><td><code>delivery</code></td><td>Zones, method type, cost, free-shipping minimum.</td></tr>
+              <tr><td><code>checkout</code></td><td>Guest/account handling, stock hold, order number format, coupons, order bump, downloads, terms, refunds.</td></tr>
+              <tr><td><code>fraud</code></td><td>Country mismatch, disposable email, high-value threshold, IP velocity.</td></tr>
+              <tr><td><code>marketing</code></td><td>GA4 + Meta Pixel and debug logging.</td></tr>
+              <tr><td><code>design</code></td><td>Brand colors, typography, hero, catalog layout, filters, product card.</td></tr>
+              <tr><td><code>email</code></td><td>17 triggers, SMTP relay, routing, footer.</td></tr>
+              <tr><td><code>tools</code></td><td>Optimize tables, clear transients, purge carts, inventory resync.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Email Merge Tags -->
+      <section id="merge-tags">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email Template Merge Tags
+        </h2>
+        <p>Every subject and body supports dynamic tags, resolved by <code>Omnify_Email_Service::replace_tokens()</code>.</p>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Group</th><th>Tags</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Order</strong></td><td><code>{site_name}</code>, <code>{order_id}</code>, <code>{order_number}</code>, <code>{order_total}</code>, <code>{order_status}</code>, <code>{old_status}</code>, <code>{new_status}</code>, <code>{customer_name}</code>, <code>{customer_first_name}</code>, <code>{first_name}</code>, <code>{last_name}</code>, <code>{customer_email}</code>, <code>{customer_portal_url}</code>, <code>{portal_url}</code>, <code>{tracking_carrier}</code>, <code>{tracking_number}</code>, <code>{refund_reason}</code>, <code>{refund_amount}</code></td></tr>
+              <tr><td><strong>Inventory</strong></td><td><code>{product_name}</code>, <code>{variation}</code>, <code>{sku}</code>, <code>{stock_qty}</code>, <code>{threshold}</code></td></tr>
+              <tr><td><strong>Cart recovery</strong></td><td><code>{cart_total}</code>, <code>{recovery_url}</code>, <code>{coupon_code}</code>, <code>{unsubscribe_url}</code>, <code>{reminder_stage}</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CSV / XML Schema -->
+      <section id="csv-schema">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          CSV &amp; XML Import/Export Schema
+        </h2>
+        <p>Move records in and out under <strong>Omnify → Import / Export</strong> as schema-validated CSV (or XML for products). Column order does not matter; unknown columns are ignored.</p>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Entity</th><th>Required</th><th>Full Header Set</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Products</strong></td><td><code>name</code></td><td><code>name, slug, type, product_kind, sales_type, price, sale_price, currency, sku, status, stock_status, manage_stock, stock_qty, allow_backorders, preorder_enabled, preorder_release_date, preorder_limit, preorder_message, shipping_class, weight, length, width, height, download_expiry_days, categories, tags, description</code></td></tr>
+              <tr><td><strong>Customers</strong></td><td><code>email</code></td><td><code>email, first_name, last_name, status, phone, company, country, tax_exempt</code></td></tr>
+              <tr><td><strong>Orders</strong></td><td><code>order_number</code>, <code>customer_email</code></td><td><code>order_number, customer_email, status, currency, subtotal, tax, shipping_total, total, payment_method, coupon_code, discount_amount</code></td></tr>
+              <tr><td><strong>Coupons</strong></td><td><code>code</code>, <code>discount_type</code>, <code>discount_value</code></td><td><code>code, is_active, discount_type, discount_value, min_order_amount, max_discount_amount, usage_limit, usage_limit_per_customer, free_shipping, first_order_only, included_product_ids, excluded_product_ids, included_categories, excluded_categories, expires_at</code></td></tr>
+              <tr><td><strong>Tax Rules</strong></td><td><code>label</code>, <code>country</code>, <code>state</code>, <code>rate</code></td><td><code>enabled, label, country, state, rate, priority, reporting_code</code></td></tr>
+              <tr><td><strong>Delivery Zones</strong></td><td><code>name</code>, <code>countries</code>, <code>states</code>, <code>method_name</code></td><td><code>enabled, name, countries, states, method_name, method_type, cost, free_min, class_costs, priority</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Performance & Scaling -->
+      <section id="performance">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Performance, Caching &amp; Scaling
+        </h2>
+        <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+          <li><strong>Normalized indexed tables</strong> — avoids <code>wp_postmeta</code> EAV joins; single-query lookups.</li>
+          <li><strong>Batch hydration</strong> — <code>Product_File_Repository::all_for_products()</code> removes N+1 file queries.</li>
+          <li><strong>Object cache group</strong> — <code>omnifywp-ecommerce</code> caches product/slug/sku/customer lookups.</li>
+          <li><strong>Compound indexes</strong> — <code>omnify_orders</code> (<code>status, created_at</code>, <code>customer_id, status, created_at</code>).</li>
+          <li><strong>Atomic stock ops</strong> — <code>reduce_stock()</code> prevents oversell under concurrency.</li>
+          <li><strong>Chunked downloads</strong> — 8KB streaming buffers for large files.</li>
+          <li><strong>&lt;35KB frontend</strong> script footprint plus deferred maintenance crons.</li>
+        </ul>
+      </section>
+
+      <!-- Security & Hardening -->
+      <section id="security">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security Model &amp; Hardening
+        </h2>
+        <ul style="margin: 12px 0 16px 24px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+          <li><strong>Capability gating</strong> — every admin/REST management route requires <code>manage_omnify</code> (or a scoped capability) / a valid API key.</li>
+          <li><strong>REST auth</strong> — nonce, HTTP Basic, <code>X-Consumer-Key</code>/<code>X-Consumer-Secret</code>, or query params.</li>
+          <li><strong>Secure-by-default gateways</strong> — disabled until credentials are saved.</li>
+          <li><strong>Webhook verification</strong> — Stripe/PayPal/Razorpay/Paystack/Paddle signatures, Alipay RSA2, WeChat AES-256-GCM.</li>
+          <li><strong>Download protection</strong> — HMAC-SHA256 tokens, <code>realpath()</code> containment, path normalization.</li>
+        </ul>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-title">Nginx — Block direct access to protected files</span><button class="copy-btn" onclick="copySnippet(this)">Copy</button></div>
+          <pre><code>location ^~ /wp-content/uploads/omnify-protected/ {
+    internal;
+    return 403;
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Glossary -->
+      <section id="glossary">
+        <h2 class="doc-heading">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Glossary
+        </h2>
+        <div class="table-container">
+          <table class="doc-table">
+            <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Bundle</strong></td><td>A curated product composed of multiple catalog items sold as one discounted SKU.</td></tr>
+              <tr><td><strong>Customer Access</strong></td><td>A row in <code>wp_omnify_customer_access</code> granting entitlement to a digital product.</td></tr>
+              <tr><td><strong>Delivery Zone</strong></td><td>A shipping rule scoped by country/region with a rate type.</td></tr>
+              <tr><td><strong>HMAC Token</strong></td><td>A signed, expiring download URL concealing the physical file path.</td></tr>
+              <tr><td><strong>Order Bump</strong></td><td>A one-click upsell offered directly on the checkout form.</td></tr>
+              <tr><td><strong>Preorder</strong></td><td>A product/variation sold before release, with optional limits and notices.</td></tr>
+              <tr><td><strong>Soft Delete</strong></td><td>A nullable <code>deleted_at</code> flag that hides a record without purging it.</td></tr>
+              <tr><td><strong>Trigger</strong></td><td>A named automated email dispatched at a lifecycle event.</td></tr>
+              <tr><td><strong>Webhook Event</strong></td><td>An inbound gateway callback recorded in <code>wp_omnify_webhook_events</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer style="margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="font-size: 0.85rem; color: var(--text-dim);">
@@ -3430,7 +3860,7 @@ node build.js
         <li><a href="#pipeline-flow" class="toc-link">Pipeline Flow</a></li>
         <li><a href="#quickstart" class="toc-link">Quickstart</a></li>
         <li><a href="#architecture" class="toc-link">Architecture & DI</a></li>
-        <li><a href="#schema-design" class="toc-link">18 SQL Tables</a></li>
+        <li><a href="#schema-design" class="toc-link">27 SQL Tables</a></li>
         <li><a href="#repo-overview" class="toc-link">Repositories SDK</a></li>
         <li><a href="#shortcodes-directory" class="toc-link">Shortcodes</a></li>
         <li><a href="#api-simulator" class="toc-link">API Sandbox</a></li>
@@ -3438,6 +3868,18 @@ node build.js
         <li><a href="#actions-directory" class="toc-link">Action Hooks</a></li>
         <li><a href="#filters-directory" class="toc-link">Filter Hooks</a></li>
         <li><a href="#developer-recipes" class="toc-link">Developer Recipes</a></li>
+        <li><a href="#roles-permissions" class="toc-link">Roles &amp; Permissions</a></li>
+        <li><a href="#tracking-analytics" class="toc-link">GA4 &amp; Meta Tracking</a></li>
+        <li><a href="#privacy-gdpr" class="toc-link">Privacy &amp; GDPR</a></li>
+        <li><a href="#shipping-tax-currency" class="toc-link">Shipping, Tax &amp; Currency</a></li>
+        <li><a href="#variations-availability" class="toc-link">Variations &amp; Preorders</a></li>
+        <li><a href="#background-jobs" class="toc-link">Cron &amp; Maintenance</a></li>
+        <li><a href="#admin-settings" class="toc-link">Admin &amp; Settings</a></li>
+        <li><a href="#merge-tags" class="toc-link">Email Merge Tags</a></li>
+        <li><a href="#csv-schema" class="toc-link">CSV / XML Schema</a></li>
+        <li><a href="#performance" class="toc-link">Performance &amp; Scaling</a></li>
+        <li><a href="#security" class="toc-link">Security &amp; Hardening</a></li>
+        <li><a href="#glossary" class="toc-link">Glossary</a></li>
       </ul>
     </aside>
 
@@ -3568,7 +4010,7 @@ node build.js
         size: "380 B",
         response: {
           "status": "healthy",
-          "engine_version": "1.4.2",
+          "engine_version": "1.4.3",
           "php_version": "8.2.14",
           "mysql_version": "8.0.36",
           "database_schema": "2026_09_24_000000",
@@ -3880,7 +4322,7 @@ node build.js
       { title: "System Pipeline Diagram", snippet: "Interactive data flow from storefront to REST API, repositories, and custom tables.", url: "#pipeline-flow" },
       { title: "Quickstart & Requirements", snippet: "PHP 8.2+, WordPress 5.8+, cloning from github.com/omnifywp/omnifywp-ecommerce.", url: "#quickstart" },
       { title: "Architecture & Container", snippet: "Omnify_Plugin singleton, dependency injection container, service resolution.", url: "#architecture" },
-      { title: "Database: 18 SQL Tables", snippet: "wp_omnify_products, orders, customers, downloads, coupons, reviews, etc.", url: "#database-tables" },
+      { title: "Database: 27 SQL Tables", snippet: "wp_omnify_products, orders, customers, downloads, coupons, reviews, etc.", url: "#database-tables" },
       { title: "Product Repository API", snippet: "find_by_slug(), reduce_stock(), create(), faceted filtering, atomic stock control.", url: "#repo-products" },
       { title: "Order Repository API", snippet: "create(), add_note(), batch hydration without N+1 queries.", url: "#repo-orders" },
       { title: "Storefront Shortcodes", snippet: "[omnify_storefront], [omnify_cart], [omnify_checkout], [omnify_order_tracking].", url: "#shortcodes-directory" },
@@ -4339,7 +4781,32 @@ node build.js
       // Public Helpers
       { name: 'omnify_get_product', type: 'helper', cat: 'helper', args: '$product_id', desc: 'Global API to retrieve a full normalized product record by ID.', snippet: '$product = omnify_get_product( 101 );\necho esc_html( $product[\'name\'] );' },
       { name: 'omnify_get_order', type: 'helper', cat: 'helper', args: '$order_id', desc: 'Global API to retrieve a complete order transaction record by ID.', snippet: '$order = omnify_get_order( 1042 );\necho esc_html( $order[\'total\'] );' },
-      { name: 'omnify_format_price', type: 'helper', cat: 'helper', args: '$amount, $currency = \'\'', desc: 'Format numeric price according to store currency formatting settings.', snippet: 'echo omnify_format_price( 68.00 ); // Returns "$68.00"' }
+      { name: 'omnify_format_price', type: 'helper', cat: 'helper', args: '$amount, $currency = \'\'', desc: 'Format numeric price according to store currency formatting settings.', snippet: 'echo omnify_format_price( 68.00 ); // Returns "$68.00"' },
+      { name: 'omnify_get_cart_url', type: 'helper', cat: 'helper', args: '', desc: 'Resolve the active Shopping Cart page URL (filterable via omnify_cart_url).', snippet: 'echo esc_url( omnify_get_cart_url() );' },
+      { name: 'omnify_get_checkout_url', type: 'helper', cat: 'helper', args: '', desc: 'Resolve the active Checkout page URL.', snippet: 'echo esc_url( omnify_get_checkout_url() );' },
+      { name: 'omnify_get_storefront_url', type: 'helper', cat: 'helper', args: '', desc: 'Resolve the primary storefront shop URL.', snippet: 'echo esc_url( omnify_get_storefront_url() );' },
+      { name: 'omnify_get_customer_portal_url', type: 'helper', cat: 'helper', args: '', desc: 'Resolve the Customer Account Portal URL.', snippet: 'echo esc_url( omnify_get_customer_portal_url() );' },
+
+      // Repository / lifecycle events
+      { name: 'omnify_product_created', type: 'action', cat: 'lifecycle', args: '$product_id, $data', desc: 'Fires when a product record is created via the repository.', snippet: 'add_action(\'omnify_product_created\', function($product_id, $data) {\n    // Sync to external PIM\n}, 10, 2);' },
+      { name: 'omnify_product_updated', type: 'action', cat: 'lifecycle', args: '$product_id, $data', desc: 'Fires when a product record is updated.', snippet: 'add_action(\'omnify_product_updated\', function($product_id, $data) {\n    // Invalidate CDN cache\n}, 10, 2);' },
+      { name: 'omnify_order_refunded', type: 'action', cat: 'lifecycle', args: '$order_id, $amount, $new_refunded, $reason, $restock', desc: 'Fires when a full or partial refund is recorded.', snippet: 'add_action(\'omnify_order_refunded\', function($order_id, $amount) {\n    // Log refund to accounting\n}, 10, 2);' },
+      { name: 'omnify_order_completed', type: 'action', cat: 'lifecycle', args: '$order_id', desc: 'Fires when an order is completed and digital access is granted.', snippet: 'add_action(\'omnify_order_completed\', function($order_id) {\n    // Provision license keys\n});' },
+      { name: 'omnify_customer_created', type: 'action', cat: 'lifecycle', args: '$customer_id, $data', desc: 'Fires when a customer profile is created.', snippet: 'add_action(\'omnify_customer_created\', function($customer_id, $data) {\n    // Sync to CRM\n}, 10, 2);' },
+      { name: 'omnify_review_status_changed', type: 'action', cat: 'lifecycle', args: '$review_id, $status, $old_status', desc: 'Fires when a review moderation status changes.', snippet: 'add_action(\'omnify_review_status_changed\', function($review_id, $status) {\n    // Notify merchant\n}, 10, 2);' },
+      { name: 'omnify_product_restocked', type: 'action', cat: 'lifecycle', args: '$product_id, $variation_id', desc: 'Fires when inventory is replenished for a product or variation.', snippet: 'add_action(\'omnify_product_restocked\', function($product_id, $variation_id) {\n    // Trigger back-in-stock notifications\n}, 10, 2);' },
+      { name: 'omnify_abandoned_cart_recovered', type: 'action', cat: 'lifecycle', args: '$token, $order_id', desc: 'Fires when an abandoned cart converts into an order.', snippet: 'add_action(\'omnify_abandoned_cart_recovered\', function($token, $order_id) {\n    // Attribute recovery revenue\n}, 10, 2);' },
+
+      // Filters
+      { name: 'omnify_before_checkout_validation', type: 'filter', cat: 'cart', args: '$data, $settings, $items', desc: 'Sanitize or inject checkout form fields before validation.', snippet: 'add_filter(\'omnify_before_checkout_validation\', function($data, $settings, $items) {\n    $data[\'phone\'] = preg_replace(\'/[^\\d+]/\', \'\', $data[\'phone\'] ?? \'\');\n    return $data;\n}, 10, 3);' },
+      { name: 'omnify_after_checkout_validation', type: 'filter', cat: 'cart', args: '$error, $data, $settings, $items', desc: 'Inject custom business rules. Return a WP_Error to halt checkout.', snippet: 'add_filter(\'omnify_after_checkout_validation\', function($error, $data) {\n    // Enforce minimum order value\n    return $error;\n}, 10, 2);' },
+      { name: 'omnify_rest_can_manage', type: 'filter', cat: 'cart', args: '$can_manage, $request, $server', desc: 'Authorize administrative REST access via custom keys or tokens.', snippet: 'add_filter(\'omnify_rest_can_manage\', function($can_manage, $request) {\n    // Validate Bearer token\n    return $can_manage;\n}, 10, 2);' },
+      { name: 'omnify_currency_exchange_rates', type: 'filter', cat: 'cart', args: '$rates', desc: 'Override the multi-currency exchange rate table (e.g. sync from an FX API).', snippet: 'add_filter(\'omnify_currency_exchange_rates\', function($rates) {\n    $live = get_transient(\'my_fx_rates\');\n    return is_array($live) ? $live : $rates;\n});' },
+      { name: 'omnify_webhook_payload', type: 'filter', cat: 'cart', args: '$payload, $event, $hook', desc: 'Mutate the JSON payload before an outbound webhook is dispatched.', snippet: 'add_filter(\'omnify_webhook_payload\', function($payload, $event) {\n    $payload[\'env\'] = \'production\';\n    return $payload;\n}, 10, 2);' },
+
+      // Admin row actions
+      { name: 'omnify_customer_row_actions', type: 'filter', cat: 'table', args: '$actions, $item', desc: 'Append action links to rows in the customers admin table.', snippet: 'add_filter(\'omnify_customer_row_actions\', function($actions, $item) {\n    $actions[\'sync\'] = \'<a href="#">Sync CRM</a>\';\n    return $actions;\n}, 10, 2);' },
+      { name: 'omnify_coupon_row_actions', type: 'filter', cat: 'table', args: '$actions, $item', desc: 'Append action links to rows in the coupons admin table.', snippet: 'add_filter(\'omnify_coupon_row_actions\', function($actions, $item) {\n    $actions[\'share\'] = \'<a href="#">Share</a>\';\n    return $actions;\n}, 10, 2);' }
     ];
 
     let activeHookCat = 'all';
@@ -4409,6 +4876,56 @@ node build.js
     document.addEventListener('DOMContentLoaded', () => {
       renderHooksGrid();
     });
+  </script>
+
+  <!-- Docs Polish v1.1 — anchors, progress, back-to-top -->
+  <script>
+    (function () {
+      function initDocsPolish() {
+        var usedIds = {};
+        document.querySelectorAll('h2, h3').forEach(function (h) {
+          var id = h.id || (h.closest('section[id]') ? h.closest('section[id]').id : '');
+          if (!id || usedIds[id] || h.querySelector('.heading-anchor')) return;
+          if (!h.id && !/doc-heading|section-title/.test(h.className)) return;
+          usedIds[id] = true;
+          var a = document.createElement('a');
+          a.className = 'heading-anchor';
+          a.href = '#' + id;
+          a.setAttribute('aria-label', 'Link to this section');
+          a.textContent = '#';
+          h.appendChild(a);
+        });
+
+        var bar = document.createElement('div');
+        bar.className = 'scroll-progress';
+        bar.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(bar);
+
+        var btn = document.createElement('button');
+        btn.className = 'to-top-btn';
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Back to top');
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+        document.body.appendChild(btn);
+        btn.addEventListener('click', function () {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function onScroll() {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          var pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+          bar.style.width = pct + '%';
+          btn.classList.toggle('visible', window.scrollY > 600);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDocsPolish);
+      } else {
+        initDocsPolish();
+      }
+    })();
   </script>
 
 </body>

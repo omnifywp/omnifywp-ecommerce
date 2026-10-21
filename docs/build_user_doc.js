@@ -46,7 +46,7 @@ const chapters = [
         <div class="feature-card">
           <div class="feature-card-icon">${svgIcons.lightning}</div>
           <h4>Zero-Postmeta Latency</h4>
-          <p>Product, order, customer, and inventory records live in 18 dedicated normalized relational SQL tables with optimized multi-column indexes, achieving sub-millisecond queries even with catalogs of millions of items.</p>
+          <p>Product, order, customer, and inventory records live in 27 dedicated normalized relational SQL tables with optimized multi-column indexes, achieving sub-millisecond queries even with catalogs of millions of items.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">${svgIcons.lock}</div>
@@ -73,7 +73,7 @@ const chapters = [
           <tr>
             <td><strong>Database Storage</strong></td>
             <td>Overloaded <code>wp_posts</code> & <code>wp_postmeta</code> EAV table joins</td>
-            <td><strong>18 Dedicated Normalized SQL Tables</strong> (Clean Separation)</td>
+            <td><strong>27 Dedicated Normalized SQL Tables</strong> (Clean Separation)</td>
           </tr>
           <tr>
             <td><strong>Query Execution Time</strong></td>
@@ -189,7 +189,7 @@ const chapters = [
         <li><strong>+ Add New Product:</strong> Jump straight into the comprehensive product authoring suite.</li>
         <li><strong>Create Coupon:</strong> Launch a flash sale or custom discount code promotion.</li>
         <li><strong>Export Accounting CSV:</strong> Generate QuickBooks and Xero compatible financial exports.</li>
-        <li><strong>Verify 18 SQL Tables:</strong> Run instant schema diagnostic checks across all custom tables.</li>
+        <li><strong>Verify 27 SQL Tables:</strong> Run instant schema diagnostic checks across all custom tables.</li>
       </ul>
     `
   },
@@ -216,6 +216,17 @@ const chapters = [
       <p>Click <strong>Create Product</strong> or edit an existing item to access the product management workspace.</p>
 
       ${mockups.product_editor}
+
+      <h3>Redesigned Product Variations Builder (v1.4.3)</h3>
+      <p>Variable products are authored through a rebuilt variation matrix that pairs clear attribute controls with fast, responsive inputs:</p>
+      <ul class="styled-list">
+        <li><strong>Unified Attribute Badge Controls:</strong> Each attribute axis (e.g. <code>SIZE</code>, <code>COLOR</code>) renders as a clean uppercase badge chip paired with an integrated borderless dropdown and custom SVG chevron indicator.</li>
+        <li><strong>Laser-Aligned Pricing &amp; Stock Grid:</strong> SKU, Regular Price, and Sale Price share a normalized 42px height and 8px radius with currency-prefix indicators; the explicit <em>Inventory Tracking</em> toggle container sits aligned with <em>Stock Qty</em> and <em>Stock Status</em>.</li>
+        <li><strong>Availability &amp; Preorders Panel:</strong> A structured fulfillment card with <em>Allow backorders</em> and <em>Preorder</em> toggles plus a subgrid for <em>Release Date</em>, <em>Preorder Limit</em>, and a shopper-facing <em>Notice Message</em>.</li>
+        <li><strong>Estimated Delivery Field:</strong> A single full-width input with a transport icon prefix communicating per-variation dispatch expectations.</li>
+        <li><strong>Compact Icon Actions:</strong> Variation image selection and removal use 32×32px icon buttons with accessible tooltips instead of text links.</li>
+        <li><strong>Lightweight Variation Notes:</strong> Native textareas replace heavy TinyMCE toolbars to remove editor bloat and improve render performance.</li>
+      </ul>
 
       <h3>Product Taxonomies</h3>
       <p>Organize your catalog with structured taxonomies that drive storefront filtering, search, and navigation:</p>
@@ -526,7 +537,7 @@ const chapters = [
       ${mockups.tools}
 
       <h3>Real-Time Database Diagnostics</h3>
-      <p>The top diagnostic bar queries all 18 normalized custom tables to present instant volume and operational metrics across key entities:</p>
+      <p>The top diagnostic bar queries all 27 normalized custom tables to present instant volume and operational metrics across key entities:</p>
       <div class="grid-cards-4" style="margin-top:1rem;margin-bottom:1.5rem;">
         <div class="feature-card">
           <h4>Orders Table</h4>
@@ -561,7 +572,7 @@ const chapters = [
         <li><strong>Clear Abandoned Carts:</strong> Prunes stale sessions older than 30 days to optimize session table storage.</li>
         <li><strong>Automated Daily Database Maintenance:</strong> Runs background cron (<code>omnify_daily_database_cleanup</code>) to automatically prune stale carts, expire transients, and optimize indexes.</li>
         <li><strong>Flush Transients & Query Caches:</strong> Recomputes pricing tiers, shipping rules, and cached queries immediately.</li>
-        <li><strong>Verify Table Schema & Indexes:</strong> Runs integrity checks across all 18 custom tables and applies missing migrations automatically.</li>
+        <li><strong>Verify Table Schema & Indexes:</strong> Runs integrity checks across all 27 custom tables and applies missing migrations automatically.</li>
       </ul>
 
       <h3>Server Runtime & Environment Specs</h3>
@@ -725,15 +736,242 @@ const chapters = [
     `
   },
   {
+    id: 'variations',
+    title: '16. Variable Products, Preorders & Availability',
+    badge: 'Catalog & Stock',
+    icon: svgIcons.products,
+    summary: 'Create variable products, configure the redesigned variation builder, and manage inventory, backorders, preorders, and the back-in-stock waitlist.',
+    content: `
+      <p class="lead-text">Variable products let you sell the same item in multiple configurations (size, color, format, license tier) with independent SKUs, pricing, and stock. OmnifyWP also models <strong>availability</strong> as a first-class concept: backorders, preorders, estimated delivery, and a customer back-in-stock waitlist.</p>
+
+      <h3>Step 1 — Create a Variable Product</h3>
+      <ol class="styled-list">
+        <li>Go to <strong>Omnify → Products → + Add New Product</strong> and set the Product Type to <em>Variable</em>.</li>
+        <li>Open the <strong>Attributes</strong> panel and add the axes you sell on (e.g. <code>SIZE</code>, <code>COLOR</code>).</li>
+        <li>Generate the variation matrix — each row inherits the parent pricing until overridden.</li>
+      </ol>
+
+      <h3>Step 2 — Configure Each Variation</h3>
+      <ul class="styled-list">
+        <li><strong>Unified Attribute Badges:</strong> each axis uses a clean badge chip paired with an integrated dropdown and custom chevron.</li>
+        <li><strong>Pricing &amp; Stock Grid:</strong> SKU, Regular Price, and Sale Price share a normalized 42px/8px-radius layout with currency prefixes and an aligned Inventory Tracking toggle.</li>
+        <li><strong>Media Actions:</strong> 32×32px icon buttons (<code>upload</code> / <code>trash</code>) with tooltips select and remove variation images.</li>
+        <li><strong>Variation Notes:</strong> lightweight native textareas replace heavy WYSIWYG toolbars.</li>
+      </ul>
+
+      <h3>Step 3 — Availability, Backorders &amp; Preorders</h3>
+      <p>Open the <strong>Availability &amp; Preorders</strong> panel on the variation:</p>
+      <ul class="styled-list">
+        <li><strong>Allow Backorders:</strong> permit purchases once stock reaches zero.</li>
+        <li><strong>Preorder:</strong> enable preorders with a <strong>Release Date</strong>, a <strong>Preorder Limit</strong>, and a shopper-facing <strong>Notice Message</strong>.</li>
+        <li><strong>Estimated Delivery:</strong> a full-width input with a transport icon prefix communicates per-variation dispatch expectations.</li>
+      </ul>
+
+      <h3>Back-In-Stock Waitlist</h3>
+      <p>Out-of-stock products and variations display a customer opt-in. When stock is replenished, the automated <em>Back-In-Stock Alert</em> email fires to every waitlisted shopper.</p>
+
+      <div class="callout tip">
+        <div class="callout-icon">${svgIcons.info}</div>
+        <div class="callout-body">
+          <strong>Tip:</strong> Preorder and backorder flags are stored per product and per variation, so a single storefront can sell in-stock, backorderable, and preorder items side by side.
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 'shipping-taxes',
+    title: '17. Shipping Zones, Taxes & Multi-Currency',
+    badge: 'Store Configuration',
+    icon: svgIcons.settings,
+    summary: 'Define country/region delivery zones and rates, configure multi-tier tax rules, and enable the storefront currency switcher.',
+    content: `
+      <p>Under <strong>Omnify → Settings</strong>, the Delivery, Tax, and Currency panels control what shoppers pay and where you sell.</p>
+
+      <h3>Delivery Zones &amp; Rates</h3>
+      ${mockups.settings_delivery}
+      <ul class="styled-list">
+        <li><strong>Flat Rate:</strong> charge a standard fee per order or per item.</li>
+        <li><strong>Free Shipping Threshold:</strong> automatically unlock free delivery above a cart subtotal.</li>
+        <li><strong>Local Pickup:</strong> let customers collect in-store with zero shipping fee.</li>
+      </ul>
+
+      <h3>Tax Rules</h3>
+      ${mockups.settings_taxes}
+      <ul class="styled-list">
+        <li><strong>Prices Entered With Tax:</strong> toggle inclusive vs exclusive catalog pricing.</li>
+        <li><strong>Calculate Tax Based On:</strong> shipping address, billing address, or store base.</li>
+        <li><strong>Rounding &amp; Shipping Tax:</strong> round per line or per total, and optionally tax shipping.</li>
+        <li><strong>Reporting Codes:</strong> attach tax reporting codes for accounting exports.</li>
+      </ul>
+
+      <h3>Multi-Currency Switcher</h3>
+      <p>Place <code>[omnify_currency_switcher]</code> (or the <code>omnify/currency-switcher</code> block) in a header or sidebar. Prices recalculate in real time, the shopper's choice is stored in a 1-year cookie, and gateways that don't support the currency are filtered out of checkout.</p>
+    `
+  },
+  {
+    id: 'emails-smtp',
+    title: '18. Email Notifications, SMTP & Logs',
+    badge: 'Marketing & Ops',
+    icon: svgIcons.settings,
+    summary: 'Configure the 17 automated email triggers, connect a custom SMTP relay for inbox delivery, and monitor delivery logs with automatic retries.',
+    content: `
+      <p>Under <strong>Omnify → Settings → Email</strong>, manage every customer and admin notification plus the delivery transport.</p>
+
+      ${mockups.settings_emails}
+
+      <h3>17 Automated Triggers</h3>
+      <p>Omnify ships 17 transactional triggers covering the full order lifecycle: order receipt, payment pending/failed, refund requested/processed, order status changes, shipment dispatched, ready-for-pickup, order cancelled, customer order notes, account welcome, low-stock and out-of-stock admin alerts, back-in-stock alerts, high-risk order alerts, and abandoned-cart recovery.</p>
+
+      <h3>Custom SMTP Relay</h3>
+      <ul class="styled-list">
+        <li><strong>Host &amp; Port:</strong> point Omnify at your SMTP server (e.g. <code>smtp.postmarkapp.com:587</code>).</li>
+        <li><strong>Encryption &amp; Auth:</strong> choose TLS/SSL and supply credentials.</li>
+        <li><strong>From / Reply-To / BCC:</strong> set the sender identity and optional admin BCC.</li>
+      </ul>
+
+      <h3>Delivery Logs &amp; Retries</h3>
+      <p>Every send is recorded in the email log with its trigger, recipient, status, and error message. Failed sends are automatically retried on an hourly schedule, and any log entry can be re-sent from the admin with one click.</p>
+    `
+  },
+  {
+    id: 'roles',
+    title: '19. Roles, Staff Permissions & Fraud',
+    badge: 'Team & Security',
+    icon: svgIcons.customers,
+    summary: 'Delegate store operations with Shop Manager and Shop Clerk roles, map per-feature permissions, and rely on automated fraud risk scoring.',
+    content: `
+      <p>OmnifyWP lets you delegate store operations safely without handing over full WordPress administrator access.</p>
+
+      <h3>Built-In Roles</h3>
+      <ul class="styled-list">
+        <li><strong>Shop Manager:</strong> full operational store management (catalog, orders, customers, settings) without <code>manage_options</code>.</li>
+        <li><strong>Shop Clerk:</strong> fulfillment, order processing, and customer support focused access.</li>
+      </ul>
+
+      <h3>Per-Feature Permissions</h3>
+      <p>Under <strong>Settings → Roles</strong>, map roles to individual feature areas: Dashboard, Orders, Products, Customers, Coupons, Abandoned Carts, Reviews, and Analytics. A clerk can be allowed to manage Orders while Products and Settings remain locked.</p>
+
+      <h3>Automated Fraud Scoring</h3>
+      <p>Each order receives a fraud risk level (<em>Safe</em>, <em>Suspicious</em>, <em>High Risk</em>) derived from IP geolocation, proxy indicators, billing/shipping mismatches, and transaction velocity. High-risk orders can raise an admin alert email and appear flagged in the order detail screen.</p>
+
+      <div class="callout warning">
+        <div class="callout-icon">${svgIcons.alert}</div>
+        <div class="callout-body">
+          <strong>Least-Privilege Tip:</strong> Grant <em>shop_clerk</em> access to Orders, Customers, and Reviews only. Keep Coupons, Settings, and Tools restricted to managers and administrators.
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 'analytics-tracking',
+    title: '20. Conversion Tracking (GA4 & Meta Pixel)',
+    badge: 'Analytics & Marketing',
+    icon: svgIcons.analytics,
+    summary: 'Connect Google Analytics 4 and Meta Pixel to measure the full e-commerce funnel from product view to purchase.',
+    content: `
+      <p>Under <strong>Omnify → Settings → Marketing</strong>, enable built-in conversion tracking without a separate tagging plugin.</p>
+
+      <h3>Google Analytics 4 (GA4)</h3>
+      <ul class="styled-list">
+        <li>Enable GA4 and paste your Measurement ID (e.g. <code>G-XXXXXXX</code>).</li>
+        <li>Tracked events: <code>view_item_list</code>, <code>view_item</code>, <code>add_to_cart</code>, <code>begin_checkout</code>, and <code>purchase</code> with transaction revenue, currency, and item parameters.</li>
+        <li>Enable debug mode to validate events in the GA4 DebugView.</li>
+      </ul>
+
+      <h3>Meta Pixel (Facebook Pixel)</h3>
+      <ul class="styled-list">
+        <li>Enable Meta Pixel and paste your numeric Pixel ID.</li>
+        <li>Tracked events: <code>PageView</code>, <code>ViewContent</code>, <code>AddToCart</code>, <code>InitiateCheckout</code>, and <code>Purchase</code>.</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-icon">${svgIcons.analytics}</div>
+        <div class="callout-body">
+          <strong>Attribution:</strong> Purchase events include the real order number and value, so revenue reconciles directly with your <strong>Analytics</strong> dashboard totals.
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 'privacy',
+    title: '21. Privacy, GDPR & Data Maintenance',
+    badge: 'Compliance',
+    icon: svgIcons.lock,
+    summary: 'Honor GDPR data requests with built-in export/erase tools, and keep the database fast with automated maintenance.',
+    content: `
+      <p>OmnifyWP integrates with the WordPress privacy framework so you can service data-subject requests without custom code.</p>
+
+      <h3>Personal Data Export &amp; Erasure</h3>
+      <ul class="styled-list">
+        <li><strong>Exporter:</strong> under <strong>Tools → Export Personal Data</strong>, an "Omnify" exporter returns the customer profile, orders, order items, downloads, wishlist, and abandoned carts.</li>
+        <li><strong>Eraser:</strong> under <strong>Tools → Erase Personal Data</strong>, the matching eraser anonymizes or removes the same records.</li>
+      </ul>
+
+      <h3>Data Retention &amp; Maintenance</h3>
+      <ul class="styled-list">
+        <li><strong>Soft Deletes:</strong> trashed records are excluded from storefront and public queries but retained for audit.</li>
+        <li><strong>Automated Daily Cleanup:</strong> the <code>omnify_daily_database_cleanup</code> cron prunes expired abandoned carts and stale sessions and optimizes tables.</li>
+        <li><strong>Download Audit Trail:</strong> every delivery logs IP, user agent, and status for compliance evidence.</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-icon">${svgIcons.lock}</div>
+        <div class="callout-body">
+          <strong>Compliance:</strong> Combine these tools with your WordPress privacy policy page and a published data-retention window documented from <strong>Settings → Advanced</strong>.
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 'import-export',
+    title: '22. Import, Export & Data Management',
+    badge: 'Data & Migration',
+    icon: svgIcons.tools,
+    summary: 'Seed demo data, move catalogs and records in and out with schema-validated CSV/XML, and perform granular maintenance without touching live transactions.',
+    content: `
+      <p class="lead-text">OmnifyWP ships a complete data lifecycle toolkit: realistic demo seeding for new stores, schema-validated import/export for migrations and bulk edits, and granular cleanup utilities that never touch live customer transactions.</p>
+
+      <h3>Demo Data Seeding</h3>
+      <p>Under <strong>Omnify → Tools</strong>, one click seeds a realistic sample store: products across simple/variable/digital types, customer profiles, historical orders with varied statuses, reviews, coupons, and category hierarchies — with an animated progress bar.</p>
+
+      <h3>Exporting Records</h3>
+      <p>Under <strong>Omnify → Import / Export</strong>, download records as standardized UTF-8 CSV (or XML for products):</p>
+      <ul class="styled-list">
+        <li><strong>Products</strong> — full catalog with pricing, stock, preorder, shipping, and taxonomy columns.</li>
+        <li><strong>Customers</strong> — CRM profiles with status and tax-exemption flags.</li>
+        <li><strong>Orders</strong> — order headers with totals, payment method, and coupon data.</li>
+        <li><strong>Coupons, Tax Rules &amp; Delivery Zones</strong> — marketing and configuration tables.</li>
+      </ul>
+
+      <h3>Importing Records</h3>
+      <p>Drag a CSV or XML file into the import dropzone. Required fields are validated per entity; column order does not matter and unknown columns are safely ignored. A starter template for each entity can be downloaded from the schema reference card.</p>
+
+      <h3>Granular Maintenance &amp; Cleanup</h3>
+      <ul class="styled-list">
+        <li><strong>Clean by Type:</strong> remove products, orders, customers, reviews, coupons, or activity logs individually.</li>
+        <li><strong>Optimize Tables / Clear Transients:</strong> reclaim space and refresh cached queries.</li>
+        <li><strong>Purge Abandoned Carts:</strong> prune stale sessions past the retention window.</li>
+        <li><strong>Danger Zone:</strong> wipe all store data behind explicit confirmation safeguards.</li>
+      </ul>
+
+      <div class="callout warning">
+        <div class="callout-icon">${svgIcons.alert}</div>
+        <div class="callout-body">
+          <strong>Back up first:</strong> Always take a database snapshot before running imports or any Danger Zone cleanup operation.
+        </div>
+      </div>
+    `
+  },
+  {
     id: 'faq',
-    title: '16. FAQ & Troubleshooting',
+    title: '23. FAQ & Troubleshooting',
     badge: 'Help & Support',
     icon: svgIcons.faq,
     summary: 'Frequently asked questions, common troubleshooting scenarios, and performance tips.',
     content: `
       <div class="faq-item">
         <h4>Q: How does OmnifyWP achieve sub-millisecond database queries?</h4>
-        <p>OmnifyWP stores products, variations, orders, and customer data in 18 dedicated normalized SQL tables (<code>wp_omnify_*</code>) with explicit multi-column indexes, bypassing WordPress's shared <code>wp_posts</code> and <code>wp_postmeta</code> tables completely.</p>
+        <p>OmnifyWP stores products, variations, orders, and customer data in 27 dedicated normalized SQL tables (<code>wp_omnify_*</code>) with explicit multi-column indexes, bypassing WordPress's shared <code>wp_posts</code> and <code>wp_postmeta</code> tables completely.</p>
       </div>
 
       <div class="faq-item">
@@ -789,6 +1027,7 @@ const sidebarNavHtml = `
     <div class="sidebar-heading">Catalog & Fulfillment</div>
     <ul class="sidebar-items">
       <li><a href="#products" class="sidebar-link"><span>Products Catalog</span> <span class="sidebar-tag">Stock</span></a></li>
+      <li><a href="#variations" class="sidebar-link"><span>Variations & Preorders</span> <span class="sidebar-tag">Stock</span></a></li>
       <li><a href="#orders" class="sidebar-link"><span>Orders & Refunds</span> <span class="sidebar-tag">Sales</span></a></li>
       <li><a href="#customers" class="sidebar-link"><span>Customers (CRM)</span> <span class="sidebar-tag">LTV</span></a></li>
       <li><a href="#coupons" class="sidebar-link"><span>Coupons & Promos</span> <span class="sidebar-tag">Deals</span></a></li>
@@ -799,6 +1038,7 @@ const sidebarNavHtml = `
     <div class="sidebar-heading">Analytics & Marketing</div>
     <ul class="sidebar-items">
       <li><a href="#analytics" class="sidebar-link"><span>Store Analytics</span> <span class="sidebar-tag">Reports</span></a></li>
+      <li><a href="#analytics-tracking" class="sidebar-link"><span>Conversion Tracking</span> <span class="sidebar-tag">GA4</span></a></li>
       <li><a href="#reviews" class="sidebar-link"><span>Reviews Moderation</span> <span class="sidebar-tag">Trust</span></a></li>
       <li><a href="#abandoned-carts" class="sidebar-link"><span>Abandoned Carts</span> <span class="sidebar-tag">Recovery</span></a></li>
     </ul>
@@ -808,7 +1048,12 @@ const sidebarNavHtml = `
     <div class="sidebar-heading">Store Configuration</div>
     <ul class="sidebar-items">
       <li><a href="#settings" class="sidebar-link"><span>Store Settings</span> <span class="sidebar-tag">Config</span></a></li>
+      <li><a href="#shipping-taxes" class="sidebar-link"><span>Shipping, Tax & Currency</span> <span class="sidebar-tag">Config</span></a></li>
+      <li><a href="#emails-smtp" class="sidebar-link"><span>Emails & SMTP</span> <span class="sidebar-tag">Mail</span></a></li>
+      <li><a href="#roles" class="sidebar-link"><span>Roles & Fraud</span> <span class="sidebar-tag">Team</span></a></li>
+      <li><a href="#privacy" class="sidebar-link"><span>Privacy & GDPR</span> <span class="sidebar-tag">Legal</span></a></li>
       <li><a href="#tools" class="sidebar-link"><span>Tools & Seeding</span> <span class="sidebar-tag">DB</span></a></li>
+      <li><a href="#import-export" class="sidebar-link"><span>Import & Export</span> <span class="sidebar-tag">Data</span></a></li>
       <li><a href="#activity" class="sidebar-link"><span>Activity Audit Log</span> <span class="sidebar-tag">Audit</span></a></li>
       <li><a href="#api" class="sidebar-link"><span>REST API Keys</span> <span class="sidebar-tag">REST</span></a></li>
     </ul>
@@ -2526,9 +2771,78 @@ const fullHtml = `<!DOCTYPE html>
       .docs-main { padding: 24px 16px 60px; }
       .hero-title { font-size: 2.1rem; }
     }
+
+    /* ==========================================================================
+       Docs Polish v1.1 — accessibility, readability & navigation
+       ========================================================================== */
+    :focus-visible {
+      outline: 2px solid var(--brand-emerald, #0f766e);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    ::selection { background: rgba(15, 118, 110, 0.18); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    table.doc-table td, table.doc-table th { line-height: 1.5; }
+    table.doc-table tbody tr:nth-child(even) { background: rgba(15, 118, 110, 0.035); }
+    table.doc-table tbody tr:hover { background: var(--bg-card-hover, rgba(15, 118, 110, 0.06)); }
+
+    .heading-anchor {
+      opacity: 0;
+      margin-left: 8px;
+      color: var(--text-dim, #64748b);
+      text-decoration: none;
+      font-weight: 400;
+      transition: opacity 0.15s ease;
+    }
+    h2:hover > .heading-anchor, h3:hover > .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 1; }
+    .heading-anchor:hover { color: var(--brand-emerald, #0f766e); }
+
+    .to-top-btn {
+      position: fixed; right: 24px; bottom: 24px; z-index: 60;
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--brand-emerald, #0f766e); color: #fff;
+      border: none; cursor: pointer; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+      opacity: 0; visibility: hidden; transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    }
+    .to-top-btn.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    .to-top-btn:hover { filter: brightness(1.08); }
+
+    .scroll-progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--brand-forest-dark, #134e4a), var(--brand-emerald, #0f766e));
+      z-index: 70; pointer-events: none;
+    }
+
+    .skip-link {
+      position: absolute; left: -9999px; top: 0; z-index: 100;
+      background: var(--brand-emerald, #0f766e); color: #fff;
+      padding: 10px 16px; border-radius: 0 0 8px 0; font-weight: 600;
+    }
+    .skip-link:focus { left: 0; }
+
+    @media print {
+      .top-header, .docs-sidebar, .docs-toc, .to-top-btn, .scroll-progress,
+      .search-modal, .toast-container, .omnify-toast-container, .ambient-glow-top { display: none !important; }
+      .docs-main { padding: 0 !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .ui-mockup-window, .doc-table { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="ambient-glow-top"></div>
 
   <!-- Top Sticky Header -->
@@ -2538,7 +2852,7 @@ const fullHtml = `<!DOCTYPE html>
         <div class="brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
         <div class="brand-text">
           OmnifyWP
-          <span class="brand-version-pill">v1.4.2</span>
+          <span class="brand-version-pill">v1.4.3</span>
         </div>
       </a>
 
@@ -2590,17 +2904,26 @@ const fullHtml = `<!DOCTYPE html>
     </aside>
 
     <!-- Main Content -->
-    <main class="docs-main">
+    <main class="docs-main" id="main-content">
       <div class="doc-hero">
         <div class="hero-badge-pill">
           <span>Store Owner Manual</span>
           <span>•</span>
-          <span>Version 1.4.2</span>
+          <span>Version 1.4.3</span>
         </div>
         <h1 class="hero-title">OmnifyWP eCommerce<br>Complete User Manual</h1>
         <p class="hero-description">
           The comprehensive operating handbook for store managers, operators, and merchants. Learn how to configure your catalog, fulfill orders, manage customer CRM profiles, execute promotional campaigns, and run a high-converting storefront.
         </p>
+
+        <nav aria-label="Popular topics" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 22px;">
+          <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);">Popular topics:</span>
+          <a href="#onboarding" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Setup Wizard</a>
+          <a href="#variations" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Variations &amp; Preorders</a>
+          <a href="#settings" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Payments</a>
+          <a href="#import-export" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Import &amp; Export</a>
+          <a href="#faq" style="font-size:0.83rem;font-weight:600;text-decoration:none;color:var(--brand-emerald);background:var(--bg-card);border:1px solid var(--border-subtle);padding:5px 12px;border-radius:9999px;">Troubleshooting</a>
+        </nav>
 
         <div class="hero-meta-bar">
           <a href="https://omnifywp.com" target="_blank" rel="noopener" class="hero-ext-btn primary">
@@ -2808,6 +3131,56 @@ const fullHtml = `<!DOCTYPE html>
         });
       }
     }, { passive: true });
+  </script>
+
+  <!-- Docs Polish v1.1 — anchors, progress, back-to-top -->
+  <script>
+    (function () {
+      function initDocsPolish() {
+        var usedIds = {};
+        document.querySelectorAll('h2, h3').forEach(function (h) {
+          var id = h.id || (h.closest('section[id]') ? h.closest('section[id]').id : '');
+          if (!id || usedIds[id] || h.querySelector('.heading-anchor')) return;
+          if (!h.id && !/doc-heading|section-title/.test(h.className)) return;
+          usedIds[id] = true;
+          var a = document.createElement('a');
+          a.className = 'heading-anchor';
+          a.href = '#' + id;
+          a.setAttribute('aria-label', 'Link to this section');
+          a.textContent = '#';
+          h.appendChild(a);
+        });
+
+        var bar = document.createElement('div');
+        bar.className = 'scroll-progress';
+        bar.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(bar);
+
+        var btn = document.createElement('button');
+        btn.className = 'to-top-btn';
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Back to top');
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+        document.body.appendChild(btn);
+        btn.addEventListener('click', function () {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function onScroll() {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          var pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+          bar.style.width = pct + '%';
+          btn.classList.toggle('visible', window.scrollY > 600);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDocsPolish);
+      } else {
+        initDocsPolish();
+      }
+    })();
   </script>
 </body>
 </html>

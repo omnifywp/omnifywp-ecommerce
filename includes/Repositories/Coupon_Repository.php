@@ -182,8 +182,8 @@ class Omnify_Coupon_Repository {
 					'is_active'      => ! empty($omnify_data['is_active']) ? 1 : 0,
 					'discount_type'  => sanitize_key((string) ($omnify_data['discount_type'] ?? 'fixed')),
 					'discount_value' => (float) ($omnify_data['discount_value'] ?? 0.0),
-					'min_order_amount' => isset($omnify_data['min_order_amount']) && '' !== trim((string) $omnify_data['min_order_amount']) ? (float) $omnify_data['min_order_amount'] : null,
-					'max_discount_amount' => isset($omnify_data['max_discount_amount']) && '' !== trim((string) $omnify_data['max_discount_amount']) ? (float) $omnify_data['max_discount_amount'] : null,
+					'min_order_amount' => isset($omnify_data['min_order_amount']) && '' !== trim((string) $omnify_data['min_order_amount']) ? max(0.0, (float) $omnify_data['min_order_amount']) : null,
+					'max_discount_amount' => isset($omnify_data['max_discount_amount']) && '' !== trim((string) $omnify_data['max_discount_amount']) ? max(0.0, (float) $omnify_data['max_discount_amount']) : null,
 					'usage_limit'    => ! empty($omnify_data['usage_limit']) ? absint($omnify_data['usage_limit']) : null,
 					'usage_limit_per_customer' => ! empty($omnify_data['usage_limit_per_customer']) ? absint($omnify_data['usage_limit_per_customer']) : null,
 					'usage_count'    => 0,
@@ -228,10 +228,10 @@ class Omnify_Coupon_Repository {
 				$omnify_update['discount_value'] = (float) $omnify_data['discount_value'];
 			}
 			if (array_key_exists('min_order_amount', $omnify_data)) {
-				$omnify_update['min_order_amount'] = isset($omnify_data['min_order_amount']) && '' !== trim((string) $omnify_data['min_order_amount']) ? (float) $omnify_data['min_order_amount'] : null;
+				$omnify_update['min_order_amount'] = isset($omnify_data['min_order_amount']) && '' !== trim((string) $omnify_data['min_order_amount']) ? max(0.0, (float) $omnify_data['min_order_amount']) : null;
 			}
 			if (array_key_exists('max_discount_amount', $omnify_data)) {
-				$omnify_update['max_discount_amount'] = isset($omnify_data['max_discount_amount']) && '' !== trim((string) $omnify_data['max_discount_amount']) ? (float) $omnify_data['max_discount_amount'] : null;
+				$omnify_update['max_discount_amount'] = isset($omnify_data['max_discount_amount']) && '' !== trim((string) $omnify_data['max_discount_amount']) ? max(0.0, (float) $omnify_data['max_discount_amount']) : null;
 			}
 			if (array_key_exists('usage_limit', $omnify_data)) {
 				$omnify_update['usage_limit'] = ! empty($omnify_data['usage_limit']) ? absint($omnify_data['usage_limit']) : null;

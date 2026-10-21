@@ -460,6 +460,25 @@ function omnify_api_page_url(string $omnify_section): string {
 							</div>
 						<?php endif; ?>
 					</div>
+
+					<!-- Webhook Delivery Payload Inspector Modal -->
+					<div id="omnify-webhook-payload-modal" class="omnify-modal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5);">
+						<div class="omnify-modal-content" style="background:#fff; margin:5% auto; padding:24px; border-radius:12px; width:90%; max-width:650px; position:relative; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+							<span class="omnify-modal-close" id="close-payload-modal" style="position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:#64748b;">&times;</span>
+							<h3 style="margin-top:0; font-size:16px; color:#0f172a; font-weight:700;"><?php esc_html_e('Webhook Delivery Inspector', 'omnifywp-ecommerce'); ?></h3>
+							<div style="margin-bottom:14px;">
+								<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+									<strong style="font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:0.04em;"><?php esc_html_e('Request Payload (JSON)', 'omnifywp-ecommerce'); ?></strong>
+									<button type="button" class="omnify-button omnify-button--secondary omnify-button--sm" id="copy-webhook-payload-btn" style="font-size:11px; padding:2px 8px;"><?php esc_html_e('Copy Payload', 'omnifywp-ecommerce'); ?></button>
+								</div>
+								<pre id="webhook-modal-req-payload" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:8px; font-size:12px; max-height:160px; overflow:auto; white-space:pre-wrap; word-break:break-all; margin:0; font-family:ui-monospace,SFMono-Regular,monospace;"></pre>
+							</div>
+							<div>
+								<strong style="display:block; font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;"><?php esc_html_e('Response Body', 'omnifywp-ecommerce'); ?></strong>
+								<pre id="webhook-modal-res-body" style="background:#f8fafc; border:1px solid #e2e8f0; color:#334155; padding:12px; border-radius:8px; font-size:12px; max-height:140px; overflow:auto; white-space:pre-wrap; word-break:break-all; margin:0; font-family:ui-monospace,SFMono-Regular,monospace;"></pre>
+							</div>
+						</div>
+					</div>
 				</div>
 			<?php endif; ?>
 

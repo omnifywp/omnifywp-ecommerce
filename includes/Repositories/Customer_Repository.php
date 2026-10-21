@@ -55,6 +55,11 @@ class Omnify_Customer_Repository {
 			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
 		}
 
+		if (isset($omnify_args['tax_exempt']) && '' !== $omnify_args['tax_exempt']) {
+			$omnify_where .= ' AND c.tax_exempt = %d';
+			$omnify_params[] = ! empty($omnify_args['tax_exempt']) ? 1 : 0;
+		}
+
 		$omnify_order_by = 'c.updated_at DESC';
 		$omnify_sort = sanitize_key((string) ($omnify_args['sort'] ?? 'created_desc'));
 		switch ($omnify_sort) {
@@ -181,6 +186,11 @@ class Omnify_Customer_Repository {
 			$omnify_params[] = sanitize_text_field((string) $omnify_args['date_to']);
 		}
 
+		if (isset($omnify_args['tax_exempt']) && '' !== $omnify_args['tax_exempt']) {
+			$omnify_where .= ' AND c.tax_exempt = %d';
+			$omnify_params[] = ! empty($omnify_args['tax_exempt']) ? 1 : 0;
+		}
+
 		$omnify_cust_table = $this->table('customers');
 		$omnify_sql = "SELECT COUNT(*) FROM {$omnify_cust_table} c WHERE {$omnify_where}";
 
@@ -239,8 +249,17 @@ class Omnify_Customer_Repository {
 			if ($omnify_wp_user && ! empty($omnify_wp_user->user_email)) {
 				$omnify_by_email = $this->find_by_email($omnify_wp_user->user_email);
 				if ($omnify_by_email && empty($omnify_by_email['user_id'])) {
-					$this->update((int) $omnify_by_email['id'], ['user_id' => $omnify_user_id]);
-					$omnify_by_email['user_id'] = $omnify_user_id;
+					// Never attach a user_id that is already owned by another customer row.
+					$omnify_conflict = \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare(
+						// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						"SELECT id FROM {$this->table('customers')} WHERE user_id = %d AND id != %d LIMIT 1",
+						$omnify_user_id,
+						(int) $omnify_by_email['id']
+					));
+					if (! $omnify_conflict) {
+						$this->update((int) $omnify_by_email['id'], ['user_id' => $omnify_user_id]);
+						$omnify_by_email['user_id'] = $omnify_user_id;
+					}
 					return $omnify_by_email;
 				}
 			}
@@ -565,10 +584,22 @@ class Omnify_Customer_Repository {
 	}
 
 	private function clean_customer_caches_by_id(int $omnify_id): void {
-		$omnify_customer = $this->find($omnify_id);
-		if ($omnify_customer) {
-			$omnify_user_id = isset($omnify_customer['user_id']) ? (int) $omnify_customer['user_id'] : 0;
-			$omnify_email = isset($omnify_customer['email']) ? $omnify_customer['email'] : '';
+		global $wpdb;
+
+		// Resolve only the cache-key columns directly to avoid a full hydration + stats query cycle.
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row(
+			$wpdb,
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT user_id, email FROM {$this->table('customers')} WHERE id = %d",
+				$omnify_id
+			),
+			ARRAY_A
+		);
+
+		if (is_array($omnify_row)) {
+			$omnify_user_id = isset($omnify_row['user_id']) ? (int) $omnify_row['user_id'] : 0;
+			$omnify_email = isset($omnify_row['email']) ? (string) $omnify_row['email'] : '';
 			wp_cache_delete('omnify_cust_ids_' . $omnify_user_id . '_' . md5($omnify_email), 'omnifywp-ecommerce');
 		}
 		$this->clear_stats_cache($omnify_id);
@@ -675,6 +706,6 @@ class Omnify_Customer_Repository {
 	}
 
 	private function now(): string {
-		return current_time('mysql');
+		return current_time('mysql', true);
 	}
 }

@@ -138,6 +138,12 @@ class Omnify_Product_File_Repository {
 		global $wpdb;
 
 		$omnify_upload = apply_filters('omnify_pre_create_product_file_data', $omnify_upload, $omnify_product_id, $omnify_version, $omnify_expires_at);
+		$omnify_file_name_check = (string) ($omnify_upload['name'] ?? basename((string) ($omnify_upload['file'] ?? '')));
+		$omnify_ext = strtolower(pathinfo($omnify_file_name_check, PATHINFO_EXTENSION));
+		$omnify_disallowed = ['php', 'phtml', 'php3', 'php4', 'php5', 'phps', 'cgi', 'exe', 'pl', 'py', 'sh', 'bat', 'cmd', 'js', 'jar', 'phar'];
+		if (in_array($omnify_ext, $omnify_disallowed, true)) {
+			return 0;
+		}
 		$omnify_now = $this->now();
 		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, 
 			$this->table(),

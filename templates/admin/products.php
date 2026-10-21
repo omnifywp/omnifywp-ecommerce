@@ -144,8 +144,8 @@ $omnify_settings = is_array($omnify_settings) ? $omnify_settings : [];
 $omnify_currency_symbol = function($omnify_currency) {
 	switch ($omnify_currency) {
 		case 'EUR': return '€';
-		case 'GBP': return 'Â£';
-		case 'JPY': return 'Â¥';
+		case 'GBP': return '£';
+		case 'JPY': return '¥';
 		case 'CAD': return 'C$';
 		case 'AUD': return 'A$';
 		default: return '$';
@@ -278,6 +278,31 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 
 	<?php include __DIR__ . '/partials/nav.php'; ?>
 	<?php if (empty($omnify_action)) { include __DIR__ . '/partials/product-subtabs.php'; } ?>
+	<?php
+	$omnify_p_msg = isset($_GET['message']) ? sanitize_key(wp_unslash($_GET['message'])) : '';
+	if (! empty($omnify_p_msg)) :
+		$omnify_is_err = in_array($omnify_p_msg, ['sku_duplicate', 'error'], true);
+		$omnify_p_text = match ($omnify_p_msg) {
+			'sku_duplicate'        => __('The specified SKU is already in use by another product. Please choose a unique SKU.', 'omnifywp-ecommerce'),
+			'bulk_mark_instock'    => __('Selected products have been marked as in stock.', 'omnifywp-ecommerce'),
+			'bulk_mark_outofstock' => __('Selected products have been marked as out of stock.', 'omnifywp-ecommerce'),
+			'bulk_trash'           => __('Selected products moved to trash.', 'omnifywp-ecommerce'),
+			'bulk_restore'         => __('Selected products restored from trash.', 'omnifywp-ecommerce'),
+			'bulk_delete'          => __('Selected products permanently deleted.', 'omnifywp-ecommerce'),
+			'deleted'              => __('Product permanently deleted.', 'omnifywp-ecommerce'),
+			'trashed'              => __('Product moved to trash.', 'omnifywp-ecommerce'),
+			'restored'             => __('Product restored from trash.', 'omnifywp-ecommerce'),
+			'saved'                => __('Product saved successfully.', 'omnifywp-ecommerce'),
+			'quick_saved'          => __('Product updated successfully.', 'omnifywp-ecommerce'),
+			default                => '',
+		};
+		if (! empty($omnify_p_text)) :
+	?>
+		<div class="omnify-alert omnify-alert--<?php echo $omnify_is_err ? 'danger' : 'success'; ?>" style="margin-bottom: 16px; padding: 12px 16px; border-radius: 6px; background: <?php echo $omnify_is_err ? '#fef2f2' : '#ecfdf5'; ?>; border: 1px solid <?php echo $omnify_is_err ? '#fecaca' : '#a7f3d0'; ?>; color: <?php echo $omnify_is_err ? '#991b1b' : '#065f46'; ?>; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+			<span class="dashicons dashicons-<?php echo $omnify_is_err ? 'warning' : 'yes-alt'; ?>" style="color: <?php echo $omnify_is_err ? '#ef4444' : '#10b981'; ?>;"></span>
+			<span><?php echo esc_html($omnify_p_text); ?></span>
+		</div>
+	<?php endif; endif; ?>
 	<?php if ($omnify_action === 'view' && $omnify_product) : ?>
 		<?php
 		$omnify_view_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
@@ -1007,31 +1032,40 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 								<span class="omnify-editor-required-note"><?php esc_html_e('* Required', 'omnifywp-ecommerce'); ?></span>
 							</div>
 							<div class="omnify-form-grid" style="display:flex; flex-direction:column; gap:16px; max-width:100%;">
-								<div class="omnify-pricing-row" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px; align-items:start; width:100%;">
-									<div class="omnify-form-group" style="margin:0;">
-										<label for="price" style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:6px; display:block;">
-											<?php esc_html_e('Regular Price', 'omnifywp-ecommerce'); ?> <span class="omnify-required">*</span>
-										</label>
-										<div class="omnify-input-addon-wrap" style="position:relative; display:flex; align-items:center;">
-											<span class="omnify-input-addon" style="position:absolute; left:12px; font-weight:600; font-size:14px; color:#64748b; pointer-events:none; z-index:1;"><?php echo esc_html($omnify_symbol); ?></span>
-											<input type="number" step="0.01" min="0" id="price" name="price" value="<?php echo esc_attr($omnify_product ? $omnify_product['price'] : '0.00'); ?>" required style="padding-left:28px !important; height:42px; width:100%; border-radius:6px; font-size:14px; font-weight:500;" />
+								<div class="omnify-pricing-row">
+									<div class="omnify-form-group">
+										<div class="omnify-field-header">
+											<label for="price">
+												<?php esc_html_e('Regular Price', 'omnifywp-ecommerce'); ?> <span class="omnify-required">*</span>
+											</label>
+										</div>
+										<div class="omnify-input-wrapper omnify-input-with-prefix">
+											<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
+											<input type="number" step="0.01" min="0" id="price" name="price" value="<?php echo esc_attr($omnify_product ? $omnify_product['price'] : '0.00'); ?>" required placeholder="0.00" />
 										</div>
 									</div>
-									<div class="omnify-form-group" style="margin:0;">
-										<label for="sale_price" style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:6px; display:block;">
-											<?php esc_html_e('Sale Price', 'omnifywp-ecommerce'); ?>
-										</label>
-										<div class="omnify-input-addon-wrap" style="position:relative; display:flex; align-items:center;">
-											<span class="omnify-input-addon" style="position:absolute; left:12px; font-weight:600; font-size:14px; color:#64748b; pointer-events:none; z-index:1;"><?php echo esc_html($omnify_symbol); ?></span>
-											<input type="number" step="0.01" min="0" id="sale_price" name="sale_price" value="<?php echo esc_attr($omnify_product && null !== $omnify_product['sale_price'] ? $omnify_product['sale_price'] : ''); ?>" placeholder="<?php esc_attr_e('Optional discount price', 'omnifywp-ecommerce'); ?>" style="padding-left:28px !important; height:42px; width:100%; border-radius:6px; font-size:14px; font-weight:500;" />
+									<div class="omnify-form-group">
+										<div class="omnify-field-header">
+											<label for="sale_price">
+												<?php esc_html_e('Sale Price', 'omnifywp-ecommerce'); ?>
+											</label>
+										</div>
+										<div class="omnify-input-wrapper omnify-input-with-prefix">
+											<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
+											<input type="number" step="0.01" min="0" id="sale_price" name="sale_price" value="<?php echo esc_attr($omnify_product && null !== $omnify_product['sale_price'] ? $omnify_product['sale_price'] : ''); ?>" placeholder="<?php esc_attr_e('Optional discount price', 'omnifywp-ecommerce'); ?>" />
 										</div>
 									</div>
-									<div class="omnify-form-group" style="margin:0;">
-										<label for="sku" style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:6px; display:block;">
-											<?php esc_html_e('SKU (Stock Keeping Unit)', 'omnifywp-ecommerce'); ?>
-										</label>
-										<input type="text" id="sku" name="sku" value="<?php echo esc_attr($omnify_product ? $omnify_product['sku'] : ''); ?>" placeholder="e.g. WAL-LTH-01" style="height:42px; width:100%; border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:13px;" />
-										<span class="help-text" style="font-size:12px; color:#64748b; margin-top:4px; display:block;"><?php esc_html_e('Unique inventory identifier used across orders and reporting.', 'omnifywp-ecommerce'); ?></span>
+									<div class="omnify-form-group">
+										<div class="omnify-field-header">
+											<label for="sku">
+												<?php esc_html_e('SKU (Stock Keeping Unit)', 'omnifywp-ecommerce'); ?>
+											</label>
+											<button type="button" class="button js-omnify-generate-sku" title="<?php esc_attr_e('Auto-generate unique SKU', 'omnifywp-ecommerce'); ?>">
+												<span class="dashicons dashicons-randomize" style="font-size:13px; width:13px; height:13px; line-height:1; vertical-align:middle; margin-right:3px;"></span><?php esc_html_e('Generate SKU', 'omnifywp-ecommerce'); ?>
+											</button>
+										</div>
+										<input type="text" id="sku" name="sku" value="<?php echo esc_attr($omnify_product ? $omnify_product['sku'] : ''); ?>" placeholder="e.g. WAL-LTH-01" style="height:44px; min-height:44px; max-height:44px; width:100%; border-radius:10px; border:1px solid #cbd5e1; box-sizing:border-box; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:13.5px;" />
+										<span class="help-text" style="font-size:12px; color:#64748b; margin-top:6px; display:block;"><?php esc_html_e('Unique inventory identifier used across orders and reporting.', 'omnifywp-ecommerce'); ?></span>
 									</div>
 								</div>
 								<div id="omnify-pricing-savings-badge" style="padding:8px 14px; border-radius:6px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:13px; font-weight:500; display:none; width:fit-content; align-items:center; gap:6px;">
@@ -1161,117 +1195,162 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 									$omnify_variations = $omnify_product && isset($omnify_product['variations']) ? $omnify_product['variations'] : [];
 									foreach ($omnify_variations as $omnify_v_idx => $omnify_v) :
 									?>
-										<div class="omnify-variation-row" data-id="<?php echo esc_attr((string) $omnify_v['id']); ?>" style="background:#ffffff; border:1px solid var(--omnify-gray-200); border-radius:6px; padding:16px; position:relative;">
+										<div class="omnify-variation-row" data-id="<?php echo esc_attr((string) $omnify_v['id']); ?>">
 											<input type="hidden" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][id]" value="<?php echo esc_attr((string) $omnify_v['id']); ?>" />
 											
-											<div class="omnify-variation-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--omnify-gray-100);">
-												<div class="omnify-variation-attributes" style="display:flex; gap:8px; flex-wrap:wrap; font-weight:600; font-size:12px;">
+											<!-- Variation Header: Attribute Badges + Delete Button -->
+											<div class="omnify-variation-header">
+												<div class="omnify-variation-attributes">
 													<?php foreach ($omnify_attrs as $omnify_attr) : 
 														$omnify_selected_val = $omnify_v['attributes'][$omnify_attr['name']] ?? '';
 													?>
-														<div class="omnify-variation-attribute-control" style="display:flex; align-items:center; gap:4px;">
-															<span><?php echo esc_html($omnify_attr['name']); ?>:</span>
+														<div class="omnify-variation-attribute-control">
+															<span class="omnify-attr-badge-label"><?php echo esc_html($omnify_attr['name']); ?></span>
 															<select name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][attributes][<?php echo esc_attr($omnify_attr['name']); ?>]" class="omnify-variation-attr-select" required>
 																<option value=""><?php esc_html_e('Select...', 'omnifywp-ecommerce'); ?></option>
-															<?php foreach ($omnify_attr['options'] as $omnify_opt) : ?>
+																<?php foreach ($omnify_attr['options'] as $omnify_opt) : ?>
 																	<option value="<?php echo esc_attr($omnify_opt); ?>" <?php selected($omnify_selected_val, $omnify_opt); ?>><?php echo esc_html($omnify_opt); ?></option>
 																<?php endforeach; ?>
 															</select>
 														</div>
 													<?php endforeach; ?>
 												</div>
-												<button type="button" class="omnify-button omnify-button--danger omnify-button--sm omnify-remove-variation" style="padding: 2px 8px !important; height: 24px !important; line-height: 22px !important; display: inline-flex; align-items: center; justify-content: center;"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px;"></span></button>
+												<button type="button" class="omnify-remove-variation" title="<?php esc_attr_e('Delete variation', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Delete variation', 'omnifywp-ecommerce'); ?>">
+													<span class="dashicons dashicons-trash"></span>
+												</button>
 											</div>
 
-											<div class="omnify-form-row omnify-form-row--thirds omnify-variation-grid-pricing">
-												<div class="omnify-form-group">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('SKU', 'omnifywp-ecommerce'); ?></label>
-													<input type="text" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][sku]" value="<?php echo esc_attr($omnify_v['sku']); ?>" placeholder="e.g. SIZE-S" />
-												</div>
-												<div class="omnify-form-group">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php
-													/* translators: %s: currency symbol. */
-													echo esc_html(sprintf(__('Regular Price (%s)', 'omnifywp-ecommerce'), $omnify_symbol));
-													?> *</label>
-													<input type="number" step="0.01" min="0" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][price]" value="<?php echo esc_attr(number_format($omnify_v['price'], 2, '.', '')); ?>" required />
-												</div>
-												<div class="omnify-form-group">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php
-													/* translators: %s: currency symbol. */
-													echo esc_html(sprintf(__('Sale Price (%s)', 'omnifywp-ecommerce'), $omnify_symbol));
-													?></label>
-													<input type="number" step="0.01" min="0" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][sale_price]" value="<?php echo esc_attr($omnify_v['sale_price'] !== null ? number_format($omnify_v['sale_price'], 2, '.', '') : ''); ?>" />
-												</div>
-											</div>
-
-											<div class="omnify-form-row omnify-variation-grid-stock" style="margin-top:10px; align-items: flex-end;">
-												<div class="omnify-form-group" style="margin-bottom: 0;">
-													<label class="omnify-toggle">
-														<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][manage_stock]" class="omnify-var-manage-stock" value="1" <?php checked($omnify_v['manage_stock']); ?> />
-														<span class="omnify-toggle__label" style="font-size:11px;"><?php esc_html_e('Manage stock level', 'omnifywp-ecommerce'); ?></span>
-													</label>
-												</div>
-												<div class="omnify-form-group omnify-var-stock-qty-group" style="margin-bottom: 0; <?php echo ! empty($omnify_v['manage_stock']) ? '' : 'display:none;'; ?>">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Stock Qty', 'omnifywp-ecommerce'); ?></label>
-													<input type="number" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][stock_qty]" value="<?php echo esc_attr($omnify_v['stock_qty'] !== null ? $omnify_v['stock_qty'] : '0'); ?>" style="padding: 4px 8px !important; height: 28px !important;" />
-												</div>
-												<div class="omnify-form-group omnify-var-stock-status-group" style="margin-bottom: 0; <?php echo ! empty($omnify_v['manage_stock']) ? 'display:none;' : ''; ?>">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Stock Status', 'omnifywp-ecommerce'); ?></label>
-													<select name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][stock_status]" style="padding: 4px 8px !important; height: 28px !important;">
-														<option value="instock" <?php selected($omnify_v['stock_status'], 'instock'); ?>><?php esc_html_e('In Stock', 'omnifywp-ecommerce'); ?></option>
-														<option value="outofstock" <?php selected($omnify_v['stock_status'], 'outofstock'); ?>><?php esc_html_e('Out of Stock', 'omnifywp-ecommerce'); ?></option>
-														<option value="onbackorder" <?php selected($omnify_v['stock_status'], 'onbackorder'); ?>><?php esc_html_e('On Backorder', 'omnifywp-ecommerce'); ?></option>
-													</select>
-												</div>
-											</div>
-
-											<div class="omnify-form-row omnify-variation-grid-preorder" style="margin-top:10px; align-items:flex-end;">
-												<div class="omnify-form-group" style="margin-bottom:0;">
-													<label class="omnify-toggle">
-														<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][allow_backorders]" value="1" <?php checked(! empty($omnify_v['allow_backorders'])); ?> />
-														<span class="omnify-toggle__label" style="font-size:11px;"><?php esc_html_e('Allow backorders', 'omnifywp-ecommerce'); ?></span>
-													</label>
-												</div>
-												<div class="omnify-form-group" style="margin-bottom:0;">
-													<label class="omnify-toggle">
-														<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_enabled]" class="omnify-var-preorder-toggle" value="1" <?php checked(! empty($omnify_v['preorder_enabled'])); ?> />
-														<span class="omnify-toggle__label" style="font-size:11px;"><?php esc_html_e('Preorder', 'omnifywp-ecommerce'); ?></span>
-													</label>
-												</div>
-												<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; <?php echo ! empty($omnify_v['preorder_enabled']) ? '' : 'display:none;'; ?>">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Release Date', 'omnifywp-ecommerce'); ?></label>
-													<input type="date" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_release_date]" value="<?php echo esc_attr($omnify_v['preorder_release_date'] ?? ''); ?>" style="padding: 4px 8px !important; height: 28px !important;" />
-												</div>
-												<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; <?php echo ! empty($omnify_v['preorder_enabled']) ? '' : 'display:none;'; ?>">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Limit', 'omnifywp-ecommerce'); ?></label>
-													<input type="number" min="1" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_limit]" value="<?php echo esc_attr($omnify_v['preorder_limit'] ?? ''); ?>" style="padding: 4px 8px !important; height: 28px !important;" />
-												</div>
-												<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; <?php echo ! empty($omnify_v['preorder_enabled']) ? '' : 'display:none;'; ?>">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Message', 'omnifywp-ecommerce'); ?></label>
-													<input type="text" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_message]" value="<?php echo esc_attr($omnify_v['preorder_message'] ?? ''); ?>" placeholder="<?php esc_attr_e('Ships when available', 'omnifywp-ecommerce'); ?>" style="padding: 4px 8px !important; height: 28px !important;" />
-												</div>
-											</div>
-
-											<!-- Variation Image + Description -->
-											<div class="omnify-form-row omnify-variation-grid-media" style="margin-top:10px; gap:12px; align-items:flex-start;">
-												<div class="omnify-form-group" style="margin-bottom:0; flex:0 0 auto; width:80px;">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Image', 'omnifywp-ecommerce'); ?></label>
-													<input type="hidden" class="omnify-var-thumbnail-id-input" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][thumbnail_id]" value="<?php echo esc_attr($omnify_v['thumbnail_id'] ?? ''); ?>" />
-													<div class="omnify-var-thumbnail-preview" style="margin-bottom:4px;">
-														<?php if (!empty($omnify_v['thumbnail_url'])) : ?>
-															<img src="<?php echo esc_url($omnify_v['thumbnail_url']); ?>" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #d1d5db;" />
-														<?php else : ?>
-															<span style="font-size:11px;color:#9ca3af;">No image</span>
-														<?php endif; ?>
+											<!-- Variation Body -->
+											<div class="omnify-variation-body">
+												<!-- Pricing Grid: SKU | Regular Price (€ prefix) | Sale Price (€ prefix) -->
+												<div class="omnify-form-row omnify-variation-grid-pricing">
+													<div class="omnify-form-group">
+														<label><?php esc_html_e('SKU', 'omnifywp-ecommerce'); ?></label>
+														<input type="text" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][sku]" value="<?php echo esc_attr($omnify_v['sku']); ?>" placeholder="e.g. SIZE-S" class="omnify-var-sku-input" />
 													</div>
-													<div style="display:flex;gap:4px;flex-direction:column;">
-														<button type="button" class="omnify-button omnify-button--secondary omnify-var-pick-image-btn" style="padding:2px 6px !important;font-size:10px;height:auto!important;"><?php esc_html_e('Select', 'omnifywp-ecommerce'); ?></button>
-														<button type="button" class="omnify-button omnify-button--danger omnify-var-remove-image-btn" style="padding:2px 6px !important;font-size:10px;height:auto!important;"><?php esc_html_e('Remove', 'omnifywp-ecommerce'); ?></button>
+													<div class="omnify-form-group">
+														<label><?php
+														/* translators: %s: currency symbol. */
+														echo esc_html(sprintf(__('Regular Price (%s)', 'omnifywp-ecommerce'), $omnify_symbol));
+														?> <span class="omnify-required">*</span></label>
+														<div class="omnify-input-wrapper omnify-input-with-prefix">
+															<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
+															<input type="number" step="0.01" min="0" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][price]" value="<?php echo esc_attr(number_format($omnify_v['price'], 2, '.', '')); ?>" required placeholder="0.00" />
+														</div>
+													</div>
+													<div class="omnify-form-group">
+														<label><?php
+														/* translators: %s: currency symbol. */
+														echo esc_html(sprintf(__('Sale Price (%s)', 'omnifywp-ecommerce'), $omnify_symbol));
+														?></label>
+														<div class="omnify-input-wrapper omnify-input-with-prefix">
+															<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
+															<input type="number" step="0.01" min="0" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][sale_price]" value="<?php echo esc_attr($omnify_v['sale_price'] !== null ? number_format($omnify_v['sale_price'], 2, '.', '') : ''); ?>" placeholder="<?php esc_attr_e('Optional discount', 'omnifywp-ecommerce'); ?>" />
+														</div>
 													</div>
 												</div>
-												<div class="omnify-form-group" style="margin-bottom:0; flex:1;">
-													<label style="font-size:11px; font-weight:600; margin-bottom:4px;"><?php esc_html_e('Variation Note', 'omnifywp-ecommerce'); ?></label>
-													<textarea name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][description]" class="omnify-var-description-textarea" rows="2" placeholder="e.g. Ships from Japan, limited edition" style="width:100%;font-size:12px;resize:vertical;min-height:54px;"><?php echo esc_textarea($omnify_v['description'] ?? ''); ?></textarea>
+
+												<!-- Stock Grid: Stock Tracking Toggle | Stock Qty | Stock Status -->
+												<div class="omnify-form-row omnify-variation-grid-stock">
+													<div class="omnify-form-group">
+														<label><?php esc_html_e('Inventory Tracking', 'omnifywp-ecommerce'); ?></label>
+														<div class="omnify-toggle-box">
+															<label class="omnify-toggle">
+																<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][manage_stock]" class="omnify-var-manage-stock" value="1" <?php checked($omnify_v['manage_stock']); ?> />
+																<span class="omnify-toggle__label"><?php esc_html_e('Manage stock level', 'omnifywp-ecommerce'); ?></span>
+															</label>
+														</div>
+													</div>
+													<div class="omnify-form-group omnify-var-stock-qty-group" style="<?php echo ! empty($omnify_v['manage_stock']) ? '' : 'display:none;'; ?>">
+														<label><?php esc_html_e('Stock Qty', 'omnifywp-ecommerce'); ?></label>
+														<input type="number" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][stock_qty]" value="<?php echo esc_attr($omnify_v['stock_qty'] !== null ? $omnify_v['stock_qty'] : '0'); ?>" placeholder="0" />
+													</div>
+													<div class="omnify-form-group omnify-var-stock-status-group" style="<?php echo ! empty($omnify_v['manage_stock']) ? 'display:none;' : ''; ?>">
+														<label><?php esc_html_e('Stock Status', 'omnifywp-ecommerce'); ?></label>
+														<select name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][stock_status]">
+															<option value="instock" <?php selected($omnify_v['stock_status'], 'instock'); ?>><?php esc_html_e('In Stock', 'omnifywp-ecommerce'); ?></option>
+															<option value="outofstock" <?php selected($omnify_v['stock_status'], 'outofstock'); ?>><?php esc_html_e('Out of Stock', 'omnifywp-ecommerce'); ?></option>
+															<option value="onbackorder" <?php selected($omnify_v['stock_status'], 'onbackorder'); ?>><?php esc_html_e('On Backorder', 'omnifywp-ecommerce'); ?></option>
+														</select>
+													</div>
+												</div>
+
+												<!-- Availability & Fulfillment Panel -->
+												<div class="omnify-var-availability-panel">
+													<div class="omnify-var-availability-toggles">
+														<div class="omnify-var-toggle-item">
+															<label class="omnify-toggle">
+																<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][allow_backorders]" value="1" <?php checked(! empty($omnify_v['allow_backorders'])); ?> />
+																<span class="omnify-toggle__label"><?php esc_html_e('Allow backorders', 'omnifywp-ecommerce'); ?></span>
+															</label>
+														</div>
+														<div class="omnify-var-toggle-item">
+															<label class="omnify-toggle">
+																<input type="checkbox" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_enabled]" class="omnify-var-preorder-toggle" value="1" <?php checked(! empty($omnify_v['preorder_enabled'])); ?> />
+																<span class="omnify-toggle__label"><?php esc_html_e('Preorder', 'omnifywp-ecommerce'); ?></span>
+															</label>
+														</div>
+													</div>
+													<div class="omnify-var-preorder-fields-grid" style="<?php echo ! empty($omnify_v['preorder_enabled']) ? 'display:grid;' : 'display:none;'; ?>">
+														<div class="omnify-form-group omnify-var-preorder-field">
+															<label><?php esc_html_e('Release Date', 'omnifywp-ecommerce'); ?></label>
+															<input type="date" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_release_date]" value="<?php echo esc_attr($omnify_v['preorder_release_date'] ?? ''); ?>" />
+														</div>
+														<div class="omnify-form-group omnify-var-preorder-field">
+															<label><?php esc_html_e('Preorder Limit', 'omnifywp-ecommerce'); ?></label>
+															<input type="number" min="1" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_limit]" value="<?php echo esc_attr($omnify_v['preorder_limit'] ?? ''); ?>" placeholder="<?php esc_attr_e('Optional limit', 'omnifywp-ecommerce'); ?>" />
+														</div>
+														<div class="omnify-form-group omnify-var-preorder-field">
+															<label><?php esc_html_e('Preorder Notice Message', 'omnifywp-ecommerce'); ?></label>
+															<input type="text" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][preorder_message]" value="<?php echo esc_attr($omnify_v['preorder_message'] ?? ''); ?>" placeholder="<?php esc_attr_e('Ships when available', 'omnifywp-ecommerce'); ?>" />
+														</div>
+													</div>
+												</div>
+
+												<!-- Estimated Delivery -->
+												<div class="omnify-form-row omnify-variation-grid-delivery">
+													<div class="omnify-form-group">
+														<label><?php esc_html_e('Estimated Delivery', 'omnifywp-ecommerce'); ?></label>
+														<div class="omnify-input-wrapper omnify-input-with-prefix">
+															<span class="omnify-input-prefix">
+																<span class="dashicons dashicons-car" style="color:#059669; font-size:16px; width:16px; height:16px; line-height:1;"></span>
+															</span>
+															<input type="text" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][estimated_delivery]" value="<?php echo esc_attr($omnify_v['estimated_delivery'] ?? ''); ?>" placeholder="<?php esc_attr_e('e.g. 3-5 business days, Ships within 24 hours', 'omnifywp-ecommerce'); ?>" />
+														</div>
+													</div>
+												</div>
+
+												<!-- Variation Image + Note -->
+												<div class="omnify-form-row omnify-variation-grid-media">
+													<div class="omnify-var-image-col">
+														<label><?php esc_html_e('Image', 'omnifywp-ecommerce'); ?></label>
+														<input type="hidden" class="omnify-var-thumbnail-id-input" name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][thumbnail_id]" value="<?php echo esc_attr($omnify_v['thumbnail_id'] ?? ''); ?>" />
+														<div class="omnify-var-thumbnail-preview">
+															<?php if (!empty($omnify_v['thumbnail_url'])) : ?>
+																<img src="<?php echo esc_url($omnify_v['thumbnail_url']); ?>" alt="" />
+															<?php else : ?>
+																<div class="omnify-var-no-image">
+																	<span class="dashicons dashicons-format-image"></span>
+																	<span><?php esc_html_e('No image', 'omnifywp-ecommerce'); ?></span>
+																</div>
+															<?php endif; ?>
+														</div>
+														<div class="omnify-var-image-actions">
+															<button type="button" class="omnify-var-action-btn omnify-var-pick-image-btn" title="<?php esc_attr_e('Select or upload image', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Select or upload image', 'omnifywp-ecommerce'); ?>">
+																<span class="dashicons dashicons-upload"></span>
+															</button>
+															<button type="button" class="omnify-var-action-btn omnify-var-action-btn--danger omnify-var-remove-image-btn" title="<?php esc_attr_e('Remove image', 'omnifywp-ecommerce'); ?>" aria-label="<?php esc_attr_e('Remove image', 'omnifywp-ecommerce'); ?>" style="<?php echo !empty($omnify_v['thumbnail_url']) ? '' : 'display:none;'; ?>">
+																<span class="dashicons dashicons-trash"></span>
+															</button>
+														</div>
+													</div>
+													<div class="omnify-var-note-col">
+														<div class="omnify-field-header">
+															<label><?php esc_html_e('Variation Note', 'omnifywp-ecommerce'); ?></label>
+															<span class="omnify-field-subtext"><?php esc_html_e('(Customer-facing note shown when selected)', 'omnifywp-ecommerce'); ?></span>
+														</div>
+														<textarea name="variations[<?php echo esc_attr( $omnify_v_idx ); ?>][description]" class="omnify-var-description-textarea" rows="3" placeholder="<?php esc_attr_e('e.g. Ships from overseas warehouse • Limited edition batch', 'omnifywp-ecommerce'); ?>"><?php echo esc_textarea($omnify_v['description'] ?? ''); ?></textarea>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -1363,6 +1442,16 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 											</label>
 										</div>
 										<span class="help-text" style="font-size:12px; color:#64748b; margin-top:4px; display:block;"><?php esc_html_e('Customers can continue to place orders when stock hits 0.', 'omnifywp-ecommerce'); ?></span>
+									</div>
+								</div>
+
+								<div class="omnify-form-row omnify-stock-managed-row" id="omnify-stock-threshold-row" style="margin-bottom:20px; <?php echo ($omnify_product && $omnify_product['manage_stock']) ? '' : 'display: none;'; ?>">
+									<div class="omnify-form-group" style="margin:0; max-width:400px;">
+										<label for="low_stock_threshold" style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:6px; display:block;">
+											<?php esc_html_e('Low Stock Notification Threshold', 'omnifywp-ecommerce'); ?>
+										</label>
+										<input type="number" min="0" id="low_stock_threshold" name="low_stock_threshold" value="<?php echo esc_attr($omnify_product && isset($omnify_product['low_stock_threshold']) && null !== $omnify_product['low_stock_threshold'] ? (string) $omnify_product['low_stock_threshold'] : ''); ?>" placeholder="<?php esc_attr_e('Store default', 'omnifywp-ecommerce'); ?>" style="height:42px; width:100%; border-radius:6px; font-size:14px; font-weight:500;" />
+										<span class="help-text" style="font-size:12px; color:#64748b; margin-top:4px; display:block;"><?php esc_html_e('Send alert when stock reaches this quantity. Leave empty to use store default.', 'omnifywp-ecommerce'); ?></span>
 									</div>
 								</div>
 
@@ -1483,6 +1572,21 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 									<span class="dashicons dashicons-arrow-down-alt2" style="font-size:14px; width:14px; height:14px; line-height:1; color:var(--omnify-gray-400);"></span>
 								</summary>
 								<div style="margin-top:16px; border-top:1px solid var(--omnify-gray-200); padding-top:16px;">
+									<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px;">
+										<div style="display:flex; align-items:center; gap:8px;">
+											<select id="omnify-inv-log-reason-filter" style="height:30px; font-size:12px; border-radius:6px;">
+												<option value=""><?php esc_html_e('All Reasons', 'omnifywp-ecommerce'); ?></option>
+												<option value="order_placed"><?php esc_html_e('Order Placed', 'omnifywp-ecommerce'); ?></option>
+												<option value="manual"><?php esc_html_e('Manual Update', 'omnifywp-ecommerce'); ?></option>
+												<option value="cancelled"><?php esc_html_e('Order Cancelled', 'omnifywp-ecommerce'); ?></option>
+												<option value="refunded"><?php esc_html_e('Refund Restocked', 'omnifywp-ecommerce'); ?></option>
+											</select>
+										</div>
+										<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_export_inventory_logs&product_id=' . (int) $omnify_product['id']), 'omnify_export_inventory_logs')); ?>" class="omnify-button omnify-button--secondary omnify-button--sm" style="height:30px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+											<span class="dashicons dashicons-download" style="font-size:14px; width:14px; height:14px; line-height:1; vertical-align:middle;"></span>
+											<?php esc_html_e('Export CSV', 'omnifywp-ecommerce'); ?>
+										</a>
+									</div>
 									<?php if (empty($omnify_inventory_logs)) : ?>
 										<p style="color: var(--shopify-gray-600); font-size: 13px; margin: 0; padding: 12px 0;"><?php esc_html_e('No inventory changes recorded yet.', 'omnifywp-ecommerce'); ?></p>
 									<?php else : ?>
@@ -1518,7 +1622,7 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 																: sprintf(__('Var (%s)', 'omnifywp-ecommerce'), implode(', ', $omnify_attr_desc));
 														}
 													?>
-														<tr style="border-bottom: 1px solid var(--omnify-gray-100);">
+														<tr class="omnify-inv-log-row" data-reason="<?php echo esc_attr(strtolower($omnify_log['reason'])); ?>" style="border-bottom: 1px solid var(--omnify-gray-100);">
 															<td style="padding: 10px 0; font-size:12px;"><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($omnify_log['created_at']))); ?></td>
 															<td><strong style="font-size:12.5px;"><?php echo esc_html($omnify_item_desc); ?></strong></td>
 															<td style="text-align: center; <?php echo esc_attr($omnify_change_class); ?>"><?php echo esc_html($omnify_change_text); ?></td>
@@ -2013,6 +2117,7 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 		$omnify_filter_search    = isset($_GET['search']) ? sanitize_text_field(wp_unslash($_GET['search'])) : '';
 		$omnify_filter_category  = isset($_GET['category']) ? sanitize_text_field(wp_unslash($_GET['category'])) : '';
 		$omnify_filter_type      = isset($_GET['type']) ? sanitize_key(wp_unslash($_GET['type'])) : '';
+		$omnify_filter_stock     = isset($_GET['stock_status']) ? sanitize_key(wp_unslash($_GET['stock_status'])) : '';
 		$omnify_filter_status    = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['status'])) : '';
 		$omnify_filter_date_from = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
 		$omnify_filter_date_to   = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
@@ -2044,6 +2149,15 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 					<option value="physical" <?php selected($omnify_filter_type, 'physical'); ?>><?php esc_html_e('Physical', 'omnifywp-ecommerce'); ?></option>
 					<option value="variable" <?php selected($omnify_filter_type, 'variable'); ?>><?php esc_html_e('Variable', 'omnifywp-ecommerce'); ?></option>
 					<option value="bundle" <?php selected($omnify_filter_type, 'bundle'); ?>><?php esc_html_e('Bundle', 'omnifywp-ecommerce'); ?></option>
+				</select>
+			</div>
+			<div class="omnify-filter-group">
+				<label for="stock_status"><?php esc_html_e('Stock Status', 'omnifywp-ecommerce'); ?></label>
+				<select id="stock_status" name="stock_status">
+					<option value=""><?php esc_html_e('All Stock Statuses', 'omnifywp-ecommerce'); ?></option>
+					<option value="instock" <?php selected($omnify_filter_stock, 'instock'); ?>><?php esc_html_e('In stock', 'omnifywp-ecommerce'); ?></option>
+					<option value="outofstock" <?php selected($omnify_filter_stock, 'outofstock'); ?>><?php esc_html_e('Out of stock', 'omnifywp-ecommerce'); ?></option>
+					<option value="onbackorder" <?php selected($omnify_filter_stock, 'onbackorder'); ?>><?php esc_html_e('On backorder', 'omnifywp-ecommerce'); ?></option>
 				</select>
 			</div>
 			<div class="omnify-filter-group">
@@ -2169,17 +2283,19 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 					<div class="omnify-table-toolbar">
 						<div class="left">
 							<input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" style="margin-right:8px;" />
-							<span class="selected-count">0 selected</span>
+							<span class="selected-count"><?php esc_html_e('0 selected', 'omnifywp-ecommerce'); ?></span>
 							<div class="omnify-bulk-actions-wrapper" style="display: none; align-items: center; gap: 8px; margin-left: 16px;">
 								<select name="bulk_action">
-									<option value="">Bulk actions</option>
-									<option value="trash">Move to Trash</option>
-									<option value="restore">Restore</option>
+									<option value=""><?php esc_html_e('Bulk actions', 'omnifywp-ecommerce'); ?></option>
+									<option value="trash"><?php esc_html_e('Move to Trash', 'omnifywp-ecommerce'); ?></option>
+									<option value="restore"><?php esc_html_e('Restore', 'omnifywp-ecommerce'); ?></option>
+									<option value="mark_instock"><?php esc_html_e('Mark as In Stock', 'omnifywp-ecommerce'); ?></option>
+									<option value="mark_outofstock"><?php esc_html_e('Mark as Out of Stock', 'omnifywp-ecommerce'); ?></option>
 									<?php if ('trash' === $omnify_status) : ?>
 										<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
 									<?php endif; ?>
 								</select>
-								<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm">Apply</button>
+								<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Apply', 'omnifywp-ecommerce'); ?></button>
 							</div>
 						</div>
 						<div class="right">
@@ -2200,6 +2316,7 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 								<th><?php esc_html_e('Product Name', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Price', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
+								<th><?php esc_html_e('Stock', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Categories', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Tags', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Files', 'omnifywp-ecommerce'); ?></th>
@@ -2274,6 +2391,18 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 										</span>
 									</td>
 									<td>
+										<?php if (! empty($omnify_prod['manage_stock'])) : ?>
+											<div class="omnify-inline-stock-wrap" style="display: flex; align-items: center; gap: 4px;">
+												<input type="number" class="omnify-input omnify-inline-stock-input" data-product-id="<?php echo esc_attr($omnify_prod['id']); ?>" data-initial="<?php echo esc_attr((string) ($omnify_prod['stock_qty'] ?? 0)); ?>" value="<?php echo esc_attr((string) ($omnify_prod['stock_qty'] ?? 0)); ?>" style="width: 64px; padding: 2px 6px; height: 26px; font-size: 12px; font-weight: 600; text-align: center; border-radius: 4px; border: 1px solid #cbd5e1;" />
+												<button type="button" class="omnify-button omnify-button--secondary omnify-button--xs omnify-inline-stock-save" data-product-id="<?php echo esc_attr($omnify_prod['id']); ?>" title="<?php esc_attr_e('Save Stock', 'omnifywp-ecommerce'); ?>" style="padding: 2px 6px; height: 26px; line-height: 20px; font-size: 11px;">
+													<span class="dashicons dashicons-yes" style="font-size: 12px; width: 12px; height: 12px; line-height: 1;"></span>
+												</button>
+											</div>
+										<?php else : ?>
+											<span class="omnify-badge omnify-badge--neutral" style="font-size: 11px;"><?php esc_html_e('Unlimited', 'omnifywp-ecommerce'); ?></span>
+										<?php endif; ?>
+									</td>
+									<td>
 										<?php if (empty($omnify_prod['categories'])) : ?>
 											<span class="omnify-muted-dash">&mdash;</span>
 										<?php else : ?>
@@ -2322,8 +2451,11 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-products&action=edit&id=' . $omnify_prod['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Edit Product', 'omnifywp-ecommerce'); ?>">
 												<span class="dashicons dashicons-edit" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
 											</a>
-											<a href="#" class="omnify-icon-btn omnify-quick-edit" data-id="<?php echo esc_attr($omnify_prod['id']); ?>" data-name="<?php echo esc_attr($omnify_prod['name']); ?>" data-price="<?php echo esc_attr($omnify_prod['price']); ?>" data-sale-price="<?php echo esc_attr($omnify_prod['sale_price'] ?? ''); ?>" data-status="<?php echo esc_attr($omnify_prod['status']); ?>" data-sku="<?php echo esc_attr($omnify_prod['sku'] ?? ''); ?>" title="<?php esc_attr_e('Quick Edit', 'omnifywp-ecommerce'); ?>">
+											<a href="#" class="omnify-icon-btn omnify-quick-edit" data-id="<?php echo esc_attr($omnify_prod['id']); ?>" data-name="<?php echo esc_attr($omnify_prod['name']); ?>" data-price="<?php echo esc_attr($omnify_prod['price']); ?>" data-sale-price="<?php echo esc_attr($omnify_prod['sale_price'] ?? ''); ?>" data-status="<?php echo esc_attr($omnify_prod['status']); ?>" data-sku="<?php echo esc_attr($omnify_prod['sku'] ?? ''); ?>" data-stock-qty="<?php echo esc_attr((string) ($omnify_prod['stock_qty'] ?? 0)); ?>" data-manage-stock="<?php echo esc_attr((string) ($omnify_prod['manage_stock'] ?? 0)); ?>" title="<?php esc_attr_e('Quick Edit', 'omnifywp-ecommerce'); ?>">
 												<span class="dashicons dashicons-welcome-write-blog" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
+											</a>
+											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_duplicate_product&id=' . $omnify_prod['id']), 'omnify_duplicate_product_' . $omnify_prod['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Duplicate / Clone Product', 'omnifywp-ecommerce'); ?>">
+												<span class="dashicons dashicons-admin-page" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle;"></span>
 											</a>
 											<?php $omnify_is_trashed = !empty($omnify_prod['deleted_at']); ?>
 											<?php if ($omnify_is_trashed): ?>
@@ -2416,6 +2548,20 @@ $omnify_global_attributes = is_array($omnify_global_attributes) ? $omnify_global
 					<div class="omnify-form-group">
 						<label for="qe-sku"><?php esc_html_e('SKU', 'omnifywp-ecommerce'); ?></label>
 						<input type="text" id="qe-sku" name="sku" />
+					</div>
+				</div>
+
+				<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+					<div class="omnify-form-group">
+						<label for="qe-stock-qty"><?php esc_html_e('Stock Quantity', 'omnifywp-ecommerce'); ?></label>
+						<input type="number" step="1" id="qe-stock-qty" name="stock_qty" min="0" />
+					</div>
+					<div class="omnify-form-group">
+						<label for="qe-manage-stock"><?php esc_html_e('Manage Stock', 'omnifywp-ecommerce'); ?></label>
+						<select id="qe-manage-stock" name="manage_stock">
+							<option value="1"><?php esc_html_e('Yes, track inventory', 'omnifywp-ecommerce'); ?></option>
+							<option value="0"><?php esc_html_e('No, unlimited', 'omnifywp-ecommerce'); ?></option>
+						</select>
 					</div>
 				</div>
 

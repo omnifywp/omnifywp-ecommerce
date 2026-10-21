@@ -215,6 +215,7 @@ class Omnify_Payment_Gateway_Service {
 
 	public function refund_wechat_payment(string $omnify_out_trade_no, float $omnify_amount, string $omnify_currency): string|WP_Error {
 		$omnify_settings = $this->omnify_settings->all();
+		$omnify_mode = 'live' === ($omnify_settings['wechat_mode'] ?? 'sandbox') ? 'live' : 'sandbox';
 		$omnify_mch_id = trim((string) ($omnify_settings['wechat_mch_id'] ?? ($omnify_settings['wechat_mchid'] ?? '')));
 		$omnify_api_key = trim((string) ($omnify_settings['wechat_api_v3_key'] ?? ($omnify_settings['wechat_key'] ?? '')));
 
@@ -240,11 +241,17 @@ class Omnify_Payment_Gateway_Service {
 			$omnify_settings
 		);
 		if (is_wp_error($omnify_txn)) {
+			if ('live' === $omnify_mode) {
+				return $omnify_txn;
+			}
 			return 'wechat_ref_test_' . uniqid();
 		}
 
 		$omnify_total_fen = (int) ($omnify_txn['amount']['total'] ?? 0);
 		if ($omnify_total_fen <= 0) {
+			if ('live' === $omnify_mode) {
+				return new WP_Error('omnify_wechat_refund_lookup_failed', __('WeChat Pay could not resolve the original transaction total for this refund.', 'omnifywp-ecommerce'));
+			}
 			return 'wechat_ref_test_' . uniqid();
 		}
 
@@ -271,6 +278,9 @@ class Omnify_Payment_Gateway_Service {
 		], $omnify_settings);
 
 		if (is_wp_error($omnify_response)) {
+			if ('live' === $omnify_mode) {
+				return $omnify_response;
+			}
 			return 'wechat_ref_test_' . uniqid();
 		}
 
@@ -314,9 +324,9 @@ class Omnify_Payment_Gateway_Service {
 			'format'         => 'json',
 		];
 
-		$omnify_url = add_query_arg($omnify_params, $omnify_base . '/validator/api/merchantTransIDvalidationAPI.php');
-		$omnify_response = wp_remote_get($omnify_url, [
+		$omnify_response = wp_remote_post($omnify_base . '/validator/api/merchantTransIDvalidationAPI.php', [
 			'timeout' => 30,
+			'body'    => $omnify_params,
 		]);
 
 		if (is_wp_error($omnify_response)) {

@@ -97,7 +97,7 @@ const mockups = {
         <div class="mockup-bar">
           <div>
             <h3 style="margin:0; font-size:1.15rem; font-weight:700;">Good morning, Administrator</h3>
-            <span style="font-size:0.8rem; color:var(--text-dim);">Live Store Health: 18 SQL Tables Indexed • Last 30 Days</span>
+            <span style="font-size:0.8rem; color:var(--text-dim);">Live Store Health: 27 SQL Tables Indexed • Last 30 Days</span>
           </div>
           <div class="mockup-pills">
             <span class="mockup-pill active">Last 30 Days</span>
@@ -1658,7 +1658,7 @@ const mockups = {
     'Figure 15.3: Interactive cart page featuring real-time scarcity countdown timer, shipping threshold meter, and instant coupon calculation.'
   ),
 
-  // Figure 15.4: Conversion-Optimized Checkout with Express Pay & 10+ Gateways
+  // Figure 15.4: Conversion-Optimized Checkout with Express Pay & 12 Gateways
   storefront_checkout: wrapWindow(
     'https://omnifywp.com/checkout/',
     'Conversion-Optimized Checkout',
@@ -1698,7 +1698,7 @@ const mockups = {
 
             <h4 style="margin:20px 0 10px; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
               <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#0f766e; color:#fff; font-size:0.75rem; font-weight:700;">2</span>
-              Payment Method (10+ Gateways Integrated)
+              Payment Method (12 Gateways Integrated)
             </h4>
             
             <!-- Gateway Cards Selector -->
@@ -1777,7 +1777,7 @@ const mockups = {
         </div>
       </div>
     `,
-    'Figure 15.4: Conversion-optimized checkout with Express 1-Click Pay, 10+ payment gateways, and VIP priority order bump.'
+    'Figure 15.4: Conversion-optimized checkout with Express 1-Click Pay, 12 payment gateways, and VIP priority order bump.'
   ),
 
   // Figure 15.5: Customer Portal & Download Locker
@@ -1840,8 +1840,8 @@ const mockups = {
           </div>
           <div class="table-row" style="padding:14px 18px;">
             <div style="flex:2.5;">
-              <div style="font-weight:700;color:#0f172a;">omnistudio-pro-v1.4.2.zip</div>
-              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">8.4 MB &bull; SHA-256 HMAC Protected &bull; Version 1.4.2</div>
+              <div style="font-weight:700;color:#0f172a;">omnistudio-pro-v1.4.3.zip</div>
+              <div style="font-size:0.75rem; color:var(--text-dim);margin-top:2px;">8.4 MB &bull; SHA-256 HMAC Protected &bull; Version 1.4.3</div>
             </div>
             <div style="flex:1.2;" class="font-mono" style="color:#0f766e;font-weight:600;">#OMN-1042</div>
             <div style="flex:1.5;"><span class="badge success" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">3 Remaining (2/5 used)</span></div>

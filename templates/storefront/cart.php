@@ -41,7 +41,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 		<?php do_action('omnify_before_cart'); ?>
 		
 		<!-- Steps Nav (Minimal Modern) -->
-		<div class="omnify-cart-steps-minimal" aria-label="<?php esc_attr_e('Checkout progress', 'omnifywp-ecommerce'); ?>">
+		<div class="omnify-cart-steps-minimal" aria-label="<?php esc_attr_e('Checkout progress', 'omnifywp-ecommerce'); ?>" style="<?php echo ( ! isset( $omnify_show_steps ) || $omnify_show_steps ) ? '' : 'display:none;'; ?>">
 			<span class="omnify-step-item is-active">
 				<span class="omnify-step-number">1</span>
 				<span class="omnify-step-title"><?php esc_html_e('Shopping Cart', 'omnifywp-ecommerce'); ?></span>
@@ -70,7 +70,10 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 		<?php endif; ?>
 
 		<!-- Free shipping progress bar -->
-		<?php if (! empty($omnify_settings['cart_free_shipping_enabled'])) : ?>
+		<?php
+		$omnify_show_ship_meter = ! array_key_exists('cart_show_shipping_meter', $omnify_settings) || ! empty($omnify_settings['cart_show_shipping_meter']);
+		if ($omnify_show_ship_meter && ! empty($omnify_settings['cart_free_shipping_enabled'])) :
+		?>
 		<div class="omnify-cart-shipping-progress" id="omnify-shipping-progress-wrapper">
 			<div class="progress-bar-container">
 				<div class="progress-bar-fill" id="omnify-shipping-progress-fill"></div>
@@ -134,7 +137,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 							<span style="font-size: 11px; font-weight: 700; color: #16A34A; letter-spacing: 0.04em; text-transform: uppercase;"><?php esc_html_e('Applied', 'omnifywp-ecommerce'); ?>:</span>
 							<strong id="omnify-applied-coupon-code" style="color: #0F172A; font-size: 13.5px; font-weight: 600; text-transform: uppercase;"></strong>
 						</div>
-						<button type="button" id="omnify-cart-coupon-remove" class="omnify-coupon-remove-btn"><?php esc_html_e('&times; Remove', 'omnifywp-ecommerce'); ?></button>
+						<button type="button" id="omnify-cart-coupon-remove" class="omnify-coupon-remove-btn">&times; <?php esc_html_e('Remove', 'omnifywp-ecommerce'); ?></button>
 					</div>
 					
 					<div id="omnify-cart-coupon-message" class="omnify-cart-coupon__message" style="display: none;"></div>
@@ -199,7 +202,7 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 					</div>
 
 					<!-- Order Note -->
-					<div class="omnify-cart-note-box" id="omnify-cart-note-box">
+					<div class="omnify-cart-note-box" id="omnify-cart-note-box" style="<?php echo ( ! isset( $omnify_show_note ) || $omnify_show_note ) ? '' : 'display:none;'; ?>">
 						<button type="button" class="omnify-cart-accordion-trigger" id="omnify-note-toggle">
 							<span style="display:flex; align-items:center; gap:8px;">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -226,6 +229,10 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 				</button>
 				
 				<!-- Trust & Security Badges -->
+				<?php
+				$omnify_show_cart_trust = ! array_key_exists('cart_show_trust_badges', $omnify_settings) || ! empty($omnify_settings['cart_show_trust_badges']);
+				if ($omnify_show_cart_trust) :
+				?>
 				<div class="omnify-cart-trust-badges">
 					<div class="trust-badge-heading">
 						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#18794E" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -248,7 +255,12 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 						<span><span class="dashicons dashicons-download" style="font-size:12px; width:12px; height:12px; vertical-align:middle; margin-right:4px;"></span>Instant Access</span>
 					</div>
 				</div>
+				<?php endif; ?>
 
+				<?php
+				$omnify_show_continue = ! array_key_exists('cart_show_continue_shopping', $omnify_settings) || ! empty($omnify_settings['cart_show_continue_shopping']);
+				if ($omnify_show_continue) :
+				?>
 				<div class="omnify-cart-bottom-actions">
 					<a href="<?php echo esc_url($omnify_storefront_url); ?>" class="omnify-continue-shopping-link">
 						‹ <?php esc_html_e('Continue Shopping', 'omnifywp-ecommerce'); ?>
@@ -257,16 +269,33 @@ $omnify_coupons_enabled = ! array_key_exists('enable_coupons', $omnify_settings)
 						<?php esc_html_e('Clear cart', 'omnifywp-ecommerce'); ?>
 					</button>
 				</div>
+				<?php endif; ?>
 				<?php do_action('omnify_after_cart_totals'); ?>
 			</aside>
 
 		</div>
 
+		<!-- Clear Cart Confirmation Modal -->
+		<div id="omnify-cart-clear-modal" class="omnify-modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+			<div class="omnify-modal-dialog" style="background:#fff; border-radius:12px; max-width:400px; width:100%; padding:24px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); text-align:center;">
+				<div style="width:48px; height:48px; border-radius:50%; background:#fef2f2; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px;">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+				</div>
+				<h3 style="font-size:18px; font-weight:700; color:#0f172a; margin:0 0 8px;"><?php esc_html_e('Clear entire cart?', 'omnifywp-ecommerce'); ?></h3>
+				<p style="font-size:14px; color:#64748b; margin:0 0 20px; line-height:1.5;"><?php esc_html_e('Are you sure you want to remove all items from your cart? This action cannot be undone.', 'omnifywp-ecommerce'); ?></p>
+				<div style="display:flex; gap:10px; justify-content:center;">
+					<button type="button" id="omnify-cart-clear-cancel" class="omnify-btn omnify-btn--secondary" style="flex:1;"><?php esc_html_e('Cancel', 'omnifywp-ecommerce'); ?></button>
+					<button type="button" id="omnify-cart-clear-confirm" class="omnify-btn omnify-btn--danger" style="flex:1; background:#dc2626; color:#fff; border-color:#dc2626;"><?php esc_html_e('Yes, Clear Cart', 'omnifywp-ecommerce'); ?></button>
+				</div>
+			</div>
+		</div>
+
 		<!-- Cross Sells (You may be interested in...) -->
 		<?php
+		$omnify_show_cross_sells = ! array_key_exists('cart_show_cross_sells', $omnify_settings) || ! empty($omnify_settings['cart_show_cross_sells']);
 		$omnify_products_repo = new \Omnify\eCommerce\Repositories\Omnify_Product_Repository( new \Omnify\eCommerce\Database\Omnify_Schema() );
 		$omnify_cross_sells = $omnify_products_repo->all(['limit' => 4, 'status' => 'publish']);
-		if (! empty($omnify_cross_sells)) : ?>
+		if ($omnify_show_cross_sells && ! empty($omnify_cross_sells)) : ?>
 		<div class="omnify-cart-cross-sells">
 			<h3 class="omnify-cross-sells-title"><?php esc_html_e('You may also like', 'omnifywp-ecommerce'); ?></h3>
 			<div class="omnify-cart-cross-sells-grid">

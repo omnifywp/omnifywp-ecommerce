@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	init('initPortalAuthEnhancements', initPortalAuthEnhancements);
 	init('initPremiumCatalog', initPremiumCatalog);
 	init('initCrossTabSync', initCrossTabSync);
+	init('initPhoneFormatting', initPhoneFormatting);
 });
 
 const OMNIFY_CART_KEY = 'omnify_cart_items';
@@ -411,6 +412,48 @@ function initWishlistButtons() {
 		});
 	});
 
+	const moveAllBtn = document.getElementById('omnify-wishlist-move-all');
+	if (moveAllBtn && !moveAllBtn.dataset.listenerAttached) {
+		moveAllBtn.dataset.listenerAttached = 'true';
+		moveAllBtn.addEventListener('click', () => {
+			const wishCards = document.querySelectorAll('#omnify-pane-wishlist .omnify-product-card');
+			if (!wishCards.length) return;
+			let movedCount = 0;
+			let skippedVariable = 0;
+			wishCards.forEach((card) => {
+				const id = parseInt(card.dataset.productCardId || card.dataset.productId || '0', 10);
+				if (!id) return;
+				const type = card.dataset.productType || 'product';
+				const variationId = parseInt(card.dataset.variationId || card.dataset.selectedVariationId || '0', 10);
+				if (type === 'variable' && !variationId) {
+					skippedVariable++;
+					return;
+				}
+				const name = card.dataset.productName || card.querySelector('.omnify-portal-card-title')?.textContent?.trim() || 'Product';
+				const price = parseFloat(card.dataset.productPrice || '0');
+				const image = card.dataset.productImage || card.querySelector('img')?.src || '';
+				addItemToCart({
+					id: id,
+					name: name,
+					price: price,
+					image: image,
+					type: type,
+					variation_id: variationId || undefined,
+					quantity: 1,
+				});
+				movedCount++;
+			});
+			if (movedCount > 0) {
+				renderMiniCarts();
+				updateCartBadge();
+				showAddedToCartToast({ name: `${movedCount} wishlist item(s)` });
+			}
+			if (skippedVariable > 0 && typeof omnifyShowToast === 'function') {
+				omnifyShowToast(`${skippedVariable} variable product(s) require option selection before adding to cart.`, 'warning');
+			}
+		});
+	}
+
 	refreshAll();
 }
 
@@ -439,9 +482,15 @@ window.omnifyInitSearchableSelect = function(select) {
 	select.parentNode.insertBefore(wrapper, select);
 	wrapper.appendChild(select);
 
+	const listboxId = 'omnify-listbox-' + Math.random().toString(36).substr(2, 9);
 	const input = document.createElement('input');
 	input.type = 'text';
 	input.className = 'omnify-custom-select-input';
+	input.setAttribute('role', 'combobox');
+	input.setAttribute('aria-autocomplete', 'list');
+	input.setAttribute('aria-expanded', 'false');
+	input.setAttribute('aria-haspopup', 'listbox');
+	input.setAttribute('aria-controls', listboxId);
 	input.placeholder = select.getAttribute('placeholder') || select.dataset.placeholder || 'Select option...';
 	wrapper.appendChild(input);
 
@@ -454,6 +503,8 @@ window.omnifyInitSearchableSelect = function(select) {
 
 	const dropdown = document.createElement('div');
 	dropdown.className = 'omnify-custom-select-dropdown';
+	dropdown.setAttribute('id', listboxId);
+	dropdown.setAttribute('role', 'listbox');
 	wrapper.appendChild(dropdown);
 
 	const empty = document.createElement('div');
@@ -566,9 +617,11 @@ window.omnifyInitSearchableSelect = function(select) {
 			dropdown.insertBefore(deselectDiv, customOpt);
 		}
 
-		Array.from(select.options).forEach(opt => {
+		Array.from(select.options).forEach((opt, optIdx) => {
 			const optionDiv = document.createElement('div');
 			optionDiv.className = 'omnify-custom-select-option';
+			optionDiv.setAttribute('role', 'option');
+			optionDiv.id = `${listboxId}-opt-${optIdx}`;
 			optionDiv.textContent = opt.textContent.trim();
 			optionDiv.dataset.value = opt.value;
 
@@ -643,6 +696,7 @@ window.omnifyInitSearchableSelect = function(select) {
 		dropdown.style.display = 'block';
 		wrapper.classList.add('open');
 		wrapper.style.zIndex = '999999';
+		input.setAttribute('aria-expanded', 'true');
 
 		const tr = wrapper.closest('tr');
 		if (tr) {
@@ -676,6 +730,8 @@ window.omnifyInitSearchableSelect = function(select) {
 		dropdown.style.display = 'none';
 		wrapper.classList.remove('open');
 		wrapper.style.removeProperty('z-index');
+		input.setAttribute('aria-expanded', 'false');
+		input.removeAttribute('aria-activedescendant');
 
 		const tr = wrapper.closest('tr');
 		if (tr) {
@@ -687,6 +743,57 @@ window.omnifyInitSearchableSelect = function(select) {
 			td.style.removeProperty('z-index');
 			td.style.removeProperty('position');
 		}
+	}
+
+	let activeOptionIndex = -1;
+	input.addEventListener('keydown', (e) => {
+		const visibleOpts = Array.from(dropdown.querySelectorAll('.omnify-custom-select-option:not(.hidden):not(.omnify-custom-select-deselect)'));
+		if (!visibleOpts.length) return;
+
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			if (!wrapper.classList.contains('open')) {
+				openDropdown();
+				activeOptionIndex = 0;
+			} else {
+				activeOptionIndex = (activeOptionIndex + 1) % visibleOpts.length;
+			}
+			highlightOption(visibleOpts, activeOptionIndex);
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			if (!wrapper.classList.contains('open')) {
+				openDropdown();
+				activeOptionIndex = visibleOpts.length - 1;
+			} else {
+				activeOptionIndex = (activeOptionIndex - 1 + visibleOpts.length) % visibleOpts.length;
+			}
+			highlightOption(visibleOpts, activeOptionIndex);
+		} else if (e.key === 'Enter') {
+			if (wrapper.classList.contains('open') && activeOptionIndex >= 0 && visibleOpts[activeOptionIndex]) {
+				e.preventDefault();
+				visibleOpts[activeOptionIndex].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+				activeOptionIndex = -1;
+			}
+		} else if (e.key === 'Escape') {
+			if (wrapper.classList.contains('open')) {
+				e.preventDefault();
+				closeDropdown();
+			}
+		}
+	});
+
+	function highlightOption(visibleOpts, idx) {
+		visibleOpts.forEach((opt, i) => {
+			if (i === idx) {
+				opt.classList.add('focused');
+				opt.setAttribute('aria-selected', 'true');
+				input.setAttribute('aria-activedescendant', opt.id);
+				opt.scrollIntoView({ block: 'nearest' });
+			} else {
+				opt.classList.remove('focused');
+				opt.removeAttribute('aria-selected');
+			}
+		});
 	}
 
 	input.addEventListener('focus', () => {
@@ -834,9 +941,31 @@ function setCartItems(items) {
 	updateCartCount();
 	renderMiniCarts();
 	document.dispatchEvent(new CustomEvent('omnify:cart-updated', { detail: { items } }));
+
+	// Real-time broadcast sync across all browser tabs
+	if (typeof window.BroadcastChannel === 'function') {
+		try {
+			const channel = new BroadcastChannel('omnify_cart_channel');
+			channel.postMessage({ type: 'cart_updated', items });
+			channel.close();
+		} catch (err) {}
+	}
 }
 
 function initCrossTabSync() {
+	if (typeof window.BroadcastChannel === 'function') {
+		try {
+			const channel = new BroadcastChannel('omnify_cart_channel');
+			channel.onmessage = (e) => {
+				if (e.data && e.data.type === 'cart_updated') {
+					updateCartCount();
+					if (typeof renderMiniCarts === 'function') renderMiniCarts();
+					document.dispatchEvent(new CustomEvent('omnify:cart-updated', { detail: { items: e.data.items || getCartItems() } }));
+				}
+			};
+		} catch (err) {}
+	}
+
 	window.addEventListener('storage', (e) => {
 		if (e.key === OMNIFY_CART_KEY) {
 			updateCartCount();
@@ -853,6 +982,56 @@ function initCrossTabSync() {
 		} else if (e.key === OMNIFY_COMPARE_KEY) {
 			if (typeof renderCompareButtons === 'function') renderCompareButtons();
 			if (typeof renderCompareCounters === 'function') renderCompareCounters();
+		}
+	});
+}
+
+function initPhoneFormatting() {
+	const phoneInputs = document.querySelectorAll('input[type="tel"], input[name*="phone"], #omnify-phone, #omnify-billing-phone, #omnify-shipping-phone');
+	phoneInputs.forEach((input) => {
+		if (input.dataset.phoneFormatted === '1') return;
+		input.dataset.phoneFormatted = '1';
+
+		input.addEventListener('input', () => {
+			let val = input.value;
+			const startsWithPlus = val.startsWith('+');
+			const digits = val.replace(/\D/g, '');
+
+			if (!digits) {
+				input.value = startsWithPlus ? '+' : '';
+				return;
+			}
+
+			if (startsWithPlus) {
+				if (digits.length <= 3) {
+					input.value = `+${digits}`;
+				} else if (digits.length <= 6) {
+					input.value = `+${digits.slice(0, 1)} (${digits.slice(1)})`;
+				} else if (digits.length <= 10) {
+					input.value = `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+				} else {
+					input.value = `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+				}
+			} else {
+				if (digits.length <= 3) {
+					input.value = digits.length ? `(${digits}` : '';
+				} else if (digits.length <= 6) {
+					input.value = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+				} else {
+					input.value = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+				}
+			}
+		});
+	});
+
+	// Render tel: links for customer phone numbers displayed as plain text
+	document.querySelectorAll('.omnify-customer-phone, [data-omnify-phone]').forEach((el) => {
+		const raw = el.textContent.trim();
+		if (raw && !el.querySelector('a') && !el.closest('a')) {
+			const clean = raw.replace(/[^\d+]/g, '');
+			if (clean) {
+				el.innerHTML = `<a href="tel:${clean}" style="color: inherit; text-decoration: underline;">${escapeHtml(raw)}</a>`;
+			}
 		}
 	});
 }
@@ -1140,6 +1319,13 @@ function initQuickViewButtons() {
 				if (stock) stock.hidden = true;
 				cart.disabled = true;
 				cart.textContent = 'Select Options';
+			}
+			// Update estimated delivery badge based on selected variation
+			const deliveryBadge = document.getElementById('omnify-delivery-badge');
+			const deliveryText = deliveryBadge ? deliveryBadge.querySelector('.omnify-delivery-text') : null;
+			if (deliveryText && matchedVariation && matchedVariation.estimated_delivery) {
+				deliveryText.textContent = matchedVariation.estimated_delivery;
+				if (deliveryBadge) deliveryBadge.style.display = 'flex';
 			}
 		}
 
@@ -1699,7 +1885,7 @@ function renderMiniCarts() {
 							<div class="omnify-mini-cart-item__footer-row">
 								<div class="omnify-mini-cart-item__qty" aria-label="Quantity">
 									<button type="button" class="omnify-mini-cart__qty-btn" data-action="decrease" aria-label="Decrease quantity">−</button>
-									<span class="omnify-mini-cart__qty-val">${qty}</span>
+									<input type="number" class="omnify-mini-cart__qty-input" value="${qty}" min="1" max="999" aria-label="Item quantity" style="width: 32px; text-align: center; border: none; font-size: 0.78rem; font-weight: 700; background: transparent; padding: 0; color: #0F172A; -moz-appearance: textfield;">
 									<button type="button" class="omnify-mini-cart__qty-btn" data-action="increase" aria-label="Increase quantity">+</button>
 								</div>
 								<div class="omnify-mini-cart-item__price">${formatStoreMoney(lineTotal)}</div>
@@ -1742,6 +1928,32 @@ function initMiniCarts() {
 
 		closeBtn?.addEventListener('click', () => closeMiniCart(miniCart));
 
+		const cartPanel = miniCart.querySelector('.omnify-mini-cart__panel');
+		if (cartPanel) {
+			let touchStartX = 0;
+			let touchStartY = 0;
+			cartPanel.addEventListener('touchstart', (e) => {
+				const touch = e.changedTouches ? e.changedTouches[0] : null;
+				if (touch) {
+					touchStartX = touch.clientX;
+					touchStartY = touch.clientY;
+				}
+			}, { passive: true });
+
+			cartPanel.addEventListener('touchend', (e) => {
+				const touch = e.changedTouches ? e.changedTouches[0] : null;
+				if (touch) {
+					const deltaX = touch.clientX - touchStartX;
+					const deltaY = touch.clientY - touchStartY;
+					// Swipe right by at least 50px with predominantly horizontal motion
+					if (deltaX > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+						closeMiniCart(miniCart);
+					}
+				}
+			}, { passive: true });
+		}
+
+		let miniCartUpdating = false;
 		miniCart.addEventListener('click', (event) => {
 			const itemEl = event.target.closest('.omnify-mini-cart-item');
 			if (!itemEl) return;
@@ -1751,6 +1963,16 @@ function initMiniCarts() {
 			if (!qtyBtn && !removeBtn) return;
 
 			event.preventDefault();
+			if (qtyBtn && miniCartUpdating) return;
+			if (qtyBtn) {
+				miniCartUpdating = true;
+				qtyBtn.style.pointerEvents = 'none';
+				setTimeout(() => {
+					miniCartUpdating = false;
+					if (qtyBtn) qtyBtn.style.pointerEvents = '';
+				}, 200);
+			}
+
 			const id = String(itemEl.dataset.id || '');
 			const variationId = String(itemEl.dataset.variationId || '');
 			let items = getCartItems();
@@ -1766,6 +1988,23 @@ function initMiniCarts() {
 				});
 			}
 
+			setCartItems(items);
+		});
+
+		miniCart.addEventListener('change', (event) => {
+			const input = event.target.closest('.omnify-mini-cart__qty-input');
+			if (!input) return;
+			const itemEl = input.closest('.omnify-mini-cart-item');
+			if (!itemEl) return;
+			const id = String(itemEl.dataset.id || '');
+			const variationId = String(itemEl.dataset.variationId || '');
+			let val = parseInt(input.value, 10);
+			if (isNaN(val) || val < 1) val = 1;
+			let items = getCartItems();
+			items = items.map((item) => {
+				if (!(String(item.id) === id && String(item.variationId || '') === variationId)) return item;
+				return { ...item, quantity: val };
+			});
 			setCartItems(items);
 		});
 
@@ -1913,6 +2152,8 @@ function initStorefrontFilters() {
 		activeBrands.push(...activeBrandLinks);
 
 		const activeLabels = Array.from(document.querySelectorAll('.omnify-sidebar-label-check:checked')).map(c => c.value);
+		const activeRatingChecks = Array.from(document.querySelectorAll('.omnify-filter-rating-check:checked')).map(c => parseInt(c.value, 10));
+		const minSelectedRating = activeRatingChecks.length > 0 ? Math.min(...activeRatingChecks) : 0;
 
 		cards.forEach((card) => {
 			const matchesQuery = !query || (card.dataset.search || '').includes(query);
@@ -2029,8 +2270,14 @@ function initStorefrontFilters() {
 				});
 			}
 
+			let matchesRating = true;
+			if (minSelectedRating > 0) {
+				const cardRating = parseFloat(card.dataset.rating || '0');
+				matchesRating = cardRating >= minSelectedRating;
+			}
+
 			const show = matchesQuery && matchesCategory && matchesType && matchesCustomAttrs && 
-						 matchesColor && matchesSize && matchesPrice && matchesStatus && matchesBrand && matchesLabels;
+						 matchesColor && matchesSize && matchesPrice && matchesStatus && matchesBrand && matchesLabels && matchesRating;
 			
 			if (show) matchingCards.push(card);
 			card.style.setProperty('display', 'none', 'important');
@@ -2073,11 +2320,70 @@ function initStorefrontFilters() {
 				loadMoreBtn.style.display = 'none';
 			}
 		}
+
+		const hasActiveFilter = Boolean(
+			query || category || type || (activeColors && activeColors.length) || (activeSizes && activeSizes.length) ||
+			priceMin !== null || priceMax !== null || (activeStatuses && activeStatuses.length) ||
+			(activeBrands && activeBrands.length) || (activeLabels && activeLabels.length) || minSelectedRating > 0
+		);
+		const clearFiltersBtn = document.getElementById('omnify-clear-all-filters-btn');
+		if (clearFiltersBtn) {
+			clearFiltersBtn.style.display = hasActiveFilter ? 'inline-flex' : 'none';
+		}
+	}
+
+	const clearAllFiltersBtn = document.getElementById('omnify-clear-all-filters-btn');
+	if (clearAllFiltersBtn && !clearAllFiltersBtn.dataset.listenerAttached) {
+		clearAllFiltersBtn.dataset.listenerAttached = 'true';
+		clearAllFiltersBtn.addEventListener('click', (e) => {
+			if (window.location.search && window.location.search.length > 1) {
+				return;
+			}
+			e.preventDefault();
+			if (searchInput) searchInput.value = '';
+			if (categoryFilter) categoryFilter.value = '';
+			document.querySelectorAll('.omnify-sidebar-category-check:checked, .omnify-filter-checkbox:checked').forEach(c => c.checked = false);
+			document.querySelectorAll('.omnify-color-swatch-filter.is-active, .omnify-size-pill-filter.is-active, .omnify-pill.is-active').forEach(el => el.classList.remove('is-active'));
+			activeTypePill = '';
+			applyFilters();
+		});
 	}
 
 	// ── Premium Drawer Toggle & Bindings ─────────────────────────
 	const drawer = document.getElementById('omnify-filter-drawer');
 	const triggerBtns = document.querySelectorAll('.omnify-filter-trigger-btn');
+	let lastActiveTrigger = null;
+
+	if (drawer) {
+		drawer.addEventListener('keydown', (e) => {
+			if (drawer.style.display === 'none') return;
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				triggerBtns.forEach(b => b.classList.remove('is-active'));
+				drawer.style.maxHeight = '0';
+				drawer.style.opacity = '0';
+				setTimeout(() => { drawer.style.display = 'none'; }, 350);
+				if (lastActiveTrigger) {
+					lastActiveTrigger.focus();
+				}
+				return;
+			}
+			if (e.key === 'Tab') {
+				const focusables = Array.from(drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.offsetParent !== null);
+				if (focusables.length === 0) return;
+				const first = focusables[0];
+				const last = focusables[focusables.length - 1];
+				if (e.shiftKey && document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				} else if (!e.shiftKey && document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		});
+	}
+
 	triggerBtns.forEach(btn => {
 		btn.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -2091,6 +2397,7 @@ function initStorefrontFilters() {
 				groups.forEach(g => g.style.display = 'none');
 				
 				if (!isAlreadyActive) {
+					lastActiveTrigger = btn;
 					btn.classList.add('is-active');
 					const targetGroup = drawer.querySelector(`.omnify-filter-group[data-group="${group}"]`);
 					if (targetGroup) targetGroup.style.display = 'block';
@@ -2098,10 +2405,20 @@ function initStorefrontFilters() {
 					drawer.style.display = 'block';
 					drawer.style.maxHeight = drawer.scrollHeight + 'px';
 					drawer.style.opacity = '1';
+
+					setTimeout(() => {
+						const firstFocusable = drawer.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+						if (firstFocusable) {
+							firstFocusable.focus();
+						}
+					}, 50);
 				} else {
 					drawer.style.maxHeight = '0';
 					drawer.style.opacity = '0';
 					setTimeout(() => { drawer.style.display = 'none'; }, 350);
+					if (lastActiveTrigger) {
+						lastActiveTrigger.focus();
+					}
 				}
 			}
 		});
@@ -2159,7 +2476,7 @@ function initStorefrontFilters() {
 	});
 
 	// Checkboxes inside drawer selection
-	document.querySelectorAll('.omnify-filter-status-check, .omnify-filter-brand-check').forEach(chk => {
+	document.querySelectorAll('.omnify-filter-status-check, .omnify-filter-brand-check, .omnify-filter-rating-check').forEach(chk => {
 		chk.addEventListener('change', applyFilters);
 	});
 
@@ -2365,7 +2682,7 @@ function initStorefrontFilters() {
 			if (priceMaxInput) priceMaxInput.value = maxVal;
 			if (priceSlider) priceSlider.value = maxVal;
 
-			document.querySelectorAll('.omnify-filter-status-check, .omnify-filter-brand-check').forEach(chk => {
+			document.querySelectorAll('.omnify-filter-status-check, .omnify-filter-brand-check, .omnify-filter-rating-check').forEach(chk => {
 				chk.checked = false;
 			});
 
@@ -2798,6 +3115,16 @@ function initCartPage() {
 				const lineTotal = unitPrice * qty;
 				const key = cartItemKey(item);
 				const isSelected = selectedCartKeys.has(key);
+				let attrText = '';
+				if (item.attributes && typeof item.attributes === 'object') {
+					attrText = Object.entries(item.attributes).map(([k, v]) => `${k}: ${v}`).join(' · ');
+				} else if (item.variationLabel) {
+					attrText = item.variationLabel;
+				} else if (item.variationAttributes) {
+					attrText = item.variationAttributes;
+				} else if (item.variationId) {
+					attrText = `Variation #${item.variationId}`;
+				}
 				return `
 					<div class="omnify-cart-item ${isSelected ? 'is-selected' : ''}" data-id="${escapeHtml(item.id)}" data-variation-id="${escapeHtml(item.variationId || '')}" data-key="${escapeHtml(key)}">
 						<label class="omnify-cart-item__select" aria-label="Select ${escapeHtml(item.name || 'product')} for checkout">
@@ -2806,7 +3133,7 @@ function initCartPage() {
 						<div class="omnify-cart-item__media">${item.image ? `<img src="${escapeHtml(item.image)}" alt="">` : `<span>${escapeHtml(String(item.name || 'P').charAt(0))}</span>`}</div>
 						<div class="omnify-cart-item__body">
 							<strong>${escapeHtml(item.name || 'Product')}</strong>
-							${item.variationId ? `<small>Variation #${escapeHtml(item.variationId)}</small>` : ''}
+							${attrText ? `<small class="omnify-cart-item__variation" style="display: block; color: #64748b; font-size: 12px; margin-top: 2px;">${escapeHtml(attrText)}</small>` : ''}
 							${item.url ? `<a href="${escapeHtml(item.url)}">View Details</a>` : ''}
 						</div>
 						<div class="omnify-cart-item__price">${escapeHtml(item.displayPrice || formatStoreMoney(item.price))}</div>
@@ -2834,7 +3161,9 @@ function initCartPage() {
 		const progressText = document.getElementById('omnify-shipping-progress-text');
 		if (progressWrapper && progressFill && progressText) {
 			const selectedItems = getSelectedCartItems(items);
-			const subtotal = selectedItems.reduce((acc, item) => acc + (parseFloat(item.price || 0) * (parseInt(item.quantity, 10) || 1)), 0);
+			const rawSubtotal = selectedItems.reduce((acc, item) => acc + (parseFloat(item.price || 0) * (parseInt(item.quantity, 10) || 1)), 0);
+			const couponDiscount = appliedCartCoupon ? Math.min(rawSubtotal, Math.max(0, parseFloat(appliedCartCoupon.discount || 0) || 0)) : 0;
+			const subtotal = Math.max(0, rawSubtotal - couponDiscount);
 			const threshold = (window.omnifyStorefront && window.omnifyStorefront.cart && typeof window.omnifyStorefront.cart.freeShippingThreshold !== 'undefined') ? parseFloat(window.omnifyStorefront.cart.freeShippingThreshold) : 200;
 			const diff = threshold - subtotal;
 			if (subtotal === 0) {
@@ -2993,14 +3322,44 @@ function initCartPage() {
 		});
 	}
 
+	const clearModal = document.getElementById('omnify-cart-clear-modal');
+	const clearConfirmBtn = document.getElementById('omnify-cart-clear-confirm');
+	const clearCancelBtn = document.getElementById('omnify-cart-clear-cancel');
+
+	function doClearCart() {
+		setCartItems([]);
+		selectedCartKeys = new Set();
+		resetCartCoupon({ silent: true });
+		window.sessionStorage.removeItem('omnify_cart_coupon_code');
+		window.sessionStorage.removeItem(OMNIFY_CHECKOUT_SELECTED_KEY);
+		renderCart();
+		if (clearModal) clearModal.style.display = 'none';
+	}
+
 	if (clearBtn) {
-		clearBtn.addEventListener('click', () => {
-			setCartItems([]);
-			selectedCartKeys = new Set();
-			resetCartCoupon({ silent: true });
-			window.sessionStorage.removeItem('omnify_cart_coupon_code');
-			window.sessionStorage.removeItem(OMNIFY_CHECKOUT_SELECTED_KEY);
-			renderCart();
+		clearBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			if (clearModal) {
+				clearModal.style.display = 'flex';
+			} else if (window.confirm('Are you sure you want to clear your cart?')) {
+				doClearCart();
+			}
+		});
+	}
+
+	if (clearConfirmBtn) {
+		clearConfirmBtn.addEventListener('click', () => {
+			doClearCart();
+		});
+	}
+	if (clearCancelBtn) {
+		clearCancelBtn.addEventListener('click', () => {
+			if (clearModal) clearModal.style.display = 'none';
+		});
+	}
+	if (clearModal) {
+		clearModal.addEventListener('click', (e) => {
+			if (e.target === clearModal) clearModal.style.display = 'none';
 		});
 	}
 
@@ -3353,6 +3712,93 @@ function initCheckoutPageForm() {
 	}
 	window.localStorage.setItem(abandonedCartStorageKey, abandonedCartToken);
 
+	// Revalidate cart items and inventory on checkout page load (Item 5)
+	const isCheckoutCartMode = pageForm.getAttribute('data-cart-mode') === '1';
+	if (isCheckoutCartMode && window.omnifyStorefront && window.omnifyStorefront.restUrl) {
+		const cartItemsToValidate = getCheckoutCartItems();
+		if (cartItemsToValidate.length > 0) {
+			window.fetch(`${omnifyStorefront.restUrl}/cart`, {
+				method: 'GET',
+				headers: {
+					'X-WP-Nonce': omnifyStorefront.nonce,
+					'x-omnify-cart-token': getOmnifyCartToken()
+				}
+			})
+			.then(r => r.json())
+			.then(cartData => {
+				if (cartData && Array.isArray(cartData.items)) {
+					let stockWarning = '';
+					cartData.items.forEach(srvItem => {
+						const localMatch = cartItemsToValidate.find(it => String(it.id) === String(srvItem.product_id) && String(it.variationId || 0) === String(srvItem.variation_id || 0));
+						if (localMatch && srvItem.manage_stock && typeof srvItem.stock_qty !== 'undefined') {
+							if (srvItem.stock_qty <= 0) {
+								stockWarning = `"${srvItem.name}" is currently out of stock. Please remove it from your cart.`;
+							} else if (srvItem.stock_qty < localMatch.quantity) {
+								stockWarning = `"${srvItem.name}" only has ${srvItem.stock_qty} units available. Your cart quantity exceeds available stock.`;
+							}
+						}
+					});
+					if (stockWarning && errorBox) {
+						errorBox.textContent = stockWarning;
+						errorBox.style.display = 'block';
+						if (submitBtn) {
+							submitBtn.disabled = true;
+						}
+					}
+				}
+			})
+			.catch(() => {});
+		}
+	}
+
+	// EU VAT Reverse Charge verification (Item 6)
+	const vatInput = document.getElementById('omnify-vat-number') || document.getElementById('omnify-vat-number-digital');
+	const vatNotice = document.getElementById('omnify-vat-notice') || document.getElementById('omnify-vat-notice-digital');
+	let appliedVatExempt = false;
+	if (vatInput && vatNotice) {
+		let vatTimer = null;
+		vatInput.addEventListener('input', () => {
+			clearTimeout(vatTimer);
+			const vatVal = vatInput.value.trim();
+			if (!vatVal) {
+				vatNotice.style.display = 'none';
+				appliedVatExempt = false;
+				refreshSummary(appliedDiscount);
+				return;
+			}
+			vatTimer = setTimeout(() => {
+				const billCountry = document.getElementById('omnify-billing-country')?.value || document.getElementById('omnify-shipping-country')?.value || '';
+				window.fetch(`${omnifyStorefront.restUrl}/checkout/validate-vat`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': omnifyStorefront.nonce
+					},
+					body: JSON.stringify({ vat_number: vatVal, country: billCountry })
+				})
+				.then(r => r.json().then(data => ({ ok: r.ok, data })))
+				.then(res => {
+					if (res.ok && res.data.valid) {
+						appliedVatExempt = true;
+						vatNotice.textContent = `Valid VAT (${res.data.vat_number}). EU B2B reverse charge applied (0% VAT).`;
+						vatNotice.style.color = '#008060';
+						vatNotice.style.display = 'block';
+						refreshSummary(appliedDiscount);
+					} else {
+						appliedVatExempt = false;
+						vatNotice.textContent = res.data.message || 'Invalid EU VAT number.';
+						vatNotice.style.color = '#d82c0d';
+						vatNotice.style.display = 'block';
+						refreshSummary(appliedDiscount);
+					}
+				})
+				.catch(() => {
+					appliedVatExempt = false;
+				});
+			}, 400);
+		});
+	}
+
 	/** Helper: parse currency string from an element e.g. "USD 29.99" → 29.99 */
 	function parseAmount(el) {
 		if (!el) return 0;
@@ -3531,7 +3977,10 @@ function initCheckoutPageForm() {
 		const taxShipping = Boolean((window.omnifyStorefront || {}).taxShipping);
 		const pricesIncludeTax = Boolean((window.omnifyStorefront || {}).pricesIncludeTax);
 		if (taxRate > 0) {
-			if (pricesIncludeTax) {
+			if (appliedVatExempt) {
+				taxAmount = 0;
+				total = netAmount + delivery.amount;
+			} else if (pricesIncludeTax) {
 				const productTax = netAmount - (netAmount / (1 + (taxRate / 100)));
 				const shippingTax = taxShipping ? delivery.amount * (taxRate / 100) : 0;
 				taxAmount = productTax + shippingTax;
@@ -3549,10 +3998,10 @@ function initCheckoutPageForm() {
 			taxAmountEl.textContent = formatStoreMoney(taxAmount);
 		}
 		if (taxLabelEl) {
-			taxLabelEl.textContent = `${taxRule.label || 'Tax'} (${taxRate.toFixed(2)}%)${pricesIncludeTax ? ' included' : ''}`;
+			taxLabelEl.textContent = appliedVatExempt ? 'EU Reverse Charge (0%)' : `${taxRule.label || 'Tax'} (${taxRate.toFixed(2)}%)${pricesIncludeTax ? ' included' : ''}`;
 		}
 		if (taxRowEl) {
-			taxRowEl.style.display = taxRate > 0 ? 'flex' : 'none';
+			taxRowEl.style.display = (taxRate > 0 || appliedVatExempt) ? 'flex' : 'none';
 		}
 		if (shippingAmountEl) {
 			shippingAmountEl.textContent = formatStoreMoney(delivery.amount);
@@ -3685,21 +4134,66 @@ function initCheckoutPageForm() {
 		if (createAccountCheckbox && passwordGroup && passwordInput) {
 			const accountMode = createAccountCheckbox.dataset.accountMode || 'optional';
 			if (accountMode === 'required') {
-				passwordGroup.style.display = 'flex';
+				passwordGroup.style.display = 'block';
 				passwordInput.required = true;
 			}
 			createAccountCheckbox.addEventListener('change', () => {
 				if (createAccountCheckbox.checked) {
-					passwordGroup.style.display = 'flex';
+					passwordGroup.style.display = 'block';
 					passwordInput.required = true;
-				passwordInput.focus();
-			} else {
-				passwordGroup.style.display = 'none';
-				passwordInput.required = false;
-				passwordInput.value = '';
-			}
-		});
-	}
+					passwordInput.focus();
+				} else {
+					passwordGroup.style.display = 'none';
+					passwordInput.required = false;
+					passwordInput.value = '';
+				}
+			});
+		}
+
+		// Email availability check & duplicate account warning
+		const emailInput = document.getElementById('omnify-email');
+		const emailCheckMsg = document.getElementById('omnify-email-check-msg');
+		let emailCheckTimer = null;
+
+		if (emailInput && emailCheckMsg) {
+			const checkEmailAvailability = () => {
+				const email = (emailInput.value || '').trim();
+				if (!email || !email.includes('@') || !email.includes('.')) {
+					emailCheckMsg.style.display = 'none';
+					return;
+				}
+				const restBase = window.omnifyStorefront?.restUrl || '/wp-json/';
+				fetch(`${restBase.replace(/\/$/, '')}/omnify/v1/checkout/check-email`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': window.omnifyStorefront?.nonce || ''
+					},
+					body: JSON.stringify({ email })
+				})
+				.then(res => res.json())
+				.then(data => {
+					if (data && data.exists) {
+						emailCheckMsg.style.display = 'block';
+						emailCheckMsg.style.background = '#EFF6FF';
+						emailCheckMsg.style.border = '1px solid #BFDBFE';
+						emailCheckMsg.style.color = '#1E40AF';
+						emailCheckMsg.textContent = 'An account already exists with this email. You can sign in to access your saved details, or proceed as guest.';
+					} else {
+						emailCheckMsg.style.display = 'none';
+					}
+				})
+				.catch(() => {
+					emailCheckMsg.style.display = 'none';
+				});
+			};
+
+			emailInput.addEventListener('input', () => {
+				clearTimeout(emailCheckTimer);
+				emailCheckTimer = setTimeout(checkEmailAvailability, 600);
+			});
+			emailInput.addEventListener('blur', checkEmailAvailability);
+		}
 
 	['omnify-shipping-country', 'omnify-shipping-state', 'omnify-billing-country', 'omnify-billing-state'].forEach((id) => {
 		const field = document.getElementById(id);
@@ -4116,6 +4610,21 @@ function initCheckoutPageForm() {
 		}
 		const agreeToTerms = termsCheckbox ? (termsCheckbox.checked ? 1 : 0) : 0;
 
+		// Check minimum order amount (Item 2)
+		const minOrderThreshold = parseFloat((window.omnifyStorefront && window.omnifyStorefront.minOrderAmount) || 0);
+		if (minOrderThreshold > 0) {
+			const currentSubtotalVal = parseAmount(document.getElementById('omnify-summary-subtotal'));
+			if (currentSubtotalVal > 0 && currentSubtotalVal < minOrderThreshold) {
+				const minMsg = `Minimum order amount is ${formatStoreMoney(minOrderThreshold)}. Your current subtotal is ${formatStoreMoney(currentSubtotalVal)}.`;
+				if (errorBox) {
+					errorBox.textContent = minMsg;
+					errorBox.style.display = 'block';
+					errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+				return;
+			}
+		}
+
 		// Disable submit button and trigger spinner animation
 		submitBtn.disabled = true;
 		submitBtn.querySelector('.btn-text').style.display = 'none';
@@ -4125,6 +4634,8 @@ function initCheckoutPageForm() {
 		const variationIdInput = document.getElementById('omnify-checkout-variation-id');
 		const variationId = variationIdInput ? parseInt(variationIdInput.value, 10) : 0;
 		const isCartMode = pageForm.getAttribute('data-cart-mode') === '1';
+
+		const idempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (`omnify_${Date.now()}_${Math.random().toString(36).slice(2)}`);
 
 		const payload = {
 			email:          email,
@@ -4137,9 +4648,14 @@ function initCheckoutPageForm() {
 			agree_to_terms: agreeToTerms,
 			abandoned_cart_token: abandonedCartToken,
 			cart_token:     getOmnifyCartToken(),
+			idempotency_key: idempotencyKey,
 			order_notes:    document.getElementById('omnify-order-notes')?.value || '',
 			order_bump:     document.getElementById('omnify-order-bump-checkbox')?.checked ? 1 : 0,
 		};
+
+		if (vatInput && vatInput.value.trim()) {
+			payload.vat_number = vatInput.value.trim();
+		}
 
 		if (isCartMode) {
 			const items = getCheckoutCartItems();
@@ -4169,6 +4685,18 @@ function initCheckoutPageForm() {
 			payload.shipping_country    = document.getElementById('omnify-shipping-country').value;
 			payload.shipping_phone      = document.getElementById('omnify-shipping-phone').value;
 			payload.shipping_method_id  = shippingMethodIdEl ? shippingMethodIdEl.value : '';
+
+			if (summaryBreakdown && summaryBreakdown.dataset.isPhysical === '1' && !payload.shipping_method_id) {
+				showNotice('Delivery is unavailable for this destination address. Please verify your address or select an alternate destination.', 'error');
+				const shippingSec = document.getElementById('omnify-shipping-methods');
+				if (shippingSec) shippingSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				if (submitBtn) {
+					submitBtn.disabled = false;
+					submitBtn.querySelector('.btn-text').style.display = 'inline';
+					submitBtn.querySelector('.btn-spinner').style.display = 'none';
+				}
+				return;
+			}
 		}
 
 		// Gather billing address details
@@ -4560,7 +5088,8 @@ function initCheckoutPageForm() {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'X-WP-Nonce': omnifyStorefront.nonce
+				'X-WP-Nonce': omnifyStorefront.nonce,
+				'Idempotency-Key': idempotencyKey
 			},
 			body: JSON.stringify(payload)
 		})
@@ -4641,6 +5170,11 @@ function initCheckoutPageForm() {
 		.catch((err) => {
 			errorBox.textContent = err.message;
 			errorBox.style.display = 'block';
+			errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			const firstInvalid = pageForm.querySelector(':invalid') || pageForm.querySelector('.omnify-field--invalid');
+			if (firstInvalid && typeof firstInvalid.focus === 'function') {
+				firstInvalid.focus();
+			}
 		})
 		.finally(() => {
 			submitBtn.disabled = false;
@@ -5163,6 +5697,11 @@ function initPortalTabs() {
 		if (tabs.some((t) => t.getAttribute('data-tab') === cleanHash)) {
 			activateTab(cleanHash);
 		}
+	} else {
+		const defaultTab = document.querySelector('.omnify-portal-wrapper')?.getAttribute('data-default-tab');
+		if (defaultTab && tabs.some((t) => t.getAttribute('data-tab') === defaultTab)) {
+			activateTab(defaultTab);
+		}
 	}
 
 	document.querySelectorAll('[data-omnify-open-tab]').forEach((trigger) => {
@@ -5208,8 +5747,11 @@ function initPortalAuthEnhancements() {
 	});
 
 	document.querySelectorAll('[data-omnify-password-strength]').forEach((field) => {
-		const meter = field.closest('form')?.querySelector('[data-omnify-password-meter]');
-		if (!meter) return;
+		const container = field.closest('form') || field.closest('#omnify-password-group') || field.closest('.omnify-checkout-card') || field.parentElement?.parentElement || document;
+		const meter = container?.querySelector('[data-omnify-password-meter]');
+		const meterBar = container?.querySelector('#omnify-password-meter-fill');
+		const meterTrack = container?.querySelector('#omnify-password-strength-track');
+		if (!meter && !meterBar) return;
 
 		field.addEventListener('input', () => {
 			const value = field.value || '';
@@ -5219,20 +5761,32 @@ function initPortalAuthEnhancements() {
 			if (/\d/.test(value)) score++;
 			if (/[^A-Za-z0-9]/.test(value)) score++;
 
-			meter.classList.remove('is-weak', 'is-ok', 'is-strong');
+			if (meterTrack) meterTrack.style.display = value ? 'block' : 'none';
+			if (meter) meter.classList.remove('is-weak', 'is-ok', 'is-strong');
+
 			if (!value) {
-				meter.textContent = 'Use at least 8 characters. Mix letters, numbers, and symbols for a stronger password.';
+				if (meterBar) { meterBar.style.width = '0%'; meterBar.style.backgroundColor = 'transparent'; }
+				if (meter) meter.textContent = 'Use at least 8 characters. Mix letters, numbers, and symbols for a stronger password.';
 				return;
 			}
 			if (score <= 1) {
-				meter.classList.add('is-weak');
-				meter.textContent = 'Weak password. Add more characters and variety.';
+				if (meterBar) { meterBar.style.width = '33%'; meterBar.style.backgroundColor = '#EF4444'; }
+				if (meter) {
+					meter.classList.add('is-weak');
+					meter.textContent = 'Weak password. Add more characters and variety.';
+				}
 			} else if (score <= 3) {
-				meter.classList.add('is-ok');
-				meter.textContent = 'Good password. A symbol or mixed case will make it stronger.';
+				if (meterBar) { meterBar.style.width = '66%'; meterBar.style.backgroundColor = '#F59E0B'; }
+				if (meter) {
+					meter.classList.add('is-ok');
+					meter.textContent = 'Good password. A symbol or mixed case will make it stronger.';
+				}
 			} else {
-				meter.classList.add('is-strong');
-				meter.textContent = 'Strong password.';
+				if (meterBar) { meterBar.style.width = '100%'; meterBar.style.backgroundColor = '#10B981'; }
+				if (meter) {
+					meter.classList.add('is-strong');
+					meter.textContent = 'Strong password.';
+				}
 			}
 		});
 	});
@@ -5717,6 +6271,87 @@ function initProductSinglePage() {
 			});
 		}
 
+		// Touch swipe gesture support on mobile
+		let touchStartX = 0;
+		let touchEndX = 0;
+
+		mainBox.addEventListener('touchstart', (e) => {
+			if (e.touches && e.touches[0]) {
+				touchStartX = e.touches[0].clientX;
+			}
+		}, { passive: true });
+
+		mainBox.addEventListener('touchend', (e) => {
+			if (e.changedTouches && e.changedTouches[0]) {
+				touchEndX = e.changedTouches[0].clientX;
+				const diff = touchEndX - touchStartX;
+				if (Math.abs(diff) > 40 && thumbItems.length > 1) {
+					const activeIdx = Array.from(thumbItems).findIndex(t => t.classList.contains('is-active') || t.classList.contains('active'));
+					let nextIdx = activeIdx >= 0 ? activeIdx : 0;
+					if (diff < 0) {
+						// Swiped left -> next
+						nextIdx = (nextIdx + 1) % thumbItems.length;
+					} else {
+						// Swiped right -> prev
+						nextIdx = (nextIdx - 1 + thumbItems.length) % thumbItems.length;
+					}
+					thumbItems[nextIdx]?.click();
+				}
+			}
+		});
+
+		// Gallery lightbox on main image click
+		mainImg.style.cursor = 'zoom-in';
+		mainImg.addEventListener('click', () => {
+			const lightbox = document.createElement('div');
+			lightbox.className = 'omnify-gallery-lightbox';
+			lightbox.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.92);z-index:9999999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px;box-sizing:border-box;';
+
+			const imgWrap = document.createElement('div');
+			imgWrap.style.cssText = 'position:relative;max-width:92vw;max-height:92vh;display:flex;align-items:center;justify-content:center;';
+
+			const fullImg = document.createElement('img');
+			fullImg.src = mainImg.src;
+			fullImg.alt = mainImg.alt || 'Product preview';
+			fullImg.style.cssText = 'max-width:100%;max-height:90vh;border-radius:8px;box-shadow:0 20px 40px rgba(0,0,0,0.5);cursor:default;object-fit:contain;transition:transform 0.25s ease;';
+
+			let isZoomed = false;
+			fullImg.addEventListener('click', (e) => {
+				e.stopPropagation();
+				isZoomed = !isZoomed;
+				fullImg.style.transform = isZoomed ? 'scale(1.5)' : 'scale(1)';
+				fullImg.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+			});
+
+			const closeBtn = document.createElement('button');
+			closeBtn.type = 'button';
+			closeBtn.innerHTML = '&times;';
+			closeBtn.setAttribute('aria-label', 'Close image viewer');
+			closeBtn.style.cssText = 'position:absolute;top:20px;right:24px;background:none;border:none;color:#FFFFFF;font-size:36px;line-height:1;cursor:pointer;padding:8px;z-index:10000000;';
+			closeBtn.addEventListener('click', () => lightbox.remove());
+
+			lightbox.appendChild(closeBtn);
+			imgWrap.appendChild(fullImg);
+			lightbox.appendChild(imgWrap);
+
+			const onKeyDown = (e) => {
+				if (e.key === 'Escape') {
+					lightbox.remove();
+					document.removeEventListener('keydown', onKeyDown);
+				}
+			};
+			document.addEventListener('keydown', onKeyDown);
+
+			lightbox.addEventListener('click', (e) => {
+				if (e.target === lightbox) {
+					lightbox.remove();
+					document.removeEventListener('keydown', onKeyDown);
+				}
+			});
+
+			document.body.appendChild(lightbox);
+		});
+
 		window.showImage = showImage;
 	})();
 
@@ -6054,6 +6689,13 @@ function initProductSinglePage() {
 			if (varImgUrl && typeof window.showImage === 'function') {
 				window.showImage(varImgUrl, null);
 			}
+			// Update estimated delivery badge per variation
+			const pdpDeliveryBadge = document.getElementById('omnify-delivery-badge');
+			const pdpDeliveryText = pdpDeliveryBadge ? pdpDeliveryBadge.querySelector('.omnify-delivery-text') : null;
+			if (pdpDeliveryText && matching && matching.estimated_delivery) {
+				pdpDeliveryText.textContent = matching.estimated_delivery;
+				if (pdpDeliveryBadge) pdpDeliveryBadge.style.display = 'flex';
+			}
 		}
 
 		// Swatch click listener (Supports toggle deselect)
@@ -6295,18 +6937,43 @@ function initProductSinglePage() {
 		}
 	};
 
-	// Handle dynamic review images selection change preview list
+	// Handle dynamic review images selection change preview list with validation
 	const uploadInput = document.getElementById('omnify-review-upload-input');
 	const fileList = document.getElementById('omnify-review-file-list');
 	if (uploadInput && fileList) {
 		uploadInput.addEventListener('change', function() {
 			fileList.innerHTML = '';
+			const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+			const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+			let hasErrors = false;
+
 			Array.from(this.files || []).forEach(file => {
+				if (!validTypes.includes(file.type)) {
+					hasErrors = true;
+					if (typeof omnifyShowToast === 'function') {
+						omnifyShowToast(`"${file.name}" is not a supported image file (JPEG, PNG, WEBP, GIF only).`, 'error');
+					} else {
+						alert(`"${file.name}" is not a supported image file.`);
+					}
+					return;
+				}
+				if (file.size > maxSizeBytes) {
+					hasErrors = true;
+					if (typeof omnifyShowToast === 'function') {
+						omnifyShowToast(`"${file.name}" exceeds the 5MB size limit.`, 'error');
+					} else {
+						alert(`"${file.name}" exceeds the 5MB size limit.`);
+					}
+					return;
+				}
 				const item = document.createElement('div');
 				item.className = 'omnify-upload-file-item';
 				item.innerHTML = `<svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><polyline points='21 15 16 10 5 21'/></svg><span>${file.name}</span>`;
 				fileList.appendChild(item);
 			});
+			if (hasErrors && fileList.children.length === 0) {
+				uploadInput.value = '';
+			}
 		});
 	}
 
@@ -6750,11 +7417,28 @@ function initLiveSearchAutocomplete() {
 	if (!searchInput || !resultsBox) return;
 
 	let debounceTimer = null;
+	let activeIndex = -1;
 	const store = window.omnifyStorefront || {};
 	const restUrl = (store.restUrl || '/wp-json/omnify/v1').replace(/\/$/, '');
 
+	function updateHighlight(items) {
+		items.forEach((item, idx) => {
+			if (idx === activeIndex) {
+				item.classList.add('is-selected');
+				item.style.backgroundColor = '#f1f5f9';
+				item.setAttribute('aria-selected', 'true');
+				item.scrollIntoView({ block: 'nearest' });
+			} else {
+				item.classList.remove('is-selected');
+				item.style.backgroundColor = '';
+				item.removeAttribute('aria-selected');
+			}
+		});
+	}
+
 	searchInput.addEventListener('input', () => {
 		clearTimeout(debounceTimer);
+		activeIndex = -1;
 		const query = searchInput.value.trim();
 
 		if (query.length < 2) {
@@ -6771,19 +7455,20 @@ function initLiveSearchAutocomplete() {
 				if (!response.ok) throw new Error('Search failed');
 				const products = await response.json();
 
+				activeIndex = -1;
 				if (!Array.isArray(products) || products.length === 0) {
 					resultsBox.innerHTML = `<div style="padding: 12px; font-size: 13px; color: #64748b; text-align: center;">No matching products found</div>`;
 					resultsBox.style.display = 'block';
 					return;
 				}
 
-				resultsBox.innerHTML = products.map(p => {
+				resultsBox.innerHTML = products.map((p, idx) => {
 					const img = p.featured_image || p.thumbnail_url || (p.images && p.images[0]) || '';
 					const price = p.formatted_price || (store.currencySymbol || '$') + Number(p.sale_price !== null && p.sale_price !== '' ? p.sale_price : p.price).toFixed(2);
 					const link = p.permalink || `/?omnify_product=${encodeURIComponent(p.slug || p.id)}`;
 
 					return `
-						<a href="${link}" class="omnify-search-item" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-decoration: none; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+						<a href="${link}" class="omnify-search-item" data-index="${idx}" role="option" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-decoration: none; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
 							${img ? `<img src="${img}" alt="${p.name || ''}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" />` : `<div style="width: 36px; height: 36px; background: #e2e8f0; border-radius: 4px; flex-shrink: 0;"></div>`}
 							<div style="flex: 1; min-width: 0;">
 								<div style="font-size: 13px; font-weight: 600; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name || ''}</div>
@@ -6803,12 +7488,35 @@ function initLiveSearchAutocomplete() {
 	document.addEventListener('click', (e) => {
 		if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
 			resultsBox.style.display = 'none';
+			activeIndex = -1;
 		}
 	});
 
 	searchInput.addEventListener('keydown', (e) => {
+		const items = resultsBox.querySelectorAll('.omnify-search-item');
+		if (resultsBox.style.display !== 'none' && items.length > 0) {
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				activeIndex = (activeIndex + 1) >= items.length ? 0 : activeIndex + 1;
+				updateHighlight(items);
+				return;
+			}
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				activeIndex = (activeIndex - 1) < 0 ? items.length - 1 : activeIndex - 1;
+				updateHighlight(items);
+				return;
+			}
+			if (e.key === 'Enter' && activeIndex >= 0 && items[activeIndex]) {
+				e.preventDefault();
+				items[activeIndex].click();
+				return;
+			}
+		}
+
 		if (e.key === 'Escape') {
 			resultsBox.style.display = 'none';
+			activeIndex = -1;
 		}
 	});
 }
@@ -6906,6 +7614,185 @@ function initPortalReorderButtons() {
 	});
 }
 
+function initReviewStarFilter() {
+	const starFilterBtns = document.querySelectorAll('.omnify-review-star-filter');
+	if (!starFilterBtns.length) return;
+
+	let activeRatingFilter = null;
+	starFilterBtns.forEach((btn) => {
+		btn.style.cursor = 'pointer';
+		btn.addEventListener('click', function(e) {
+			e.preventDefault();
+			const targetStar = this.getAttribute('data-star');
+			const reviewCards = document.querySelectorAll('.omnify-review-card');
+
+			if (activeRatingFilter === targetStar) {
+				activeRatingFilter = null;
+				starFilterBtns.forEach((b) => b.classList.remove('is-active-filter'));
+				reviewCards.forEach((card) => { card.style.display = ''; });
+			} else {
+				activeRatingFilter = targetStar;
+				starFilterBtns.forEach((b) => {
+					if (b.getAttribute('data-star') === targetStar) {
+						b.classList.add('is-active-filter');
+					} else {
+						b.classList.remove('is-active-filter');
+					}
+				});
+				reviewCards.forEach((card) => {
+					const cardRating = card.getAttribute('data-rating');
+					if (cardRating === targetStar) {
+						card.style.display = '';
+					} else {
+						card.style.display = 'none';
+					}
+				});
+			}
+		});
+	});
+}
+
+function initCouponFormatting() {
+	document.querySelectorAll('#omnify-cart-coupon-input, #omnify-coupon-input, input[name="coupon_code"]').forEach((input) => {
+		if (input.dataset.omnifyFormatted === '1') return;
+		input.dataset.omnifyFormatted = '1';
+		input.addEventListener('input', () => {
+			const start = input.selectionStart;
+			const end = input.selectionEnd;
+			input.value = input.value.toUpperCase();
+			if (start !== null && end !== null) {
+				input.setSelectionRange(start, end);
+			}
+		});
+		input.addEventListener('blur', () => {
+			input.value = input.value.trim().toUpperCase();
+		});
+	});
+}
+
+/**
+ * Initialize dynamic Order Bump checkbox additions without page reload.
+ */
+function initOrderBumpBlocks() {
+	document.querySelectorAll('.omnify-order-bump-checkbox').forEach((cb) => {
+		if (cb.dataset.omnifyBumpInit === '1') return;
+		cb.dataset.omnifyBumpInit = '1';
+
+		cb.addEventListener('change', () => {
+			const productId = parseInt(cb.getAttribute('data-product-id') || '0', 10);
+			if (!productId) return;
+
+			let items = getCartItems();
+			if (cb.checked) {
+				const existingIndex = items.findIndex((i) => parseInt(i.product_id, 10) === productId);
+				if (existingIndex >= 0) {
+					items[existingIndex].qty = (items[existingIndex].qty || 1) + 1;
+				} else {
+					items.push({
+						product_id: productId,
+						qty: 1,
+						price: parseFloat(cb.getAttribute('data-price') || '0')
+					});
+				}
+				setCartItems(items);
+			} else {
+				items = items.filter((i) => parseInt(i.product_id, 10) !== productId);
+				setCartItems(items);
+			}
+		});
+	});
+}
+
+/**
+ * Initialize Sticky Add-to-Cart bar interactions (quantity stepper, dynamic visibility).
+ */
+function initStickyAtcBar() {
+	document.querySelectorAll('.omnify-sticky-atc-bar').forEach((bar) => {
+		if (bar.dataset.omnifyStickyInit === '1') return;
+		bar.dataset.omnifyStickyInit = '1';
+
+		const qtyInput = bar.querySelector('.omnify-sticky-qty-input');
+		bar.querySelectorAll('.omnify-qty-step').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				if (!qtyInput) return;
+				const step = parseInt(btn.getAttribute('data-step') || '0', 10);
+				let val = parseInt(qtyInput.value || '1', 10) + step;
+				if (val < 1) val = 1;
+				if (val > 99) val = 99;
+				qtyInput.value = val;
+			});
+		});
+
+		const atcBtn = bar.querySelector('.omnify-btn-add-to-cart');
+		if (atcBtn && qtyInput) {
+			atcBtn.addEventListener('click', () => {
+				const pid = parseInt(atcBtn.getAttribute('data-product-id') || '0', 10);
+				const qty = parseInt(qtyInput.value || '1', 10);
+				if (pid && qty > 0) {
+					let items = getCartItems();
+					const idx = items.findIndex((i) => parseInt(i.product_id, 10) === pid);
+					if (idx >= 0) {
+						items[idx].qty = (items[idx].qty || 1) + qty;
+					} else {
+						items.push({ product_id: pid, qty });
+					}
+					setCartItems(items);
+				}
+			});
+		}
+	});
+}
+
+/**
+ * Initialize Free Shipping Goal live updates on cart change.
+ */
+function initFreeShippingGoal() {
+	function recalculateGoals() {
+		const items = getCartItems();
+		let subtotal = 0;
+		items.forEach((item) => {
+			const price = parseFloat(item.price || item.unit_price || 0);
+			const qty = parseInt(item.qty || item.quantity || 1, 10);
+			subtotal += price * qty;
+		});
+
+		document.querySelectorAll('.omnify-free-shipping-goal-block').forEach((goal) => {
+			const threshold = parseFloat(goal.getAttribute('data-threshold') || '50');
+			const initialTemplate = goal.getAttribute('data-initial-template') || 'Add %s more to unlock FREE Shipping!';
+			const successMsg = goal.getAttribute('data-success-msg') || '🎉 Congratulations! You have unlocked FREE Shipping!';
+			const showConfetti = goal.getAttribute('data-confetti') === '1';
+
+			const pct = Math.min(100, Math.round((subtotal / threshold) * 100));
+			const remaining = Math.max(0, threshold - subtotal);
+
+			const fill = goal.querySelector('.omnify-goal-fill');
+			if (fill) fill.style.width = pct + '%';
+
+			const pctTarget = goal.querySelector('.omnify-goal-pct-target');
+			if (pctTarget) pctTarget.textContent = pct;
+
+			const msgTarget = goal.querySelector('.omnify-goal-msg-target');
+			if (msgTarget) {
+				if (remaining <= 0) {
+					msgTarget.innerHTML = successMsg;
+					if (showConfetti && !goal.dataset.confettiFired) {
+						goal.dataset.confettiFired = '1';
+						goal.style.transform = 'scale(1.02)';
+						setTimeout(() => { goal.style.transform = 'scale(1)'; }, 300);
+					}
+				} else {
+					goal.dataset.confettiFired = '';
+					const formattedRem = '$' + remaining.toFixed(2);
+					msgTarget.innerHTML = initialTemplate.replace('%s', formattedRem);
+				}
+			}
+		});
+	}
+
+	recalculateGoals();
+	document.addEventListener('omnify:cart-updated', recalculateGoals);
+}
+
 omnifyRunOnReady(() => {
 	initProductSinglePage();
 	initPortalAddressesPage();
@@ -6917,5 +7804,10 @@ omnifyRunOnReady(() => {
 	initCardMockSwatches();
 	initLiveSearchAutocomplete();
 	initPortalReorderButtons();
+	initReviewStarFilter();
+	initCouponFormatting();
+	initOrderBumpBlocks();
+	initStickyAtcBar();
+	initFreeShippingGoal();
 });
 

@@ -35,7 +35,8 @@ class Omnify_Order_Lifecycle_Service {
 		private Omnify_Product_Repository $omnify_products,
 		private Omnify_Customer_Access_Repository $omnify_access,
 		private ?Omnify_Coupon_Repository $omnify_coupons = null,
-		private ?Omnify_Abandoned_Cart_Repository $omnify_abandoned_carts = null
+		private ?Omnify_Abandoned_Cart_Repository $omnify_abandoned_carts = null,
+		private ?\Omnify\eCommerce\Support\Omnify_Email_Service $omnify_emails = null
 	) {}
 
 	private const EXPIRY_CRON_HOOK = 'omnify_expired_pending_orders_cleanup';
@@ -154,10 +155,27 @@ class Omnify_Order_Lifecycle_Service {
 
 		foreach ($omnify_order['items'] as $omnify_item) {
 			$omnify_product_id = absint($omnify_item['product_id'] ?? 0);
-			if ($omnify_product_id > 0) {
+			if ($omnify_product_id > 0 && $this->is_digital_product($omnify_product_id)) {
 				$this->omnify_access->revoke($omnify_customer_id, $omnify_product_id);
 			}
 		}
+	}
+
+	private function is_digital_product(int $omnify_product_id): bool {
+		if ($omnify_product_id <= 0) {
+			return false;
+		}
+
+		$omnify_product = $this->omnify_products->find($omnify_product_id);
+		if (! $omnify_product) {
+			return false;
+		}
+
+		$omnify_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
+		$omnify_is_physical = 'physical' === ($omnify_product['type'] ?? 'download')
+			|| ('variable' === ($omnify_product['type'] ?? 'download') && 'physical' === ($omnify_variation_settings['product_kind'] ?? 'digital'));
+
+		return ! $omnify_is_physical;
 	}
 
 	public function restock_order_items(array $omnify_order, string $omnify_reason): void {
@@ -220,10 +238,32 @@ class Omnify_Order_Lifecycle_Service {
 			}
 
 			if (! $omnify_stock_row || empty($omnify_stock_row['manage_stock'])) {
+				if ('bundle' === ($omnify_product['type'] ?? '')) {
+					$omnify_child_pids = (array) ($omnify_product['bundled_ids'] ?? []);
+					foreach ($omnify_child_pids as $omnify_child_pid) {
+						$omnify_child_prod = $this->omnify_products->find((int) $omnify_child_pid);
+						if ($omnify_child_prod && ! empty($omnify_child_prod['manage_stock'])) {
+							$this->omnify_products->increment_stock((int) $omnify_child_pid, null, $omnify_qty);
+							$omnify_c_new_qty = $this->omnify_products->get_product_stock_qty((int) $omnify_child_pid);
+							$this->omnify_products->log_stock_change(
+								(int) $omnify_child_pid,
+								null,
+								$omnify_qty,
+								$omnify_c_new_qty,
+								sprintf('%s (Restocked Bundle Child in Order %s)', $omnify_reason, (string) ($omnify_order['order_number'] ?: '#' . $omnify_order['id'])),
+								null
+							);
+							$omnify_items_restocked++;
+							$this->omnify_products->sync_bundles_containing_product((int) $omnify_child_pid);
+						}
+					}
+					$this->omnify_products->sync_bundles_containing_product($omnify_product_id);
+				}
 				continue;
 			}
 
 			$this->omnify_products->increment_stock($omnify_product_id, $omnify_variation_id, $omnify_qty);
+			$this->omnify_products->sync_bundles_containing_product($omnify_product_id);
 			$omnify_new_qty = $omnify_variation_id
 				? $this->omnify_products->get_variation_stock_qty($omnify_variation_id)
 				: $this->omnify_products->get_product_stock_qty($omnify_product_id);
@@ -301,6 +341,36 @@ class Omnify_Order_Lifecycle_Service {
 			}
 
 			if (! $omnify_stock_row || empty($omnify_stock_row['manage_stock'])) {
+				if ('bundle' === ($omnify_product['type'] ?? '')) {
+					$omnify_child_pids = (array) ($omnify_product['bundled_ids'] ?? []);
+					foreach ($omnify_child_pids as $omnify_child_pid) {
+						$omnify_child_prod = $this->omnify_products->find((int) $omnify_child_pid);
+						if ($omnify_child_prod && ! empty($omnify_child_prod['manage_stock'])) {
+							$omnify_c_old_qty = (int) ($omnify_child_prod['stock_qty'] ?? 0);
+							$omnify_c_updated = $this->omnify_products->reduce_stock((int) $omnify_child_pid, null, $omnify_qty);
+							if ($omnify_c_updated) {
+								$omnify_c_new_qty = $this->omnify_products->get_product_stock_qty((int) $omnify_child_pid);
+								$this->omnify_products->log_stock_change(
+									(int) $omnify_child_pid,
+									null,
+									-$omnify_qty,
+									$omnify_c_new_qty,
+									sprintf(__('Bundle child item in Order %s', 'omnifywp-ecommerce'), (string) ($omnify_order['order_number'] ?: '#' . $omnify_order['id'])),
+									null
+								);
+								if ($this->omnify_emails) {
+									$omnify_c_thresh = (isset($omnify_child_prod['low_stock_threshold']) && '' !== trim((string) $omnify_child_prod['low_stock_threshold'])) ? max(0, (int) $omnify_child_prod['low_stock_threshold']) : max(1, (int) ($omnify_settings['low_stock_threshold'] ?? 2));
+									if ($omnify_c_new_qty <= 0) {
+										$this->omnify_emails->send_out_of_stock_alert($omnify_child_prod, null, $omnify_c_old_qty);
+									} elseif ($omnify_c_new_qty <= $omnify_c_thresh) {
+										$this->omnify_emails->send_low_stock_alert($omnify_child_prod, null, $omnify_c_old_qty, $omnify_c_new_qty, $omnify_c_thresh);
+									}
+								}
+								$omnify_items_reduced++;
+							}
+						}
+					}
+				}
 				continue;
 			}
 
@@ -318,6 +388,17 @@ class Omnify_Order_Lifecycle_Service {
 					sprintf(__('Order %s paid', 'omnifywp-ecommerce'), (string) ($omnify_order['order_number'] ?: '#' . $omnify_order['id'])),
 					null
 				);
+
+				// Automated low stock and out-of-stock notification alerts to store admin
+				if ($this->omnify_emails) {
+					$omnify_threshold = (isset($omnify_product['low_stock_threshold']) && '' !== trim((string) $omnify_product['low_stock_threshold'])) ? max(0, (int) $omnify_product['low_stock_threshold']) : max(1, (int) ($omnify_settings['low_stock_threshold'] ?? 2));
+					if ($omnify_new_qty <= 0) {
+						$this->omnify_emails->send_out_of_stock_alert($omnify_product, $omnify_stock_row, $omnify_new_qty + $omnify_qty);
+					} elseif ($omnify_new_qty <= $omnify_threshold) {
+						$this->omnify_emails->send_low_stock_alert($omnify_product, $omnify_stock_row, $omnify_new_qty + $omnify_qty, $omnify_new_qty, $omnify_threshold);
+					}
+				}
+
 				$omnify_items_reduced++;
 			}
 		}
@@ -340,12 +421,15 @@ class Omnify_Order_Lifecycle_Service {
 		if (get_option($omnify_restored_key)) {
 			return;
 		}
-		update_option($omnify_restored_key, '1', false);
 
 		$omnify_coupon = $this->omnify_coupons->find_by_code($omnify_order['coupon_code'], true);
 		if ($omnify_coupon && ! empty($omnify_coupon['id'])) {
-			$this->omnify_coupons->decrement_usage((int) $omnify_coupon['id']);
+			if (! $this->omnify_coupons->decrement_usage((int) $omnify_coupon['id'])) {
+				return;
+			}
 		}
+
+		update_option($omnify_restored_key, '1', false);
 	}
 
 	private function trigger_order_completed_once(int $omnify_order_id): void {

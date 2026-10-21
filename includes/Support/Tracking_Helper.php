@@ -107,6 +107,38 @@ class Tracking_Helper {
 				$url = 'https://merchant.pathao.com/tracking?consignment_id=' . $encoded_number;
 				break;
 
+			case 'deutschepost':
+			case 'deutschepostdhl':
+				$url = 'https://www.deutschepost.de/sendung/simpleQuery.html?locale=en_GB&form.sendungsnummer=' . $encoded_number;
+				break;
+
+			case 'postnl':
+				$url = 'https://postnl.post/tracktrace/?barcode=' . $encoded_number;
+				break;
+
+			case 'correos':
+			case 'correosespana':
+				$url = 'https://www.correos.es/es/en/tools/tracker/items/' . $encoded_number;
+				break;
+
+			case 'indiapost':
+			case 'speedpost':
+				$url = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+				break;
+
+			case 'chronopost':
+				$url = 'https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=' . $encoded_number;
+				break;
+
+			case 'bluedart':
+				$url = 'https://www.bluedart.com/tracking?trackNumber=' . $encoded_number;
+				break;
+
+			case 'sfexpress':
+			case 'shunfeng':
+				$url = 'https://www.sf-international.com/us/en/dynamic_function/waybill/#search/bill-number/' . $encoded_number;
+				break;
+
 			default:
 				// Fallback to universal package tracker
 				$url = 'https://parcelsapp.com/en/tracking/' . $encoded_number;

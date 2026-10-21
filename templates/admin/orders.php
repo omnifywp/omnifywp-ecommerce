@@ -117,7 +117,7 @@ $omnify_filter_sort           = isset($_GET['sort']) ? sanitize_key(wp_unslash($
 				<label for="status"><?php esc_html_e('Order Status', 'omnifywp-ecommerce'); ?></label>
 				<select id="status" name="status">
 					<option value=""><?php esc_html_e('All Statuses', 'omnifywp-ecommerce'); ?></option>
-					<?php foreach (['pending','processing','completed','shipped','refunded','cancelled','trash'] as $omnify_st): ?>
+					<?php foreach (['pending','processing','packed','ready_to_deliver','out_for_delivery','delivered','completed','shipped','refund_requested','refunded','cancelled','failed','trash'] as $omnify_st): ?>
 						<option value="<?php echo esc_attr($omnify_st); ?>" <?php selected($omnify_filter_status, $omnify_st); ?>><?php echo esc_html(ucfirst(str_replace('_',' ',$omnify_st))); ?></option>
 					<?php endforeach; ?>
 				</select>
@@ -239,23 +239,23 @@ $omnify_filter_sort           = isset($_GET['sort']) ? sanitize_key(wp_unslash($
 				<div class="omnify-table-toolbar">
 					<div class="left">
 						<input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" style="margin-right:8px;" />
-						<span class="selected-count">0 selected</span>
+						<span class="selected-count"><?php esc_html_e('0 selected', 'omnifywp-ecommerce'); ?></span>
 						<div class="omnify-bulk-actions-wrapper" style="display: none; align-items: center; gap: 8px; margin-left: 16px;">
 							<select name="bulk_action">
-								<option value="">Bulk actions</option>
-								<option value="trash">Move to Trash</option>
-								<option value="restore">Restore from Trash</option>
-								<option value="mark_completed">Mark as Completed</option>
-								<option value="mark_shipped">Mark as Shipped</option>
-								<option value="mark_processing">Mark as Processing</option>
-								<option value="mark_cancelled">Mark as Cancelled</option>
-								<option value="fulfill">Mark Fulfilled</option>
-								<option value="packing_slips">Generate Packing Slips (open printable)</option>
+								<option value=""><?php esc_html_e('Bulk actions', 'omnifywp-ecommerce'); ?></option>
+								<option value="trash"><?php esc_html_e('Move to Trash', 'omnifywp-ecommerce'); ?></option>
+								<option value="restore"><?php esc_html_e('Restore from Trash', 'omnifywp-ecommerce'); ?></option>
+								<option value="mark_completed"><?php esc_html_e('Mark as Completed', 'omnifywp-ecommerce'); ?></option>
+								<option value="mark_shipped"><?php esc_html_e('Mark as Shipped', 'omnifywp-ecommerce'); ?></option>
+								<option value="mark_processing"><?php esc_html_e('Mark as Processing', 'omnifywp-ecommerce'); ?></option>
+								<option value="mark_cancelled"><?php esc_html_e('Mark as Cancelled', 'omnifywp-ecommerce'); ?></option>
+								<option value="fulfill"><?php esc_html_e('Mark Fulfilled', 'omnifywp-ecommerce'); ?></option>
+								<option value="packing_slips"><?php esc_html_e('Generate Packing Slips (open printable)', 'omnifywp-ecommerce'); ?></option>
 								<?php if ('trash' === $omnify_status) : ?>
 									<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
 								<?php endif; ?>
 							</select>
-							<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm">Apply</button>
+							<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Apply', 'omnifywp-ecommerce'); ?></button>
 						</div>
 					</div>
 					<div class="right">

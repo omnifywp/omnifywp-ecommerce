@@ -228,9 +228,28 @@ if ($omnify_success_order) {
 		<?php endif; ?>
 
 		<?php
-		$omnify_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
-		$omnify_is_physical_checkout = (isset($omnify_product['type']) && $omnify_product['type'] === 'physical')
-			|| (isset($omnify_product['type']) && $omnify_product['type'] === 'variable' && 'physical' === ($omnify_variation_settings['product_kind'] ?? 'digital'));
+		if (! empty($omnify_is_cart_checkout) && ! empty($omnify_cart_items) && is_array($omnify_cart_items)) {
+			$omnify_is_physical_checkout = false;
+			foreach ($omnify_cart_items as $omnify_ci) {
+				$omnify_ci_prod = $omnify_ci['product'] ?? $omnify_ci;
+				$omnify_ci_kind = $omnify_ci_prod['type'] ?? 'digital';
+				if ('physical' === $omnify_ci_kind) {
+					$omnify_is_physical_checkout = true;
+					break;
+				}
+				if ('variable' === $omnify_ci_kind) {
+					$omnify_ci_var_set = wp_parse_args($omnify_ci_prod['variation_settings'] ?? [], ['product_kind' => 'digital']);
+					if ('physical' === ($omnify_ci_var_set['product_kind'] ?? 'digital')) {
+						$omnify_is_physical_checkout = true;
+						break;
+					}
+				}
+			}
+		} else {
+			$omnify_variation_settings = wp_parse_args($omnify_product['variation_settings'] ?? [], ['product_kind' => 'digital']);
+			$omnify_is_physical_checkout = (isset($omnify_product['type']) && $omnify_product['type'] === 'physical')
+				|| (isset($omnify_product['type']) && $omnify_product['type'] === 'variable' && 'physical' === ($omnify_variation_settings['product_kind'] ?? 'digital'));
+		}
 		?>
 
 		<!-- Steps Nav (Minimal Modern) -->
@@ -319,7 +338,39 @@ if ($omnify_success_order) {
 		$omnify_line_total = $omnify_actual_price * $omnify_checkout_quantity;
 		?>
 
-		<div id="omnify-checkout-page-grid" class="omnify-checkout-grid" style="<?php echo ! empty($omnify_is_redirect_success) ? 'display: none;' : ''; ?>">
+		<?php
+		$omnify_checkout_layout = sanitize_key((string) ($omnify_settings['checkout_layout'] ?? ''));
+		$omnify_grid_extra_class = ('1col' === $omnify_checkout_layout) ? 'omnify-checkout-grid--1col' : '';
+		$omnify_show_scarcity = ! empty($omnify_settings['checkout_show_timer']);
+		$omnify_timer_mins    = ! empty($omnify_settings['checkout_timer_minutes']) ? absint($omnify_settings['checkout_timer_minutes']) : 15;
+		?>
+
+		<?php if ($omnify_show_scarcity) : ?>
+		<div class="omnify-checkout-urgency-banner" style="background: #fef3c7; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; color: #92400e; font-weight: 500;">
+			<span class="dashicons dashicons-clock" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span>
+			<span><?php esc_html_e('Your items and special pricing are reserved for:', 'omnifywp-ecommerce'); ?> <strong id="omnify-checkout-timer" data-minutes="<?php echo esc_attr((string) $omnify_timer_mins); ?>" style="font-family: monospace; font-size: 14px; color: #b45309;"><?php echo esc_html(sprintf('%02d:00', $omnify_timer_mins)); ?></strong></span>
+		</div>
+		<script>
+		(function() {
+			var timerEl = document.getElementById('omnify-checkout-timer');
+			if (!timerEl) return;
+			var totalSec = (parseInt(timerEl.getAttribute('data-minutes'), 10) || 15) * 60;
+			var interval = setInterval(function() {
+				totalSec--;
+				if (totalSec <= 0) {
+					clearInterval(interval);
+					timerEl.textContent = '00:00';
+					return;
+				}
+				var m = Math.floor(totalSec / 60);
+				var s = totalSec % 60;
+				timerEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+			}, 1000);
+		})();
+		</script>
+		<?php endif; ?>
+
+		<div id="omnify-checkout-page-grid" class="omnify-checkout-grid <?php echo esc_attr($omnify_grid_extra_class); ?>" style="<?php echo ! empty($omnify_is_redirect_success) ? 'display: none;' : ''; ?>">
 			
 			<!-- Left Column: Form -->
 			<div>
@@ -370,6 +421,7 @@ if ($omnify_success_order) {
 					
 					<div class="omnify-checkout-form-group">
 						<input type="email" id="omnify-email" name="email" required placeholder="<?php esc_attr_e('Email address *', 'omnifywp-ecommerce'); ?>" value="<?php echo esc_attr($omnify_default_email); ?>">
+						<div id="omnify-email-check-msg" style="display: none; font-size: 12px; margin-top: 6px; padding: 6px 10px; border-radius: 6px;"></div>
 					</div>
 
 					<!-- Guest Checkout Tracking Info -->
@@ -393,7 +445,14 @@ if ($omnify_success_order) {
 								</label>
 								<div id="omnify-password-group" class="omnify-checkout-form-group" style="display: none; margin-top: 12px; margin-bottom: 0;">
 									<label for="omnify-password" style="font-size: 12px; font-weight: 500; color: #475569; display: block; margin-bottom: 4px;"><?php esc_html_e('Create Password *', 'omnifywp-ecommerce'); ?></label>
-									<input type="password" id="omnify-password" name="password" placeholder="<?php esc_attr_e('Choose a password (min. 6 characters)', 'omnifywp-ecommerce'); ?>">
+									<div class="omnify-password-field" style="position: relative;">
+										<input type="password" id="omnify-password" name="password" data-omnify-password-strength placeholder="<?php esc_attr_e('Choose a password (min. 6 characters)', 'omnifywp-ecommerce'); ?>" style="padding-right: 56px;">
+										<button type="button" data-omnify-toggle-password style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 11.5px; font-weight: 600; color: #64748B; cursor: pointer; padding: 4px 6px;"><?php esc_html_e('Show', 'omnifywp-ecommerce'); ?></button>
+									</div>
+									<div class="omnify-password-strength-bar" style="margin-top: 6px; height: 4px; width: 100%; background: #E2E8F0; border-radius: 2px; overflow: hidden; display: none;" id="omnify-password-strength-track">
+										<div id="omnify-password-meter-fill" style="height: 100%; width: 0; transition: width 0.3s ease, background-color 0.3s ease; border-radius: 2px;"></div>
+									</div>
+									<div data-omnify-password-meter class="omnify-password-meter" style="font-size: 11px; color: #64748B; margin-top: 5px;"></div>
 								</div>
 							</div>
 						<?php endif; ?>
@@ -577,9 +636,11 @@ if ($omnify_success_order) {
 
 							<!-- Company name (Optional) -->
 							<div class="omnify-company-wrap">
-								<a href="#" id="omnify-toggle-company" class="optional-toggle-link">+ <?php esc_html_e('Company name (optional)', 'omnifywp-ecommerce'); ?></a>
+								<a href="#" id="omnify-toggle-company" class="optional-toggle-link">+ <?php esc_html_e('Company name & VAT (optional)', 'omnifywp-ecommerce'); ?></a>
 								<div class="omnify-checkout-form-group" id="omnify-company-input-group" style="display: none;">
-									<input type="text" id="omnify-company" name="billing_company" placeholder="<?php esc_attr_e('Company name', 'omnifywp-ecommerce'); ?>">
+									<input type="text" id="omnify-company" name="billing_company" placeholder="<?php esc_attr_e('Company name', 'omnifywp-ecommerce'); ?>" style="margin-bottom: 8px;">
+									<input type="text" id="omnify-vat-number" name="vat_number" placeholder="<?php esc_attr_e('EU VAT number (optional, e.g. DE123456789)', 'omnifywp-ecommerce'); ?>">
+									<div id="omnify-vat-notice" style="display: none; font-size: 11px; margin-top: 4px; font-weight: 500;"></div>
 								</div>
 							</div>
 
@@ -709,9 +770,11 @@ if ($omnify_success_order) {
 						</div>
 
 						<div class="omnify-company-wrap">
-							<a href="#" id="omnify-toggle-company" class="optional-toggle-link">+ <?php esc_html_e('Company name (optional)', 'omnifywp-ecommerce'); ?></a>
+							<a href="#" id="omnify-toggle-company" class="optional-toggle-link">+ <?php esc_html_e('Company name & VAT (optional)', 'omnifywp-ecommerce'); ?></a>
 							<div class="omnify-checkout-form-group" id="omnify-company-input-group" style="display: none;">
-								<input type="text" id="omnify-company" name="billing_company" placeholder="<?php esc_attr_e('Company name', 'omnifywp-ecommerce'); ?>">
+								<input type="text" id="omnify-company" name="billing_company" placeholder="<?php esc_attr_e('Company name', 'omnifywp-ecommerce'); ?>" style="margin-bottom: 8px;">
+								<input type="text" id="omnify-vat-number-digital" name="vat_number" placeholder="<?php esc_attr_e('EU VAT number (optional, e.g. DE123456789)', 'omnifywp-ecommerce'); ?>">
+								<div id="omnify-vat-notice-digital" style="display: none; font-size: 11px; margin-top: 4px; font-weight: 500;"></div>
 							</div>
 						</div>
 
@@ -762,6 +825,7 @@ if ($omnify_success_order) {
 					<?php endif; ?>
 
 					<!-- Order Notes / Special Instructions -->
+					<?php if (! isset($omnify_show_order_notes) || $omnify_show_order_notes) : ?>
 					<div class="omnify-checkout-notes-wrap" style="margin-top: 20px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--checkout-gray-200);">
 						<label for="omnify-order-notes" style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--checkout-gray-700); margin-bottom: 8px;">
 							<span><span class="dashicons dashicons-edit" style="font-size:14px; width:14px; height:14px; vertical-align:middle;"></span></span>
@@ -769,6 +833,7 @@ if ($omnify_success_order) {
 						</label>
 						<textarea id="omnify-order-notes" name="order_notes" rows="2" placeholder="<?php esc_attr_e('Notes about your order, e.g. special delivery instructions or gift requests...', 'omnifywp-ecommerce'); ?>" style="width: 100%; border: 1px solid var(--checkout-gray-200); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: inherit; line-height: 1.4; resize: vertical; box-sizing: border-box; background: #fff;"></textarea>
 					</div>
+					<?php endif; ?>
 
 					<!-- Payment selection block -->
 					<?php 
@@ -1066,9 +1131,9 @@ if ($omnify_success_order) {
 								<span style="font-size: 13px; line-height: 1.4; color: var(--checkout-gray-700);">
 									<?php printf(
 										wp_kses(
-											// translators: %s: placeholder value.
-											__('I agree to the <a href="%s" target="_blank" style="color: var(--checkout-primary); text-decoration: underline;">Terms & Conditions</a>', 'omnifywp-ecommerce'),
-											['a' => ['href' => [], 'target' => [], 'style' => []]]
+											/* translators: %s: placeholder value. */
+											__('I agree to the <a href="%s" target="_blank" rel="noopener noreferrer" style="color: var(--checkout-primary); text-decoration: underline;">Terms & Conditions</a>', 'omnifywp-ecommerce'),
+											['a' => ['href' => [], 'target' => [], 'rel' => [], 'style' => []]]
 										),
 										esc_url($omnify_settings['terms_url'] ?: '#')
 									); ?> <span class="required" style="color: #dc2626;">*</span>
@@ -1349,6 +1414,16 @@ if ($omnify_success_order) {
 									<?php echo esc_html($omnify_tb['label']); ?>
 								</span>
 							<?php endforeach; ?>
+						</div>
+					</div>
+					<?php endif; ?>
+
+					<?php if (! empty($omnify_settings['checkout_show_guarantees'])) : ?>
+					<div class="omnify-checkout-guarantee-seal" style="margin-top: 14px; padding: 12px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #166534;">
+						<span class="dashicons dashicons-shield" style="font-size: 20px; width: 20px; height: 20px; color: #16a34a; line-height: 1;"></span>
+						<div>
+							<strong style="display: block; font-size: 12.5px;"><?php esc_html_e('30-Day Money-Back Guarantee', 'omnifywp-ecommerce'); ?></strong>
+							<span><?php esc_html_e('100% risk-free. Hassle-free refunds or instant replacements.', 'omnifywp-ecommerce'); ?></span>
 						</div>
 					</div>
 					<?php endif; ?>

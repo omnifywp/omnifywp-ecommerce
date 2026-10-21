@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Omnify_Migrations {
-	private const VERSION = '2026_10_18_000094_stock_subscribers';
+	private const VERSION = '2026_10_21_000095_variation_estimated_delivery';
 
 	public function __construct(private Omnify_Schema $omnify_schema) {}
 
@@ -68,6 +68,8 @@ class Omnify_Migrations {
 		$this->migrate_add_product_taxonomy_indexes();
 		$this->migrate_add_order_stock_lifecycle_columns();
 		$this->migrate_webhook_events_diagnostic_columns();
+		$this->migrate_add_downloads_indexes();
+		$this->migrate_add_variation_estimated_delivery();
 
 		$this->record(self::VERSION);
 		update_option('omnify_schema_version', self::VERSION);
@@ -1307,6 +1309,18 @@ class Omnify_Migrations {
 		}
 	}
 
+	private function migrate_add_downloads_indexes(): void {
+		global $wpdb;
+		$omnify_table = $this->omnify_schema->table('downloads');
+		if (! $this->table_exists($omnify_table)) {
+			return;
+		}
+
+		if (empty($this->table_indexes($omnify_table, 'customer_file_status'))) {
+			$this->add_key($omnify_table, 'customer_file_status', 'customer_id, file_id, status');
+		}
+	}
+
 	private function migrate_add_order_items_item_meta(): void {
 		global $wpdb;
 
@@ -1373,6 +1387,19 @@ class Omnify_Migrations {
 		}
 		if (empty($this->table_indexes($omnify_table, 'status'))) {
 			$this->add_key($omnify_table, 'status', 'status');
+		}
+	}
+
+	private function migrate_add_variation_estimated_delivery(): void {
+		global $wpdb;
+
+		$omnify_table = $this->omnify_schema->table('product_variations');
+		if (! $this->table_exists($omnify_table)) {
+			return;
+		}
+
+		if (! $this->column_exists($omnify_table, 'estimated_delivery')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN estimated_delivery VARCHAR(100) NULL AFTER thumbnail_id', $omnify_table));
 		}
 	}
 

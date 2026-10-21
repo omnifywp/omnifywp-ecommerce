@@ -72,6 +72,28 @@ class Omnify_Email_Service {
 		return Omnify_Locations::currency_symbol($omnify_currency);
 	}
 
+	public function format_price(float $omnify_amount, string $omnify_currency = 'USD'): string {
+		$omnify_symbol = $this->currency_symbol($omnify_currency);
+		$omnify_settings = $this->omnify_settings();
+		$omnify_pos = (string) ($omnify_settings['currency_position'] ?? 'left');
+		$omnify_decimals = (int) ($omnify_settings['currency_decimals'] ?? 2);
+		$omnify_dec_point = (string) ($omnify_settings['decimal_separator'] ?? '.');
+		$omnify_thousands = (string) ($omnify_settings['thousand_separator'] ?? ',');
+		$omnify_formatted = number_format($omnify_amount, $omnify_decimals, $omnify_dec_point, $omnify_thousands);
+
+		switch ($omnify_pos) {
+			case 'left_space':
+				return $omnify_symbol . ' ' . $omnify_formatted;
+			case 'right':
+				return $omnify_formatted . $omnify_symbol;
+			case 'right_space':
+				return $omnify_formatted . ' ' . $omnify_symbol;
+			case 'left':
+			default:
+				return $omnify_symbol . $omnify_formatted;
+		}
+	}
+
 	private function omnify_settings(): array {
 		$omnify_settings = get_option('omnify_settings', []);
 
@@ -273,18 +295,33 @@ class Omnify_Email_Service {
 			$omnify_failure = $omnify_error;
 		};
 
+		$omnify_phpmailer_init = static function ($phpmailer): void {
+			if (isset($phpmailer->Timeout) && $phpmailer->Timeout > 15) {
+				$phpmailer->Timeout = 15;
+			}
+		};
+
 		add_action('wp_mail_failed', $omnify_capture);
+		add_action('phpmailer_init', $omnify_phpmailer_init);
 		$omnify_sent = wp_mail($omnify_to, $omnify_subject, $omnify_body, $omnify_headers);
 		remove_action('wp_mail_failed', $omnify_capture);
+		remove_action('phpmailer_init', $omnify_phpmailer_init);
 
 		$omnify_error_message = '';
 		if (! $omnify_sent) {
 			if ($omnify_failure && is_wp_error($omnify_failure)) {
 				$omnify_error_message = $omnify_failure->get_error_message();
 			}
+			global $phpmailer;
+			if (! $omnify_error_message && isset($phpmailer) && ! empty($phpmailer->ErrorInfo)) {
+				$omnify_error_message = (string) $phpmailer->ErrorInfo;
+			}
 			if (! $omnify_error_message) {
 				$omnify_error_message = __('WordPress mail returned false without a detailed error.', 'omnifywp-ecommerce');
 			}
+			set_transient('omnify_last_mail_error', $omnify_error_message, 60);
+		} else {
+			delete_transient('omnify_last_mail_error');
 		}
 
 		$this->log_email($omnify_trigger, $omnify_to, $omnify_subject, $omnify_body, $omnify_headers, $omnify_sent ? 'sent' : 'failed', $omnify_error_message, $omnify_context);
@@ -476,7 +513,7 @@ class Omnify_Email_Service {
 				</tr>',
 				$omnify_item_desc,
 				$omnify_item['quantity'],
-				esc_html($omnify_symbol . number_format(($omnify_item['price'] + $omnify_item['tax']) * $omnify_item['quantity'], 2))
+				esc_html($omnify_symbol . number_format(($omnify_item['price'] * $omnify_item['quantity']) + (float) ($omnify_item['tax'] ?? 0), 2))
 			);
 		}
 
@@ -691,7 +728,7 @@ class Omnify_Email_Service {
 					<td style="padding: 8px 10px; border-bottom: 1px solid #eee; text-align: right;">%s</td>
 				</tr>',
 				$omnify_item_desc,
-				esc_html($omnify_symbol . number_format(($omnify_item['price'] + $omnify_item['tax']) * $omnify_item['quantity'], 2))
+				esc_html($omnify_symbol . number_format(($omnify_item['price'] * $omnify_item['quantity']) + (float) ($omnify_item['tax'] ?? 0), 2))
 			);
 		}
 
@@ -813,11 +850,15 @@ class Omnify_Email_Service {
 			$omnify_recovery_url = add_query_arg(['coupon' => $omnify_coupon_code], $omnify_recovery_url);
 		}
 		$omnify_cart_token   = (string) ($omnify_cart['token'] ?? '');
+		$omnify_reminder_count = (int) ($omnify_cart['reminder_count'] ?? 0);
+		$omnify_stage          = $omnify_reminder_count + 1;
+
 		$omnify_unsubscribe_url = esc_url_raw(
 			add_query_arg(
 				[
 					'omnify_action' => 'unsubscribe_abandoned_cart',
 					'token'         => $omnify_cart_token,
+					'sig'           => hash_hmac('sha256', $omnify_cart_token, wp_salt('nonce')),
 				],
 				home_url('/')
 			)
@@ -831,10 +872,22 @@ class Omnify_Email_Service {
 			'{recovery_url}'    => $omnify_recovery_url,
 			'{coupon_code}'     => $omnify_coupon_code,
 			'{unsubscribe_url}' => $omnify_unsubscribe_url,
+			'{reminder_stage}'  => (string) $omnify_stage,
 		];
 
+		// Multi-stage abandoned cart copy customization (Item 26)
+		$omnify_default_subject = '[{site_name}] Complete your order';
+		$omnify_default_heading = __('Complete your order', 'omnifywp-ecommerce');
+		if (2 === $omnify_stage) {
+			$omnify_default_subject = '[{site_name}] Still thinking about it? Complete your order';
+			$omnify_default_heading = __('We saved your items for you', 'omnifywp-ecommerce');
+		} elseif ($omnify_stage >= 3) {
+			$omnify_default_subject = '[{site_name}] Final reminder: Your cart is expiring soon';
+			$omnify_default_heading = __('Final reminder: Don\'t miss out!', 'omnifywp-ecommerce');
+		}
+
 		$omnify_subject = strtr(
-			(string) ($omnify_settings['email_abandoned_cart_subject'] ?? '[{site_name}] Complete your order'),
+			(string) ($omnify_settings['email_abandoned_cart_subject'] ?? $omnify_default_subject),
 			array_merge(['{site_name}' => get_bloginfo('name')], $omnify_tokens)
 		);
 		$omnify_intro = strtr(
@@ -844,7 +897,7 @@ class Omnify_Email_Service {
 		$omnify_footer = trim((string) ($omnify_settings['email_footer_text'] ?? ''));
 
 		$omnify_body = '<div style="font-family: Helvetica, Arial, sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 10px;">
-			<h2 style="color: #0f172a; margin: 0 0 12px; font-size: 24px;">' . esc_html__('Complete your order', 'omnifywp-ecommerce') . '</h2>
+			<h2 style="color: #0f172a; margin: 0 0 12px; font-size: 24px;">' . esc_html($omnify_default_heading) . '</h2>
 			<p style="font-size: 15px; line-height: 1.7; margin: 0 0 18px;">' . nl2br(esc_html($omnify_intro)) . '</p>
 			<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 18px 0;">
 				<p style="margin: 0 0 8px; font-size: 13px; color: #64748b;">' . esc_html__('Cart item', 'omnifywp-ecommerce') . '</p>
@@ -870,7 +923,13 @@ class Omnify_Email_Service {
 			</p>
 		</div>';
 
-		return $this->send_logged('abandoned_cart', $omnify_email, $omnify_subject, $omnify_body, [], ['cart_id' => absint($omnify_cart['id'] ?? 0)]);
+		// RFC 8058 compliant unsubscribe headers (Item 25)
+		$omnify_headers = [
+			'List-Unsubscribe: <' . $omnify_unsubscribe_url . '>',
+			'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+		];
+
+		return $this->send_logged('abandoned_cart', $omnify_email, $omnify_subject, $omnify_body, $omnify_headers, ['cart_id' => absint($omnify_cart['id'] ?? 0)]);
 	}
 
 	public function send_low_stock_alert(array $omnify_product, ?array $omnify_variation, int $omnify_old_qty, int $omnify_new_qty, int $omnify_threshold): bool {

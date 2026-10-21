@@ -58,26 +58,7 @@
 					if (typeof tinymce === 'undefined') return;
 
 					if (step === 2) {
-						document.querySelectorAll('.omnify-var-description-textarea').forEach(function(ta) {
-							if (!ta.id) {
-								ta.id = 'var-desc-' + Math.random().toString(36).substr(2, 9);
-							}
-							if (!tinymce.get(ta.id)) {
-								tinymce.init({
-									selector: '#' + ta.id,
-									menubar: false,
-									branding: false,
-									plugins: 'lists link',
-									toolbar: 'bold italic underline | bullist numlist | link',
-									height: 100,
-									setup: function(editor) {
-										editor.on('change keyup', function() {
-											editor.save();
-										});
-									}
-								});
-							}
-						});
+						// Variation Note uses a clean, lightweight native textarea
 					}
 
 					if (step === 3) {
@@ -632,6 +613,8 @@
 						}
 						if (e.target.classList.contains('omnify-var-preorder-toggle')) {
 							const row = e.target.closest('.omnify-variation-row');
+							const preGrid = row.querySelector('.omnify-var-preorder-fields-grid');
+							if (preGrid) preGrid.style.display = e.target.checked ? 'grid' : 'none';
 							row.querySelectorAll('.omnify-var-preorder-field').forEach(field => {
 								field.style.display = e.target.checked ? 'block' : 'none';
 							});
@@ -721,173 +704,153 @@
 							optionsHtml += `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>${opt}</option>`;
 						});
 							selectsHtml += `
-								<div class="omnify-variation-attribute-control" style="display:flex; align-items:center; gap:4px;">
-									<span>${attr.name}:</span>
+								<div class="omnify-variation-attribute-control">
+									<span class="omnify-attr-badge-label">${attr.name}</span>
 									<select name="variations[${index}][attributes][${attr.name}]" class="omnify-variation-attr-select" required>
 										${optionsHtml}
-								</select>
-							</div>
-						`;
+									</select>
+								</div>
+							`;
 					});
 
+					const currencySymbol = document.getElementById('price') ? (document.querySelector('label[for="price"]').textContent.match(/\(([^)]+)\)/) ? document.querySelector('label[for="price"]').textContent.match(/\(([^)]+)\)/)[1] : '$') : '$';
 					const row = document.createElement('div');
 					row.className = 'omnify-variation-row';
-					row.style.cssText = 'background:#ffffff; border:1px solid var(--omnify-gray-200); border-radius:6px; padding:16px; position:relative;';
 					row.innerHTML = `
 						<input type="hidden" name="variations[${index}][id]" value="" />
-							<div class="omnify-variation-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--omnify-gray-100);">
-								<div class="omnify-variation-attributes" style="display:flex; gap:8px; flex-wrap:wrap; font-weight:600; font-size:12px;">
-									${selectsHtml || '<span style="color:red; font-style:italic;">No attributes defined. Define attributes first.</span>'}
+						<div class="omnify-variation-header">
+							<div class="omnify-variation-attributes">
+								${selectsHtml || '<span style="color:#ef4444; font-size:12px; font-weight:600;">No attributes defined. Define attributes first.</span>'}
+							</div>
+							<button type="button" class="omnify-remove-variation" title="Delete variation" aria-label="Delete variation">
+								<span class="dashicons dashicons-trash"></span>
+							</button>
+						</div>
+
+						<div class="omnify-variation-body">
+							<!-- Pricing Grid: SKU | Regular Price | Sale Price -->
+							<div class="omnify-form-row omnify-variation-grid-pricing">
+								<div class="omnify-form-group">
+									<label>SKU</label>
+									<input type="text" name="variations[${index}][sku]" value="${data.sku || ''}" placeholder="e.g. SIZE-S" class="omnify-var-sku-input" />
 								</div>
-							<button type="button" class="omnify-button omnify-button--danger omnify-button--sm omnify-remove-variation" style="padding: 2px 8px !important; height: 24px !important; line-height: 22px !important; display: inline-flex; align-items: center; justify-content: center;"><span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px;"></span></button>
-						</div>
-
-						<div class="omnify-form-row omnify-form-row--thirds omnify-variation-grid-pricing">
-							<div class="omnify-form-group">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">SKU</label>
-								<input type="text" name="variations[${index}][sku]" value="${data.sku || ''}" placeholder="e.g. SIZE-S" />
-							</div>
-							<div class="omnify-form-group">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Regular Price (${document.getElementById('price') ? document.querySelector('label[for="price"]').textContent.match(/\(([^)]+)\)/)[1] : '$'}) *</label>
-								<input type="number" step="0.01" min="0" name="variations[${index}][price]" value="${data.price || '0.00'}" required />
-							</div>
-							<div class="omnify-form-group">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Sale Price</label>
-								<input type="number" step="0.01" min="0" name="variations[${index}][sale_price]" value="${data.sale_price || ''}" />
-							</div>
-						</div>
-
-						<div class="omnify-form-row omnify-variation-grid-stock" style="margin-top:10px; align-items: center;">
-							<div class="omnify-form-group" style="margin-bottom: 0;">
-								<label class="omnify-toggle">
-									<input type="checkbox" name="variations[${index}][manage_stock]" class="omnify-var-manage-stock" value="1" />
-									<span class="omnify-toggle__label" style="font-size:11px;">Manage stock level</span>
-								</label>
-							</div>
-							<div class="omnify-form-group omnify-var-stock-qty-group" style="margin-bottom: 0; display:none;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Stock Qty</label>
-								<input type="number" name="variations[${index}][stock_qty]" value="0" style="padding: 4px 8px !important; height: 28px !important;" />
-							</div>
-							<div class="omnify-form-group omnify-var-stock-status-group" style="margin-bottom: 0;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Stock Status</label>
-								<select name="variations[${index}][stock_status]" style="padding: 4px 8px !important; height: 28px !important;">
-									<option value="instock">In Stock</option>
-									<option value="outofstock">Out of Stock</option>
-									<option value="onbackorder">On Backorder</option>
-								</select>
-							</div>
-						</div>
-
-						<div class="omnify-form-row omnify-variation-grid-preorder" style="margin-top:10px; align-items:flex-end;">
-							<div class="omnify-form-group" style="margin-bottom:0;">
-								<label class="omnify-toggle">
-									<input  type="checkbox" name="variations[${index}][allow_backorders]" value="1" />
-									<span class="omnify-toggle__label" style="font-size:11px;">Allow backorders</span>
-								</label>
-							</div>
-							<div class="omnify-form-group" style="margin-bottom:0;">
-								<label class="omnify-toggle">
-									<input type="checkbox" name="variations[${index}][preorder_enabled]" class="omnify-var-preorder-toggle" value="1" />
-									<span class="omnify-toggle__label" style="font-size:11px;">Preorder</span>
-								</label>
-							</div>
-							<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; display:none;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Release Date</label>
-								<input type="date" name="variations[${index}][preorder_release_date]" style="padding: 4px 8px !important; height: 28px !important;" />
-							</div>
-							<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; display:none;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Limit</label>
-								<input type="number" min="1" name="variations[${index}][preorder_limit]" style="padding: 4px 8px !important; height: 28px !important;" />
-							</div>
-							<div class="omnify-form-group omnify-var-preorder-field" style="margin-bottom:0; display:none;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Message</label>
-								<input type="text" name="variations[${index}][preorder_message]" placeholder="Ships when available" style="padding: 4px 8px !important; height: 28px !important;" />
-							</div>
-						</div>
-
-						<div class="omnify-form-row omnify-variation-grid-media" style="margin-top:10px; gap:12px; align-items:flex-start;">
-							<div class="omnify-form-group" style="margin-bottom:0; flex:0 0 auto; width:80px;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Image</label>
-								<input type="hidden" class="omnify-var-thumbnail-id-input" name="variations[${index}][thumbnail_id]" value="" />
-								<div class="omnify-var-thumbnail-preview" style="margin-bottom:4px;"><span style="font-size:11px;color:#9ca3af;">No image</span></div>
-								<div style="display:flex;gap:4px;flex-direction:column;">
-									<button type="button" class="omnify-button omnify-button--secondary omnify-var-pick-image-btn" style="padding:2px 6px !important;font-size:10px;height:auto!important;">Select</button>
-									<button type="button" class="omnify-button omnify-button--danger omnify-var-remove-image-btn" style="padding:2px 6px !important;font-size:10px;height:auto!important;">Remove</button>
+								<div class="omnify-form-group">
+									<label>Regular Price (${currencySymbol}) <span class="omnify-required">*</span></label>
+									<div class="omnify-input-wrapper omnify-input-with-prefix">
+										<span class="omnify-input-prefix">${currencySymbol}</span>
+										<input type="number" step="0.01" min="0" name="variations[${index}][price]" value="${data.price || '0.00'}" required placeholder="0.00" />
+									</div>
+								</div>
+								<div class="omnify-form-group">
+									<label>Sale Price (${currencySymbol})</label>
+									<div class="omnify-input-wrapper omnify-input-with-prefix">
+										<span class="omnify-input-prefix">${currencySymbol}</span>
+										<input type="number" step="0.01" min="0" name="variations[${index}][sale_price]" value="${data.sale_price || ''}" placeholder="Optional discount" />
+									</div>
 								</div>
 							</div>
-							<div class="omnify-form-group" style="margin-bottom:0; flex:1;">
-								<label style="font-size:11px; font-weight:600; margin-bottom:4px;">Variation Note</label>
-								<textarea name="variations[${index}][description]" class="omnify-var-description-textarea" rows="2" placeholder="e.g. Ships from Japan, limited edition" style="width:100%;font-size:12px;resize:vertical;min-height:54px;"></textarea>
+
+							<!-- Stock Grid -->
+							<div class="omnify-form-row omnify-variation-grid-stock">
+								<div class="omnify-form-group">
+									<label>Inventory Tracking</label>
+									<div class="omnify-toggle-box">
+										<label class="omnify-toggle">
+											<input type="checkbox" name="variations[${index}][manage_stock]" class="omnify-var-manage-stock" value="1" />
+											<span class="omnify-toggle__label">Manage stock level</span>
+										</label>
+									</div>
+								</div>
+								<div class="omnify-form-group omnify-var-stock-qty-group" style="display:none;">
+									<label>Stock Qty</label>
+									<input type="number" name="variations[${index}][stock_qty]" value="0" placeholder="0" />
+								</div>
+								<div class="omnify-form-group omnify-var-stock-status-group">
+									<label>Stock Status</label>
+									<select name="variations[${index}][stock_status]">
+										<option value="instock">In Stock</option>
+										<option value="outofstock">Out of Stock</option>
+										<option value="onbackorder">On Backorder</option>
+									</select>
+								</div>
+							</div>
+
+							<!-- Availability & Preorder Strip -->
+							<div class="omnify-var-availability-panel">
+								<div class="omnify-var-availability-toggles">
+									<div class="omnify-var-toggle-item">
+										<label class="omnify-toggle">
+											<input type="checkbox" name="variations[${index}][allow_backorders]" value="1" />
+											<span class="omnify-toggle__label">Allow backorders</span>
+										</label>
+									</div>
+									<div class="omnify-var-toggle-item">
+										<label class="omnify-toggle">
+											<input type="checkbox" name="variations[${index}][preorder_enabled]" class="omnify-var-preorder-toggle" value="1" />
+											<span class="omnify-toggle__label">Preorder</span>
+										</label>
+									</div>
+								</div>
+								<div class="omnify-var-preorder-fields-grid" style="display:none;">
+									<div class="omnify-form-group omnify-var-preorder-field">
+										<label>Release Date</label>
+										<input type="date" name="variations[${index}][preorder_release_date]" />
+									</div>
+									<div class="omnify-form-group omnify-var-preorder-field">
+										<label>Preorder Limit</label>
+										<input type="number" min="1" name="variations[${index}][preorder_limit]" placeholder="Optional limit" />
+									</div>
+									<div class="omnify-form-group omnify-var-preorder-field">
+										<label>Preorder Notice Message</label>
+										<input type="text" name="variations[${index}][preorder_message]" placeholder="Ships when available" />
+									</div>
+								</div>
+							</div>
+
+							<!-- Estimated Delivery -->
+							<div class="omnify-form-row omnify-variation-grid-delivery">
+								<div class="omnify-form-group">
+									<label>Estimated Delivery</label>
+									<div class="omnify-input-wrapper omnify-input-with-prefix">
+										<span class="omnify-input-prefix">
+											<span class="dashicons dashicons-car" style="color:#059669; font-size:16px; width:16px; height:16px; line-height:1;"></span>
+										</span>
+										<input type="text" name="variations[${index}][estimated_delivery]" value="${data.estimated_delivery || ''}" placeholder="e.g. 3-5 business days, Ships within 24 hours" />
+									</div>
+								</div>
+							</div>
+
+							<!-- Variation Image + Note -->
+							<div class="omnify-form-row omnify-variation-grid-media">
+								<div class="omnify-var-image-col">
+									<label>Image</label>
+									<input type="hidden" class="omnify-var-thumbnail-id-input" name="variations[${index}][thumbnail_id]" value="" />
+									<div class="omnify-var-thumbnail-preview">
+										<div class="omnify-var-no-image">
+											<span class="dashicons dashicons-format-image"></span>
+											<span>No image</span>
+										</div>
+									</div>
+									<div class="omnify-var-image-actions">
+										<button type="button" class="omnify-var-action-btn omnify-var-pick-image-btn" title="Select or upload image" aria-label="Select or upload image">
+											<span class="dashicons dashicons-upload"></span>
+										</button>
+										<button type="button" class="omnify-var-action-btn omnify-var-action-btn--danger omnify-var-remove-image-btn" title="Remove image" aria-label="Remove image" style="display:none;">
+											<span class="dashicons dashicons-trash"></span>
+										</button>
+									</div>
+								</div>
+								<div class="omnify-var-note-col">
+									<div class="omnify-field-header">
+										<label>Variation Note</label>
+										<span class="omnify-field-subtext">(Customer-facing note when selected)</span>
+									</div>
+									<textarea name="variations[${index}][description]" class="omnify-var-description-textarea" rows="3" placeholder="e.g. Ships from overseas warehouse • Limited edition batch">${data.description || ''}</textarea>
+								</div>
 							</div>
 						</div>
 					`;
 					varContainer.appendChild(row);
-
-					if (typeof tinymce !== 'undefined') {
-						const ta = row.querySelector('.omnify-var-description-textarea');
-						if (ta) {
-							ta.id = 'var-desc-' + Math.random().toString(36).substr(2, 9);
-							tinymce.init({
-								selector: '#' + ta.id,
-								menubar: false,
-								branding: false,
-								plugins: 'lists link',
-								toolbar: 'bold italic underline | bullist numlist | link',
-								height: 100,
-								setup: function(editor) {
-									editor.on('change keyup', function() {
-										editor.save();
-									});
-								}
-							});
-						}
-					}
-				}
-
-				function reindexVariations() {
-					const rows = varContainer.querySelectorAll('.omnify-variation-row');
-					rows.forEach(function(row, idx) {
-						const hiddenInputs = row.querySelectorAll('input[type="hidden"]');
-						hiddenInputs.forEach(function(inp) {
-							if (inp.name && inp.name.includes('[id]')) inp.name = `variations[${idx}][id]`;
-							if (inp.name && inp.classList.contains('omnify-var-thumbnail-id-input')) inp.name = `variations[${idx}][thumbnail_id]`;
-						});
-						row.querySelectorAll('.omnify-variation-attr-select').forEach(function(sel) {
-							const nameAttr = sel.name;
-							const matches = nameAttr.match(/\[attributes\]\[([^\]]+)\]/);
-							if (matches && matches[1]) {
-								sel.name = `variations[${idx}][attributes][${matches[1]}]`;
-							}
-						});
-						const skuInput = row.querySelector('input[name*="[sku]"]'); if (skuInput) skuInput.name = `variations[${idx}][sku]`;
-						const priceInput = row.querySelector('input[name*="[price]"][type="number"]'); if (priceInput && !priceInput.name.includes('[sale_price]')) priceInput.name = `variations[${idx}][price]`;
-						const salePriceInput = row.querySelector('input[name*="[sale_price]"]'); if (salePriceInput) salePriceInput.name = `variations[${idx}][sale_price]`;
-						const manageStockInput = row.querySelector('input[name*="[manage_stock]"]'); if (manageStockInput) manageStockInput.name = `variations[${idx}][manage_stock]`;
-						const stockQtyInput = row.querySelector('input[name*="[stock_qty]"]'); if (stockQtyInput) stockQtyInput.name = `variations[${idx}][stock_qty]`;
-						const stockStatusSel = row.querySelector('select[name*="[stock_status]"]'); if (stockStatusSel) stockStatusSel.name = `variations[${idx}][stock_status]`;
-						const allowBackordersInput = row.querySelector('input[name*="[allow_backorders]"]'); if (allowBackordersInput) allowBackordersInput.name = `variations[${idx}][allow_backorders]`;
-						const preorderEnabledInput = row.querySelector('input[name*="[preorder_enabled]"]'); if (preorderEnabledInput) preorderEnabledInput.name = `variations[${idx}][preorder_enabled]`;
-						const preorderDateInput = row.querySelector('input[name*="[preorder_release_date]"]'); if (preorderDateInput) preorderDateInput.name = `variations[${idx}][preorder_release_date]`;
-						const preorderLimitInput = row.querySelector('input[name*="[preorder_limit]"]'); if (preorderLimitInput) preorderLimitInput.name = `variations[${idx}][preorder_limit]`;
-						const preorderMessageInput = row.querySelector('input[name*="[preorder_message]"]'); if (preorderMessageInput) preorderMessageInput.name = `variations[${idx}][preorder_message]`;
-						const descTa = row.querySelector('textarea[name*="[description]"]'); if (descTa) descTa.name = `variations[${idx}][description]`;
-					});
-				}
-
-				// --- Bundle products search filtering ---
-				const bundleSearchInput = document.getElementById('omnify-bundle-search');
-				if (bundleSearchInput) {
-					bundleSearchInput.addEventListener('input', function(e) {
-						const q = e.target.value.toLowerCase();
-						document.querySelectorAll('.omnify-bundle-product-item').forEach(function(item) {
-							const text = item.textContent.toLowerCase();
-							if (text.includes(q)) {
-								item.style.display = 'flex';
-							} else {
-								item.style.display = 'none';
-							}
-						});
-					});
 				}
 
 				// --- Upsells search filtering ---
@@ -950,6 +913,10 @@ omnifyOnReady(function() {
 				if (qeSalePrice) qeSalePrice.value = this.dataset['sale-price'] || '';
 				if (qeStatus) qeStatus.value = this.dataset.status || 'draft';
 				if (qeSku) qeSku.value = this.dataset.sku || '';
+				const qeStockQty = document.getElementById('qe-stock-qty');
+				if (qeStockQty) qeStockQty.value = this.dataset.stockQty !== undefined ? this.dataset.stockQty : '0';
+				const qeManageStock = document.getElementById('qe-manage-stock');
+				if (qeManageStock) qeManageStock.value = this.dataset.manageStock !== undefined ? this.dataset.manageStock : '0';
 				modal.style.display = 'block';
 			});
 		});

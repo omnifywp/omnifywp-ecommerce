@@ -55,6 +55,12 @@ $omnify_object_type = isset($_GET['object_type']) ? sanitize_key(wp_unslash($_GE
 $omnify_date_from   = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
 $omnify_date_to     = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
 
+// Whitelist pagination parameters so tampered query args cannot leak into pagination links.
+$omnify_query_base = array_intersect_key(
+	$_GET,
+	array_flip(['search', 'user_id', 'action_type', 'object_type', 'date_from', 'date_to', 'page', 'paged'])
+);
+
 global $wpdb;
 $omnify_act_table = $wpdb->prefix . 'omnify_admin_activities';
 $omnify_24h_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$omnify_act_table} WHERE created_at >= NOW() - INTERVAL 24 HOUR");
@@ -73,13 +79,33 @@ if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_webhooks_table)
 			<h1><?php esc_html_e('Activity Log', 'omnifywp-ecommerce'); ?></h1>
 			<p><?php esc_html_e('Audit trail of administrative actions performed on this store.', 'omnifywp-ecommerce'); ?></p>
 		</div>
-		<div class="omnify-header-row__actions">
+		<div class="omnify-header-row__actions" style="display: flex; align-items: center; gap: 8px;">
+			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: inline-flex; align-items: center; gap: 6px;">
+				<?php wp_nonce_field('omnify_prune_activity_logs', 'omnify_prune_nonce'); ?>
+				<input type="hidden" name="action" value="omnify_prune_activity_logs" />
+				<select name="days" style="font-size: 12px; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid #cbd5e1;">
+					<option value="30"><?php esc_html_e('Older than 30 days', 'omnifywp-ecommerce'); ?></option>
+					<option value="60"><?php esc_html_e('Older than 60 days', 'omnifywp-ecommerce'); ?></option>
+					<option value="90"><?php esc_html_e('Older than 90 days', 'omnifywp-ecommerce'); ?></option>
+				</select>
+				<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm" onclick="return confirm('<?php esc_attr_e('Are you sure you want to permanently prune old activity logs?', 'omnifywp-ecommerce'); ?>');">
+					<span class="dashicons dashicons-trash" style="font-size: 13px; width: 13px; height: 13px; line-height: 1; vertical-align: middle;"></span>
+					<?php esc_html_e('Prune Logs', 'omnifywp-ecommerce'); ?>
+				</button>
+			</form>
 			<a href="<?php echo esc_url('https://omnifywp.com/doc/'); ?>" target="_blank" class="omnify-button omnify-button--secondary">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
 				<?php esc_html_e('Documentation', 'omnifywp-ecommerce'); ?>
 			</a>
 		</div>
 	</div>
+
+	<?php if (isset($_GET['message']) && 'pruned' === $_GET['message']) : ?>
+		<div class="omnify-alert omnify-alert--success" style="margin-bottom: 16px; padding: 12px 16px; border-radius: 6px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+			<span class="dashicons dashicons-yes-alt" style="color: #10b981;"></span>
+			<span><?php printf(esc_html__('Successfully pruned %d old activity log entries.', 'omnifywp-ecommerce'), absint($_GET['count'] ?? 0)); ?></span>
+		</div>
+	<?php endif; ?>
 
 	<!-- Navigation Tabs -->
 	<?php $omnify_active_tab = 'activity'; ?>
@@ -417,8 +443,7 @@ if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_webhooks_table)
 					</div>
 					<div style="display: flex; gap: 6px; align-items: center;">
 						<?php if ($omnify_page > 1) :
-							// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							$omnify_prev_query = array_merge($_GET, ['paged' => $omnify_page - 1]);
+							$omnify_prev_query = array_merge($omnify_query_base, ['paged' => $omnify_page - 1]);
 							?>
 							<a href="<?php echo esc_url(add_query_arg($omnify_prev_query, admin_url('admin.php'))); ?>" class="omnify-button omnify-button--secondary omnify-button--sm" style="text-decoration: none; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;">
 								<span class="dashicons dashicons-arrow-left-alt2" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
@@ -430,8 +455,7 @@ if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_webhooks_table)
 						$omnify_range = 2;
 						for ($omnify_i = 1; $omnify_i <= $omnify_total_pages; $omnify_i++) {
 							if ($omnify_i == 1 || $omnify_i == $omnify_total_pages || ($omnify_i >= $omnify_page - $omnify_range && $omnify_i <= $omnify_page + $omnify_range)) {
-								// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-								$omnify_i_query = array_merge($_GET, ['paged' => $omnify_i]);
+								$omnify_i_query = array_merge($omnify_query_base, ['paged' => $omnify_i]);
 								$omnify_active_style = ($omnify_i === $omnify_page) ? 'background: #059669; color: #ffffff; border-color: #059669; font-weight: 700;' : 'background: #ffffff; color: #334155; border-color: #cbd5e1;';
 								?>
 								<a href="<?php echo esc_url(add_query_arg($omnify_i_query, admin_url('admin.php'))); ?>" class="omnify-button omnify-button--secondary omnify-button--sm" style="text-decoration: none; padding: 6px 12px; min-width: 32px; justify-content: center; border-radius: 6px; <?php echo esc_attr($omnify_active_style); ?>"><?php echo esc_html($omnify_i); ?></a>
@@ -443,8 +467,7 @@ if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_webhooks_table)
 						?>
 
 						<?php if ($omnify_page < $omnify_total_pages) :
-							// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							$omnify_next_query = array_merge($_GET, ['paged' => $omnify_page + 1]);
+							$omnify_next_query = array_merge($omnify_query_base, ['paged' => $omnify_page + 1]);
 							?>
 							<a href="<?php echo esc_url(add_query_arg($omnify_next_query, admin_url('admin.php'))); ?>" class="omnify-button omnify-button--secondary omnify-button--sm" style="text-decoration: none; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;">
 								<?php esc_html_e('Next', 'omnifywp-ecommerce'); ?>

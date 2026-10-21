@@ -182,6 +182,10 @@ class Omnify_Wishlist_Repository {
 		}
 
 		$omnify_added = $this->add($omnify_user_id, $omnify_product_id);
+		if (! $omnify_added && $this->exists($omnify_user_id, $omnify_product_id)) {
+			// A concurrent request won the UNIQUE(user_id, product_id) race; the item is present.
+			return ['wishlisted' => true];
+		}
 
 		return ['wishlisted' => $omnify_added];
 	}

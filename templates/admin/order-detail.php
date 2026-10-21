@@ -65,8 +65,8 @@ $omnify_val = $omnify_template_vars['omnify_val'] ?? null;
 $omnify_currency_symbol = function($omnify_currency) {
 	switch ($omnify_currency) {
 		case 'EUR': return '€';
-		case 'GBP': return 'Â£';
-		case 'JPY': return 'Â¥';
+		case 'GBP': return '£';
+		case 'JPY': return '¥';
 		case 'CAD': return 'C$';
 		case 'AUD': return 'A$';
 		default: return '$';
@@ -110,11 +110,10 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 			<a href="<?php echo esc_url($omnify_order_document_url('invoice')); ?>" target="_blank" class="omnify-button omnify-button--secondary" style="text-decoration: none;">
 				<?php esc_html_e('Invoice / PDF', 'omnifywp-ecommerce'); ?>
 			</a>
-			<?php if (! empty($omnify_order['shipping_address_1'])) : ?>
-				<a href="<?php echo esc_url($omnify_order_document_url('packing_slip')); ?>" target="_blank" class="omnify-button omnify-button--secondary" style="text-decoration: none;">
-					<?php esc_html_e('Packing Slip', 'omnifywp-ecommerce'); ?>
-				</a>
-			<?php endif; ?>
+			<a href="<?php echo esc_url($omnify_order_document_url('packing_slip')); ?>" target="_blank" class="omnify-button omnify-button--secondary" style="text-decoration: none;">
+				<span class="dashicons dashicons-clipboard" style="font-size: 14px; width: 14px; height: 14px; line-height: 1; vertical-align: middle; margin-right: 4px;"></span>
+				<?php esc_html_e('Packing Slip', 'omnifywp-ecommerce'); ?>
+			</a>
 			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 				<?php wp_nonce_field('omnify_resend_receipt', 'omnify_resend_nonce'); ?>
 				<input type="hidden" name="action" value="omnify_resend_receipt" />
@@ -276,6 +275,12 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 					<div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--omnify-gray-600);">
 						<span><?php esc_html_e('Payment Method', 'omnifywp-ecommerce'); ?>:</span>
 						<span style="text-transform: capitalize;"><?php echo esc_html(ucwords(str_replace('_', ' ', $omnify_order['payment_method']))); ?></span>
+					</div>
+					<?php endif; ?>
+					<?php if (! empty($omnify_order['payment_instructions'])) : ?>
+					<div style="margin-top: 10px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; color: var(--omnify-dark);">
+						<strong style="display: block; margin-bottom: 4px; color: #475569; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;"><?php esc_html_e('Payment Instructions & Reference', 'omnifywp-ecommerce'); ?></strong>
+						<div style="line-height: 1.5; white-space: pre-wrap;"><?php echo esc_html($omnify_order['payment_instructions']); ?></div>
 					</div>
 					<?php endif; ?>
 					<div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; border-top: 1px solid var(--omnify-gray-200); padding-top: 8px;">
@@ -470,27 +475,57 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 									<div style="font-size: 13px; line-height: 1.4; color: var(--omnify-dark);">
 										<?php echo wp_kses_post($omnify_note['note']); ?>
 									</div>
-									<span class="omnify-timeline-item__date">
-										<?php 
-										$omnify_author_name = __('System', 'omnifywp-ecommerce');
-										if ($omnify_note['author_id']) {
-											$omnify_user = get_userdata($omnify_note['author_id']);
-											if ($omnify_user) {
-												$omnify_author_name = $omnify_user->display_name;
+									<div style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+										<?php if (! empty($omnify_note['customer_notified']) || 'customer' === ($omnify_note['note_type'] ?? '')): ?>
+											<span class="omnify-badge" style="font-size: 11px; padding: 2px 7px; border-radius: 4px; background: #e0f2fe; color: #0369a1; font-weight: 600; border: 1px solid #bae6fd;">
+												<?php esc_html_e('Customer Note', 'omnifywp-ecommerce'); ?>
+											</span>
+										<?php else: ?>
+											<span class="omnify-badge" style="font-size: 11px; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600; border: 1px solid #e2e8f0;">
+												<?php esc_html_e('Private Staff Note', 'omnifywp-ecommerce'); ?>
+											</span>
+										<?php endif; ?>
+										<span class="omnify-timeline-item__date" style="margin-top: 0;">
+											<?php 
+											$omnify_author_name = __('System', 'omnifywp-ecommerce');
+											if ($omnify_note['author_id']) {
+												$omnify_user = get_userdata($omnify_note['author_id']);
+												if ($omnify_user) {
+													$omnify_author_name = $omnify_user->display_name;
+												}
 											}
-										}
-										printf(
-											/* translators: 1: author name, 2: formatted date */
-											esc_html__('Added by %1$s on %2$s', 'omnifywp-ecommerce'),
-											'<strong>' . esc_html($omnify_author_name) . '</strong>',
-											esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($omnify_note['created_at'])))
-										);
-										?>
-										&middot; 
-										<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_order_note&order_id=' . $omnify_order['id'] . '&note_id=' . $omnify_note['id']), 'omnify_delete_order_note_' . $omnify_note['id'])); ?>" style="color: var(--omnify-danger); text-decoration: none;" onclick="return confirm('<?php esc_attr_e('Are you sure you want to delete this note?', 'omnifywp-ecommerce'); ?>');">
-											<?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?>
-										</a>
-									</span>
+											printf(
+												/* translators: 1: author name, 2: formatted date */
+												esc_html__('by %1$s on %2$s', 'omnifywp-ecommerce'),
+												'<strong>' . esc_html($omnify_author_name) . '</strong>',
+												esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($omnify_note['created_at'])))
+											);
+											?>
+											&middot; 
+											<a href="#" class="omnify-edit-note-toggle" data-target="omnify-edit-note-<?php echo esc_attr((string) $omnify_note['id']); ?>" style="color: var(--omnify-primary, #0f766e); text-decoration: none;">
+												<?php esc_html_e('Edit', 'omnifywp-ecommerce'); ?>
+											</a>
+											&middot; 
+											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_order_note&order_id=' . $omnify_order['id'] . '&note_id=' . $omnify_note['id']), 'omnify_delete_order_note_' . $omnify_note['id'])); ?>" style="color: var(--omnify-danger); text-decoration: none;" onclick="return confirm('<?php esc_attr_e('Are you sure you want to delete this note?', 'omnifywp-ecommerce'); ?>');">
+												<?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?>
+											</a>
+										</span>
+										<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="omnify-edit-note-<?php echo esc_attr((string) $omnify_note['id']); ?>" style="display:none; margin-top:10px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+											<?php wp_nonce_field('omnify_edit_order_note_' . $omnify_note['id']); ?>
+											<input type="hidden" name="action" value="omnify_edit_order_note" />
+											<input type="hidden" name="order_id" value="<?php echo esc_attr((string) $omnify_order['id']); ?>" />
+											<input type="hidden" name="note_id" value="<?php echo esc_attr((string) $omnify_note['id']); ?>" />
+											<textarea name="note" style="width:100%; min-height:60px; font-size:13px; margin-bottom:8px;" required><?php echo esc_textarea($omnify_note['note']); ?></textarea>
+											<div style="display:flex; gap:8px; align-items:center;">
+												<select name="note_type" style="height:30px; font-size:12px;">
+													<option value="private" <?php selected($omnify_note_type, 'private'); ?>><?php esc_html_e('Private note', 'omnifywp-ecommerce'); ?></option>
+													<option value="customer" <?php selected($omnify_note_type, 'customer'); ?>><?php esc_html_e('Customer note', 'omnifywp-ecommerce'); ?></option>
+												</select>
+												<button type="submit" class="button button-small button-primary"><?php esc_html_e('Save', 'omnifywp-ecommerce'); ?></button>
+												<button type="button" class="button button-small omnify-cancel-note-edit" data-target="omnify-edit-note-<?php echo esc_attr((string) $omnify_note['id']); ?>"><?php esc_html_e('Cancel', 'omnifywp-ecommerce'); ?></button>
+											</div>
+										</form>
+									</div>
 								</div>
 							</div>
 						<?php endforeach; ?>
@@ -682,9 +717,9 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 				</div>
 				
 				<div style="border-top: 1px solid var(--omnify-gray-200); padding-top: 16px;">
-					<a href="<?php
-					// translators: %s: placeholder value. echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_order&order_id=' . $order['id']), 'omnify_delete_order_' . $order['id'])); ?>" class="omnify-button omnify-button--danger omnify-button--full js-confirm-delete" data-message="<?php
-					// translators: %s: placeholder value. echo esc_attr(sprintf(__('Are you sure you want to delete Order %s? This action cannot be undone and will permanently remove all related items and notes.', 'omnifywp-ecommerce'), $order['order_number'] ?: '#' . $order['id'])); ?>" style="height: 36px; justify-content: center; align-items: center; text-decoration: none; gap: 6px;">
+					<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_order&order_id=' . $omnify_order['id']), 'omnify_delete_order_' . $omnify_order['id'])); ?>" class="omnify-button omnify-button--danger omnify-button--full js-confirm-delete" data-message="<?php
+					/* translators: %s: Order number */
+					echo esc_attr(sprintf(__('Are you sure you want to delete Order %s? This action cannot be undone and will permanently remove all related items and notes.', 'omnifywp-ecommerce'), ! empty($omnify_order['order_number']) ? $omnify_order['order_number'] : '#' . $omnify_order['id'])); ?>" style="height: 36px; justify-content: center; align-items: center; text-decoration: none; gap: 6px;">
 						<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
 						<?php esc_html_e('Delete Order', 'omnifywp-ecommerce'); ?>
 					</a>
@@ -733,6 +768,50 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 					<p style="font-size: 13px; color: var(--omnify-gray-600);"><?php esc_html_e('Guest checkout / Customer not registered.', 'omnifywp-ecommerce'); ?></p>
 					<span style="font-weight: 600; font-size: 14px;"><?php echo esc_html($omnify_order['customer_email']); ?></span>
 				<?php endif; ?>
+
+				<!-- Customer Lifetime Value Metrics -->
+				<?php
+				$omnify_lookup_cid = absint($omnify_order['customer_id'] ?? 0);
+				$omnify_lookup_email = sanitize_email((string) ($omnify_order['customer_email'] ?: ($omnify_order['billing_email'] ?? '')));
+				global $wpdb;
+				$omnify_orders_table = $wpdb->prefix . 'omnify_orders';
+				$omnify_customers_table = $wpdb->prefix . 'omnify_customers';
+				if ($omnify_lookup_cid > 0) {
+					$omnify_ltv_row = $wpdb->get_row($wpdb->prepare(
+						"SELECT COUNT(*) as order_count, COALESCE(SUM(total), 0) as total_spend, MIN(created_at) as first_order_date FROM {$omnify_orders_table} WHERE customer_id = %d AND status NOT IN ('trash', 'cancelled', 'refunded', 'failed')",
+						$omnify_lookup_cid
+					), ARRAY_A);
+				} elseif (! empty($omnify_lookup_email)) {
+					$omnify_ltv_row = $wpdb->get_row($wpdb->prepare(
+						"SELECT COUNT(o.id) as order_count, COALESCE(SUM(o.total), 0) as total_spend, MIN(o.created_at) as first_order_date FROM {$omnify_orders_table} o INNER JOIN {$omnify_customers_table} c ON o.customer_id = c.id WHERE c.email = %s AND o.status NOT IN ('trash', 'cancelled', 'refunded', 'failed')",
+						$omnify_lookup_email
+					), ARRAY_A);
+				} else {
+					$omnify_ltv_row = null;
+				}
+				$omnify_order_count = absint($omnify_ltv_row['order_count'] ?? 1);
+				$omnify_total_spend = (float) ($omnify_ltv_row['total_spend'] ?? $omnify_order['total']);
+				$omnify_aov = $omnify_order_count > 0 ? ($omnify_total_spend / $omnify_order_count) : $omnify_total_spend;
+				$omnify_customer_since = ! empty($omnify_ltv_row['first_order_date']) ? date_i18n(get_option('date_format'), strtotime($omnify_ltv_row['first_order_date'])) : '—';
+				?>
+				<div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--omnify-gray-200); display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+					<div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px;">
+						<span style="font-size: 11px; color: #64748B; display: block; text-transform: uppercase; font-weight: 600;"><?php esc_html_e('Lifetime Spend', 'omnifywp-ecommerce'); ?></span>
+						<strong style="font-size: 13px; color: #0F172A;"><?php echo esc_html($omnify_format_price($omnify_total_spend)); ?></strong>
+					</div>
+					<div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px;">
+						<span style="font-size: 11px; color: #64748B; display: block; text-transform: uppercase; font-weight: 600;"><?php esc_html_e('Total Orders', 'omnifywp-ecommerce'); ?></span>
+						<strong style="font-size: 13px; color: #0F172A;"><?php echo esc_html((string) $omnify_order_count); ?></strong>
+					</div>
+					<div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px;">
+						<span style="font-size: 11px; color: #64748B; display: block; text-transform: uppercase; font-weight: 600;"><?php esc_html_e('Avg Order Value', 'omnifywp-ecommerce'); ?></span>
+						<strong style="font-size: 13px; color: #0F172A;"><?php echo esc_html($omnify_format_price($omnify_aov)); ?></strong>
+					</div>
+					<div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px;">
+						<span style="font-size: 11px; color: #64748B; display: block; text-transform: uppercase; font-weight: 600;"><?php esc_html_e('Customer Since', 'omnifywp-ecommerce'); ?></span>
+						<strong style="font-size: 12px; color: #0F172A;"><?php echo esc_html($omnify_customer_since); ?></strong>
+					</div>
+				</div>
 			</div>
 
 			<?php if (! empty($omnify_order['shipping_address_1'])) : ?>
@@ -905,3 +984,25 @@ $omnify_order_document_url = static function(string $omnify_type) use ($omnify_o
 		</div>
 	</div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	document.querySelectorAll('.omnify-edit-note-toggle').forEach(function(btn) {
+		btn.addEventListener('click', function(e) {
+			e.preventDefault();
+			var target = document.getElementById(this.getAttribute('data-target'));
+			if (target) {
+				target.style.display = target.style.display === 'none' ? 'block' : 'none';
+			}
+		});
+	});
+	document.querySelectorAll('.omnify-cancel-note-edit').forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			var target = document.getElementById(this.getAttribute('data-target'));
+			if (target) {
+				target.style.display = 'none';
+			}
+		});
+	});
+});
+</script>

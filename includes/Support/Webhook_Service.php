@@ -33,7 +33,7 @@ class Omnify_Webhook_Service {
 		add_action('omnify_order_created', [$this, 'on_order_created'], 20, 2);
 		add_action('omnify_order_status_changed', [$this, 'on_order_status_changed'], 20, 3);
 		add_action('omnify_order_completed', [$this, 'on_order_completed'], 20, 1);
-		add_action('omnify_order_refunded', [$this, 'on_order_refunded'], 20, 3);
+		add_action('omnify_order_refunded', [$this, 'on_order_refunded'], 20, 5);
 		add_action('omnify_customer_created', [$this, 'on_customer_created'], 20, 2);
 		add_action(self::PRUNE_CRON_HOOK, [$this, 'prune_logs']);
 		add_action(self::RETRY_CRON_HOOK, [$this, 'process_retry_queue']);
@@ -93,14 +93,18 @@ class Omnify_Webhook_Service {
 		]);
 	}
 
-	public function on_order_refunded(int $omnify_order_id, float $omnify_refund_amount, float $omnify_total_refunded): void {
+	public function on_order_refunded(int $omnify_order_id, float $omnify_refund_amount, float $omnify_total_refunded, string $omnify_reason = '', bool $omnify_restocked = false): void {
 		$omnify_order = $this->omnify_orders->find($omnify_order_id);
+		$omnify_order_items = $this->omnify_orders->get_order_items($omnify_order_id);
 		$this->dispatch('order.refunded', [
 			'event'          => 'order.refunded',
 			'timestamp'      => current_time('mysql', true),
 			'order_id'       => $omnify_order_id,
 			'refund_amount'  => $omnify_refund_amount,
 			'total_refunded' => $omnify_total_refunded,
+			'refund_reason'  => $omnify_reason ?: ($omnify_order['refund_reason'] ?? ''),
+			'restocked'      => $omnify_restocked || ! empty($omnify_order['restocked']),
+			'items'          => $omnify_order_items,
 			'order_number'   => $omnify_order['order_number'] ?? ('#' . $omnify_order_id),
 			'order'          => $omnify_order,
 		]);
@@ -147,7 +151,8 @@ class Omnify_Webhook_Service {
 			}
 
 			$omnify_secret    = (string) ($omnify_hook['secret'] ?? '');
-			$omnify_signature = hash_hmac('sha256', $omnify_hook_json, $omnify_secret);
+			$omnify_timestamp = (string) time();
+			$omnify_signature = hash_hmac('sha256', $omnify_timestamp . '.' . $omnify_hook_json, $omnify_secret);
 
 			$omnify_blocking = (bool) apply_filters('omnify_webhook_blocking_dispatch', true, $omnify_event, $omnify_hook);
 			$omnify_timeout  = (int) apply_filters('omnify_webhook_dispatch_timeout', 3, $omnify_event, $omnify_hook);
@@ -158,7 +163,8 @@ class Omnify_Webhook_Service {
 				'headers'  => [
 					'Content-Type'       => 'application/json; charset=utf-8',
 					'X-Omnify-Event'     => $omnify_event,
-					'X-Omnify-Signature' => $omnify_signature,
+					'X-Omnify-Timestamp' => $omnify_timestamp,
+					'X-Omnify-Signature' => 't=' . $omnify_timestamp . ',v1=' . $omnify_signature,
 					'User-Agent'         => 'OmnifyWP-Webhooks/' . OMNIFY_VERSION,
 				],
 				'body'     => $omnify_hook_json,
@@ -222,7 +228,8 @@ class Omnify_Webhook_Service {
 		];
 		$omnify_json = (string) wp_json_encode($omnify_payload);
 		$omnify_secret = (string) ($omnify_hook['secret'] ?? '');
-		$omnify_signature = hash_hmac('sha256', $omnify_json, $omnify_secret);
+		$omnify_timestamp = (string) time();
+		$omnify_signature = hash_hmac('sha256', $omnify_timestamp . '.' . $omnify_json, $omnify_secret);
 
 		$omnify_start = microtime(true);
 		$omnify_response = wp_safe_remote_post($omnify_url, [
@@ -230,7 +237,8 @@ class Omnify_Webhook_Service {
 			'headers' => [
 				'Content-Type'       => 'application/json; charset=utf-8',
 				'X-Omnify-Event'     => 'ping',
-				'X-Omnify-Signature' => $omnify_signature,
+				'X-Omnify-Timestamp' => $omnify_timestamp,
+				'X-Omnify-Signature' => 't=' . $omnify_timestamp . ',v1=' . $omnify_signature,
 				'User-Agent'         => 'OmnifyWP-Webhooks/' . OMNIFY_VERSION,
 			],
 			'body'    => $omnify_json,
@@ -255,10 +263,12 @@ class Omnify_Webhook_Service {
 		$omnify_is_success = $omnify_code >= 200 && $omnify_code < 300;
 
 		return [
-			'success'       => $omnify_is_success,
-			'response_code' => $omnify_code,
-			'duration'      => $omnify_duration,
-			'message'       => $omnify_is_success ? sprintf(__('Ping delivered successfully (HTTP %d, %.3fs).', 'omnifywp-ecommerce'), $omnify_code, $omnify_duration) : sprintf(__('Ping failed (HTTP %d): %s', 'omnifywp-ecommerce'), $omnify_code, $omnify_body),
+			'success'         => $omnify_is_success,
+			'response_code'   => $omnify_code,
+			'duration'        => $omnify_duration,
+			'request_payload' => $omnify_json,
+			'response_body'   => $omnify_body,
+			'message'         => $omnify_is_success ? sprintf(__('Ping delivered successfully (HTTP %d, %.3fs).', 'omnifywp-ecommerce'), $omnify_code, $omnify_duration) : sprintf(__('Ping failed (HTTP %d): %s', 'omnifywp-ecommerce'), $omnify_code, $omnify_body),
 		];
 	}
 
@@ -425,6 +435,16 @@ class Omnify_Webhook_Service {
 					['%d']
 				);
 				continue;
+			}
+
+			// Exponential backoff check (Item 29): retry 1 = 5 min, retry 2 = 15 min, retry 3 = 45 min
+			$omnify_backoff_minutes = 5 * (3 ** ($omnify_retry_attempt - 1));
+			$omnify_last_time = strtotime((string) ($omnify_log['created_at'] ?? 'now'));
+			if (preg_match('/\[Auto-Retry #\d+.*?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $omnify_current_body, $omnify_time_m)) {
+				$omnify_last_time = strtotime($omnify_time_m[1]);
+			}
+			if ((time() - $omnify_last_time) < ($omnify_backoff_minutes * MINUTE_IN_SECONDS)) {
+				continue; // Backoff interval has not elapsed yet
 			}
 
 			$omnify_payload_json = (string) ($omnify_log['request_payload'] ?? '');

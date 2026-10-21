@@ -50,7 +50,9 @@ $omnify_refund_rate = $omnify_template_vars['omnify_refund_rate'] ?? null;
 $omnify_refund_rate_trend = $omnify_template_vars['omnify_refund_rate_trend'] ?? null;
 $omnify_refunded_amount = $omnify_template_vars['omnify_refunded_amount'] ?? null;
 $omnify_refunded_trend = $omnify_template_vars['omnify_refunded_trend'] ?? null;
-$omnify_render_trend = isset($omnify_template_vars['omnify_render_trend']) && is_callable($omnify_template_vars['omnify_render_trend']) ? $omnify_template_vars['omnify_render_trend'] : 'omnify_render_trend';
+$omnify_render_trend = isset($omnify_template_vars['omnify_render_trend']) && is_callable($omnify_template_vars['omnify_render_trend'])
+	? $omnify_template_vars['omnify_render_trend']
+	: ( function_exists('omnify_render_trend') ? 'omnify_render_trend' : static fn($omnify_trend) => '' );
 $omnify_selected_category = $omnify_template_vars['omnify_selected_category'] ?? null;
 $omnify_selected_method = $omnify_template_vars['omnify_selected_method'] ?? null;
 $omnify_selected_status = $omnify_template_vars['omnify_selected_status'] ?? null;
@@ -91,10 +93,12 @@ wp_add_inline_script('omnify-admin', 'window.omnifyChartData = ' . wp_json_encod
  *
  * @package Omnify
  */
-// Format helper
-$omnify_fmt_price = function($omnify_val) use ($omnify_symbol) {
-	return $omnify_symbol . number_format((float) $omnify_val, 2);
-};
+// Format helper (falls back to a default only when no callable formatter was injected)
+if (! isset($omnify_fmt_price) || ! is_callable($omnify_fmt_price)) {
+	$omnify_fmt_price = function($omnify_val) use ($omnify_symbol) {
+		return $omnify_symbol . number_format((float) $omnify_val, 2);
+	};
+}
 
 // Safe defaults for new filters/metrics
 $omnify_all_analytics_categories = $omnify_all_analytics_categories ?? [];
@@ -110,7 +114,7 @@ $omnify_weekday_orders_cnt = $omnify_weekday_orders_cnt ?? [0,0,0,0,0,0,0];
 
 // Trend rendering helper
 if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
-	$omnify_render_trend = 'omnify_render_trend';
+	$omnify_render_trend = function_exists('omnify_render_trend') ? 'omnify_render_trend' : static fn($omnify_trend) => '';
 }
 ?>
 <div class="omnify-admin-wrapper omnify-analytics-page" data-active-tab="overview">
@@ -120,7 +124,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			<p><?php esc_html_e('Analyze your storefront performance, coupon conversions, and sales metrics.', 'omnifywp-ecommerce'); ?></p>
 		</div>
 		<div class="omnify-header-row__actions">
-			<a href="<?php echo esc_url(add_query_arg('export_csv', '1')); ?>" class="omnify-button omnify-button--primary">
+			<a href="<?php echo esc_url(wp_nonce_url(add_query_arg('export_csv', '1'), 'omnify_analytics_export')); ?>" class="omnify-button omnify-button--primary">
 				<span class="dashicons dashicons-download" style="font-size: 15px; width: 15px; height: 15px; line-height: 1; vertical-align: middle;"></span>
 				<?php esc_html_e('Export Report (CSV)', 'omnifywp-ecommerce'); ?>
 			</a>
@@ -268,7 +272,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_gross_sales)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_gross_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_gross_trend)); ?>
 			</div>
 		</div>
 
@@ -280,7 +284,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_net_sales)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_net_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_net_trend)); ?>
 			</div>
 		</div>
 
@@ -292,7 +296,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_net_after_refunds)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_net_refunds_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_net_refunds_trend)); ?>
 			</div>
 		</div>
 
@@ -304,7 +308,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((int) $omnify_order_count)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_orders_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_orders_trend)); ?>
 			</div>
 		</div>
 
@@ -316,7 +320,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_aov)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_aov_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_aov_trend)); ?>
 			</div>
 		</div>
 
@@ -329,7 +333,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((int) $omnify_items_sold)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_items_sold_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_items_sold_trend)); ?>
 			</div>
 		</div>
 
@@ -343,7 +347,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 				<p class="omnify-dashboard-stat-card__value" style="<?php echo (float) $omnify_coupon_discounts > 0 ? 'color: var(--omnify-danger) !important;' : ''; ?>">
 					<?php echo (float) $omnify_coupon_discounts > 0 ? '-' : ''; ?><?php echo esc_html($omnify_fmt_price($omnify_coupon_discounts)); ?>
 				</p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_coupon_discounts_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_coupon_discounts_trend)); ?>
 			</div>
 		</div>
 
@@ -355,7 +359,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((float) $omnify_coupon_order_rate, 1)); ?>%</p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_coupon_order_rate_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_coupon_order_rate_trend)); ?>
 			</div>
 		</div>
 
@@ -369,7 +373,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 				<p class="omnify-dashboard-stat-card__value" style="<?php echo (float) $omnify_refunded_amount > 0 ? 'color: var(--omnify-danger) !important;' : ''; ?>">
 					<?php echo (float) $omnify_refunded_amount > 0 ? '-' : ''; ?><?php echo esc_html($omnify_fmt_price($omnify_refunded_amount)); ?>
 				</p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_refunded_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_refunded_trend)); ?>
 			</div>
 		</div>
 
@@ -381,7 +385,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((float) $omnify_refund_rate, 1)); ?>%</p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_refund_rate_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_refund_rate_trend)); ?>
 			</div>
 		</div>
 
@@ -394,7 +398,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_tax_collected)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_tax_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_tax_trend)); ?>
 			</div>
 		</div>
 
@@ -406,7 +410,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_fmt_price($omnify_shipping_collected)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_shipping_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_shipping_trend)); ?>
 			</div>
 		</div>
 
@@ -418,7 +422,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((int) $omnify_downloads_count)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_downloads_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_downloads_trend)); ?>
 			</div>
 		</div>
 
@@ -430,7 +434,7 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 			</div>
 			<div class="omnify-stat-card__bottom">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((int) $omnify_new_customers_count)); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_customers_trend)); ?>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_customers_trend)); ?>
 			</div>
 		</div>
 
@@ -441,8 +445,8 @@ if (! isset($omnify_render_trend) || ! is_callable($omnify_render_trend)) {
 				<span class="omnify-stat-icon-wrap omnify-stat-icon-wrap--slate"><span class="dashicons dashicons-editor-ul"></span></span>
 			</div>
 			<div class="omnify-stat-card__bottom">
-				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_avg_items_per_order); ?></p>
-				<?php echo wp_kses_post(omnify_render_trend($omnify_avg_items_trend)); ?>
+				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format((float) $omnify_avg_items_per_order, 2)); ?></p>
+				<?php echo wp_kses_post($omnify_render_trend($omnify_avg_items_trend)); ?>
 			</div>
 		</div>
 	</div>

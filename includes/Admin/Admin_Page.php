@@ -146,9 +146,18 @@ class Omnify_Admin_Page {
 			'omnify_bulk_customers',
 			'omnify_bulk_products',
 			'omnify_bulk_coupons',
+			'omnify_bulk_reviews',
+			'omnify_bulk_abandoned_carts',
+			'omnify_export_inventory_logs',
 			'omnify_quick_edit_product',
+			'omnify_duplicate_product',
 			'omnify_quick_update_order_status',
 			'omnify_remove_shop_user',
+			'omnify_edit_order_note',
+			'omnify_preview_email_template',
+			'omnify_review_tax_exemption',
+			'omnify_run_db_maintenance',
+			'omnify_prune_activity_logs',
 		];
 
 		foreach ($omnify_actions as $omnify_action) {
@@ -294,10 +303,26 @@ class Omnify_Admin_Page {
 			[$this, 'render_orders']
 		);
 
+		$omnify_products_title = __('Products', 'omnifywp-ecommerce');
+		$omnify_out_of_stock_count = get_transient('omnify_depleted_stock_count');
+		if (false === $omnify_out_of_stock_count) {
+			global $wpdb;
+			$omnify_products_table = $wpdb->prefix . 'omnify_products';
+			$omnify_out_of_stock_count = (int) $wpdb->get_var(
+				"SELECT COUNT(*) FROM {$omnify_products_table} WHERE deleted_at IS NULL AND status = 'publish' AND (stock_status = 'outofstock' OR (manage_stock = 1 AND stock_quantity <= 0))"
+			);
+			set_transient('omnify_depleted_stock_count', $omnify_out_of_stock_count, 5 * MINUTE_IN_SECONDS);
+		} else {
+			$omnify_out_of_stock_count = (int) $omnify_out_of_stock_count;
+		}
+		if ($omnify_out_of_stock_count > 0) {
+			$omnify_products_title .= sprintf(' <span class="awaiting-mod count-%1$d" style="background:#dc2626; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; font-weight:700;"><span class="pending-count">%1$d</span></span>', $omnify_out_of_stock_count);
+		}
+
 		add_submenu_page(
 			'omnifywp-ecommerce',
 			__('Products', 'omnifywp-ecommerce'),
-			__('Products', 'omnifywp-ecommerce'),
+			$omnify_products_title,
 			'manage_omnify',
 			'omnify-products',
 			[$this, 'render_products']
@@ -604,7 +629,14 @@ class Omnify_Admin_Page {
 				'manualPayment'   => __('Manual Payment', 'omnifywp-ecommerce'),
 				'instructions'    => __('Payment Instructions', 'omnifywp-ecommerce'),
 				'delete'          => __('Delete', 'omnifywp-ecommerce'),
+				'searchResult'    => __('result', 'omnifywp-ecommerce'),
+				'searchResults'   => __('results', 'omnifywp-ecommerce'),
+				'searchThisPage'  => __('This page', 'omnifywp-ecommerce'),
+				'searchNoResults' => __('No settings match your search.', 'omnifywp-ecommerce'),
+				'searchHint'      => __('Type to search every settings screen.', 'omnifywp-ecommerce'),
+				'settingsUrl'     => admin_url('admin.php?page=omnify-settings'),
 			]);
+			wp_localize_script('omnify-settings-helper', 'omnifySettingsSearch', \Omnify\eCommerce\Admin\Omnify_Settings_Search_Index::all());
 			wp_localize_script('omnify-settings-helper', 'omnifyLocationData', [
 				'countries' => \Omnify\eCommerce\Support\Omnify_Locations::countries(),
 				'states'    => \Omnify\eCommerce\Support\Omnify_Locations::states(),
@@ -655,6 +687,8 @@ class Omnify_Admin_Page {
 		$omnify_category = sanitize_text_field(wp_unslash($_GET['category'] ?? ''));
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$omnify_type = sanitize_key(wp_unslash($_GET['type'] ?? ''));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$omnify_stock_status = sanitize_key(wp_unslash($_GET['stock_status'] ?? ''));
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 		$omnify_date_from = sanitize_text_field(wp_unslash($_GET['date_from'] ?? ''));
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
@@ -666,13 +700,14 @@ class Omnify_Admin_Page {
 		$omnify_per_page = 20;
 
 		$omnify_query_args = [
-			'status'    => $omnify_status,
-			'search'    => $omnify_search,
-			'category'  => $omnify_category,
-			'type'      => $omnify_type,
-			'date_from' => $omnify_date_from,
-			'date_to'   => $omnify_date_to,
-			'sort'      => $omnify_sort,
+			'status'       => $omnify_status,
+			'search'       => $omnify_search,
+			'category'     => $omnify_category,
+			'type'         => $omnify_type,
+			'stock_status' => $omnify_stock_status,
+			'date_from'    => $omnify_date_from,
+			'date_to'      => $omnify_date_to,
+			'sort'         => $omnify_sort,
 		];
 
 		$omnify_total_products = $this->omnify_products->count($omnify_query_args);
@@ -783,15 +818,18 @@ class Omnify_Admin_Page {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$omnify_sort = sanitize_key(wp_unslash($_GET['sort'] ?? 'created_desc'));
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$omnify_tax_exempt = isset($_GET['tax_exempt']) && $_GET['tax_exempt'] !== '' ? sanitize_key(wp_unslash($_GET['tax_exempt'])) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$omnify_paged = max(1, absint(wp_unslash($_GET['paged'] ?? 1)));
 		$omnify_per_page = 20;
 
 		$omnify_filter_args = [
-			'status'    => $omnify_status,
-			'search'    => $omnify_search,
-			'date_from' => $omnify_date_from,
-			'date_to'   => $omnify_date_to,
-			'sort'      => $omnify_sort,
+			'status'     => $omnify_status,
+			'search'     => $omnify_search,
+			'tax_exempt' => $omnify_tax_exempt,
+			'date_from'  => $omnify_date_from,
+			'date_to'    => $omnify_date_to,
+			'sort'       => $omnify_sort,
 		];
 
 		$omnify_total_customers = $this->omnify_customers->count($omnify_filter_args);
@@ -1502,8 +1540,8 @@ class Omnify_Admin_Page {
 		}
 
 		// 9. Handle CSV Export
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if (!empty($_GET['export_csv'])) {
+			check_admin_referer('omnify_analytics_export');
 			$this->export_analytics_csv([
 				'range' => $omnify_range,
 				'start' => $omnify_start,
@@ -1576,10 +1614,12 @@ class Omnify_Admin_Page {
 		$this->fputcsv_safe($omnify_output, ['--- FINANCIAL SUMMARY ---']);
 		$this->fputcsv_safe($omnify_output, ['Metric', 'Value']);
 		foreach ($omnify_data['kpis'] as $omnify_metric => $omnify_val) {
-			if (in_array($omnify_metric, ['Gross Sales', 'Net Sales', 'Coupon Discounts', 'Tax Collected', 'Shipping Collected', 'Average Order Value'])) {
-				$this->fputcsv_safe($omnify_output, [$omnify_metric, $omnify_data['currency_symbol'] . number_format($omnify_val, 2)]);
+			if (in_array($omnify_metric, ['Gross Sales', 'Net Sales', 'Net After Refunds', 'Refunded Amount', 'Coupon Discounts', 'Tax Collected', 'Shipping Collected', 'Average Order Value'])) {
+				$this->fputcsv_safe($omnify_output, [$omnify_metric, $omnify_data['currency_symbol'] . number_format((float) $omnify_val, 2)]);
+			} elseif (in_array($omnify_metric, ['Refund Rate %', 'Coupon Order Rate', 'Avg Items Per Order'])) {
+				$this->fputcsv_safe($omnify_output, [$omnify_metric, number_format((float) $omnify_val, 2) . (str_contains($omnify_metric, '%') || str_contains($omnify_metric, 'Rate') ? '%' : '')]);
 			} else {
-				$this->fputcsv_safe($omnify_output, [$omnify_metric, number_format($omnify_val)]);
+				$this->fputcsv_safe($omnify_output, [$omnify_metric, number_format((float) $omnify_val)]);
 			}
 		}
 		$this->fputcsv_safe($omnify_output, []);
@@ -1642,11 +1682,26 @@ class Omnify_Admin_Page {
 				$omnify_data['currency_symbol'] . number_format($omnify_row['total'], 2)
 			]);
 		}
+		$this->fputcsv_safe($omnify_output, []);
+
+		// Status Breakdown Section
+		if (! empty($omnify_data['status_breakdown'])) {
+			$this->fputcsv_safe($omnify_output, ['--- ORDER STATUS BREAKDOWN ---']);
+			$this->fputcsv_safe($omnify_output, ['Status', 'Order Count', 'Total Value']);
+			foreach ($omnify_data['status_breakdown'] as $omnify_row) {
+				$this->fputcsv_safe($omnify_output, [
+					ucfirst(str_replace('_', ' ', (string) ($omnify_row['status'] ?? ''))),
+					(int) ($omnify_row['total'] ?? 0),
+					$omnify_data['currency_symbol'] . number_format((float) ($omnify_row['total_revenue'] ?? 0), 2)
+				]);
+			}
+		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose($omnify_output);
 		exit;
 	}
+
 
 	public function render_export(): void {
 		$omnify_settings = $this->omnify_settings->all();
@@ -2236,6 +2291,8 @@ class Omnify_Admin_Page {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$omnify_status   = sanitize_key(wp_unslash($_GET['status'] ?? ''));
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$omnify_search   = sanitize_text_field(wp_unslash($_GET['search'] ?? ''));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$omnify_paged    = max(1, absint(wp_unslash($_GET['paged'] ?? 1)));
 		$omnify_per_page = 20;
 
@@ -2354,26 +2411,32 @@ class Omnify_Admin_Page {
 		$omnify_dl_prev = (int) $this->cached_db_get_var('dashboard_dl_prev', $omnify_dl_prev_sql);
 
 		// Store Status active summaries
-		$omnify_active_products_sql = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status = 'published'", $omnify_products_table);
-		$omnify_active_coupons_sql  = $wpdb->prepare('SELECT COUNT(*) FROM %i WHERE is_active = 1', $omnify_coupons_table);
-		$omnify_pending_reviews_sql = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status = 'pending'", $omnify_reviews_table);
-		$omnify_active_products = (int) $this->cached_db_get_var('dashboard_active_products', $omnify_active_products_sql);
-		$omnify_active_coupons  = (int) $this->cached_db_get_var('dashboard_active_coupons', $omnify_active_coupons_sql);
-		$omnify_pending_reviews = (int) $this->cached_db_get_var('dashboard_pending_reviews', $omnify_pending_reviews_sql);
+		$omnify_active_products_sql     = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status = 'published'", $omnify_products_table);
+		$omnify_active_coupons_sql      = $wpdb->prepare('SELECT COUNT(*) FROM %i WHERE is_active = 1', $omnify_coupons_table);
+		$omnify_pending_reviews_sql     = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status = 'pending'", $omnify_reviews_table);
+		$omnify_outofstock_products_sql = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status = 'published' AND stock_status = 'outofstock'", $omnify_products_table);
+		$omnify_pending_fulfillment_sql = $wpdb->prepare("SELECT COUNT(*) FROM %i WHERE status IN ('processing', 'packed', 'ready_to_deliver') AND deleted_at IS NULL", $omnify_orders_table);
+		$omnify_active_products         = (int) $this->cached_db_get_var('dashboard_active_products', $omnify_active_products_sql);
+		$omnify_active_coupons          = (int) $this->cached_db_get_var('dashboard_active_coupons', $omnify_active_coupons_sql);
+		$omnify_pending_reviews         = (int) $this->cached_db_get_var('dashboard_pending_reviews', $omnify_pending_reviews_sql);
+		$omnify_outofstock_products     = (int) $this->cached_db_get_var('dashboard_outofstock_products', $omnify_outofstock_products_sql);
+		$omnify_pending_fulfillment     = (int) $this->cached_db_get_var('dashboard_pending_fulfillment', $omnify_pending_fulfillment_sql);
 
 		return [
-			'revenue'          => $omnify_revenue,
-			'orders'           => $omnify_orders,
-			'customers'        => $omnify_customers,
-			'downloads'        => $omnify_downloads,
-			'products'         => $omnify_products,
-			'revenue_trend'    => $this->calculate_trend($omnify_rev_curr, $omnify_rev_prev),
-			'orders_trend'     => $this->calculate_trend($omnify_ord_curr, $omnify_ord_prev),
-			'customers_trend'  => $this->calculate_trend($omnify_cust_curr, $omnify_cust_prev),
-			'downloads_trend'  => $this->calculate_trend($omnify_dl_curr, $omnify_dl_prev),
-			'active_products'  => $omnify_active_products,
-			'active_coupons'   => $omnify_active_coupons,
-			'pending_reviews'  => $omnify_pending_reviews,
+			'revenue'             => $omnify_revenue,
+			'orders'              => $omnify_orders,
+			'customers'           => $omnify_customers,
+			'downloads'           => $omnify_downloads,
+			'products'            => $omnify_products,
+			'revenue_trend'       => $this->calculate_trend($omnify_rev_curr, $omnify_rev_prev),
+			'orders_trend'        => $this->calculate_trend($omnify_ord_curr, $omnify_ord_prev),
+			'customers_trend'     => $this->calculate_trend($omnify_cust_curr, $omnify_cust_prev),
+			'downloads_trend'     => $this->calculate_trend($omnify_dl_curr, $omnify_dl_prev),
+			'active_products'     => $omnify_active_products,
+			'active_coupons'      => $omnify_active_coupons,
+			'pending_reviews'     => $omnify_pending_reviews,
+			'outofstock_products' => $omnify_outofstock_products,
+			'pending_fulfillment' => $omnify_pending_fulfillment,
 		];
 	}
 
@@ -2436,6 +2499,9 @@ class Omnify_Admin_Page {
 		switch ($omnify_message) {
 			case 'saved':
 				$omnify_text = __('Settings / Details saved successfully.', 'omnifywp-ecommerce');
+				break;
+			case 'cloned':
+				$omnify_text = __('Product duplicated successfully as draft.', 'omnifywp-ecommerce');
 				break;
 			case 'save_failed':
 				$omnify_text = __('Settings could not be saved. Please try again.', 'omnifywp-ecommerce');
@@ -2591,7 +2657,14 @@ class Omnify_Admin_Page {
 				break;
 			case 'email_test_failed':
 				$omnify_class = 'notice notice-error omnify-notice';
-				$omnify_text = __('Test email failed. Check the email log for the mailer error.', 'omnifywp-ecommerce');
+				$omnify_last_err = get_transient('omnify_last_mail_error');
+				if ($omnify_last_err) {
+					delete_transient('omnify_last_mail_error');
+					/* translators: %s: detailed mailer error message */
+					$omnify_text = sprintf(__('Test email failed: %s', 'omnifywp-ecommerce'), esc_html((string) $omnify_last_err));
+				} else {
+					$omnify_text = __('Test email failed. Check the email log for the mailer error.', 'omnifywp-ecommerce');
+				}
 				break;
 			case 'email_resent':
 				$omnify_text = __('Logged email resent successfully.', 'omnifywp-ecommerce');
@@ -2768,6 +2841,7 @@ class Omnify_Admin_Page {
 				'preorder_limit' => isset($omnify_var['preorder_limit']) && '' !== trim((string) $omnify_var['preorder_limit']) ? absint($omnify_var['preorder_limit']) : null,
 				'preorder_message' => sanitize_text_field((string) ($omnify_var['preorder_message'] ?? '')),
 				'thumbnail_id' => isset($omnify_var['thumbnail_id']) ? absint($omnify_var['thumbnail_id']) : null,
+				'estimated_delivery' => sanitize_text_field((string) ($omnify_var['estimated_delivery'] ?? '')),
 			];
 		}
 
@@ -2833,12 +2907,14 @@ class Omnify_Admin_Page {
 			'shipping_class'    => sanitize_title((string) wp_unslash($_POST['shipping_class'] ?? '')),
 			'attributes'        => $omnify_attributes,
 			'variation_settings' => [
-				'product_kind'   => $omnify_variation_product_kind,
-				'selector_style' => $omnify_variation_selector_style,
-				'swatch_shape'   => $omnify_variation_swatch_shape,
-				'swatch_size'    => $omnify_variation_swatch_size,
-				'out_of_stock'   => $omnify_variation_out_of_stock,
+				'product_kind'        => $omnify_variation_product_kind,
+				'selector_style'      => $omnify_variation_selector_style,
+				'swatch_shape'        => $omnify_variation_swatch_shape,
+				'swatch_size'         => $omnify_variation_swatch_size,
+				'out_of_stock'        => $omnify_variation_out_of_stock,
+				'low_stock_threshold' => isset($_POST['low_stock_threshold']) && '' !== trim((string) wp_unslash($_POST['low_stock_threshold'])) ? absint(wp_unslash($_POST['low_stock_threshold'])) : null,
 			],
+			'low_stock_threshold' => isset($_POST['low_stock_threshold']) && '' !== trim((string) wp_unslash($_POST['low_stock_threshold'])) ? absint(wp_unslash($_POST['low_stock_threshold'])) : null,
 			'gallery_ids'       => $omnify_gallery_ids,
 			'video_url'         => esc_url_raw(sanitize_text_field(wp_unslash($_POST['video_url'] ?? ''))),
 			'trust_badge_title' => sanitize_text_field(wp_unslash($_POST['trust_badge_title'] ?? '')),
@@ -2912,6 +2988,12 @@ class Omnify_Admin_Page {
 							'error'    => $omnify_err,
 							'size'     => isset($omnify_files['size'][$omnify_i]) ? (int) $omnify_files['size'][$omnify_i] : 0,
 						];
+
+						$omnify_ext = strtolower(pathinfo($omnify_name, PATHINFO_EXTENSION));
+						$omnify_disallowed = ['php', 'phtml', 'php3', 'php4', 'php5', 'phps', 'cgi', 'exe', 'pl', 'py', 'sh', 'bat', 'cmd', 'js', 'jar', 'phar'];
+						if (in_array($omnify_ext, $omnify_disallowed, true)) {
+							continue;
+						}
 
 						$omnify_upload = wp_handle_upload($omnify_file_array, ['test_form' => false]);
 						if (empty($omnify_upload['error'])) {
@@ -3022,6 +3104,46 @@ class Omnify_Admin_Page {
 		exit;
 	}
 
+	public function handle_duplicate_product(): void {
+		$omnify_id = absint(wp_unslash($_GET['id'] ?? 0));
+		check_admin_referer('omnify_duplicate_product_' . $omnify_id);
+
+		if (! $this->can_manage('products')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_original = $this->omnify_products->find($omnify_id);
+		if (! $omnify_original) {
+			wp_safe_redirect(admin_url('admin.php?page=omnify-products&message=error'));
+			exit;
+		}
+
+		$omnify_clone_data = $omnify_original;
+		unset($omnify_clone_data['id'], $omnify_clone_data['created_at'], $omnify_clone_data['updated_at'], $omnify_clone_data['deleted_at']);
+		$omnify_clone_data['name']   = sprintf(__('%s (Copy)', 'omnifywp-ecommerce'), $omnify_original['name']);
+		$omnify_clone_data['slug']   = sanitize_title($omnify_clone_data['name']) . '-' . wp_generate_password(4, false, false);
+		$omnify_clone_data['status'] = 'draft';
+		if (! empty($omnify_clone_data['sku'])) {
+			$omnify_clone_data['sku'] = $omnify_original['sku'] . '-COPY';
+		}
+
+		$omnify_new_id = $this->omnify_products->create($omnify_clone_data);
+		if ($omnify_new_id) {
+			$this->omnify_activities->log(
+				get_current_user_id(),
+				'duplicate_product',
+				'product',
+				(string) $omnify_new_id,
+				sprintf(__('Cloned product "%s" (New ID: %d).', 'omnifywp-ecommerce'), $omnify_original['name'], $omnify_new_id)
+			);
+			wp_safe_redirect(admin_url('admin.php?page=omnify-products&action=edit&id=' . $omnify_new_id . '&message=cloned'));
+			exit;
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-products&message=error'));
+		exit;
+	}
+
 	public function handle_trash_customer(): void {
 		$omnify_id = absint(wp_unslash($_GET['id'] ?? 0));
 		check_admin_referer('omnify_trash_customer_' . $omnify_id);
@@ -3058,6 +3180,17 @@ class Omnify_Admin_Page {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 			'sku' => sanitize_text_field(wp_unslash($_POST['sku'] ?? '')),
 		];
+
+		if (! empty($omnify_data['sku'])) {
+			$omnify_existing_sku = $this->omnify_products->find_by_sku($omnify_data['sku']);
+			if ($omnify_existing_sku && (int) ($omnify_existing_sku['id'] ?? 0) !== $omnify_id) {
+				if (wp_doing_ajax() || ! empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+					wp_send_json_error(['message' => sprintf(__('The SKU "%s" is already assigned to another product.', 'omnifywp-ecommerce'), $omnify_data['sku'])], 409);
+				}
+				wp_safe_redirect(admin_url('admin.php?page=omnify-products&message=sku_duplicate'));
+				exit;
+			}
+		}
 
 		// Update stock if provided
 		if (isset($_POST['stock_qty'])) {
@@ -3409,6 +3542,10 @@ class Omnify_Admin_Page {
 				$this->omnify_products->restore($omnify_id);
 			} elseif ($omnify_action === 'delete') {
 				$this->omnify_products->delete($omnify_id);
+			} elseif ($omnify_action === 'mark_instock') {
+				$this->omnify_products->update($omnify_id, ['stock_status' => 'instock']);
+			} elseif ($omnify_action === 'mark_outofstock') {
+				$this->omnify_products->update($omnify_id, ['stock_status' => 'outofstock']);
 			}
 		}
 
@@ -3436,6 +3573,33 @@ class Omnify_Admin_Page {
 		}
 
 		wp_safe_redirect(admin_url('admin.php?page=omnify-coupons&message=bulk_' . $omnify_action)); exit;
+	}
+
+	public function handle_bulk_abandoned_carts(): void {
+		check_admin_referer('omnify_bulk_abandoned_carts', 'omnify_bulk_nonce');
+		if (! $this->can_manage('abandoned_carts')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_ids = array_map('absint', (array) wp_unslash($_POST['cart_ids'] ?? []));
+		$omnify_action = sanitize_key(wp_unslash($_POST['bulk_action'] ?? ''));
+		if (empty($omnify_ids) || empty($omnify_action)) {
+			wp_safe_redirect(admin_url('admin.php?page=omnify-abandoned-carts&message=no_selection'));
+			exit;
+		}
+
+		foreach ($omnify_ids as $omnify_id) {
+			if ($omnify_action === 'trash') {
+				$this->omnify_abandoned_carts->trash($omnify_id);
+			} elseif ($omnify_action === 'restore') {
+				$this->omnify_abandoned_carts->restore($omnify_id);
+			} elseif ($omnify_action === 'delete') {
+				$this->omnify_abandoned_carts->delete($omnify_id);
+			}
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-abandoned-carts&message=bulk_' . $omnify_action));
+		exit;
 	}
 
 	public function handle_trash_review(): void {
@@ -4672,6 +4836,8 @@ class Omnify_Admin_Page {
 		$omnify_settings = $this->omnify_settings->all();
 		$omnify_store_name = (string) ($omnify_settings['store_name'] ?? get_bloginfo('name'));
 		$omnify_store_email = (string) ($omnify_settings['store_email'] ?? get_option('admin_email'));
+		$omnify_logo_url = (string) ($omnify_settings['store_logo_url'] ?? ($omnify_settings['store_logo'] ?? ''));
+		$omnify_tax_id = (string) ($omnify_settings['store_tax_id'] ?? ($omnify_settings['vat_number'] ?? ($omnify_settings['tax_registration_number'] ?? '')));
 		$omnify_symbol = $this->order_document_symbol((string) $omnify_order['currency']);
 		$omnify_title = match ($omnify_type) {
 			'invoice' => __('Invoice / Receipt', 'omnifywp-ecommerce'),
@@ -4698,9 +4864,15 @@ class Omnify_Admin_Page {
 			<main class="document">
 				<section class="header">
 					<div>
+						<?php if (! empty($omnify_logo_url)) : ?>
+							<img src="<?php echo esc_url($omnify_logo_url); ?>" alt="<?php echo esc_attr($omnify_store_name); ?>" style="max-height: 52px; max-width: 220px; margin-bottom: 8px; object-fit: contain; display: block;" />
+						<?php endif; ?>
 						<h1><?php echo esc_html($omnify_title); ?></h1>
 						<p><strong><?php echo esc_html($omnify_store_name); ?></strong></p>
 						<p><?php echo esc_html($omnify_store_email); ?></p>
+						<?php if (! empty($omnify_tax_id)) : ?>
+							<p><strong><?php esc_html_e('VAT / Tax ID:', 'omnifywp-ecommerce'); ?></strong> <?php echo esc_html($omnify_tax_id); ?></p>
+						<?php endif; ?>
 					</div>
 					<div class="right">
 						<p><strong><?php echo esc_html($omnify_order['order_number'] ?: '#' . $omnify_order['id']); ?></strong></p>
@@ -4897,43 +5069,61 @@ class Omnify_Admin_Page {
 		$omnify_stream .= "q 0.5 w 50 {$omnify_y} m 560 {$omnify_y} l S Q\n"; // line
 		$omnify_y -= 5;
 		$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 50 {$omnify_y} Tm (Item) Tj ET\n";
-		$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 380 {$omnify_y} Tm (Qty) Tj ET\n";
-		$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 430 {$omnify_y} Tm (Price) Tj ET\n";
-		$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (Total) Tj ET\n";
+		if ($omnify_type === 'packing_slip') {
+			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (Qty) Tj ET\n";
+		} else {
+			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 380 {$omnify_y} Tm (Qty) Tj ET\n";
+			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 430 {$omnify_y} Tm (Price) Tj ET\n";
+			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (Total) Tj ET\n";
+		}
 		$omnify_stream .= "q 0.5 w 50 " . ($omnify_y-2) . " m 560 " . ($omnify_y-2) . " l S Q\n";
 
 		$omnify_y -= 15;
 		$omnify_items_total = 0;
+		$omnify_total_units = 0;
 		foreach ((array)($omnify_order['items'] ?? []) as $omnify_item) {
 			$omnify_name = substr((string) ($omnify_item['product_name'] ?? 'Item'), 0, 45);
 			$omnify_qty = (int)($omnify_item['quantity'] ?? 1);
 			$omnify_price = (float)($omnify_item['price'] ?? 0);
 			$omnify_line_total = $omnify_price * $omnify_qty;
 			$omnify_items_total += $omnify_line_total;
+			$omnify_total_units += $omnify_qty;
 
 			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 50 {$omnify_y} Tm (" . $omnify_esc($omnify_name) . ") Tj ET\n";
-			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 380 {$omnify_y} Tm (" . $omnify_qty . ") Tj ET\n";
-			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 430 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format($omnify_price, 2)) . ") Tj ET\n";
-			$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format($omnify_line_total, 2)) . ") Tj ET\n";
+			if ($omnify_type === 'packing_slip') {
+				$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_qty . ") Tj ET\n";
+			} else {
+				$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 380 {$omnify_y} Tm (" . $omnify_qty . ") Tj ET\n";
+				$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 430 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format($omnify_price, 2)) . ") Tj ET\n";
+				$omnify_stream .= "BT /F1 9 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format($omnify_line_total, 2)) . ") Tj ET\n";
+			}
 			$omnify_y -= 14;
 			if ($omnify_y < 150) break; // prevent overflow
 		}
 
-		// Totals section
-		$omnify_y -= 20;
-		$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Subtotal:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['subtotal'] ?? $omnify_items_total), 2)) . ") Tj ET\n";
-		$omnify_y -= 12;
-		if ((float)($omnify_order['discount_amount'] ?? 0) > 0) {
-			$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Discount:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (-" . $omnify_esc($omnify_symbol . number_format((float)$omnify_order['discount_amount'], 2)) . ") Tj ET\n";
+		if ($omnify_type === 'packing_slip') {
+			// Packing slip totals: show total units only, omit all prices
+			$omnify_y -= 20;
+			$omnify_stream .= "q 0.5 w 380 {$omnify_y} m 560 {$omnify_y} l S Q\n";
 			$omnify_y -= 12;
+			$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Total Units Shipped:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_total_units . ") Tj ET\n";
+		} else {
+			// Totals section with financial amounts
+			$omnify_y -= 20;
+			$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Subtotal:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['subtotal'] ?? $omnify_items_total), 2)) . ") Tj ET\n";
+			$omnify_y -= 12;
+			if ((float)($omnify_order['discount_amount'] ?? 0) > 0) {
+				$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Discount:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (-" . $omnify_esc($omnify_symbol . number_format((float)$omnify_order['discount_amount'], 2)) . ") Tj ET\n";
+				$omnify_y -= 12;
+			}
+			$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Tax:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['tax'] ?? 0), 2)) . ") Tj ET\n";
+			$omnify_y -= 12;
+			$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Shipping:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['shipping_total'] ?? 0), 2)) . ") Tj ET\n";
+			$omnify_y -= 14;
+			$omnify_stream .= "q 0.5 w 380 {$omnify_y} m 560 {$omnify_y} l S Q\n";
+			$omnify_y -= 12;
+			$omnify_stream .= "BT /F1 12 Tf 1 0 0 1 380 {$omnify_y} Tm (TOTAL:) Tj ET BT /F1 12 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)$omnify_order['total'], 2)) . ") Tj ET\n";
 		}
-		$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Tax:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['tax'] ?? 0), 2)) . ") Tj ET\n";
-		$omnify_y -= 12;
-		$omnify_stream .= "BT /F1 10 Tf 1 0 0 1 380 {$omnify_y} Tm (Shipping:) Tj ET BT /F1 10 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)($omnify_order['shipping_total'] ?? 0), 2)) . ") Tj ET\n";
-		$omnify_y -= 14;
-		$omnify_stream .= "q 0.5 w 380 {$omnify_y} m 560 {$omnify_y} l S Q\n";
-		$omnify_y -= 12;
-		$omnify_stream .= "BT /F1 12 Tf 1 0 0 1 380 {$omnify_y} Tm (TOTAL:) Tj ET BT /F1 12 Tf 1 0 0 1 510 {$omnify_y} Tm (" . $omnify_esc($omnify_symbol . number_format((float)$omnify_order['total'], 2)) . ") Tj ET\n";
 
 		// Footer
 		$omnify_y = 60;
@@ -5178,6 +5368,7 @@ class Omnify_Admin_Page {
 				// 3. Restock inventory if requested
 				if ($omnify_restock && $omnify_detail['product_id'] > 0) {
 					$this->omnify_products->increment_stock($omnify_detail['product_id'], $omnify_detail['variation_id'], $omnify_detail['qty']);
+					$this->omnify_products->sync_bundles_containing_product($omnify_detail['product_id']);
 
 					$omnify_new_qty = $omnify_detail['variation_id'] > 0
 						? $this->omnify_products->get_variation_stock_qty((int) $omnify_detail['variation_id'])
@@ -5199,7 +5390,8 @@ class Omnify_Admin_Page {
 				}
 			}
 
-			if ($omnify_status === 'refunded' || $omnify_restock) {
+			// Only mark order fully restocked when the order status reaches 'refunded' (all items refunded)
+			if ($omnify_status === 'refunded') {
 				$this->omnify_orders->update($omnify_order_id, [
 					'restocked'     => 1,
 					'stock_reduced' => 0,
@@ -5218,7 +5410,7 @@ class Omnify_Admin_Page {
 		if ($omnify_old_status !== $omnify_status) {
 			do_action('omnify_order_status_changed', $omnify_order_id, $omnify_status, $omnify_old_status);
 		}
-		do_action('omnify_order_refunded', $omnify_order_id, $omnify_total_refund, $omnify_new_refunded);
+		do_action('omnify_order_refunded', $omnify_order_id, $omnify_total_refund, $omnify_new_refunded, $omnify_reason, (bool) $omnify_restock);
 
 		// Build timeline note
 		$omnify_note_parts = [];
@@ -5268,7 +5460,7 @@ class Omnify_Admin_Page {
 		if ($omnify_status !== $omnify_order['status']) {
 			do_action('omnify_order_status_changed', $omnify_order_id, $omnify_status, (string) $omnify_order['status']);
 		}
-		do_action('omnify_order_refunded', $omnify_order_id, $omnify_total_refund, $omnify_new_refunded);
+		do_action('omnify_order_refunded', $omnify_order_id, $omnify_total_refund, $omnify_new_refunded, $omnify_reason, (bool) $omnify_restock);
 
 		$omnify_user_id = get_current_user_id();
 		$this->omnify_activities->log(
@@ -5341,6 +5533,9 @@ class Omnify_Admin_Page {
 
 		if ($omnify_order_id && !empty($omnify_note)) {
 			$this->omnify_orders->add_note($omnify_order_id, $omnify_note, null, $omnify_note_type, 'customer' === $omnify_note_type);
+			if ('customer' === $omnify_note_type && isset($this->omnify_emails)) {
+				$this->omnify_emails->send_customer_note($omnify_order_id, $omnify_note);
+			}
 		}
 
 		wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=order_note_added'));
@@ -5359,6 +5554,193 @@ class Omnify_Admin_Page {
 		$this->omnify_orders->delete_note($omnify_order_id, $omnify_note_id);
 
 		wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=order_note_deleted'));
+		exit;
+	}
+
+	public function handle_edit_order_note(): void {
+		$omnify_order_id = absint(wp_unslash($_POST['order_id'] ?? 0));
+		$omnify_note_id  = absint(wp_unslash($_POST['note_id'] ?? 0));
+		check_admin_referer('omnify_edit_order_note_' . $omnify_note_id);
+
+		if (! $this->can_manage('orders')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_note      = wp_kses_post(wp_unslash($_POST['note'] ?? ''));
+		$omnify_note_type = sanitize_key((string) wp_unslash($_POST['note_type'] ?? 'private'));
+
+		if ($omnify_order_id && $omnify_note_id && ! empty($omnify_note)) {
+			global $wpdb;
+			$omnify_notes_table = $wpdb->prefix . 'omnify_order_notes';
+			\Omnify\eCommerce\Support\Omnify_DB::update(
+				$wpdb,
+				$omnify_notes_table,
+				[
+					'note'              => $omnify_note,
+					'note_type'         => $omnify_note_type,
+					'customer_visible'  => 'customer' === $omnify_note_type ? 1 : 0,
+					'customer_notified' => 'customer' === $omnify_note_type ? 1 : 0,
+				],
+				[
+					'id'       => $omnify_note_id,
+					'order_id' => $omnify_order_id,
+				],
+				['%s', '%s', '%d', '%d'],
+				['%d', '%d']
+			);
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-orders&action=view&id=' . $omnify_order_id . '&message=order_note_updated'));
+		exit;
+	}
+
+	public function handle_preview_email_template(): void {
+		if (! $this->can_manage('settings')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+		$omnify_template = sanitize_key(wp_unslash($_GET['template'] ?? 'receipt'));
+		check_admin_referer('omnify_preview_email_' . $omnify_template);
+
+		$omnify_html = $this->render_dummy_email_template_preview($omnify_template);
+		header('Content-Type: text/html; charset=UTF-8');
+		echo $omnify_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		exit;
+	}
+
+	private function render_dummy_email_template_preview(string $omnify_template): string {
+		$omnify_settings = $this->omnify_settings->all();
+		$omnify_site_name = get_bloginfo('name');
+		$omnify_currency  = $omnify_settings['currency'] ?? 'USD';
+
+		$omnify_headings = [
+			'receipt'          => __('Thank you for your order!', 'omnifywp-ecommerce'),
+			'order_shipped'    => __('Your order has been shipped', 'omnifywp-ecommerce'),
+			'abandoned_cart'   => __('Complete your order', 'omnifywp-ecommerce'),
+			'customer_note'    => __('New note added to your order', 'omnifywp-ecommerce'),
+			'customer_welcome' => __('Welcome to our store!', 'omnifywp-ecommerce'),
+			'out_of_stock'     => __('Out of stock alert', 'omnifywp-ecommerce'),
+		];
+		$omnify_heading = $omnify_headings[$omnify_template] ?? __('Email Preview', 'omnifywp-ecommerce');
+
+		return '<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>' . esc_html($omnify_heading) . ' - ' . esc_html($omnify_site_name) . '</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 32px 16px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;">
+	<div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+		<div style="background: #0f172a; padding: 24px 32px; color: #ffffff;">
+			<h1 style="margin: 0; font-size: 20px; font-weight: 600; color: #ffffff;">' . esc_html($omnify_site_name) . '</h1>
+			<p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">' . esc_html__('Live Email Template Preview', 'omnifywp-ecommerce') . ' (' . esc_html(strtoupper($omnify_template)) . ')</p>
+		</div>
+		<div style="padding: 32px;">
+			<h2 style="margin: 0 0 16px; font-size: 22px; color: #0f172a;">' . esc_html($omnify_heading) . '</h2>
+			<p style="margin: 0 0 20px; font-size: 15px; color: #475569; line-height: 1.6;">' . esc_html__('Hi Alex, this is a live rendered preview of your notification email configured in OmnifyWP eCommerce store settings.', 'omnifywp-ecommerce') . '</p>
+			<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+				<div style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">' . esc_html__('Sample Order #10042', 'omnifywp-ecommerce') . '</div>
+				<div style="display: flex; justify-content: space-between; font-size: 14px; color: #1e293b; padding: 6px 0; border-bottom: 1px dashed #cbd5e1;">
+					<span>Minimalist Cotton Hoodie &times; 1</span>
+					<strong>$79.00</strong>
+				</div>
+				<div style="display: flex; justify-content: space-between; font-size: 14px; color: #1e293b; padding: 6px 0;">
+					<span>Subtotal</span>
+					<span>$79.00</span>
+				</div>
+				<div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: #0f172a; padding-top: 8px; border-top: 2px solid #e2e8f0; margin-top: 4px;">
+					<span>Total</span>
+					<span>$79.00 ' . esc_html($omnify_currency) . '</span>
+				</div>
+			</div>
+			<div style="text-align: center; margin: 28px 0 12px;">
+				<a href="#" style="background: #0f766e; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; display: inline-block;">' . esc_html__('View Your Order Details', 'omnifywp-ecommerce') . '</a>
+			</div>
+		</div>
+		<div style="background: #f8fafc; padding: 20px 32px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.5;">
+			<p style="margin: 0;">' . esc_html(trim((string) ($omnify_settings['email_footer_text'] ?? 'OmnifyWP eCommerce Store. All rights reserved.'))) . '</p>
+		</div>
+	</div>
+</body>
+</html>';
+	}
+
+	public function handle_review_tax_exemption(): void {
+		if (! $this->can_manage('customers')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+		$omnify_user_id = absint(wp_unslash($_POST['user_id'] ?? $_GET['user_id'] ?? 0));
+		check_admin_referer('omnify_review_tax_' . $omnify_user_id);
+
+		$omnify_decision = sanitize_key(wp_unslash($_POST['decision'] ?? $_GET['decision'] ?? 'approve'));
+		$omnify_status   = 'approve' === $omnify_decision ? 'approved' : 'rejected';
+
+		if ($omnify_user_id > 0) {
+			update_user_meta($omnify_user_id, '_omnify_tax_exempt_status', $omnify_status);
+			update_user_meta($omnify_user_id, '_omnify_tax_exempt_reviewed_at', current_time('mysql'));
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-customers&message=tax_status_updated'));
+		exit;
+	}
+
+	public function handle_run_db_maintenance(): void {
+		if (! $this->can_manage('settings')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+		check_admin_referer('omnify_run_db_maintenance_nonce');
+
+		$omnify_type = sanitize_key(wp_unslash($_POST['maintenance_type'] ?? 'all'));
+		global $wpdb;
+
+		if (in_array($omnify_type, ['transients', 'all'], true)) {
+			// Clear expired transients
+			$wpdb->query(
+				"DELETE a, b FROM {$wpdb->options} a, {$wpdb->options} b
+				WHERE a.option_name LIKE '_transient_omnify_%'
+				AND b.option_name = CONCAT('_transient_timeout_', SUBSTRING(a.option_name, 12))
+				AND b.option_value < UNIX_TIMESTAMP()"
+			);
+			delete_transient('omnify_depleted_stock_count');
+			delete_transient('omnify_cart_cron_checked');
+			delete_transient('omnify_webhook_retry_cron_checked');
+		}
+
+		if (in_array($omnify_type, ['carts', 'all'], true)) {
+			// Prune abandoned carts older than 60 days, preserving recovered carts
+			if (isset($this->omnify_abandoned_carts) && method_exists($this->omnify_abandoned_carts, 'prune_stale')) {
+				$this->omnify_abandoned_carts->prune_stale(60);
+			} else {
+				$omnify_carts_table = $wpdb->prefix . 'omnify_abandoned_carts';
+				$omnify_cutoff = gmdate('Y-m-d H:i:s', time() - (60 * DAY_IN_SECONDS));
+				$wpdb->query($wpdb->prepare("DELETE FROM {$omnify_carts_table} WHERE status != 'recovered' AND updated_at < %s", $omnify_cutoff));
+			}
+		}
+
+		if (in_array($omnify_type, ['bundles', 'all'], true)) {
+			// Re-sync all bundle product stock statuses
+			if (isset($this->omnify_products) && method_exists($this->omnify_products, 'all')) {
+				$omnify_bundles = $this->omnify_products->all(['type' => 'bundle', 'limit' => 500]);
+				foreach ($omnify_bundles as $omnify_b) {
+					if (method_exists($this->omnify_products, 'sync_bundle_stock_status')) {
+						$this->omnify_products->sync_bundle_stock_status((int) $omnify_b['id']);
+					}
+				}
+			}
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-settings&section=tools&message=db_maintenance_completed'));
+		exit;
+	}
+
+	public function handle_prune_activity_logs(): void {
+		check_admin_referer('omnify_prune_activity_logs', 'omnify_prune_nonce');
+		if (! $this->can_manage('settings')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+		$omnify_days = max(1, absint(wp_unslash($_POST['days'] ?? 30)));
+		$omnify_pruned = $this->omnify_activities->prune_older_than($omnify_days);
+		wp_safe_redirect(admin_url('admin.php?page=omnify-activity&message=pruned&count=' . $omnify_pruned));
 		exit;
 	}
 
@@ -5722,6 +6104,7 @@ class Omnify_Admin_Page {
 		exit;
 	}
 
+
 	public function handle_export_products_xml(): void {
 		check_admin_referer('omnify_export_products_xml');
 
@@ -5831,6 +6214,7 @@ class Omnify_Admin_Page {
 		exit;
 	}
 
+
 	public function handle_export_downloads(): void {
 		check_admin_referer('omnify_export_downloads');
 
@@ -5889,6 +6273,7 @@ class Omnify_Admin_Page {
 		exit;
 	}
 
+
 	public function handle_export_orders(): void {
 		check_admin_referer('omnify_export_orders');
 
@@ -5926,9 +6311,27 @@ class Omnify_Admin_Page {
 			'created_at',
 		]);
 
+		$omnify_date_from = sanitize_text_field(wp_unslash($_REQUEST['date_from'] ?? ''));
+		$omnify_date_to   = sanitize_text_field(wp_unslash($_REQUEST['date_to'] ?? ''));
+		$omnify_status    = sanitize_key(wp_unslash($_REQUEST['status'] ?? ''));
+
+		$omnify_filter_args = [
+			'per_page'          => 100,
+			'include_relations' => false,
+		];
+		if (! empty($omnify_date_from)) {
+			$omnify_filter_args['date_from'] = $omnify_date_from;
+		}
+		if (! empty($omnify_date_to)) {
+			$omnify_filter_args['date_to'] = $omnify_date_to;
+		}
+		if (! empty($omnify_status) && 'all' !== $omnify_status) {
+			$omnify_filter_args['status'] = $omnify_status;
+		}
+
 		$omnify_offset = 0;
 		do {
-			$omnify_orders = $this->omnify_orders->all(['per_page' => 100, 'offset' => $omnify_offset, 'include_relations' => false]);
+			$omnify_orders = $this->omnify_orders->all(array_merge($omnify_filter_args, ['offset' => $omnify_offset]));
 			foreach ($omnify_orders as $omnify_order) {
 				$this->fputcsv_safe($omnify_output, [
 					$omnify_order['order_number'] ?: '#' . $omnify_order['id'],
@@ -5965,6 +6368,7 @@ class Omnify_Admin_Page {
 		fclose($omnify_output);
 		exit;
 	}
+
 
 	public function handle_export_coupons(): void {
 		check_admin_referer('omnify_export_coupons');
@@ -6007,6 +6411,7 @@ class Omnify_Admin_Page {
 		exit;
 	}
 
+
 	public function handle_export_tax_rules(): void {
 		check_admin_referer('omnify_export_tax_rules');
 
@@ -6035,6 +6440,7 @@ class Omnify_Admin_Page {
 		fclose($omnify_output);
 		exit;
 	}
+
 
 	public function handle_export_delivery_zones(): void {
 		check_admin_referer('omnify_export_delivery_zones');
@@ -6067,6 +6473,65 @@ class Omnify_Admin_Page {
 			]);
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose($omnify_output);
+		exit;
+	}
+
+
+	public function handle_export_inventory_logs(): void {
+		check_admin_referer('omnify_export_inventory_logs');
+
+		if (! $this->can_manage('products')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_product_id = absint(wp_unslash($_GET['product_id'] ?? 0));
+		global $wpdb;
+		$omnify_logs_table  = $wpdb->prefix . 'omnify_inventory_logs';
+		$omnify_prods_table = $wpdb->prefix . 'omnify_products';
+		$omnify_vars_table  = $wpdb->prefix . 'omnify_product_variations';
+
+		if ($omnify_product_id > 0) {
+			$omnify_sql = $wpdb->prepare(
+				"SELECT l.id, p.name as product_name, v.sku as var_sku, l.change_qty, l.new_qty, l.reason, u.display_name as user_name, l.created_at
+				 FROM {$omnify_logs_table} l
+				 LEFT JOIN {$omnify_prods_table} p ON l.product_id = p.id
+				 LEFT JOIN {$omnify_vars_table} v ON l.variation_id = v.id
+				 LEFT JOIN {$wpdb->users} u ON l.user_id = u.ID
+				 WHERE l.product_id = %d
+				 ORDER BY l.created_at DESC LIMIT 5000",
+				$omnify_product_id
+			);
+		} else {
+			$omnify_sql = "SELECT l.id, p.name as product_name, v.sku as var_sku, l.change_qty, l.new_qty, l.reason, u.display_name as user_name, l.created_at
+				 FROM {$omnify_logs_table} l
+				 LEFT JOIN {$omnify_prods_table} p ON l.product_id = p.id
+				 LEFT JOIN {$omnify_vars_table} v ON l.variation_id = v.id
+				 LEFT JOIN {$wpdb->users} u ON l.user_id = u.ID
+				 ORDER BY l.created_at DESC LIMIT 5000";
+		}
+
+		$omnify_rows = $wpdb->get_results($omnify_sql, ARRAY_A);
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=inventory-logs-' . gmdate('Y-m-d') . '.csv');
+		$omnify_output = fopen('php://output', 'w');
+		fprintf($omnify_output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+		$this->fputcsv_safe($omnify_output, ['Log ID', 'Product Name', 'Variation SKU', 'Adjustment Qty', 'New Quantity', 'Reason', 'User', 'Created At']);
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_r) {
+				$this->fputcsv_safe($omnify_output, [
+					$omnify_r['id'],
+					$omnify_r['product_name'] ?: 'Main Product',
+					$omnify_r['var_sku'] ?: 'N/A',
+					$omnify_r['change_qty'],
+					$omnify_r['new_qty'],
+					$omnify_r['reason'],
+					$omnify_r['user_name'] ?: 'System',
+					$omnify_r['created_at'],
+				]);
+			}
+		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose($omnify_output);
 		exit;
@@ -6736,27 +7201,29 @@ class Omnify_Admin_Page {
 	}
 
 	public function handle_delete_global_category(): void {
-		$omnify_index = isset($_GET['index']) ? (int) wp_unslash($_GET['index']): -1;
-		check_admin_referer('omnify_delete_global_category_' . $omnify_index);
+		$omnify_slug = isset($_GET['slug']) ? sanitize_title(wp_unslash((string) $_GET['slug'])) : '';
+		check_admin_referer('omnify_delete_global_category_' . $omnify_slug);
 
 		if (! current_user_can('manage_options')) {
 			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
 		}
 
 		$omnify_global_cats = get_option('omnify_global_categories', []);
-		if (is_array($omnify_global_cats) && isset($omnify_global_cats[$omnify_index])) {
-			$omnify_deleted_slug = $omnify_global_cats[$omnify_index]['slug'] ?? '';
-			unset($omnify_global_cats[$omnify_index]);
+		if (is_array($omnify_global_cats) && '' !== $omnify_slug) {
+			foreach ($omnify_global_cats as $omnify_key => $omnify_cat) {
+				if (isset($omnify_cat['slug']) && $omnify_cat['slug'] === $omnify_slug) {
+					unset($omnify_global_cats[$omnify_key]);
+					break;
+				}
+			}
 
 			// Clean up child categories' parents
-			if ($omnify_deleted_slug !== '') {
-				foreach ($omnify_global_cats as &$omnify_cat) {
-					if (isset($omnify_cat['parent']) && $omnify_cat['parent'] === $omnify_deleted_slug) {
-						$omnify_cat['parent'] = '';
-					}
+			foreach ($omnify_global_cats as &$omnify_cat) {
+				if (isset($omnify_cat['parent']) && $omnify_cat['parent'] === $omnify_slug) {
+					$omnify_cat['parent'] = '';
 				}
-				unset($omnify_cat);
 			}
+			unset($omnify_cat);
 
 			update_option('omnify_global_categories', array_values($omnify_global_cats));
 		}
@@ -6854,16 +7321,21 @@ class Omnify_Admin_Page {
 	}
 
 	public function handle_delete_global_brand(): void {
-		$omnify_index = isset($_GET['index']) ? (int) wp_unslash($_GET['index']): -1;
-		check_admin_referer('omnify_delete_global_brand_' . $omnify_index);
+		$omnify_slug = isset($_GET['slug']) ? sanitize_title(wp_unslash((string) $_GET['slug'])) : '';
+		check_admin_referer('omnify_delete_global_brand_' . $omnify_slug);
 
 		if (! current_user_can('manage_options')) {
 			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
 		}
 
 		$omnify_global_brands = get_option('omnify_global_brands', []);
-		if (is_array($omnify_global_brands) && isset($omnify_global_brands[$omnify_index])) {
-			unset($omnify_global_brands[$omnify_index]);
+		if (is_array($omnify_global_brands) && '' !== $omnify_slug) {
+			foreach ($omnify_global_brands as $omnify_key => $omnify_brand) {
+				if (isset($omnify_brand['slug']) && $omnify_brand['slug'] === $omnify_slug) {
+					unset($omnify_global_brands[$omnify_key]);
+					break;
+				}
+			}
 			update_option('omnify_global_brands', array_values($omnify_global_brands));
 		}
 
@@ -7070,6 +7542,44 @@ class Omnify_Admin_Page {
 		}
 
 		wp_safe_redirect(admin_url('admin.php?page=omnify-reviews&message=review_deleted'));
+		exit;
+	}
+
+	public function handle_bulk_reviews(): void {
+		check_admin_referer('omnify_bulk_reviews', 'omnify_bulk_nonce');
+		if (! $this->can_manage('reviews')) {
+			wp_die(esc_html__('Unauthorized access.', 'omnifywp-ecommerce'));
+		}
+
+		$omnify_ids = array_map('absint', (array) wp_unslash($_POST['review_ids'] ?? []));
+		$omnify_action = sanitize_key(wp_unslash($_POST['bulk_action'] ?? ''));
+		if (empty($omnify_ids) || empty($omnify_action)) {
+			wp_safe_redirect(admin_url('admin.php?page=omnify-reviews&message=no_selection'));
+			exit;
+		}
+
+		foreach ($omnify_ids as $omnify_id) {
+			if (! $omnify_id) continue;
+			switch ($omnify_action) {
+				case 'approve':
+					$this->omnify_reviews_repo->update_status($omnify_id, 'approved');
+					break;
+				case 'reject':
+					$this->omnify_reviews_repo->update_status($omnify_id, 'rejected');
+					break;
+				case 'trash':
+					$this->omnify_reviews_repo->trash($omnify_id);
+					break;
+				case 'restore':
+					$this->omnify_reviews_repo->restore($omnify_id);
+					break;
+				case 'delete':
+					$this->omnify_reviews_repo->delete($omnify_id);
+					break;
+			}
+		}
+
+		wp_safe_redirect(admin_url('admin.php?page=omnify-reviews&message=bulk_' . $omnify_action));
 		exit;
 	}
 

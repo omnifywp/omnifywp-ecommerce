@@ -237,17 +237,17 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 				<div class="omnify-table-toolbar">
 					<div class="left">
 						<input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" style="margin-right:8px;" />
-						<span class="selected-count">0 selected</span>
+						<span class="selected-count"><?php esc_html_e('0 selected', 'omnifywp-ecommerce'); ?></span>
 						<div class="omnify-bulk-actions-wrapper" style="display: none; align-items: center; gap: 8px; margin-left: 16px;">
 							<select name="bulk_action">
-								<option value="">Bulk actions</option>
-								<option value="trash">Move to Trash</option>
-								<option value="restore">Restore</option>
+								<option value=""><?php esc_html_e('Bulk actions', 'omnifywp-ecommerce'); ?></option>
+								<option value="trash"><?php esc_html_e('Move to Trash', 'omnifywp-ecommerce'); ?></option>
+								<option value="restore"><?php esc_html_e('Restore', 'omnifywp-ecommerce'); ?></option>
 								<?php if ('trash' === $omnify_status) : ?>
 									<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
 								<?php endif; ?>
 							</select>
-							<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm">Apply</button>
+							<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Apply', 'omnifywp-ecommerce'); ?></button>
 						</div>
 					</div>
 					<div class="right">
@@ -281,9 +281,14 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 									<tr>
 										<td><input type="checkbox" class="omnify-checkbox omnify-bulk-item" name="coupon_ids[]" value="<?php echo esc_attr($omnify_c['id']); ?>" /></td>
 										<td>
-											<strong class="omnify-code-pill">
-												<?php echo esc_html($omnify_c['code']); ?>
-											</strong>
+											<div style="display: inline-flex; align-items: center; gap: 6px;">
+												<strong class="omnify-code-pill" id="coupon-code-<?php echo esc_attr((string) $omnify_c['id']); ?>">
+													<?php echo esc_html($omnify_c['code']); ?>
+												</strong>
+												<button type="button" class="omnify-icon-btn js-copy-coupon-code" data-code="<?php echo esc_attr($omnify_c['code']); ?>" title="<?php esc_attr_e('Copy code', 'omnifywp-ecommerce'); ?>" style="width: 22px; height: 22px; padding: 0; border: none; background: transparent; cursor: pointer; color: #64748b;">
+													<span class="dashicons dashicons-admin-page" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+												</button>
+											</div>
 										</td>
 										<td>
 											<span class="omnify-status <?php echo ! empty($omnify_c['is_active']) && ! $omnify_c['is_expired'] ? 'omnify-status--active' : 'omnify-status--revoked'; ?>">
@@ -307,12 +312,23 @@ sort($omnify_category_options, SORT_NATURAL | SORT_FLAG_CASE);
 											</strong>
 										</td>
 										<td>
-											<span style="font-size: 13px; font-weight: 500;">
-												<?php 
-												$omnify_limit = null === $omnify_c['usage_limit'] ? '∞' : (string) $omnify_c['usage_limit'];
-												echo esc_html($omnify_c['usage_count'] . ' / ' . $omnify_limit); 
+											<div style="min-width: 110px;">
+												<div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 3px;">
+													<span><?php echo esc_html($omnify_c['usage_count']); ?></span>
+													<span style="color: #64748b;"><?php echo null === $omnify_c['usage_limit'] ? '∞' : esc_html($omnify_c['usage_limit']); ?></span>
+												</div>
+												<?php
+												$omnify_usage_pct = null !== $omnify_c['usage_limit'] && $omnify_c['usage_limit'] > 0
+													? min(100, round(($omnify_c['usage_count'] / $omnify_c['usage_limit']) * 100))
+													: 0;
+												$omnify_bar_color = $omnify_usage_pct >= 90 ? '#ef4444' : ($omnify_usage_pct >= 70 ? '#f59e0b' : '#10b981');
 												?>
-											</span>
+												<?php if (null !== $omnify_c['usage_limit']) : ?>
+													<div style="width: 100%; height: 5px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+														<div style="width: <?php echo esc_attr((string) $omnify_usage_pct); ?>%; height: 100%; background: <?php echo esc_attr($omnify_bar_color); ?>; border-radius: 999px;"></div>
+													</div>
+												<?php endif; ?>
+											</div>
 										</td>
 										<td>
 											<?php if ($omnify_c['is_expired']) : ?>

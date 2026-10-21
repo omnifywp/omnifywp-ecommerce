@@ -41,8 +41,8 @@ $omnify_stats = wp_parse_args(
 $omnify_currency_symbol = function($omnify_currency) {
 	switch ($omnify_currency) {
 		case 'EUR': return '€';
-		case 'GBP': return 'Â£';
-		case 'JPY': return 'Â¥';
+		case 'GBP': return '£';
+		case 'JPY': return '¥';
 		case 'CAD': return 'C$';
 		case 'AUD': return 'A$';
 		default: return '$';
@@ -81,13 +81,20 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 			'customers' => $omnify_stats['customers_trend'] ?? 0,
 			'downloads' => $omnify_stats['downloads_trend'] ?? 0,
 		];
+		$omnify_trend_class = static function ($omnify_value): string {
+			$omnify_value = (float) $omnify_value;
+			return $omnify_value > 0 ? 'positive' : ($omnify_value < 0 ? 'negative' : 'neutral');
+		};
+		$omnify_trend_sign = static function ($omnify_value): string {
+			return (float) $omnify_value > 0 ? '+' : '';
+		};
 		?>
 		<div class="omnify-dashboard-stat-card">
 			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Total Revenue', 'omnifywp-ecommerce'); ?></span>
 			<div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html($omnify_symbol . number_format($omnify_stats['revenue'], 2)); ?></p>
-				<span class="omnify-trend <?php echo esc_attr((($omnify_trends['revenue'] ?? 0) >= 0) ? 'positive' : 'negative'); ?>">
-					<?php echo esc_html( ((($omnify_trends['revenue'] ?? 0) >= 0) ? '+' : '') . number_format($omnify_trends['revenue'] ?? 0, 1) . '%' ); ?>
+				<span class="omnify-trend <?php echo esc_attr($omnify_trend_class($omnify_trends['revenue'] ?? 0)); ?>">
+					<?php echo esc_html( $omnify_trend_sign($omnify_trends['revenue'] ?? 0) . number_format($omnify_trends['revenue'] ?? 0, 1) . '%' ); ?>
 				</span>
 			</div>
 		</div>
@@ -95,8 +102,8 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Total Orders', 'omnifywp-ecommerce'); ?></span>
 			<div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format($omnify_stats['orders'])); ?></p>
-				<span class="omnify-trend <?php echo esc_attr((($omnify_trends['orders'] ?? 0) >= 0) ? 'positive' : 'negative'); ?>">
-					<?php echo esc_html( ((($omnify_trends['orders'] ?? 0) >= 0) ? '+' : '') . number_format($omnify_trends['orders'] ?? 0, 1) . '%' ); ?>
+				<span class="omnify-trend <?php echo esc_attr($omnify_trend_class($omnify_trends['orders'] ?? 0)); ?>">
+					<?php echo esc_html( $omnify_trend_sign($omnify_trends['orders'] ?? 0) . number_format($omnify_trends['orders'] ?? 0, 1) . '%' ); ?>
 				</span>
 			</div>
 		</div>
@@ -104,8 +111,8 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Customers', 'omnifywp-ecommerce'); ?></span>
 			<div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format($omnify_stats['customers'])); ?></p>
-				<span class="omnify-trend <?php echo esc_attr((($omnify_trends['customers'] ?? 0) >= 0) ? 'positive' : 'negative'); ?>">
-					<?php echo esc_html( ((($omnify_trends['customers'] ?? 0) >= 0) ? '+' : '') . number_format($omnify_trends['customers'] ?? 0, 1) . '%' ); ?>
+				<span class="omnify-trend <?php echo esc_attr($omnify_trend_class($omnify_trends['customers'] ?? 0)); ?>">
+					<?php echo esc_html( $omnify_trend_sign($omnify_trends['customers'] ?? 0) . number_format($omnify_trends['customers'] ?? 0, 1) . '%' ); ?>
 				</span>
 			</div>
 		</div>
@@ -113,8 +120,8 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 			<span class="omnify-dashboard-stat-card__label"><?php esc_html_e('Total Downloads', 'omnifywp-ecommerce'); ?></span>
 			<div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
 				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format($omnify_stats['downloads'])); ?></p>
-				<span class="omnify-trend <?php echo esc_attr((($omnify_trends['downloads'] ?? 0) >= 0) ? 'positive' : 'negative'); ?>">
-					<?php echo esc_html( ((($omnify_trends['downloads'] ?? 0) >= 0) ? '+' : '') . number_format($omnify_trends['downloads'] ?? 0, 1) . '%' ); ?>
+				<span class="omnify-trend <?php echo esc_attr($omnify_trend_class($omnify_trends['downloads'] ?? 0)); ?>">
+					<?php echo esc_html( $omnify_trend_sign($omnify_trends['downloads'] ?? 0) . number_format($omnify_trends['downloads'] ?? 0, 1) . '%' ); ?>
 				</span>
 			</div>
 		</div>
@@ -150,6 +157,30 @@ $omnify_symbol = $omnify_currency_symbol($omnify_settings['default_currency'] ??
 				<?php if (($omnify_stats['pending_reviews'] ?? 0) > 0): ?>
 					<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-reviews')); ?>" class="omnify-icon-btn omnify-icon-btn--view" title="<?php esc_attr_e('Moderate reviews', 'omnifywp-ecommerce'); ?>" style="width:26px;height:26px;">
 						<span class="dashicons dashicons-visibility" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+					</a>
+				<?php endif; ?>
+			</div>
+			<div class="omnify-summary-tile">
+				<span class="icon" style="background:#fee2e2; color:#ef4444;"><span class="dashicons dashicons-warning" style="font-size: 20px; width: 20px; height: 20px;"></span></span>
+				<div class="content">
+					<div class="label"><?php esc_html_e('Out of Stock', 'omnifywp-ecommerce'); ?></div>
+					<div class="value" style="color: <?php echo ($omnify_stats['outofstock_products'] ?? 0) > 0 ? '#ef4444' : 'var(--omnify-dark)'; ?>;"><?php echo esc_html(number_format($omnify_stats['outofstock_products'] ?? 0)); ?></div>
+				</div>
+				<?php if (($omnify_stats['outofstock_products'] ?? 0) > 0): ?>
+					<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-products&stock_status=outofstock')); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('View out of stock', 'omnifywp-ecommerce'); ?>" style="width:26px;height:26px;">
+						<span class="dashicons dashicons-arrow-right-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+					</a>
+				<?php endif; ?>
+			</div>
+			<div class="omnify-summary-tile">
+				<span class="icon" style="background:#fef3c7; color:#d97706;"><span class="dashicons dashicons-clock" style="font-size: 20px; width: 20px; height: 20px;"></span></span>
+				<div class="content">
+					<div class="label"><?php esc_html_e('Awaiting Dispatch', 'omnifywp-ecommerce'); ?></div>
+					<div class="value" style="color: <?php echo ($omnify_stats['pending_fulfillment'] ?? 0) > 0 ? '#d97706' : 'var(--omnify-dark)'; ?>;"><?php echo esc_html(number_format($omnify_stats['pending_fulfillment'] ?? 0)); ?></div>
+				</div>
+				<?php if (($omnify_stats['pending_fulfillment'] ?? 0) > 0): ?>
+					<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders&status=processing')); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('View pending orders', 'omnifywp-ecommerce'); ?>" style="width:26px;height:26px;">
+						<span class="dashicons dashicons-arrow-right-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
 					</a>
 				<?php endif; ?>
 			</div>

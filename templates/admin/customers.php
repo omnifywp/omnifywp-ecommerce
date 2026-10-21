@@ -244,7 +244,90 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 					</form>
 				</div>
 
-				<!-- Customer Timeline & Notes Card -->
+				<!-- Customer Orders Card -->
+				<div class="omnify-card">
+					<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+						<h2 style="margin: 0;"><?php esc_html_e('Customer Orders', 'omnifywp-ecommerce'); ?></h2>
+						<?php
+						$omnify_order_repo = new \Omnify\eCommerce\Repositories\Omnify_Order_Repository(new \Omnify\eCommerce\Database\Omnify_Schema());
+						$omnify_cust_status_filter = sanitize_key(wp_unslash($_GET['cust_order_status'] ?? 'all'));
+						$omnify_cust_orders_paged  = max(1, absint(wp_unslash($_GET['cust_orders_paged'] ?? 1)));
+						$omnify_cust_orders_limit  = 5;
+						$omnify_cust_orders_offset = ($omnify_cust_orders_paged - 1) * $omnify_cust_orders_limit;
+						$omnify_cust_args = [
+							'customer_id' => (int) $omnify_customer['id'],
+							'per_page'    => $omnify_cust_orders_limit,
+							'offset'      => $omnify_cust_orders_offset,
+						];
+						if ('all' !== $omnify_cust_status_filter && '' !== $omnify_cust_status_filter) {
+							$omnify_cust_args['status'] = $omnify_cust_status_filter;
+						}
+						$omnify_cust_orders       = $omnify_order_repo->all($omnify_cust_args);
+						$omnify_cust_orders_total = $omnify_order_repo->count($omnify_cust_args);
+						$omnify_cust_orders_pages = max(1, (int) ceil($omnify_cust_orders_total / $omnify_cust_orders_limit));
+						?>
+						<div class="omnify-status-pills" style="display: flex; gap: 4px;">
+							<?php foreach (['all' => __('All', 'omnifywp-ecommerce'), 'completed' => __('Completed', 'omnifywp-ecommerce'), 'processing' => __('Processing', 'omnifywp-ecommerce'), 'refunded' => __('Refunded', 'omnifywp-ecommerce')] as $st_key => $st_label) : ?>
+								<a href="<?php echo esc_url(add_query_arg(['cust_order_status' => $st_key, 'cust_orders_paged' => 1])); ?>" class="omnify-pill <?php echo $omnify_cust_status_filter === $st_key ? 'is-active' : ''; ?>" style="text-decoration: none; padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid <?php echo $omnify_cust_status_filter === $st_key ? '#008060' : '#cbd5e1'; ?>; background: <?php echo $omnify_cust_status_filter === $st_key ? '#008060' : '#f8fafc'; ?>; color: <?php echo $omnify_cust_status_filter === $st_key ? '#fff' : '#475569'; ?>;">
+									<?php echo esc_html($st_label); ?>
+								</a>
+							<?php endforeach; ?>
+						</div>
+					</div>
+
+					<?php if (empty($omnify_cust_orders)) : ?>
+						<p style="color: var(--omnify-gray-600); font-style: italic; font-size: 13px; margin: 0;"><?php esc_html_e('No orders found for this customer.', 'omnifywp-ecommerce'); ?></p>
+					<?php else : ?>
+						<table class="omnify-table" style="font-size: 13px;">
+							<thead>
+								<tr>
+									<th><?php esc_html_e('Order', 'omnifywp-ecommerce'); ?></th>
+									<th><?php esc_html_e('Date', 'omnifywp-ecommerce'); ?></th>
+									<th><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
+									<th><?php esc_html_e('Total', 'omnifywp-ecommerce'); ?></th>
+									<th style="text-align: right;"><?php esc_html_e('Action', 'omnifywp-ecommerce'); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ($omnify_cust_orders as $co) : ?>
+									<tr>
+										<td>
+											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders&action=view&id=' . $co['id'])); ?>" style="font-weight: 600; text-decoration: none; color: #008060;">
+												<?php echo esc_html($co['order_number'] ?: ('#' . $co['id'])); ?>
+											</a>
+										</td>
+										<td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($co['created_at']))); ?></td>
+										<td>
+											<span class="omnify-status omnify-status--<?php echo esc_attr($co['status'] === 'completed' ? 'published' : ($co['status'] === 'refunded' ? 'revoked' : 'draft')); ?>" style="font-size: 10px; padding: 2px 6px;">
+												<?php echo esc_html(ucwords(str_replace('_', ' ', $co['status']))); ?>
+											</span>
+										</td>
+										<td><strong><?php echo esc_html($omnify_symbol . number_format((float) $co['total'], 2)); ?></strong></td>
+										<td style="text-align: right;">
+											<a href="<?php echo esc_url(admin_url('admin.php?page=omnify-orders&action=view&id=' . $co['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('View Order', 'omnifywp-ecommerce'); ?>" style="width: 24px; height: 24px;">
+												<span class="dashicons dashicons-visibility" style="font-size: 13px; width: 13px; height: 13px; line-height: 1;"></span>
+											</a>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+
+						<?php if ($omnify_cust_orders_pages > 1) : ?>
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 12px; color: #64748b;">
+								<span><?php printf(esc_html__('Page %d of %d', 'omnifywp-ecommerce'), $omnify_cust_orders_paged, $omnify_cust_orders_pages); ?></span>
+								<div style="display: flex; gap: 6px;">
+									<?php if ($omnify_cust_orders_paged > 1) : ?>
+										<a href="<?php echo esc_url(add_query_arg(['cust_orders_paged' => $omnify_cust_orders_paged - 1])); ?>" class="omnify-button omnify-button--secondary omnify-button--sm">&larr; <?php esc_html_e('Prev', 'omnifywp-ecommerce'); ?></a>
+									<?php endif; ?>
+									<?php if ($omnify_cust_orders_paged < $omnify_cust_orders_pages) : ?>
+										<a href="<?php echo esc_url(add_query_arg(['cust_orders_paged' => $omnify_cust_orders_paged + 1])); ?>" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Next', 'omnifywp-ecommerce'); ?> &rarr;</a>
+									<?php endif; ?>
+								</div>
+							</div>
+						<?php endif; ?>
+					<?php endif; ?>
+				</div>
 				<div class="omnify-card">
 					<h2><?php esc_html_e('Timeline & Notes', 'omnifywp-ecommerce'); ?></h2>
 					
@@ -367,7 +450,8 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 											<?php if ($omnify_access['expires_at']) : ?>
 												<br/>
 												<span style="font-size: 10px;"><?php
-												// translators: %s: placeholder value. echo esc_html(sprintf(__('Expires: %s', 'omnifywp-ecommerce'), date_i18n(get_option('date_format'), strtotime($access['expires_at'])))); ?></span>
+												/* translators: %s: access expiration date. */
+												echo esc_html(sprintf(__('Expires: %s', 'omnifywp-ecommerce'), date_i18n(get_option('date_format'), strtotime((string) $omnify_access['expires_at'])))); ?></span>
 											<?php endif; ?>
 										</div>
 									</div>
@@ -425,8 +509,9 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 		$omnify_filter_search    = isset($_GET['search']) ? sanitize_text_field(wp_unslash($_GET['search'])) : '';
 		$omnify_filter_date_from = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
 		$omnify_filter_date_to   = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
-		$omnify_filter_status    = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['status'])) : '';
-		$omnify_filter_sort      = isset($_GET['sort']) ? sanitize_key(wp_unslash($_GET['sort'])) : 'created_desc';
+		$omnify_filter_status     = isset($_GET['status']) ? sanitize_key(wp_unslash($_GET['status'])) : '';
+		$omnify_filter_tax_exempt = isset($_GET['tax_exempt']) && $_GET['tax_exempt'] !== '' ? sanitize_key(wp_unslash($_GET['tax_exempt'])) : '';
+		$omnify_filter_sort       = isset($_GET['sort']) ? sanitize_key(wp_unslash($_GET['sort'])) : 'created_desc';
 		?>
 	<!-- Customers Filter Bar -->
 	<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" class="omnify-filter-card">
@@ -452,6 +537,14 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 					<option value="active" <?php selected($omnify_filter_status, 'active'); ?>><?php esc_html_e('Active', 'omnifywp-ecommerce'); ?></option>
 					<option value="inactive" <?php selected($omnify_filter_status, 'inactive'); ?>><?php esc_html_e('Inactive', 'omnifywp-ecommerce'); ?></option>
 					<option value="trash" <?php selected($omnify_filter_status, 'trash'); ?>><?php esc_html_e('Trash', 'omnifywp-ecommerce'); ?></option>
+				</select>
+			</div>
+			<div class="omnify-filter-group">
+				<label for="tax_exempt"><?php esc_html_e('Tax Exemption', 'omnifywp-ecommerce'); ?></label>
+				<select id="tax_exempt" name="tax_exempt">
+					<option value=""><?php esc_html_e('All Tax Statuses', 'omnifywp-ecommerce'); ?></option>
+					<option value="1" <?php selected($omnify_filter_tax_exempt, '1'); ?>><?php esc_html_e('Tax Exempt', 'omnifywp-ecommerce'); ?></option>
+					<option value="0" <?php selected($omnify_filter_tax_exempt, '0'); ?>><?php esc_html_e('Standard (Taxed)', 'omnifywp-ecommerce'); ?></option>
 				</select>
 			</div>
 			<div class="omnify-filter-group">
@@ -493,6 +586,12 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 		$omnify_c_chips['status'] = [
 			'label' => __('Status', 'omnifywp-ecommerce') . ': ' . ucfirst($omnify_filter_status),
 			'url'   => remove_query_arg('status'),
+		];
+	}
+	if ('' !== $omnify_filter_tax_exempt) {
+		$omnify_c_chips['tax_exempt'] = [
+			'label' => __('Tax Status', 'omnifywp-ecommerce') . ': ' . ('1' === $omnify_filter_tax_exempt ? __('Exempt', 'omnifywp-ecommerce') : __('Standard', 'omnifywp-ecommerce')),
+			'url'   => remove_query_arg('tax_exempt'),
 		];
 	}
 	if ('' !== $omnify_filter_date_from || '' !== $omnify_filter_date_to) {
@@ -545,7 +644,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 									<option value="">Bulk actions</option>
 									<option value="trash">Move to Trash</option>
 									<option value="restore">Restore</option>
-									<?php if ('trash' === $omnify_status) : ?>
+									<?php if ('trash' === $omnify_filter_status) : ?>
 										<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
 									<?php endif; ?>
 								</select>
@@ -567,6 +666,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 								<th style="min-width: 170px;"><?php esc_html_e('Customer', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Email Address', 'omnifywp-ecommerce'); ?></th>
 								<th style="width: 110px;"><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></th>
+								<th style="width: 100px; text-align: center;"><?php esc_html_e('Tax Status', 'omnifywp-ecommerce'); ?></th>
 								<th style="width: 80px; text-align: center;"><?php esc_html_e('Orders', 'omnifywp-ecommerce'); ?></th>
 								<th style="width: 120px;"><?php esc_html_e('Total Spent', 'omnifywp-ecommerce'); ?></th>
 								<th><?php esc_html_e('Company', 'omnifywp-ecommerce'); ?></th>
@@ -598,6 +698,13 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::countries();
 										<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_cust['status'] === 'active' ? 'published' : 'draft'); ?>">
 											<?php echo esc_html(strtoupper((string)$omnify_cust['status'])); ?>
 										</span>
+									</td>
+									<td style="text-align: center;">
+										<?php if (! empty($omnify_cust['tax_exempt'])) : ?>
+											<span class="omnify-status omnify-status--published" style="font-size: 11px; padding: 2px 7px;"><?php esc_html_e('Exempt', 'omnifywp-ecommerce'); ?></span>
+										<?php else : ?>
+											<span class="omnify-muted-dash" style="color: #94a3b8;">&mdash;</span>
+										<?php endif; ?>
 									</td>
 									<td style="text-align: center;">
 										<span class="omnify-customer-orders-pill"><?php echo esc_html(number_format((int)($omnify_cust['order_count'] ?? 0))); ?></span>

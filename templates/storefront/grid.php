@@ -343,6 +343,12 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 	</div>
 	<?php endif; ?>
 
+	<?php
+	$omnify_show_flash = ! array_key_exists('storefront_show_flash_sale', $omnify_settings) || ! empty($omnify_settings['storefront_show_flash_sale']);
+	$omnify_flash_msg  = ! empty($omnify_settings['storefront_flash_message']) ? (string) $omnify_settings['storefront_flash_message'] : __('Special Offer: Save up to 30% on curated bundles & new releases.', 'omnifywp-ecommerce');
+	$omnify_flash_code = ! empty($omnify_settings['storefront_flash_coupon']) ? (string) $omnify_settings['storefront_flash_coupon'] : 'FLASH30';
+	?>
+	<?php if ($omnify_show_flash) : ?>
 	<!-- Interactive Flash Sale Announcement Ticker with Live Countdown & 1-Click Coupon -->
 	<div id="omnify-flash-ticker" class="omnify-flash-ticker">
 		<div class="omnify-flash-ticker__inner">
@@ -351,7 +357,7 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				<span><?php esc_html_e('FLASH SALE', 'omnifywp-ecommerce'); ?></span>
 			</div>
 			<div class="omnify-flash-ticker__message">
-				<span><?php esc_html_e('Special Offer: Save up to 30% on curated bundles & new releases.', 'omnifywp-ecommerce'); ?></span>
+				<span><?php echo esc_html($omnify_flash_msg); ?></span>
 			</div>
 			<div class="omnify-flash-ticker__timer">
 				<span class="timer-label"><?php esc_html_e('Ends in:', 'omnifywp-ecommerce'); ?></span>
@@ -361,13 +367,14 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				<span class="timer-sep">:</span>
 				<span class="timer-unit"><strong id="omnify-ticker-secs">18</strong>s</span>
 			</div>
-			<button type="button" class="omnify-coupon-code-pill" data-code="FLASH30" title="<?php esc_attr_e('Click to copy code', 'omnifywp-ecommerce'); ?>">
+			<button type="button" class="omnify-coupon-code-pill" data-code="<?php echo esc_attr($omnify_flash_code); ?>" title="<?php esc_attr_e('Click to copy code', 'omnifywp-ecommerce'); ?>">
 				<span class="coupon-tag"><?php esc_html_e('CODE:', 'omnifywp-ecommerce'); ?></span>
-				<code>FLASH30</code>
+				<code><?php echo esc_html($omnify_flash_code); ?></code>
 				<span class="copy-hint"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span>
 			</button>
 		</div>
 	</div>
+	<?php endif; ?>
 
 	<?php if (! empty($omnify_storefront_product_notice)) : ?>
 		<div class="omnify-storefront-alert omnify-storefront-alert--warning" style="margin: 0 auto 24px auto; max-width: 1200px; padding: 14px 20px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; color: #92400e; display: flex; align-items: center; gap: 10px; font-size: 14px;">
@@ -489,6 +496,29 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				</div>
 				<?php endif; ?>
 
+				<!-- Star Rating Filter Accordion -->
+				<div class="omnify-sidebar-widget active">
+					<h3 class="omnify-sidebar-widget-title">
+						<span><?php esc_html_e('Rating', 'omnifywp-ecommerce'); ?></span>
+						<span class="arrow"></span>
+					</h3>
+					<div class="omnify-sidebar-widget-content">
+						<div class="omnify-sidebar-rating-list">
+							<?php for ($omnify_stars = 5; $omnify_stars >= 1; $omnify_stars--) : ?>
+								<label class="omnify-sidebar-rating-item" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; font-size:13px; color:var(--omnify-gray-700, #334155);">
+									<input type="checkbox" class="omnify-filter-rating-check" value="<?php echo (int) $omnify_stars; ?>" style="margin:0; border-radius:4px; cursor:pointer;" />
+									<span class="omnify-rating-stars-preview" style="color:#f59e0b; display:inline-flex; align-items:center;">
+										<?php for ($s = 1; $s <= 5; $s++) : ?>
+											<svg width="13" height="13" viewBox="0 0 24 24" fill="<?php echo $s <= $omnify_stars ? '#f59e0b' : 'none'; ?>" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+										<?php endfor; ?>
+									</span>
+									<span class="omnify-rating-label-text"><?php echo (5 === $omnify_stars) ? esc_html__('5 stars only', 'omnifywp-ecommerce') : sprintf(esc_html__('%d+ stars', 'omnifywp-ecommerce'), $omnify_stars); ?></span>
+								</label>
+							<?php endfor; ?>
+						</div>
+					</div>
+				</div>
+
 				<!-- Clear All Button -->
 				<div class="omnify-sidebar-footer">
 					<a href="#" class="omnify-sidebar-clear-all">
@@ -514,6 +544,14 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 							// translators: %d: placeholder value.
 							printf(esc_html__('%d products', 'omnifywp-ecommerce'), count($omnify_products)); ?>
 						</span>
+
+						<?php
+						$omnify_has_any_filters = ! empty($omnify_current_cat) || ! empty($omnify_current_brand) || ! empty($omnify_current_search) || ! empty($_GET['filter_tag']) || ! empty($_GET['min_price']) || ! empty($_GET['max_price']) || ! empty($_GET['in_stock']);
+						$omnify_clear_url = remove_query_arg(['category', 'brand', 'filter_brand', 'search', 'filter_tag', 'min_price', 'max_price', 'in_stock', 'paged']);
+						?>
+						<a href="<?php echo esc_url($omnify_clear_url); ?>" id="omnify-clear-all-filters-btn" class="omnify-clear-filters-link" style="<?php echo $omnify_has_any_filters ? 'display: inline-flex;' : 'display: none;'; ?> align-items: center; gap: 4px; font-size: 12px; color: #dc2626; text-decoration: none; font-weight: 500; margin-left: 8px; padding: 2px 8px; border-radius: 4px; background: #fee2e2;">
+							&times; <?php esc_html_e('Clear all filters', 'omnifywp-ecommerce'); ?>
+						</a>
 					</div>
 
 					<div class="omnify-filter-right">
@@ -592,6 +630,64 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 				<?php endif; ?>
 
 		<section class="omnify-storefront-products">
+
+		<?php
+		$omnify_show_quick_filters = ! empty($omnify_settings['storefront_show_quick_filters']) || ('1' === (string) ($omnify_settings['storefront_show_quick_filters'] ?? ''));
+		if ($omnify_show_quick_filters && ! empty($omnify_all_categories)) :
+		?>
+			<div class="omnify-quick-filters-strip omnify-quick-filter-strip" role="group" aria-label="<?php esc_attr_e('Quick filter categories', 'omnifywp-ecommerce'); ?>" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; padding: 4px 0;">
+				<button type="button" class="omnify-quick-filter-pill is-active" data-category="" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 13px; font-weight: 600; border-radius: 999px; border: 1px solid var(--omnify-primary, #0f766e); background: var(--omnify-primary, #0f766e); color: #ffffff; cursor: pointer; transition: all 0.2s;">
+					<span><?php esc_html_e('All', 'omnifywp-ecommerce'); ?></span>
+					<span class="pill-count" style="font-size: 11px; opacity: 0.85; background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 999px;"><?php echo count($omnify_products); ?></span>
+				</button>
+				<?php foreach (array_slice($omnify_all_categories, 0, 8) as $omnify_qc) :
+					$omnify_qc_slug = sanitize_title($omnify_qc);
+					$omnify_qc_cnt = $omnify_cat_counts[$omnify_qc_slug] ?? 0;
+				?>
+					<button type="button" class="omnify-quick-filter-pill" data-category="<?php echo esc_attr($omnify_qc_slug); ?>" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 999px; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; cursor: pointer; transition: all 0.2s;">
+						<span><?php echo esc_html($omnify_qc); ?></span>
+						<?php if ($omnify_qc_cnt > 0) : ?>
+							<span class="pill-count" style="font-size: 11px; color: #64748b; background: #f1f5f9; padding: 1px 6px; border-radius: 999px;"><?php echo (int) $omnify_qc_cnt; ?></span>
+						<?php endif; ?>
+					</button>
+				<?php endforeach; ?>
+			</div>
+			<script>
+				(function() {
+					var pills = document.querySelectorAll('.omnify-quick-filter-pill');
+					pills.forEach(function(p) {
+						p.addEventListener('click', function(e) {
+							e.preventDefault();
+							pills.forEach(function(o) {
+								o.classList.remove('is-active');
+								o.style.background = '#ffffff';
+								o.style.color = '#475569';
+								o.style.borderColor = '#e2e8f0';
+								var cnt = o.querySelector('.pill-count');
+								if (cnt) { cnt.style.background = '#f1f5f9'; cnt.style.color = '#64748b'; }
+							});
+							p.classList.add('is-active');
+							p.style.background = 'var(--omnify-primary, #0f766e)';
+							p.style.color = '#ffffff';
+							p.style.borderColor = 'var(--omnify-primary, #0f766e)';
+							var activeCnt = p.querySelector('.pill-count');
+							if (activeCnt) { activeCnt.style.background = 'rgba(255,255,255,0.2)'; activeCnt.style.color = '#ffffff'; }
+
+							var cat = p.getAttribute('data-category') || '';
+							var catSelect = document.getElementById('omnify-category-filter');
+							if (catSelect) {
+								catSelect.value = cat;
+								catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+							}
+							var checks = document.querySelectorAll('.omnify-sidebar-category-check');
+							checks.forEach(function(c) {
+								c.checked = (c.value === cat);
+							});
+						});
+					});
+				})();
+			</script>
+		<?php endif; ?>
 
 	<?php
 	$omnify_grid_layout_class = 'omnify-storefront-grid--' . $omnify_catalog_layout;
@@ -765,6 +861,8 @@ $omnify_all_tags = array_values(array_unique(array_filter($omnify_all_tags)));
 					data-brands="<?php echo esc_attr($omnify_brand_slugs); ?>"
 					data-attributes="<?php echo esc_attr(wp_json_encode($omnify_product['attributes'] ?? [])); ?>"
 					data-variations="<?php echo esc_attr(wp_json_encode($omnify_variations)); ?>"
+					data-rating="<?php echo esc_attr((string) $omnify_avg_rating); ?>"
+					data-reviews="<?php echo esc_attr((string) $omnify_card_reviews); ?>"
 					data-is-hot="<?php echo esc_attr($omnify_is_hot ? '1' : '0'); ?>"
 					data-is-new="<?php echo esc_attr($omnify_is_new ? '1' : '0'); ?>">
 					

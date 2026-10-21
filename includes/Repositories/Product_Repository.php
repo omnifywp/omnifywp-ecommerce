@@ -99,6 +99,10 @@ class Omnify_Product_Repository {
 
 		if ($omnify_stock_status === 'instock') {
 			$omnify_where .= " AND stock_status = 'instock' AND (manage_stock = 0 OR stock_qty > 0)";
+		} elseif ($omnify_stock_status === 'outofstock') {
+			$omnify_where .= " AND (stock_status = 'outofstock' OR (manage_stock = 1 AND stock_qty <= 0))";
+		} elseif ($omnify_stock_status === 'onbackorder') {
+			$omnify_where .= " AND stock_status = 'onbackorder'";
 		} elseif ($omnify_stock_status === 'onsale') {
 			$omnify_where .= " AND sale_price IS NOT NULL AND sale_price < price";
 		}
@@ -255,6 +259,10 @@ class Omnify_Product_Repository {
 
 		if ($omnify_stock_status === 'instock') {
 			$omnify_where .= " AND stock_status = 'instock' AND (manage_stock = 0 OR stock_qty > 0)";
+		} elseif ($omnify_stock_status === 'outofstock') {
+			$omnify_where .= " AND (stock_status = 'outofstock' OR (manage_stock = 1 AND stock_qty <= 0))";
+		} elseif ($omnify_stock_status === 'onbackorder') {
+			$omnify_where .= " AND stock_status = 'onbackorder'";
 		} elseif ($omnify_stock_status === 'onsale') {
 			$omnify_where .= " AND sale_price IS NOT NULL AND sale_price < price";
 		}
@@ -956,6 +964,10 @@ class Omnify_Product_Repository {
 		$omnify_row['return_info'] = $omnify_row['return_info'] ?? '';
 		$omnify_row['short_description'] = $omnify_row['short_description'] ?? '';
 
+		$omnify_row['low_stock_threshold'] = isset($omnify_row['variation_settings']['low_stock_threshold']) && '' !== trim((string) $omnify_row['variation_settings']['low_stock_threshold'])
+			? (int) $omnify_row['variation_settings']['low_stock_threshold']
+			: (isset($omnify_row['low_stock_threshold']) && null !== $omnify_row['low_stock_threshold'] ? (int) $omnify_row['low_stock_threshold'] : null);
+
 		return $omnify_row;
 	}
 
@@ -1045,6 +1057,7 @@ class Omnify_Product_Repository {
 			$omnify_row['preorder_message'] = $omnify_row['preorder_message'] ?? '';
 			$omnify_row['thumbnail_id'] = null === $omnify_row['thumbnail_id'] ? null : (int) $omnify_row['thumbnail_id'];
 			$omnify_row['thumbnail_url'] = $omnify_row['thumbnail_id'] ? wp_get_attachment_image_url((int) $omnify_row['thumbnail_id'], 'full') : '';
+			$omnify_row['estimated_delivery'] = $omnify_row['estimated_delivery'] ?? '';
 			return $omnify_row;
 		}, $omnify_rows);
 	}
@@ -1182,6 +1195,7 @@ class Omnify_Product_Repository {
 				'preorder_limit' => isset($omnify_var['preorder_limit']) && '' !== trim((string) $omnify_var['preorder_limit']) ? absint($omnify_var['preorder_limit']) : null,
 				'preorder_message' => sanitize_text_field($omnify_var['preorder_message'] ?? ''),
 				'thumbnail_id' => absint($omnify_var['thumbnail_id'] ?? 0) ?: null,
+				'estimated_delivery' => sanitize_text_field($omnify_var['estimated_delivery'] ?? ''),
 				'updated_at'   => $omnify_now,
 			];
 
@@ -1306,6 +1320,7 @@ class Omnify_Product_Repository {
 			));
 		}
 		$this->clean_product_caches($omnify_product_id);
+		$this->sync_bundles_containing_product($omnify_product_id);
 		if ($omnify_old_stock <= 0 && ($omnify_old_stock + $omnify_qty) > 0) {
 			do_action('omnify_product_restocked', $omnify_product_id, $omnify_variation_id);
 		}
@@ -1347,6 +1362,14 @@ class Omnify_Product_Repository {
 			if ($omnify_updated && $omnify_updated > 0) {
 				$this->clean_variation_caches($omnify_variation_id);
 				$this->clean_product_caches($omnify_product_id);
+				$this->sync_bundles_containing_product($omnify_product_id);
+
+				$omnify_new_stock = (int) \Omnify\eCommerce\Support\Omnify_DB::get_var(
+					$wpdb,
+					$wpdb->prepare("SELECT stock_qty FROM {$omnify_table} WHERE id = %d", $omnify_variation_id)
+				);
+				$this->log_stock_change($omnify_product_id, $omnify_variation_id, -$omnify_qty, $omnify_new_stock, 'order_placed');
+
 				return true;
 			}
 		} else {
@@ -1376,11 +1399,94 @@ class Omnify_Product_Repository {
 
 			if ($omnify_updated && $omnify_updated > 0) {
 				$this->clean_product_caches($omnify_product_id);
+				$this->sync_bundles_containing_product($omnify_product_id);
+
+				$omnify_new_stock = (int) \Omnify\eCommerce\Support\Omnify_DB::get_var(
+					$wpdb,
+					$wpdb->prepare("SELECT stock_qty FROM {$omnify_table} WHERE id = %d", $omnify_product_id)
+				);
+				$this->log_stock_change($omnify_product_id, null, -$omnify_qty, $omnify_new_stock, 'order_placed');
+
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Synchronize bundle out-of-stock state when child items are depleted.
+	 */
+	public function sync_bundle_stock_status(int $omnify_bundle_id): string {
+		global $wpdb;
+		$omnify_table = $this->table('products');
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_row = \Omnify\eCommerce\Support\Omnify_DB::get_row(
+			$wpdb,
+			$wpdb->prepare("SELECT id, type, stock_status, bundled_ids FROM {$omnify_table} WHERE id = %d", $omnify_bundle_id),
+			ARRAY_A
+		);
+		if (! $omnify_row || 'bundle' !== ($omnify_row['type'] ?? '')) {
+			return 'instock';
+		}
+		$omnify_child_ids = empty($omnify_row['bundled_ids']) ? [] : json_decode($omnify_row['bundled_ids'], true);
+		if (empty($omnify_child_ids) || ! is_array($omnify_child_ids)) {
+			return 'instock';
+		}
+		$omnify_is_depleted = false;
+		foreach ($omnify_child_ids as $omnify_cid) {
+			$omnify_cid = absint($omnify_cid);
+			if (! $omnify_cid) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$omnify_child = \Omnify\eCommerce\Support\Omnify_DB::get_row(
+				$wpdb,
+				$wpdb->prepare("SELECT id, manage_stock, stock_qty, stock_status, allow_backorders, preorder_enabled FROM {$omnify_table} WHERE id = %d AND deleted_at IS NULL", $omnify_cid),
+				ARRAY_A
+			);
+			if (! $omnify_child) {
+				$omnify_is_depleted = true;
+				break;
+			}
+			$omnify_child_can_oversell = ! empty($omnify_child['allow_backorders']) || ! empty($omnify_child['preorder_enabled']);
+			if ('outofstock' === ($omnify_child['stock_status'] ?? '') && ! $omnify_child_can_oversell) {
+				$omnify_is_depleted = true;
+				break;
+			}
+			if (! empty($omnify_child['manage_stock']) && (int) ($omnify_child['stock_qty'] ?? 0) <= 0 && ! $omnify_child_can_oversell) {
+				$omnify_is_depleted = true;
+				break;
+			}
+		}
+		$omnify_new_status = $omnify_is_depleted ? 'outofstock' : 'instock';
+		if (($omnify_row['stock_status'] ?? '') !== $omnify_new_status) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			\Omnify\eCommerce\Support\Omnify_DB::update(
+				$wpdb,
+				$omnify_table,
+				['stock_status' => $omnify_new_status, 'updated_at' => $this->now()],
+				['id' => $omnify_bundle_id]
+			);
+			$this->clean_product_caches($omnify_bundle_id);
+		}
+		return $omnify_new_status;
+	}
+
+	public function sync_bundles_containing_product(int $omnify_product_id): void {
+		global $wpdb;
+		$omnify_table = $this->table('products');
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$omnify_bundles = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare("SELECT id FROM {$omnify_table} WHERE type = 'bundle' AND bundled_ids LIKE %s AND deleted_at IS NULL", '%' . $wpdb->esc_like((string) $omnify_product_id) . '%'),
+			ARRAY_A
+		);
+		if (! empty($omnify_bundles)) {
+			foreach ($omnify_bundles as $omnify_b) {
+				$this->sync_bundle_stock_status((int) $omnify_b['id']);
+			}
+		}
 	}
 
 	/**
@@ -1400,6 +1506,7 @@ class Omnify_Product_Repository {
 				'created_at'   => $this->now(),
 			]
 		);
+		wp_cache_delete('omnify_inventory_logs_' . $omnify_product_id, 'omnifywp-ecommerce');
 	}
 
 	/**

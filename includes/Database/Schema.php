@@ -103,6 +103,7 @@ class Omnify_Schema {
 				preorder_limit INT UNSIGNED NULL DEFAULT NULL,
 				preorder_message VARCHAR(255) NULL,
 				thumbnail_id BIGINT UNSIGNED NULL,
+				estimated_delivery VARCHAR(100) NULL,
 				created_at DATETIME NOT NULL,
 				updated_at DATETIME NOT NULL,
 				PRIMARY KEY (id),
@@ -235,6 +236,7 @@ class Omnify_Schema {
 				KEY product_id (product_id),
 				KEY file_id (file_id),
 				KEY customer_id (customer_id),
+				KEY customer_file_status (customer_id, file_id, status),
 				KEY downloaded_at (downloaded_at)
 			) {$omnify_charset};",
 			'email_logs' => "CREATE TABLE {$this->table('email_logs')} (
@@ -333,6 +335,7 @@ class Omnify_Schema {
 				KEY transaction_id (transaction_id),
 				KEY status (status),
 				KEY created_at (created_at),
+				KEY status_created (status, created_at),
 				KEY customer_status_created (customer_id, status, created_at),
 				UNIQUE KEY order_number (order_number)
 			) {$omnify_charset};",
@@ -351,6 +354,7 @@ class Omnify_Schema {
 				PRIMARY KEY (id),
 				KEY order_id (order_id),
 				KEY product_id (product_id),
+				KEY variation_id (variation_id),
 				KEY order_product (order_id, product_id)
 			) {$omnify_charset};",
 			'order_notes' => "CREATE TABLE {$this->table('order_notes')} (

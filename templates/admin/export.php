@@ -280,10 +280,34 @@ $omnify_result_type = is_array($omnify_import_result ?? null) ? (string) ($omnif
 						</div>
 						<h3 class="omnify-modern-export-title"><?php echo esc_html($omnify_export['title']); ?></h3>
 						<p class="omnify-modern-export-desc"><?php echo esc_html($omnify_export['description']); ?></p>
-						<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=' . $omnify_export['action']), $omnify_export['nonce'])); ?>" class="omnify-modern-export-btn">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-							<span><?php echo esc_html($omnify_export['button']); ?></span>
-						</a>
+						<?php if ('orders' === $omnify_export['theme']) : ?>
+							<form method="get" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: grid; gap: 8px; margin-top: auto;">
+								<input type="hidden" name="action" value="<?php echo esc_attr($omnify_export['action']); ?>">
+								<?php wp_nonce_field($omnify_export['nonce'], '_wpnonce', false); ?>
+								<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+									<input type="date" name="date_from" placeholder="<?php esc_attr_e('From', 'omnifywp-ecommerce'); ?>" style="font-size: 11px; padding: 4px 6px; border: 1px solid #CBD5E1; border-radius: 6px;" title="<?php esc_attr_e('Start Date', 'omnifywp-ecommerce'); ?>" />
+									<input type="date" name="date_to" placeholder="<?php esc_attr_e('To', 'omnifywp-ecommerce'); ?>" style="font-size: 11px; padding: 4px 6px; border: 1px solid #CBD5E1; border-radius: 6px;" title="<?php esc_attr_e('End Date', 'omnifywp-ecommerce'); ?>" />
+								</div>
+								<select name="status" style="font-size: 11px; padding: 4px 6px; border: 1px solid #CBD5E1; border-radius: 6px; background: #FFF;">
+									<option value=""><?php esc_html_e('All Order Statuses', 'omnifywp-ecommerce'); ?></option>
+									<option value="completed"><?php esc_html_e('Completed', 'omnifywp-ecommerce'); ?></option>
+									<option value="processing"><?php esc_html_e('Processing', 'omnifywp-ecommerce'); ?></option>
+									<option value="pending"><?php esc_html_e('Pending Payment', 'omnifywp-ecommerce'); ?></option>
+									<option value="shipped"><?php esc_html_e('Shipped', 'omnifywp-ecommerce'); ?></option>
+									<option value="refunded"><?php esc_html_e('Refunded', 'omnifywp-ecommerce'); ?></option>
+									<option value="cancelled"><?php esc_html_e('Cancelled', 'omnifywp-ecommerce'); ?></option>
+								</select>
+								<button type="submit" class="omnify-modern-export-btn" style="border: none; cursor: pointer; width: 100%;">
+									<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+									<span><?php echo esc_html($omnify_export['button']); ?></span>
+								</button>
+							</form>
+						<?php else : ?>
+							<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=' . $omnify_export['action']), $omnify_export['nonce'])); ?>" class="omnify-modern-export-btn">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+								<span><?php echo esc_html($omnify_export['button']); ?></span>
+							</a>
+						<?php endif; ?>
 					</div>
 				<?php endforeach; ?>
 			</div>

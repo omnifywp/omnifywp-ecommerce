@@ -1,6 +1,6 @@
 # OmnifyWP eCommerce — Complete Developer Documentation
 
-> **Version:** 1.4.2  
+> **Version:** 1.4.3  
 > **Official Website:** [https://omnifywp.com](https://omnifywp.com)  
 > **wp.org Directory:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **GitHub Repository:** [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)  
@@ -12,7 +12,7 @@
 ## Table of Contents
 1. [Introduction & Core Philosophy](#1-introduction--core-philosophy)
 2. [Plugin Lifecycle & Container Architecture](#2-plugin-lifecycle--container-architecture)
-3. [Database Engine & 18 Relational Tables](#3-database-engine--18-relational-tables)
+3. [Database Engine & 27 Relational Tables](#3-database-engine--27-relational-tables)
    - [Architectural Schema Overview](#architectural-schema-overview)
    - [Deep Column & Index Breakdown](#deep-column--index-breakdown)
 4. [Soft Deletions & Cache Invalidation System](#4-soft-deletions--cache-invalidation-system)
@@ -56,6 +56,26 @@
 10. [Action & Filter Hooks Directory](#10-action--filter-hooks-directory)
 11. [Storefront Template Overriding & Theme Integration](#11-storefront-template-overriding--theme-integration)
 12. [Developer Recipes & Code Examples](#12-developer-recipes--code-examples)
+13. [Roles, Capabilities & Staff Permissions](#13-roles-capabilities--staff-permissions)
+14. [Analytics & Conversion Tracking (GA4 + Meta Pixel)](#14-analytics--conversion-tracking-ga4--meta-pixel)
+15. [Privacy, GDPR & Data Lifecycle](#15-privacy-gdpr--data-lifecycle)
+16. [Shipping Zones, Tax Rules & Multi-Currency](#16-shipping-zones-tax-rules--multi-currency)
+17. [Product Variations, Availability & Preorders](#17-product-variations-availability--preorders)
+18. [Background Jobs, Cron & Maintenance](#18-background-jobs-cron--maintenance)
+19. [Admin Pages & Settings Reference](#19-admin-pages--settings-reference)
+20. [Email Template Merge Tags](#20-email-template-merge-tags)
+21. [CSV & XML Import/Export Schema](#21-csv--xml-importexport-schema)
+22. [Performance, Caching & Scaling](#22-performance-caching--scaling)
+23. [Security Model & Hardening](#23-security-model--hardening)
+24. [Glossary](#24-glossary)
+
+---
+
+> **How to use this documentation**
+> - **New to Omnify?** Read §1 Introduction → §2 Lifecycle & Container → §3 Database Engine.
+> - **Building an integration?** Jump to §9 REST API Reference → §10 Hooks Directory → §12 Developer Recipes.
+> - **Shipping a production store?** Review §7 Payment Gateways, §13–§18 platform features, and §23 Security & Hardening.
+> - **Looking something up?** The HTML portal (`docs/index.html`) has full-text search (Ctrl/Cmd-K) and a live Hooks explorer.
 
 ---
 
@@ -101,7 +121,7 @@ $order_repo   = $container->get(Omnify_Order_Repository::class);
 
 ---
 
-## 3. Database Engine & 18 Relational Tables
+## 3. Database Engine & 27 Relational Tables
 
 ### Architectural Schema Overview
 
@@ -111,73 +131,88 @@ All custom tables use the `$wpdb->prefix . 'omnify_'` naming convention and Inno
 | :--- | :--- | :--- |
 | `wp_omnify_products` | Master product catalog (simple, variable, bundle, download) | `PRIMARY (id)`, `UNIQUE KEY (slug)`, `KEY status_type (status, type)` |
 | `wp_omnify_product_variations` | Matrix variations (SKU, price, attributes) | `PRIMARY (id)`, `KEY (product_id)` |
-| `wp_omnify_product_files` | Physical downloadable files & file metadata | `PRIMARY (id)`, `KEY (product_id)`, `KEY (expires_at)` |
+| `wp_omnify_product_files` | Digital downloadable files & file metadata | `PRIMARY (id)`, `KEY (product_id)`, `KEY (expires_at)` |
 | `wp_omnify_product_categories` | Product category taxonomy associations | `PRIMARY (id)`, `KEY (product_id)`, `KEY (slug)` |
 | `wp_omnify_product_brands` | Product brand associations | `PRIMARY (id)`, `KEY (product_id)`, `KEY (slug)` |
 | `wp_omnify_product_tags` | Product tag associations | `PRIMARY (id)`, `KEY (product_id)`, `KEY (slug)` |
-| `wp_omnify_orders` | Financial transactions, tax, shipping, and customer references | `PRIMARY (id)`, `UNIQUE KEY (order_number)`, `KEY customer_status (customer_id, status)` |
-| `wp_omnify_order_items` | Snapshot of purchased products, prices, and quantities | `PRIMARY (id)`, `KEY (order_id)`, `KEY (product_id)` |
-| `wp_omnify_order_notes` | Staff comments & customer-facing order updates | `PRIMARY (id)`, `KEY (order_id)`, `KEY (customer_visible)` |
 | `wp_omnify_customers` | Customer profiles, default addresses, and tax exemption status | `PRIMARY (id)`, `UNIQUE KEY (email)`, `KEY (user_id)`, `KEY (status)` |
 | `wp_omnify_customer_notes` | Private admin CRM notes per customer | `PRIMARY (id)`, `KEY (customer_id)`, `KEY (customer_visible)` |
 | `wp_omnify_customer_activity` | Event timeline (orders, logins, address changes) | `PRIMARY (id)`, `KEY (customer_id)`, `KEY (activity_type)` |
 | `wp_omnify_customer_access` | Digital file entitlements granting access to files | `PRIMARY (id)`, `UNIQUE KEY customer_product (customer_id, product_id)` |
 | `wp_omnify_downloads` | Download logs with IP, user-agent, and status tracking | `PRIMARY (id)`, `KEY (product_id)`, `KEY (file_id)`, `KEY (customer_id)` |
-| `wp_omnify_coupons` | Promotion codes, discount rules, usage limits, and expiry | `PRIMARY (id)`, `UNIQUE KEY (code)` |
-| `wp_omnify_reviews` | Ratings, moderation status, and customer reviews | `PRIMARY (id)`, `KEY (product_id)`, `KEY (status)` |
+| `wp_omnify_email_logs` | Outbound transactional email dispatch log & retry queue | `PRIMARY (id)`, `KEY (trigger_name)`, `KEY (status)` |
+| `wp_omnify_orders` | Financial transactions, tax, shipping, and customer references | `PRIMARY (id)`, `UNIQUE KEY (order_number)`, `KEY customer_status (customer_id, status)` |
+| `wp_omnify_order_items` | Snapshot of purchased products, prices, and quantities | `PRIMARY (id)`, `KEY (order_id)`, `KEY (product_id)` |
+| `wp_omnify_order_notes` | Staff comments & customer-facing order updates | `PRIMARY (id)`, `KEY (order_id)`, `KEY (customer_visible)` |
 | `wp_omnify_abandoned_carts` | Incomplete checkout sessions, tokens, and recovery reminders | `PRIMARY (id)`, `UNIQUE KEY (token)`, `KEY email_status (email, status)` |
 | `wp_omnify_wishlists` | Customer product favorites associations | `PRIMARY (id)`, `UNIQUE KEY user_product (user_id, product_id)` |
-| `wp_omnify_activity_logs` | Admin action audits and security trace logs | `PRIMARY (id)`, `KEY (user_id)`, `KEY (action)` |
+| `wp_omnify_coupons` | Promotion codes, discount rules, usage limits, and expiry | `PRIMARY (id)`, `UNIQUE KEY (code)` |
+| `wp_omnify_reviews` | Ratings, moderation status, and customer reviews | `PRIMARY (id)`, `KEY (product_id)`, `KEY (status)` |
+| `wp_omnify_metadata` | Extensible key/value metadata for products, orders, and customers | `PRIMARY (id)`, `KEY object_type (object_type, object_id)` |
+| `wp_omnify_webhook_events` | Inbound gateway webhook event ledger (dedupe & audit) | `PRIMARY (id)`, `KEY gateway (gateway)`, `KEY event_id (event_id)` |
+| `wp_omnify_webhooks` | Registered outbound webhook endpoints & topic subscriptions | `PRIMARY (id)`, `KEY (status)` |
+| `wp_omnify_webhook_delivery_logs` | Outbound webhook delivery attempts, HTTP status, and latency | `PRIMARY (id)`, `KEY (webhook_id)`, `KEY (status)` |
+| `wp_omnify_inventory_logs` | Stock movement audit trail (reductions, restocks, adjustments) | `PRIMARY (id)`, `KEY (product_id)`, `KEY (variation_id)` |
+| `wp_omnify_stock_subscribers` | Back-in-stock waitlist opt-ins per product/variation | `PRIMARY (id)`, `KEY (product_id)`, `KEY (variation_id)` |
+| `wp_omnify_admin_activities` | Admin action audits and security trace logs | `PRIMARY (id)`, `KEY (user_id)`, `KEY (action)` |
+| `wp_omnify_api_keys` | REST API consumer key/secret pairs and permission scopes | `PRIMARY (id)`, `UNIQUE KEY (consumer_key)`, `KEY (user_id)` |
 
 ### Deep Column & Index Breakdown
 
 #### 1. `wp_omnify_products` (Core Catalog)
 - `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Unique product ID.
-- `title` (VARCHAR(255) NOT NULL): Product display title.
-- `slug` (VARCHAR(255) NOT NULL UNIQUE): URL-safe permalink identifier.
-- `type` (ENUM('simple', 'variable', 'download', 'bundle') DEFAULT 'simple'): Product architecture type.
-- `status` (ENUM('published', 'draft', 'trash') DEFAULT 'published'): Catalog visibility status.
-- `price` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Regular selling price.
-- `sale_price` (DECIMAL(12,2) NULL): Discounted price if promotional pricing active.
+- `name` (VARCHAR(190) NOT NULL): Product display name.
+- `slug` (VARCHAR(190) NOT NULL UNIQUE): URL-safe permalink identifier.
+- `type` (VARCHAR(32) NOT NULL DEFAULT `download`): Product architecture type (`simple`, `variable`, `download`, `bundle`).
+- `status` (VARCHAR(32) NOT NULL DEFAULT `draft`): Catalog visibility status (`published`, `draft`, `trash`).
+- `price` (DECIMAL(18,6) NOT NULL DEFAULT 0): Regular selling price.
+- `sale_price` (DECIMAL(18,6) NULL): Discounted price if promotional pricing is active.
+- `currency` (CHAR(3) NOT NULL DEFAULT 'USD'): ISO 4217 currency code for the price columns.
 - `sku` (VARCHAR(100) NULL): Stock Keeping Unit identifier.
-- `stock_quantity` (INT NOT NULL DEFAULT 0): Available inventory count.
-- `manage_stock` (TINYINT(1) NOT NULL DEFAULT 0): Inventory tracking toggle (`1` = active).
-- `featured_image` (VARCHAR(500) NULL): URL or WordPress attachment ID of main photo.
-- `gallery` (LONGTEXT NULL): JSON array of secondary gallery image URLs.
-- `description` (LONGTEXT NULL): Full HTML product description.
-- `short_description` (TEXT NULL): Brief excerpt displayed on product cards and list views.
-- `total_sales` (INT UNSIGNED NOT NULL DEFAULT 0): Counter for popularity sorting.
-- `rating_cache` (DECIMAL(3,2) NOT NULL DEFAULT 0.00): Cached average customer star rating.
-- `rating_count` (INT UNSIGNED NOT NULL DEFAULT 0): Total count of approved reviews.
+- `manage_stock` (TINYINT NOT NULL DEFAULT 0): Inventory tracking toggle (`1` = active).
+- `stock_qty` (INT NULL DEFAULT 0): Available inventory count.
+- `stock_status` (VARCHAR(32) NOT NULL DEFAULT `instock`): Stock status string.
+- `allow_backorders` (TINYINT NOT NULL DEFAULT 0), `preorder_enabled` (TINYINT NOT NULL DEFAULT 0): Availability & preorder flags.
+- `preorder_release_date` (DATE NULL), `preorder_limit` (INT UNSIGNED NULL), `preorder_message` (VARCHAR(255) NULL): Preorder release controls.
+- `thumbnail_id` (BIGINT UNSIGNED NULL): WordPress attachment ID of the primary image.
+- `gallery_ids` (LONGTEXT NULL): JSON array of secondary gallery attachment IDs.
+- `description` (LONGTEXT NULL) / `short_description` (TEXT NULL): Full and excerpt product copy.
+- `attributes`, `variation_settings` (LONGTEXT NULL): Serialized attribute axes and variation configuration.
+- `weight`, `length`, `width`, `height` (DECIMAL(10,2) NULL): Physical shipping dimensions.
+- `upsell_ids`, `cross_sell_ids`, `bundled_ids` (TEXT NULL): Related-product and bundle associations.
+- `download_expiry_days` (INT UNSIGNED NULL), `refund_enabled` (TINYINT NOT NULL DEFAULT 1): Digital delivery and refund policy.
 - `created_at`, `updated_at`, `deleted_at` (DATETIME NULL): Audit timestamps.
 
 #### 2. `wp_omnify_orders` (Financial Transactions)
 - `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Internal order ID.
-- `order_number` (VARCHAR(64) NOT NULL UNIQUE): Sequential or randomized customer-facing reference (e.g. `#1042`).
+- `order_number` (VARCHAR(100) NULL, `UNIQUE KEY`): Sequential or randomized customer-facing reference (e.g. `#1042`).
 - `customer_id` (BIGINT UNSIGNED NULL): Foreign key referencing `wp_omnify_customers.id`.
-- `status` (ENUM('pending_payment', 'processing', 'completed', 'on_hold', 'cancelled', 'refunded', 'failed') NOT NULL DEFAULT 'pending_payment'): Order state machine value.
-- `currency` (VARCHAR(3) NOT NULL DEFAULT 'USD'): ISO 4217 currency code.
-- `subtotal` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Sum of line items before tax and shipping.
-- `discount_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Applied coupon discount amount.
-- `tax_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Calculated sales tax amount.
-- `shipping_total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Shipping fee charged.
-- `total` (DECIMAL(12,2) NOT NULL DEFAULT 0.00): Grand total charged to customer.
-- `payment_method` (VARCHAR(50) NOT NULL): Gateway identifier (e.g., `stripe`, `paypal`, `razorpay`, `cod`, `bacs`).
-- `transaction_id` (VARCHAR(255) NULL): Payment gateway reference token (e.g. `pi_3L714q...`).
-- `billing_first_name`, `billing_last_name`, `billing_email`, `billing_phone` (VARCHAR(255) NULL): Customer details.
-- `billing_address_1`, `billing_address_2`, `billing_city`, `billing_state`, `billing_postcode`, `billing_country`: Billing postal addresses.
+- `status` (VARCHAR(32) NOT NULL DEFAULT `pending`): Order state machine value (`pending`, `pending_payment`, `processing`, `completed`, `on_hold`, `cancelled`, `partially_refunded`, `refunded`, `failed`).
+- `currency` (CHAR(3) NOT NULL DEFAULT 'USD'): ISO 4217 currency code.
+- `subtotal` (DECIMAL(18,6) NOT NULL DEFAULT 0): Sum of line items before tax and shipping.
+- `discount_amount` (DECIMAL(18,6) NOT NULL DEFAULT 0): Applied coupon discount amount.
+- `tax` (DECIMAL(18,6) NOT NULL DEFAULT 0): Calculated sales tax amount (with `tax_label`, `tax_rate`, `tax_reporting_code`, `tax_inclusive`, `tax_shipping` companions).
+- `shipping_total` (DECIMAL(18,6) NOT NULL DEFAULT 0): Shipping fee charged.
+- `total` (DECIMAL(18,6) NOT NULL DEFAULT 0): Grand total charged to customer.
+- `refunded_amount` (DECIMAL(18,6) NOT NULL DEFAULT 0): Cumulative refunded amount for full and partial refunds.
+- `payment_method` (VARCHAR(80) NULL): Gateway identifier (e.g., `stripe`, `paypal`, `razorpay`, `cod`, `bacs`).
+- `transaction_id` (VARCHAR(190) NULL): Payment gateway reference token (e.g. `pi_3L714q...`).
+- `fulfillment_status` (VARCHAR(32) NOT NULL DEFAULT `none`), `tracking_number` (VARCHAR(100) NULL), `tracking_carrier` (VARCHAR(100) NULL): Fulfillment & shipment tracking.
+- `fraud_status` (VARCHAR(32) NOT NULL DEFAULT `safe`), `fraud_score` (INT NOT NULL DEFAULT 0), `fraud_flags` (TEXT NULL): Fraud risk assessment.
+- `billing_first_name`, `billing_last_name`, `billing_phone`, `billing_address_1`, `billing_address_2`, `billing_city`, `billing_state`, `billing_postcode`, `billing_country`: Billing details.
 - `shipping_first_name`, `shipping_last_name`, `shipping_address_1`, `shipping_city`, `shipping_country`: Physical delivery destination.
 - `ip_address` (VARCHAR(45) NULL): IPv4 or IPv6 address for fraud auditing.
 - `created_at`, `updated_at`, `deleted_at` (DATETIME NULL): Lifecycle timestamps.
 
 #### 3. `wp_omnify_customer_access` (Digital Entitlements)
-- `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Access token ID.
+- `id` (BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY): Access entitlement ID.
 - `customer_id` (BIGINT UNSIGNED NOT NULL): Customer identifier.
 - `product_id` (BIGINT UNSIGNED NOT NULL): Purchased digital product.
-- `order_id` (BIGINT UNSIGNED NOT NULL): Reference order granting the entitlement.
-- `granted_at` (DATETIME NOT NULL): Timestamp when access was unlocked.
+- `status` (VARCHAR(32) NOT NULL DEFAULT `active`): Entitlement state (`active` / revoked on refund).
 - `expires_at` (DATETIME NULL): Timestamp when access terminates (`NULL` = lifetime).
-- `is_active` (TINYINT(1) NOT NULL DEFAULT 1): Hard kill switch (`0` upon refund).
+- `granted_by` (BIGINT UNSIGNED NULL): User ID that granted the entitlement (NULL for automated grants).
+- `created_at`, `updated_at` (DATETIME NOT NULL): Audit timestamps.
+- `UNIQUE KEY customer_product (customer_id, product_id)`: One entitlement per customer/product pair.
 
 ---
 
@@ -401,7 +436,24 @@ $files_by_product = $file_repo->all_for_products($product_ids);
 | `[omnify_checkout]` | `layout` (`single`, `steps`) | `single` | Single-page or multi-step checkout engine featuring live tax estimation, address autocomplete, guest checkout, and integrated payment gateways. |
 | `[omnify_customer_portal]` | `tab` (`orders`, `downloads`, `addresses`, `security`) | `orders` | Self-service customer dashboard with KPI analytics cards, order details, download access tokens, and saved address books. |
 | `[omnify_customer_downloads]`| None | — | Focused customer digital locker rendering owned files, license keys, and HMAC expiring download links. |
+| `[omnify_mini_cart]` | None | — | Floating slide-out AJAX mini-cart drawer or dropdown widget with live line item quantity adjustments, item removal, and subtotal calculation. |
+| `[omnify_currency_switcher]` | `label` (string) | `"Select Currency"` | Customer-facing multi-currency selector dropdown with real-time conversion rates and 1-year cookie persistence. |
 | `[omnify_order_tracking]` | None | — | Public guest order lookup form requiring only Order ID and Billing Email without account login. |
+| `[omnify_download_page]` | None | — | Dedicated template handler for secure, chunked file downloads. |
+
+### Native Gutenberg Blocks
+Every shortcode is also registered as a first-party Gutenberg block (registered in `Omnify_Storefront_Controller::register_blocks()`):
+
+| Block | Replaces Shortcode | Description |
+| :--- | :--- | :--- |
+| `omnify/product-grid` | `[omnify_storefront]` | Responsive catalog grid with configurable columns, category filtering, and sorting. |
+| `omnify/cart` | `[omnify_cart]` | Standalone cart block with live quantity adjustments and shipping calculation. |
+| `omnify/mini-cart` | `[omnify_mini_cart]` | Header/navigation mini-cart block with item counter pill. |
+| `omnify/checkout` | `[omnify_checkout]` | 1-Page checkout block with integrated payment gateway accordion. |
+| `omnify/customer-portal` | `[omnify_customer_portal]` | Customer account hub block (orders, downloads, addresses, profile). |
+| `omnify/order-tracking` | `[omnify_order_tracking]` | Guest order tracking and invoice lookup block. |
+| `omnify/product-card` | — | Individual product card showcase block. |
+| `omnify/currency-switcher` | `[omnify_currency_switcher]` | Header/sidebar multi-currency dropdown block. |
 
 ---
 
@@ -701,7 +753,7 @@ Host: api.yourapp.com
 Content-Type: application/json; charset=utf-8
 X-Omnify-Event: order.paid
 X-Omnify-Signature: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
-User-Agent: OmnifyWP-Webhooks/1.4.2
+User-Agent: OmnifyWP-Webhooks/1.4.3
 ```
 
 #### Node.js / Express Signature Verification Example
@@ -807,7 +859,7 @@ When a refund is processed via `Omnify_Payment_Gateway_Service`:
 2. Updates order record to `refunded` (or increments `refunded_amount`).
 3. Automatically deletes corresponding customer access entitlements from `wp_omnify_customer_access`.
 4. Fires action hook `omnify_customer_access_revoked($customer_id, $product_id)`.
-5. Logs the event into `wp_omnify_activity_logs`.
+5. Logs the event into `wp_omnify_admin_activities`.
 
 ---
 
@@ -875,9 +927,16 @@ Namespace: `/wp-json/omnify/v1`
 | `/checkout/validate-coupon` | `POST` | Public | Validate promotional coupon. |
 | `/checkout/abandoned-cart` | `POST` | Public | Save partial checkout inputs for recovery. |
 | `/checkout/payment-methods` | `GET` | Public | Retrieve active checkout payment gateways. |
+| `/checkout/validate-vat` | `POST` | Public | Validate a VAT / tax registration number. |
+| `/checkout/check-email` | `POST` | Public | Check whether an email already has an account. |
+| `/checkout/abandoned-cart/unsubscribe` | `POST` | Public | Opt a shopper out of recovery emails. |
+| `/products/subscribe-stock` | `POST` | Public | Join the back-in-stock waitlist for a product/variation. |
 | `/wishlist` | `GET` | Logged In | Retrieve customer favorites. |
 | `/wishlist/toggle` | `POST` | Logged In | Toggle item favorite status. |
-| `/products/{id}/reviews` | `GET` \| `POST` | Public | Read approved reviews or submit review. |
+| `/products/files` | `GET` | Public | List product file metadata across the catalog. |
+| `/products/{product_id}/categories` | `GET` | Public | List categories assigned to a product. |
+| `/products/{product_id}/variations` | `GET` | Public | List the variation matrix for a product. |
+| `/products/{product_id}/reviews` | `GET` \| `POST` | Public | Read approved reviews or submit review. |
 
 ### Protected Management Endpoints
 Requires `manage_omnify` capability or valid Consumer API key.
@@ -903,9 +962,52 @@ Requires `manage_omnify` capability or valid Consumer API key.
 | `/reviews/{id}` | `PUT` \| `DELETE` | Approve, reject, edit, or delete review. |
 | `/abandoned-carts` | `GET` | View captured abandoned checkout sessions. |
 | `/stats` | `GET` | Dashboard sales, AOV, refunds, and analytics. |
+| `/settings` | `GET` \| `POST` | Read or update store configuration. |
 | `/activity-logs` | `GET` | Administrative security audit log feed. |
-| `/delivery-zones` | `GET` \| `POST` | List or update shipping delivery zones. |
-| `/tax-rules` | `GET` \| `POST` | List or update regional tax rates. |
+| `/delivery-zones` | `GET` \| `POST` | List or update shipping delivery zones (`/{index}` for a single zone). |
+| `/tax-rules` | `GET` \| `POST` | List or update regional tax rates (`/{index}` for a single rule). |
+| `/customers/{id}` | `GET` | Fetch a single customer profile. |
+| `/customers/{id}/trash` \| `/restore` | `POST` | Soft-delete or restore a customer. |
+| `/customers/{id}/access` | `GET` | List digital entitlements for a customer. |
+| `/customers/{id}/wishlist` | `GET` | List wishlist items for a customer. |
+| `/access` | `GET` \| `POST` | List or grant customer product access. |
+| `/access/bulk` | `POST` | Grant access to multiple customers/products at once. |
+| `/access/{id}` | `GET` | Read a single access entitlement. |
+| `/access/revoke` | `POST` | Revoke product access from a customer. |
+| `/orders/{id}/history` | `GET` | Retrieve the status/activity history for an order. |
+| `/downloads` | `GET` | List download audit records. |
+| `/downloads/{id}` | `DELETE` | Delete a download log record. |
+| `/wishlists` | `GET` | List all wishlist rows (admin). |
+| `/products/files/{id}` | `GET` | Read a single product file record. |
+| `/products/{product_id}/files/{file_id}/download-url` | `POST` | Mint an expiring HMAC download URL. |
+| `/coupons/{id}` | `GET` | Read a single coupon. |
+| `/reviews/{id}` | `GET` | Read a single review. |
+
+### Checkout, Gateway & Webhook Endpoints
+These endpoints power the client-side gateway flows and inbound webhook verification:
+
+| Route | Method | Access | Description |
+| :--- | :---: | :---: | :--- |
+| `/checkout` | `POST` | Public | Create an order and initiate payment. |
+| `/stripe/checkout-session` \| `/stripe/payment-intent` | `POST` | Public | Create a Stripe Checkout Session or Payment Intent. |
+| `/stripe/webhook` | `POST` | Webhook | Verify `Stripe-Signature` and sync payment/refund/dispute events. |
+| `/paypal/order` \| `/paypal/capture` | `POST` | Public | Create and capture a PayPal order. |
+| `/paypal/webhook` | `POST` | Webhook | Verify PayPal webhook signature. |
+| `/razorpay/order` \| `/razorpay/verify` | `POST` | Public | Create/verify a Razorpay payment. |
+| `/razorpay/webhook` | `POST` | Webhook | Verify `X-Razorpay-Signature`. |
+| `/mollie/order` | `POST` | Public | Create a Mollie payment. |
+| `/mollie/webhook` | `POST` | Webhook | Server-side payment status check. |
+| `/paddle/order` \| `/paddle/verify` | `POST` | Public | Create/verify a Paddle transaction. |
+| `/paddle/webhook` | `POST` | Webhook | Verify `Paddle-Signature`. |
+| `/paystack/order` \| `/paystack/verify` | `POST` | Public | Create/verify a Paystack transaction. |
+| `/paystack/webhook` | `POST` | Webhook | Verify `X-Paystack-Signature` (HMAC-SHA512). |
+| `/tap/order` \| `/tap/verify` | `POST` | Public | Create/verify a Tap charge. |
+| `/tap/webhook` | `POST` | Webhook | Verify Tap signature. |
+| `/alipay/order` \| `/alipay/verify` \| `/alipay/webhook` | `POST` | Mixed | Alipay trade creation, verification, and RSA2 notify. |
+| `/wechat/order` \| `/wechat/verify` \| `/wechat/webhook` | `POST` | Mixed | WeChat Pay unified order, verification, and v3 notify. |
+| `/sslcommerz/order` \| `/sslcommerz/verify` \| `/sslcommerz/ipn` | `POST` | Mixed | SSLCommerz session, validation, and IPN. |
+| `/khalti/order` \| `/khalti/verify` | `POST` | Public | Khalti ePayment v2 initiation and lookup verification. |
+| `/esewa/order` \| `/esewa/verify` | `POST` | Public | eSewa ePay v2 initiation and HMAC verification. |
 
 ### Request & Response Payload Schemas
 
@@ -1070,26 +1172,98 @@ The following global helper functions are available anywhere in your themes or c
 
 ---
 
-### 16 Automated Email Notification Triggers
+### 17 Automated Email Notification Triggers
 
-OmnifyWP includes 16 automated email notification triggers that can be subscribed to via action hooks or configured via **Omnify → Settings → Emails**:
+OmnifyWP includes 17 automated email notification triggers that can be subscribed to via action hooks or configured via **Omnify → Settings → Emails**. Each trigger logs its dispatch to `wp_omnify_email_logs` and can be intercepted via the `omnify_email_arguments` filter:
 
-1. `order_confirmation` — Dispatched to customer immediately upon successful payment capture.
-2. `admin_new_order` — Dispatched to store admin email upon new order creation.
-3. `payment_success` — Dispatched when payment authorization clears.
-4. `payment_failed` — Dispatched when card authorization or gateway returns an error.
-5. `order_status_changed` — Dispatched whenever order transitions between statuses.
-6. `order_refunded` — Dispatched when full or partial refund is processed.
-7. `order_cancelled` — Dispatched upon order cancellation.
-8. `digital_download_ready` — Dispatched with cryptographic HMAC tokens for digital purchases.
-9. `low_stock_admin` — Alert sent to admin when inventory drops below safety threshold.
-10. `out_of_stock_admin` — Emergency alert sent when product stock reaches zero.
-11. `customer_welcome` — Welcome email sent upon customer registration.
-12. `password_reset` — Password recovery link with tokenized authentication.
-13. `order_processing` — Dispatched when warehouse begins order packing.
-14. `shipment_dispatched` — Delivery notice with carrier and tracking number.
-15. `abandoned_cart_recovery` — Scheduled recovery email dispatched 1 hour post-abandonment.
-16. `review_request` — Verified buyer review request dispatched after product delivery.
+1. `order_receipt` — Order confirmation dispatched to the customer upon successful payment capture (with optional admin copy).
+2. `payment_pending` — Sent to the customer when an order is awaiting offline or delayed payment.
+3. `abandoned_cart` — Scheduled 1-click recovery email dispatched post-abandonment.
+4. `low_stock` — Alert sent to admin when inventory drops below the safety threshold.
+5. `out_of_stock` — Emergency alert sent when product stock reaches zero.
+6. `refund_requested` — Acknowledgement sent to the customer when a refund request is submitted.
+7. `refund_processed` — Confirmation of full or partial refund with the credited amount.
+8. `order_status_changed` — Dispatched whenever an order transitions between statuses.
+9. `admin_new_order` — Dispatched to store admin recipients upon new order creation.
+10. `order_shipped` — Shipment dispatch notice with carrier and tracking number.
+11. `order_ready_pickup` — Local-pickup collection notice.
+12. `order_cancelled` — Cancellation notice sent to the customer.
+13. `customer_note` — Customer-visible support note added to an order.
+14. `customer_welcome` — Welcome email sent upon customer registration.
+15. `admin_failed_order` — Payment failure alert dispatched to store admins.
+16. `customer_back_in_stock` — Back-in-stock alert sent to waitlisted shoppers when stock is replenished.
+17. `admin_fraud_alert` — High-risk order security alert dispatched to store admins.
+
+### Extended Hooks Inventory (`omnify_*`)
+Beyond the grouped hooks above, the following action and filter hooks are dispatched across the codebase. Every hook is prefixed `omnify_`.
+
+| Hook | Type | Arguments | Purpose |
+| :--- | :--- | :--- | :--- |
+| `omnify_container_registered` | action | `$container` | Fires after a service is registered in the DI container. |
+| `omnify_container_factory` / `omnify_container_instance` | filter | `$factory\|$instance, $id, $container` | Override how a service is built or resolved. |
+| `omnify_before_boot` / `omnify_booted` | action | `$plugin, $container` | Fires around the runtime bootstrap. |
+| `omnify_admin_init` | action | `$container` | Fires on admin init after registration. |
+| `omnify_deactivated` | action | — | Fires on plugin deactivation. |
+| `omnify_product_created` / `omnify_product_updated` | action | `$product_id, $data` | Product record created/updated in the repository. |
+| `omnify_product_trashed` / `omnify_after_trash_product` | action | `$product_id, $product` | Product moved to trash. |
+| `omnify_product_restored` / `omnify_after_restore_product` | action | `$product_id, $product` | Product restored from trash. |
+| `omnify_pre_create_product_data` / `omnify_pre_update_product_data` | filter | `$data[, $id]` | Sanitize product payloads before persistence. |
+| `omnify_get_product` / `omnify_get_product_by_slug` / `omnify_get_product_by_sku` | filter | `$product, $key` | Filter a hydrated product record. |
+| `omnify_get_products_args` / `omnify_get_products_results` | filter | `$args` / `$products, $args` | Filter catalog queries and results. |
+| `omnify_product_fallback_thumbnail_url` | filter | `$url, $product` | Provide a default product image. |
+| `omnify_product_restocked` | action | `$product_id, $variation_id` | Inventory replenished. |
+| `omnify_product_reviews_updated` | action | `$product_id` | Cached rating aggregates recalculated. |
+| `omnify_order_created` / `omnify_order_updated` | action | `$order_id, $data` | Order record created / updated. |
+| `omnify_order_status_changed` | action | `$order_id, $new_status, $old_status` | Order state transition. |
+| `omnify_order_completed` | action | `$order_id[, $gateway, $txn_id]` | Order marked completed / digital access granted. |
+| `omnify_order_fulfilled` | action | `$order_id, $carrier, $tracking, $status` | Fulfillment + tracking recorded. |
+| `omnify_order_fraud_flagged` | action | `$order_id, $status, $score, $flags` | Fraud scoring flagged an order. |
+| `omnify_order_refunded` | action | `$order_id, $amount, $new_refunded, $reason, $restock` | Full or partial refund recorded. |
+| `omnify_order_trashed` / `omnify_order_restored` / `omnify_order_deleted` | action | `$order_id` | Order lifecycle (soft-delete/restore/purge). |
+| `omnify_customer_note_added` | action | `$order_id, $note, $note_id` | Customer-visible order note added. |
+| `omnify_pre_create_order_data` / `omnify_pre_update_order_data` | filter | `$data[, $id]` | Filter order payloads before save. |
+| `omnify_get_orders_args` / `omnify_get_orders_results` | filter | `$args` / `$results, $args` | Filter order queries/results. |
+| `omnify_customer_created` / `omnify_customer_updated` | action | `$customer_id, $data` | Customer profile created/updated. |
+| `omnify_customer_trashed` / `omnify_customer_restored` / `omnify_customer_deleted` | action | `$customer_id` | Customer lifecycle. |
+| `omnify_pre_create_customer_data` / `omnify_pre_update_customer_data` | filter | `$data[, $id]` | Filter customer payloads. |
+| `omnify_get_customers_args` / `omnify_get_customers_results` / `omnify_get_customer` | filter | `$args` / `$results, $args` / `$customer, $id` | Filter customer queries. |
+| `omnify_coupon_created` / `omnify_coupon_updated` | action | `$coupon_id, $data` | Coupon created/updated. |
+| `omnify_coupon_trashed` / `omnify_coupon_restored` / `omnify_coupon_deleted` | action | `$coupon_id` | Coupon lifecycle. |
+| `omnify_pre_create_coupon_data` / `omnify_pre_update_coupon_data` | filter | `$data[, $id]` | Filter coupon payloads. |
+| `omnify_review_created` / `omnify_review_updated` | action | `$review_id, $data` | Review created/updated. |
+| `omnify_review_status_changed` | action | `$review_id, $status, $old_status` | Moderation status change. |
+| `omnify_review_trashed` / `omnify_review_restored` / `omnify_review_deleted` | action | `$review_id` | Review lifecycle. |
+| `omnify_get_reviews_args` / `omnify_get_reviews_results` | filter | `$args` / `$reviews, $args` | Filter review queries. |
+| `omnify_customer_access_granted` | action | `$customer_id, $product_id, $expires_at, $id` | Digital entitlement granted. |
+| `omnify_customer_access_revoked` | action | `$customer_id, $product_id` | Digital entitlement revoked. |
+| `omnify_download_logged` / `omnify_download_deleted` | action | `$log_id, ...` / `$id` | Download audit log events. |
+| `omnify_product_file_created` / `omnify_product_file_replaced` / `omnify_product_file_deleted` | action | `$file_id, ...` | Digital file locker events. |
+| `omnify_get_product_files_results` / `omnify_get_all_product_files_results` | filter | `$results, $args` | Batch file hydration results. |
+| `omnify_abandoned_cart_saved` / `omnify_abandoned_cart_sent` | action | `$id, $data, $created` / `$id` | Cart captured / reminder sent. |
+| `omnify_abandoned_cart_recovered` / `omnify_abandoned_cart_recovered_by_email` | action | `$token, $order_id` / `$email, $order_id` | Cart recovered. |
+| `omnify_abandoned_cart_unsubscribed` / `omnify_abandoned_cart_trashed` / `omnify_abandoned_cart_restored` / `omnify_abandoned_cart_deleted` | action | `$token` / `$id` | Cart lifecycle. |
+| `omnify_abandoned_cart_followup_interval_hours` | filter | `$hours` | Follow-up reminder cadence. |
+| `omnify_wishlist_added` / `omnify_wishlist_removed` | action | `$user_id, $product_id` | Wishlist toggled. |
+| `omnify_admin_activity_logged` / `omnify_admin_activities_cleared` | action | `$id, ...` / — | Audit trail written / purged. |
+| `omnify_settings_saved` / `omnify_pre_update_settings` / `omnify_settings_all` / `omnify_settings_defaults` | action/filter | `$section, $posted` etc. | Settings save pipeline. |
+| `omnify_email_arguments` / `omnify_email_sent` | filter/action | `$args` / `$sent, $trigger, ...` | Transactional email dispatch. |
+| `omnify_webhook_payload` / `omnify_webhook_request_args` | filter | `$payload, $event, $hook` | Outbound webhook payload/request. |
+| `omnify_webhook_blocking_dispatch` / `omnify_webhook_dispatch_timeout` | filter | `$bool/$int, $event, $hook` | Outbound delivery behavior. |
+| `omnify_webhook_event_replayed` | action | `$event_id, $gateway, $row` | Inbound webhook manually replayed. |
+| `omnify_rest_routes_registered` / `omnify_rest_trash_endpoints_registered` | action | `$namespace, $server` | Fires after REST routes register. |
+| `omnify_rest_can_manage` / `omnify_rest_is_logged_in` | filter | `$permission, $request, $server` | REST authorization. |
+| `omnify_rest_products_listed` / `omnify_rest_orders_listed` / `omnify_rest_customers_listed` | action | `$count, $params, $request` | REST list endpoints. |
+| `omnify_storefront_css_variables` / `omnify_storefront_inline_css` / `omnify_storefront_body_classes` | filter | `$vars/css/classes` | Storefront theming. |
+| `omnify_storefront_trust_badges` | filter | `$badges, $settings` | Trust-bar slots. |
+| `omnify_locate_template` | filter | `$path, $template_name` | Template override resolution. |
+| `omnify_signed_url_ttl` / `omnify_download_url_ttl` | filter | `$seconds, $file_id, $customer_id` | HMAC download URL lifetime. |
+| `omnify_safe_download_directories` | filter | `$dirs` | Allowed directories for streamed files. |
+| `omnify_carrier_tracking_url` | filter | `$url, $carrier, $tracking_number` | Carrier tracking link builder. |
+| `omnify_currency_exchange_rates` / `omnify_currency_exchange_rate` | filter | `$rates` / `null, $from, $to, $amount` | Currency conversion. |
+| `omnify_currency_symbol` / `omnify_currency_decimals` / `omnify_converted_currency_amount` | filter | mixed | Currency formatting. |
+| `omnify_countries` / `omnify_allowed_countries` / `omnify_states` / `omnify_cities` / `omnify_postcodes` | filter | mixed | Selling & address geography. |
+| `omnify_cart_url` / `omnify_checkout_url` / `omnify_storefront_url` / `omnify_customer_portal_url` | filter | `$url` | Override resolved page URLs. |
+| `omnify_payment_gateways` | filter | `$gateways` | Register custom payment gateways. |
 
 ---
 
@@ -1111,7 +1285,7 @@ your-active-theme/
     ├── cart/
     │   └── cart.php            # Scarcity countdown cart & shipping meter
     ├── checkout/
-    │   ├── checkout-page.php   # 1-Page express checkout with 10+ gateways
+    │   ├── checkout-page.php   # 1-Page express checkout with 12 gateways
     │   └── order-receipt.php   # Order confirmation & receipt
     └── portal/
         └── customer-portal.php # Customer downloads, licenses & orders
@@ -1411,6 +1585,447 @@ add_filter('omnify_signed_download_expires_in', function($seconds, $file_id, $cu
     return $seconds;
 }, 10, 3);
 ```
+
+### Recipe 9: Conditionally Hide Cash on Delivery for Digital-Only Carts
+Prevent shoppers from selecting COD when the cart contains only downloadable products:
+
+```php
+add_filter('omnify_available_payment_gateways', function($gateways) {
+    $has_physical = false;
+    foreach (WC()->cart->get_cart() as $item) { /* replace with your cart source */ }
+
+    // If every cart line is digital, strip the COD gateway
+    if (! $has_physical && isset($gateways['cod'])) {
+        unset($gateways['cod']);
+    }
+    return $gateways;
+});
+```
+
+### Recipe 10: Sync Live FX Rates into the Multi-Currency Engine
+Pull rates from an external API on a schedule and feed them to the storefront currency switcher:
+
+```php
+add_action('init', function() {
+    if (! wp_next_scheduled('my_store_sync_fx')) {
+        wp_schedule_event(time(), 'hourly', 'my_store_sync_fx');
+    }
+});
+
+add_action('my_store_sync_fx', function() {
+    $response = wp_remote_get('https://api.exchangerate.host/latest?base=USD');
+    if (is_wp_error($response)) {
+        return;
+    }
+    $data  = json_decode(wp_remote_retrieve_body($response), true);
+    $rates = is_array($data['rates'] ?? null) ? $data['rates'] : [];
+    set_transient('my_fx_rates', $rates, HOUR_IN_SECONDS);
+});
+
+// Consume the cached rates inside Omnify's conversion layer
+add_filter('omnify_currency_exchange_rates', function($rates) {
+    $live = get_transient('my_fx_rates');
+    return is_array($live) && $live ? $live : $rates;
+});
+```
+
+### Recipe 11: Headless Checkout via REST (Stripe Payment Intent)
+Create an order and a Stripe Payment Intent from any decoupled frontend:
+
+```javascript
+// 1. Create the order + capture the gateway client secret
+const res = await fetch('https://your-site.com/wp-json/omnify/v1/checkout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.omnifyStorefront.nonce },
+  body: JSON.stringify({
+    billing_first_name: 'Jane',
+    billing_last_name:  'Doe',
+    billing_email:      'jane@example.com',
+    billing_country:    'US',
+    payment_method:     'stripe',
+    items: [{ product_id: 15, variation_id: null, quantity: 1 }],
+  }),
+});
+const order = await res.json();
+
+// 2. Confirm the Payment Intent client-side, then verify server-side on redirect
+console.log('Order', order.order_number, 'created');
+```
+
+### Recipe 12: Register a Custom Payment Gateway
+Implement the gateway contract and register it through the `omnify_payment_gateways` filter:
+
+```php
+add_filter('omnify_payment_gateways', function(array $gateways) {
+    $gateways['crypto_pay'] = new class {
+        public function get_id(): string { return 'crypto_pay'; }
+        public function get_title(): string { return __('Crypto (USDC / BTC)', 'my-store'); }
+        public function is_enabled(): bool {
+            return (bool) omnify()->container()
+                ->get(\Omnify\eCommerce\Settings\Omnify_Settings_Repository::class)
+                ->get('crypto_enabled', false);
+        }
+        public function process_payment(int $order_id, array $data): array {
+            $order = omnify_get_order($order_id);
+            return [
+                'result'   => 'success',
+                'redirect' => "https://pay.example.com/{$order['order_number']}",
+            ];
+        }
+        public function process_refund(int $order_id, float $amount, string $reason = ''): bool {
+            return true;
+        }
+    };
+    return $gateways;
+});
+```
+
+---
+
+## 13. Roles, Capabilities & Staff Permissions
+
+OmnifyWP ships a granular, per-feature permission model so store owners can safely delegate day-to-day operations to staff without granting full WordPress administrator rights.
+
+### Capabilities
+| Capability | Granted To | Meaning |
+| :--- | :--- | :--- |
+| `manage_omnify` | Administrators + mapped roles | Master capability gating the entire Omnify admin. |
+| `manage_omnify_{feature}` | Roles mapped per feature | Scoped access to a single feature area. |
+
+Supported feature scopes: `dashboard`, `orders`, `products`, `customers`, `coupons`, `abandoned_carts`, `reviews`, `analytics`.
+
+### Built-in Roles
+On first boot (`Omnify_Plugin::initialize_roles_and_caps()`), Omnify creates two roles when missing:
+
+| Role | Capabilities | Typical Use |
+| :--- | :--- | :--- |
+| `shop_manager` | `read`, `edit_posts`, `manage_omnify` | Full operational store management (no `manage_options`). |
+| `shop_clerk` | `read`, `edit_posts`, `manage_omnify` | Fulfillment, order processing, customer support. |
+
+### Mapping Roles to Features
+Permissions are stored in the `role_permissions` setting (`Settings → Roles`) and resolved at runtime through the `user_has_cap` filter, so a `shop_clerk` can be allowed to manage Orders but not Products or Settings:
+
+```php
+// Programmatically grant the shop_clerk role access to Orders and Reviews
+$settings = get_option('omnify_settings', []);
+$settings['role_permissions'] = array_merge((array) ($settings['role_permissions'] ?? []), [
+    'orders'  => ['administrator', 'shop_manager', 'shop_clerk'],
+    'reviews' => ['administrator', 'shop_manager', 'shop_clerk'],
+]);
+update_option('omnify_settings', $settings);
+```
+
+> [!NOTE]
+> `manage_omnify_{feature}` capabilities are computed dynamically — they are never persisted to the role, so revocation is instant when the setting changes.
+
+---
+
+## 14. Analytics & Conversion Tracking (GA4 + Meta Pixel)
+
+The `Omnify\eCommerce\Support\Omnify_Tracking_Service` injects first-party Google Analytics 4 and Meta Pixel tags on the storefront, driven by **Settings → Marketing**.
+
+### Settings Keys
+| Setting Key | Type | Description |
+| :--- | :--- | :--- |
+| `tracking_ga4_enabled` | bool | Enables the GA4 (`gtag.js`) snippet. |
+| `tracking_ga4_measurement_id` | string | GA4 Measurement ID (e.g. `G-XXXXXXX`), upper-cased & sanitized on save. |
+| `tracking_meta_enabled` | bool | Enables the Meta (Facebook) Pixel (`fbq`) snippet. |
+| `tracking_meta_pixel_id` | string | Numeric Meta Pixel ID (digits only). |
+| `tracking_debug_mode` | bool | Adds GA4 `debug_mode: true` for Tag Assistant verification. |
+
+### Runtime Hooks
+- `wp_enqueue_scripts` → `enqueue_tracking_codes()` prints the `gtag`/`fbq` bootstrap.
+- `wp_body_open` → `output_meta_pixel_noscript()` prints the `<noscript><img></noscript>` fallback.
+- Values are surfaced to the storefront JS through `window.omnifyStorefront.analytics` (`ga4Enabled`, `metaEnabled`).
+
+### Tracked E-commerce Events
+| Provider | Events |
+| :--- | :--- |
+| **GA4** | `view_item_list`, `view_item`, `add_to_cart`, `begin_checkout`, `purchase` (with `transaction_id`, `value`, `currency`, `items`). |
+| **Meta Pixel** | `PageView`, `ViewContent`, `AddToCart`, `InitiateCheckout`, `Purchase`. |
+
+```php
+// Suppress Meta Pixel on a specific page
+add_action('template_redirect', function() {
+    if (is_page('thank-you')) {
+        remove_action('wp_body_open', [omnify()->container()->get(\Omnify\eCommerce\Support\Omnify_Tracking_Service::class), 'output_meta_pixel_noscript']);
+    }
+});
+```
+
+---
+
+## 15. Privacy, GDPR & Data Lifecycle
+
+Omnify integrates with the WordPress core privacy framework (`Omnify\eCommerce\Support\Omnify_Privacy_Service`).
+
+### Registered Tools
+| WordPress Tool | Hook | Coverage |
+| :--- | :--- | :--- |
+| Personal Data Exporter | `wp_privacy_personal_data_exporters` | Customer profile, orders, order items, downloads, wishlist, abandoned carts. |
+| Personal Data Eraser | `wp_privacy_personal_data_erasers` | Anonymizes/removes the same customer-owned records on request. |
+
+The exporter/eraser are registered under the friendly name **Omnify**.
+
+### Data Lifecycle & Retention
+- **Soft deletes**: records use a nullable `deleted_at` and are excluded from storefront and public queries.
+- **Automated maintenance**: the recurring cron `omnify_daily_database_cleanup` prunes expired abandoned carts past the retention window, clears stale session transients, and optimizes tables.
+- **Email logs**: `wp_omnify_email_logs` retains dispatch history and retry state; failed sends are retried via the `omnify_retry_failed_emails` scheduled event.
+- **Download audit**: `wp_omnify_downloads` logs IP, user agent, and status per delivery for GDPR access/erasure requests.
+
+```php
+// Extend the personal data exporter with a custom field
+add_filter('wp_privacy_personal_data_exporters', function($exporters) {
+    // Wrap the existing Omnify exporter to append loyalty points
+    return $exporters;
+});
+```
+
+---
+
+## 16. Shipping Zones, Tax Rules & Multi-Currency
+
+### Delivery Zones
+Shipping rates are stored in the `delivery_zones` setting (`Settings → Delivery`) and exposed over REST at `GET|POST /wp-json/omnify/v1/delivery-zones`. Each zone carries a name, matched countries/regions, a rate type (flat/free/threshold), and optional local-pickup + per-item fees.
+
+```php
+// Register an additional delivery zone via the settings repository
+$repo = omnify()->container()->get(\Omnify\eCommerce\Settings\Omnify_Settings_Repository::class);
+$zones = (array) $repo->get('delivery_zones', []);
+$zones['eu_standard'] = [
+    'title'      => 'EU Standard (5-7 days)',
+    'countries'  => ['DE', 'FR', 'NL', 'ES', 'IT'],
+    'rate'       => 9.90,
+    'free_over'  => 120.00,
+];
+$repo->update(['delivery_zones' => $zones]);
+```
+
+### Tax Rules
+Tax tables live in the tax-rules setting (`Settings → Tax`) and are exposed at `GET|POST /wp-json/omnify/v1/tax-rules`. Relevant settings keys: `prices_include_tax`, `tax_shipping`, `tax_rounding` (`line`/`total`), `tax_reporting_enabled`, and per-order `tax_reporting_code`.
+
+### Multi-Currency Engine
+`Omnify\eCommerce\Support\Omnify_Locations` powers the `[omnify_currency_switcher]` shortcode and all price conversion. Rates and symbols are filterable:
+
+| Filter | Purpose |
+| :--- | :--- |
+| `omnify_currency_exchange_rates` | Override the full rate table (e.g. sync from an FX API). |
+| `omnify_currency_exchange_rate` | Override a single from→to rate. |
+| `omnify_converted_currency_amount` | Post-process a converted amount before formatting. |
+| `omnify_currency_symbol` | Override a currency symbol. |
+| `omnify_currency_decimals` | Override decimal precision per currency. |
+| `omnify_allowed_countries` / `omnify_countries` / `omnify_states` | Control the storefront selling/address geography. |
+
+```php
+// Fetch live FX rates from a transient-backed external API
+add_filter('omnify_currency_exchange_rates', function($rates) {
+    $live = get_transient('my_fx_rates');
+    return is_array($live) ? $live : $rates;
+});
+```
+
+---
+
+## 17. Product Variations, Availability & Preorders
+
+Variable products are modelled across `wp_omnify_products` (parent) and `wp_omnify_product_variations` (matrix rows). Availability logic is driven by dedicated columns rather than a single stock field.
+
+### Availability Columns
+| Column | Table | Purpose |
+| :--- | :--- | :--- |
+| `manage_stock` | products + variations | Enables numeric inventory tracking. |
+| `stock_qty` | products + variations | Tracked quantity. |
+| `stock_status` | products + variations | `instock` / `outofstock` / `onbackorder`. |
+| `allow_backorders` | products + variations | Permit purchases when out of stock. |
+| `preorder_enabled` | products + variations | Marks the item as a preorder. |
+| `preorder_release_date` | products + variations | Scheduled release date. |
+| `preorder_limit` | products + variations | Maximum preorder quantity. |
+| `preorder_message` | products + variations | Shopper-facing preorder notice. |
+| `estimated_delivery` | variations | Per-variation dispatch estimate. |
+
+### Stock & Access Hooks
+`omnify_stock_reduced`, `omnify_product_restocked`, `omnify_order_fraud_flagged`, `omnify_order_fulfilled`, `omnify_customer_access_granted` and `omnify_customer_access_revoked` let you mirror availability changes into external systems.
+
+```php
+add_action('omnify_product_restocked', function($product_id, $variation_id) {
+    // Notify a back-in-stock Slack channel
+}, 10, 2);
+```
+
+---
+
+## 18. Background Jobs, Cron & Maintenance
+
+| Scheduled Hook | Frequency | Responsibility |
+| :--- | :--- | :--- |
+| `omnify_abandoned_cart_recovery` | Hourly | Scans `wp_omnify_abandoned_carts` and dispatches recovery emails. |
+| `omnify_daily_database_cleanup` | Daily | Prunes expired carts, stale checkouts, and optimizes indexes. |
+| `omnify_retry_failed_emails` | Hourly | Re-dispatches failed sends logged in `wp_omnify_email_logs`. |
+| `omnify_prune_webhook_logs` | Daily | Trims old `wp_omnify_webhook_delivery_logs` rows. |
+
+Deactivation unschedules the recovery and webhook-prune events (`Omnify_Plugin::deactivate()`).
+
+```php
+// Run custom maintenance alongside the daily cleanup
+add_action('omnify_daily_database_cleanup', function() {
+    // Rebuild a custom reporting table
+});
+```
+
+---
+
+## 19. Admin Pages & Settings Reference
+
+### Admin Menu Directory
+All Omnify screens are registered under the top-level **Omnify** menu (`Omnify_Admin_Page::register_menu()`, capability `manage_omnify`):
+
+| Slug | Screen | Purpose |
+| :--- | :--- | :--- |
+| `omnify-dashboard` | Dashboard | Financial KPIs, health monitor, recent orders/customers. |
+| `omnify-orders` | Orders | Order fulfillment, refunds, notes, packing slips. |
+| `omnify-products` | Products | Catalog table + 4-step product editor. |
+| `omnify-customers` | Customers | CRM directory, LTV, activity, notes. |
+| `omnify-coupons` | Coupons | Promotion code management. |
+| `omnify-analytics` | Analytics | Sales/AOV/refund reporting + CSV export. |
+| `omnify-categories` / `omnify-tags` / `omnify-brands` / `omnify-attributes` | Taxonomies | Catalog taxonomy managers. |
+| `omnify-abandoned-carts` | Abandoned Carts | Captured sessions + recovery. |
+| `omnify-reviews` | Reviews | Moderation queue. |
+| `omnify-export` | Import / Export | CSV/XML export, import, schema reference. |
+| `omnify-api` | API & Webhooks | Keys, outbound webhooks, gateway diagnostics. |
+| `omnify-activity` | Activity Log | Administrative audit trail. |
+| `omnify-tools` | Tools & Seeding | Diagnostics, demo data, cleanup. |
+| `omnify-settings` | Settings | Multi-tab configuration hub. |
+| `omnify-setup` | Setup Wizard | 4-step onboarding. |
+
+### Settings Sections
+The Settings hub is segmented into the following tabs (see `Omnify_Settings_Search_Index::sections()`), and the same slug list gates which keys a save request may modify:
+
+| Slug | Label | Notable Settings |
+| :--- | :--- | :--- |
+| `general` | General Settings | Store name, base country, selling locations, currency, price formatting, tax defaults, test mode. |
+| `pages` | Core Pages | Storefront/Cart/Checkout/Portal/Download/Tracking page mapping + auto page setup. |
+| `roles` | Shop Roles | Minimum capability, feature permissions matrix, staff directory. |
+| `payments` | Payment Methods | 12 gateways + offline methods, modes, keys, webhook URLs. |
+| `tax` | Tax Rules | Tax defaults + regional tax rule table. |
+| `delivery` | Delivery Zones | Zones, method type, cost, free-shipping minimum. |
+| `checkout` | Checkout Flow | Guest/account handling, stock hold, order number format, coupons, order bump, downloads, terms, refunds. |
+| `fraud` | Fraud & Risk | Country mismatch, disposable email, high-value threshold, IP velocity. |
+| `marketing` | Marketing & Tracking | GA4 + Meta Pixel and debug logging. |
+| `design` | Storefront Design | Brand colors, typography, hero, catalog layout, filters, product card. |
+| `email` | Email Templates | 17 triggers, SMTP relay, routing, footer. |
+| `tools` | Tools & Maintenance | Optimize tables, clear transients, purge carts, inventory resync. |
+
+> [!NOTE]
+> Category/tag/brand/attribute management also runs through the settings saver (`categories`, `tags`, `brands`, `attributes`) alongside the Settings tabs.
+
+---
+
+## 20. Email Template Merge Tags
+
+Every email subject and body supports dynamic merge tags, resolved by `Omnify_Email_Service::replace_tokens()`.
+
+### Order Tags
+| Tag | Resolves To |
+| :--- | :--- |
+| `{site_name}` | Store name. |
+| `{order_id}` / `{order_number}` | Customer-facing order number. |
+| `{order_total}` | Currency + formatted order total. |
+| `{order_status}` | Humanized order status. |
+| `{old_status}` / `{new_status}` | Previous and new status (status-change emails). |
+| `{customer_name}` / `{customer_first_name}` / `{first_name}` / `{last_name}` | Customer name parts. |
+| `{customer_email}` | Customer email address. |
+| `{customer_portal_url}` / `{portal_url}` | Customer portal URL. |
+| `{tracking_carrier}` / `{tracking_number}` | Shipment carrier and tracking number. |
+| `{refund_reason}` / `{refund_amount}` | Refund reason and credited amount. |
+
+### Inventory Tags
+`{product_name}`, `{variation}`, `{sku}`, `{stock_qty}`, `{threshold}`.
+
+### Cart Recovery Tags
+`{cart_total}`, `{recovery_url}`, `{coupon_code}`, `{unsubscribe_url}`, `{reminder_stage}`.
+
+---
+
+## 21. CSV & XML Import/Export Schema
+
+Under **Omnify → Import / Export**, records move in and out as schema-validated CSV (or XML for products). Column order does not matter; unknown columns are ignored, and required fields are validated on import.
+
+| Entity | Required Fields | Full Header Set |
+| :--- | :--- | :--- |
+| **Products** | `name` | `name, slug, type, product_kind, sales_type, price, sale_price, currency, sku, status, stock_status, manage_stock, stock_qty, allow_backorders, preorder_enabled, preorder_release_date, preorder_limit, preorder_message, shipping_class, weight, length, width, height, download_expiry_days, categories, tags, description` |
+| **Customers** | `email` | `email, first_name, last_name, status, phone, company, country, tax_exempt` |
+| **Orders** | `order_number`, `customer_email` | `order_number, customer_email, status, currency, subtotal, tax, shipping_total, total, payment_method, coupon_code, discount_amount` |
+| **Coupons** | `code`, `discount_type`, `discount_value` | `code, is_active, discount_type, discount_value, min_order_amount, max_discount_amount, usage_limit, usage_limit_per_customer, free_shipping, first_order_only, included_product_ids, excluded_product_ids, included_categories, excluded_categories, expires_at` |
+| **Tax Rules** | `label`, `country`, `state`, `rate` | `enabled, label, country, state, rate, priority, reporting_code` |
+| **Delivery Zones** | `name`, `countries`, `states`, `method_name` | `enabled, name, countries, states, method_name, method_type, cost, free_min, class_costs, priority` |
+
+Export handlers are exposed as admin-post actions: `omnify_export_products`, `omnify_export_products_xml`, `omnify_export_customers`, `omnify_export_orders`, `omnify_export_coupons`, `omnify_export_tax_rules`, `omnify_export_delivery_zones`, `omnify_export_downloads`. Imports post to `omnify_import_csv`.
+
+---
+
+## 22. Performance, Caching & Scaling
+
+| Technique | Where | Benefit |
+| :--- | :--- | :--- |
+| Normalized indexed tables | `wp_omnify_*` | Avoids `wp_postmeta` EAV joins; single-query lookups. |
+| Batch hydration | `Product_File_Repository::all_for_products()` | Eliminates N+1 file queries across catalog loops. |
+| Object cache group | `omnifywp-ecommerce` | Caches product/slug/sku/customer lookups via `wp_cache_*`. |
+| Compound indexes | `omnify_orders` (`status, created_at`, `customer_id, status, created_at`) | Fast filtered order listings. |
+| Atomic stock ops | `Product_Repository::reduce_stock()` | Prevents oversell under concurrency. |
+| Chunked downloads | `Download_Controller::stream()` (8KB buffers) | Large files without memory exhaustion. |
+| Lightweight frontend | `<35KB` script footprint | Fast storefront boot. |
+| Deferred cron | `omnify_daily_database_cleanup` et al. | Moves maintenance off the request path. |
+
+```php
+// Warm the product cache after a bulk import
+$repo = omnify()->container()->get(\Omnify\eCommerce\Repositories\Omnify_Product_Repository::class);
+$repo->all(['status' => 'published', 'per_page' => 100]);
+```
+
+---
+
+## 23. Security Model & Hardening
+
+- **Capability gating**: every admin route requires `manage_omnify` (or a scoped `manage_omnify_{feature}`); REST management routes require the same or a valid API key.
+- **REST authentication**: WordPress nonce (`X-WP-Nonce`), HTTP Basic (`consumer_key:consumer_secret`), custom `X-Consumer-Key`/`X-Consumer-Secret` headers, or query params — resolved by `Omnify_Auth::determine_current_user()`.
+- **Secure-by-default gateways**: all gateways start disabled; none appear at checkout until credentials are saved and the toggle enabled.
+- **Webhook verification**: Stripe `Stripe-Signature` (with 300s tolerance), PayPal `/verify-webhook-signature`, Razorpay/Paystack HMAC (`X-Razorpay-Signature` / `X-Paystack-Signature`), Paddle `Paddle-Signature`, Alipay RSA2, WeChat AES-256-GCM.
+- **Download protection**: HMAC-SHA256 tokens salted with `wp_salt('auth')`, `realpath()` containment checks, and `wp_normalize_path()` guards.
+- **Output escaping**: admin/storefront templates escape with `esc_html`/`esc_attr`/`esc_url`; nonces on all mutating actions.
+- **Privacy**: core exporter/eraser integration and soft deletes.
+
+### Server Hardening
+Protect the protected-files directory so static URLs cannot bypass the PHP token validator:
+
+```apache
+# wp-content/uploads/omnify-protected/.htaccess
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+```
+
+```nginx
+location ^~ /wp-content/uploads/omnify-protected/ {
+    internal;
+    return 403;
+}
+```
+
+---
+
+## 24. Glossary
+
+| Term | Meaning |
+| :--- | :--- |
+| **Bundle** | A curated product composed of multiple catalog items sold as one discounted SKU. |
+| **Customer Access** | A row in `wp_omnify_customer_access` granting a customer entitlement to a digital product. |
+| **Delivery Zone** | A shipping rule scoped by country/region with a rate type. |
+| **HMAC Token** | A signed, expiring download URL that conceals the physical file path. |
+| **Order Bump** | A one-click upsell offered directly on the checkout form. |
+| **Preorder** | A product/variation sold before its release date, with optional limits and notices. |
+| **Soft Delete** | A nullable `deleted_at` flag that hides a record without purging it. |
+| **Trigger** | A named automated email dispatched at a lifecycle event. |
+| **Webhook Event** | An inbound gateway callback recorded in `wp_omnify_webhook_events`. |
 
 ---
 

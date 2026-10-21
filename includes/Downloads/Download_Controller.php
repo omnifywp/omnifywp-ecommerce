@@ -39,6 +39,24 @@ class Omnify_Download_Controller {
 			return;
 		}
 
+		// Item 24: Throttle download requests per IP to prevent token brute force or bandwidth abuse
+		$omnify_ip = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'));
+		// Normalize equivalent IPv6 notations (e.g. ::1 vs 0:0:0:0:0:0:0:1) so the limiter cannot be bypassed.
+		$omnify_packed_ip = @inet_pton($omnify_ip);
+		if (false !== $omnify_packed_ip) {
+			$omnify_ip = inet_ntop($omnify_packed_ip);
+		}
+		$omnify_throttle_key = 'omnify_dl_throttle_' . md5($omnify_ip);
+		$omnify_attempts = (int) get_transient($omnify_throttle_key);
+		if ($omnify_attempts > 30) {
+			wp_die(
+				esc_html__('Too many download requests. Please wait a minute before trying again.', 'omnifywp-ecommerce'),
+				esc_html__('Download Rate Limit Exceeded', 'omnifywp-ecommerce'),
+				['response' => 429]
+			);
+		}
+		set_transient($omnify_throttle_key, $omnify_attempts + 1, MINUTE_IN_SECONDS);
+
 		$omnify_file_id     = isset($_GET['file_id']) ? absint(wp_unslash($_GET['file_id'])) : 0;
 		$omnify_expires     = isset($_GET['expires']) ? absint(wp_unslash($_GET['expires'])) : 0;
 		$omnify_customer_id = isset($_GET['customer_id']) ? (absint(wp_unslash($_GET['customer_id'])) ?: null) : null;
@@ -195,6 +213,9 @@ class Omnify_Download_Controller {
 		while ( ob_get_level() > 0 ) {
 			ob_end_clean();
 		}
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 );
+		}
 
 		nocache_headers();
 		header( 'Content-Type: ' . (string) ( $omnify_file['file_type'] ?: 'application/octet-stream' ) );
@@ -247,10 +268,18 @@ class Omnify_Download_Controller {
 			fseek( $omnify_handle, (int) $omnify_start );
 		}
 
-		// Stream requested range in 8KB chunks
+		while ( ob_get_level() > 0 ) {
+			@ob_end_clean();
+		}
+
+		// Stream requested range in 64KB chunks with abort detection
 		$omnify_bytes_remaining = $omnify_length;
+		$omnify_max_chunk       = 65536; // 64KB optimal chunk size
 		while ( ! feof( $omnify_handle ) && $omnify_bytes_remaining > 0 ) {
-			$omnify_chunk_size = (int) min( 8192, $omnify_bytes_remaining );
+			if ( connection_aborted() ) {
+				break;
+			}
+			$omnify_chunk_size = (int) min( $omnify_max_chunk, $omnify_bytes_remaining );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
 			$omnify_buffer = fread( $omnify_handle, $omnify_chunk_size );
 			if ( false === $omnify_buffer || '' === $omnify_buffer ) {
@@ -258,6 +287,7 @@ class Omnify_Download_Controller {
 			}
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo $omnify_buffer;
+			@ob_flush();
 			flush();
 			$omnify_bytes_remaining -= strlen( $omnify_buffer );
 		}

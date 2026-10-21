@@ -391,6 +391,7 @@ window.omnifyInitSearchableSelect = function(select) {
 			}
 		});
 	});
+
 	attrObserver.observe(select, { attributes: true });
 
 	select.addEventListener('change', () => {
@@ -659,6 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+
 	// 2. Delete Confirmation Helper
 	const deleteButtons = document.querySelectorAll('.js-confirm-delete');
 	deleteButtons.forEach(button => {
@@ -669,6 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	});
+
 
 	// 3. Media Uploader Helper for Product Thumbnail
 	const selectThumbButton = document.getElementById('omnify-select-thumbnail');
@@ -885,8 +888,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			const imgUrl = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
 			if (imgInput) imgInput.value = attachment.id;
 			if (imgPreview) {
-				imgPreview.innerHTML = `<img src="${imgUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #d1d5db;" />`;
+				imgPreview.innerHTML = `<img src="${imgUrl}" alt="" />`;
 			}
+			const removeBtn = row.querySelector('.omnify-var-remove-image-btn');
+			if (removeBtn) removeBtn.style.display = 'inline-flex';
 		});
 
 		frame.open();
@@ -1276,6 +1281,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+
 	// Close credentials overlay
 	const closeCredentialsBtn = document.getElementById('close-credentials-btn');
 	if (closeCredentialsBtn) {
@@ -1328,6 +1334,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	});
+
 
 	// Create Webhook Handler
 	const createWebhookForm = document.getElementById('omnify-create-webhook-form');
@@ -1421,6 +1428,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+
 	// Test Webhook Ping Handler
 	document.addEventListener('click', function(e) {
 		const testBtn = e.target.closest('.test-webhook-btn');
@@ -1451,12 +1459,26 @@ document.addEventListener('DOMContentLoaded', function() {
 				testBtn.disabled = false;
 				testBtn.innerHTML = originalText;
 				if (resultSpan) {
-					if (response.success) {
-						resultSpan.style.color = '#059669';
-						resultSpan.textContent = response.data.message || 'Ping OK';
-					} else {
-						resultSpan.style.color = '#dc2626';
-						resultSpan.textContent = (response.data && response.data.message) ? response.data.message : 'Ping Failed';
+					const isSuccess = response.success;
+					resultSpan.style.color = isSuccess ? '#059669' : '#dc2626';
+					const msgText = (response.data && response.data.message) ? response.data.message : (isSuccess ? 'Ping OK' : 'Ping Failed');
+					resultSpan.innerHTML = '<span>' + msgText + '</span> <button type="button" class="view-webhook-payload-btn" style="background:none; border:none; text-decoration:underline; cursor:pointer; color:inherit; font-size:11px; padding:0; margin-left:6px;">[Inspect]</button>';
+					
+					const inspectBtn = resultSpan.querySelector('.view-webhook-payload-btn');
+					if (inspectBtn) {
+						inspectBtn.addEventListener('click', function(ev) {
+							ev.preventDefault();
+							const modal = document.getElementById('omnify-webhook-payload-modal');
+							const reqEl = document.getElementById('webhook-modal-req-payload');
+							const resEl = document.getElementById('webhook-modal-res-body');
+							if (modal && reqEl && resEl) {
+								let formattedReq = (response.data && response.data.request_payload) ? response.data.request_payload : '{}';
+								try { formattedReq = JSON.stringify(JSON.parse(formattedReq), null, 2); } catch(e) {}
+								reqEl.textContent = formattedReq;
+								resEl.textContent = (response.data && response.data.response_body) ? response.data.response_body : '(Empty)';
+								modal.style.display = 'block';
+							}
+						});
 					}
 				} else {
 					alert((response.data && response.data.message) || (response.success ? 'Success' : 'Failed'));
@@ -1474,6 +1496,29 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	});
+
+	// Webhook Payload Modal Event Listeners
+	const webhookPayloadModal = document.getElementById('omnify-webhook-payload-modal');
+	if (webhookPayloadModal) {
+		const closePayloadBtn = document.getElementById('close-payload-modal');
+		if (closePayloadBtn) {
+			closePayloadBtn.addEventListener('click', function() {
+				webhookPayloadModal.style.display = 'none';
+			});
+		}
+		const copyPayloadBtn = document.getElementById('copy-webhook-payload-btn');
+		if (copyPayloadBtn) {
+			copyPayloadBtn.addEventListener('click', function() {
+				const reqEl = document.getElementById('webhook-modal-req-payload');
+				if (reqEl && navigator.clipboard) {
+					navigator.clipboard.writeText(reqEl.textContent).then(function() {
+						copyPayloadBtn.textContent = 'Copied!';
+						setTimeout(function() { copyPayloadBtn.textContent = 'Copy Payload'; }, 2000);
+					});
+				}
+			});
+		}
+	}
 
 	// Check Stripe Connection Status
 	const testStripeBtn = document.getElementById('test-stripe-connection-btn');
@@ -1643,6 +1688,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+
 	// Arbitrary URL Checker
 	const testUrlForm = document.getElementById('omnify-test-url-form');
 	if (testUrlForm) {
@@ -1729,6 +1775,29 @@ document.addEventListener('DOMContentLoaded', function() {
 		const progressContainer = document.getElementById('omnify-demo-progress-container');
 		const progressBar = document.getElementById('omnify-demo-progress-bar');
 		const progressStatus = document.getElementById('omnify-demo-progress-status');
+
+		const countrySelect = document.getElementById('country');
+		const currencySelect = document.getElementById('currency');
+		const countryCurrencyMap = {
+			US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD', NZ: 'NZD',
+			DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR', AT: 'EUR', IE: 'EUR', PT: 'EUR', FI: 'EUR', GR: 'EUR',
+			JP: 'JPY', CN: 'CNY', IN: 'INR', BD: 'BDT', PK: 'PKR',
+			CH: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN',
+			BR: 'BRL', MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP',
+			ZA: 'ZAR', AE: 'AED', SA: 'SAR', SG: 'SGD', HK: 'HKD',
+			MY: 'MYR', TH: 'THB', ID: 'IDR', PH: 'PHP', VN: 'VND'
+		};
+
+		if (countrySelect && currencySelect) {
+			countrySelect.addEventListener('change', () => {
+				const country = countrySelect.value;
+				const suggestedCurrency = countryCurrencyMap[country];
+				if (suggestedCurrency && currencySelect.querySelector(`option[value="${suggestedCurrency}"]`)) {
+					currencySelect.value = suggestedCurrency;
+					currencySelect.dispatchEvent(new Event('change', { bubbles: true }));
+				}
+			});
+		}
 
 		const goToPanel = (panelNum) => {
 			panels.forEach(p => p.classList.remove('active'));
@@ -1966,6 +2035,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
+
 	// ── 1-Click WooCommerce Migrator ───────────────────
 	const wcMigrateBtn = document.getElementById('omnify-btn-migrate-woocommerce');
 	if (wcMigrateBtn) {
@@ -2067,6 +2137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	});
+
 
 	// ── Coupons View Toggle ──
 	const couponCreateBtn = document.getElementById('omnify-create-coupon-btn');
@@ -2274,6 +2345,10 @@ document.addEventListener('DOMContentLoaded', function() {
 				document.getElementById('qe-sale-price').value = this.dataset['sale-price'] || '';
 				document.getElementById('qe-status').value = this.dataset.status || 'draft';
 				document.getElementById('qe-sku').value = this.dataset.sku || '';
+				const stockInput = document.getElementById('qe-stock-qty');
+				if (stockInput) stockInput.value = this.dataset.stockQty !== undefined ? this.dataset.stockQty : '0';
+				const manageStockSelect = document.getElementById('qe-manage-stock');
+				if (manageStockSelect) manageStockSelect.value = this.dataset.manageStock !== undefined ? this.dataset.manageStock : '0';
 				quickEditModal.style.display = 'block';
 			});
 		});
@@ -2282,6 +2357,86 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (closeBtn) closeBtn.addEventListener('click', hideModal);
 		if (cancelBtn) cancelBtn.addEventListener('click', hideModal);
 	}
+
+	// ── Product SKU Generator Button (Item 12) ──
+	document.addEventListener('click', function(e) {
+		const genBtn = e.target.closest('.js-omnify-generate-sku');
+		if (!genBtn) return;
+		e.preventDefault();
+		const nameInput = document.getElementById('name');
+		const skuInput = document.getElementById('sku');
+		if (!skuInput) return;
+		const nameVal = (nameInput ? nameInput.value.trim() : '') || 'PROD';
+		const prefix = nameVal
+			.replace(/[^a-zA-Z0-9\s]/g, '')
+			.split(/\s+/)
+			.slice(0, 3)
+			.map(w => w.substring(0, 3).toUpperCase())
+			.join('-');
+		const rand = Math.floor(1000 + Math.random() * 9000);
+		const cleanPrefix = prefix || 'PROD';
+		skuInput.value = `${cleanPrefix}-${rand}`;
+		skuInput.dispatchEvent(new Event('input', { bubbles: true }));
+		skuInput.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+
+	// ── Admin Bulk Inline Stock Quick-Edit (Item 11) ──
+	document.addEventListener('click', function(e) {
+		const saveBtn = e.target.closest('.omnify-inline-stock-save');
+		if (!saveBtn) return;
+		e.preventDefault();
+		const wrap = saveBtn.closest('.omnify-inline-stock-wrap');
+		const input = wrap ? wrap.querySelector('.omnify-inline-stock-input') : null;
+		if (!input) return;
+
+		const productId = input.dataset.productId;
+		const newQty = parseInt(input.value, 10);
+		if (isNaN(newQty) || newQty < 0) return;
+
+		const nonce = document.querySelector('input[name="omnify_quick_nonce"]')?.value || '';
+		saveBtn.disabled = true;
+		const originalHtml = saveBtn.innerHTML;
+		saveBtn.innerHTML = '<span class="dashicons dashicons-update" style="animation: rotation 1s infinite linear; font-size:12px; width:12px; height:12px; line-height:1;"></span>';
+
+		const formData = new FormData();
+		formData.append('action', 'omnify_quick_edit_product');
+		formData.append('id', productId);
+		formData.append('stock_qty', newQty);
+		formData.append('manage_stock', '1');
+		if (nonce) formData.append('omnify_quick_nonce', nonce);
+
+		window.fetch(window.ajaxurl || 'admin-post.php', {
+			method: 'POST',
+			body: formData,
+			headers: { 'X-Requested-With': 'XMLHttpRequest' }
+		})
+		.then(r => r.json())
+		.then(data => {
+			saveBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size:12px; width:12px; height:12px; line-height:1; color:#059669;"></span>';
+			input.style.borderColor = '#10b981';
+			input.dataset.initial = newQty;
+			setTimeout(() => {
+				saveBtn.innerHTML = originalHtml;
+				saveBtn.disabled = false;
+				input.style.borderColor = '#cbd5e1';
+			}, 1500);
+		})
+		.catch(() => {
+			saveBtn.innerHTML = originalHtml;
+			saveBtn.disabled = false;
+			input.style.borderColor = '#ef4444';
+		});
+	});
+
+
+	document.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter' && e.target.classList.contains('omnify-inline-stock-input')) {
+			e.preventDefault();
+			const wrap = e.target.closest('.omnify-inline-stock-wrap');
+			const saveBtn = wrap ? wrap.querySelector('.omnify-inline-stock-save') : null;
+			if (saveBtn) saveBtn.click();
+		}
+	});
 
 	// ── Analytics Custom Dates and Chart Rendering ──
 	const rangeSelect = document.getElementById('omnify-analytics-range');
@@ -2789,4 +2944,83 @@ window.omnifyShowToast = function(message, type = 'error') {
 	const timeout = setTimeout(dismiss, 4000);
 	toast.addEventListener('mouseenter', () => clearTimeout(timeout));
 };
+
+// ── Email Template Preview Modal (Item 28) ──
+document.addEventListener('DOMContentLoaded', () => {
+	const emailModal = document.getElementById('omnify-email-preview-modal');
+	const emailModalClose = document.getElementById('omnify-email-modal-close-btn');
+	const emailModalTitle = document.getElementById('omnify-modal-title');
+	const emailModalFrom = document.getElementById('omnify-modal-from');
+	const emailModalSubject = document.getElementById('omnify-modal-subject');
+	const emailModalContent = document.getElementById('omnify-modal-content');
+
+	if (emailModalClose) {
+		emailModalClose.addEventListener('click', () => {
+			if (emailModal) emailModal.classList.remove('is-open');
+		});
+	}
+
+	document.querySelectorAll('.omnify-email-preview-btn').forEach(btn => {
+		btn.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const card = btn.closest('.omnify-email-card');
+			const titleEl = card ? card.querySelector('.omnify-email-card-title') : null;
+			const subjectInput = card ? card.querySelector('input[name*="subject"]') : null;
+			const introInput = card ? card.querySelector('textarea[name*="intro"]') : null;
+
+			const title = titleEl ? titleEl.textContent.trim() : 'Email Template';
+			const subject = subjectInput ? subjectInput.value : '[Store] Notification';
+			const intro = introInput ? introInput.value : '';
+
+			if (emailModalTitle) emailModalTitle.textContent = title;
+			if (emailModalFrom) emailModalFrom.textContent = 'store@example.com (via OmnifyWP Mailer)';
+			if (emailModalSubject) emailModalSubject.textContent = subject;
+
+			if (emailModalContent) {
+				emailModalContent.innerHTML = `
+					<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155; max-width: 580px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
+						<h2 style="color: #0f172a; margin: 0 0 14px; font-size: 20px;">${title}</h2>
+						<p style="font-size: 14.5px; line-height: 1.6; margin: 0 0 20px; color: #334155;">${intro}</p>
+						<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;">
+							<div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px;">
+								<span>Minimalist Cotton Hoodie &times; 1</span>
+								<strong>$79.00</strong>
+							</div>
+							<div style="display:flex; justify-content:space-between; font-size:14px; font-weight:700; border-top:1px solid #e2e8f0; padding-top:8px; margin-top:8px;">
+								<span>Total</span>
+								<span>$79.00 USD</span>
+							</div>
+						</div>
+						<div style="text-align: center; margin: 20px 0 10px;">
+							<span style="display: inline-block; background: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 6px; font-size: 13.5px; font-weight: 600;">View Order</span>
+						</div>
+					</div>
+				`;
+			}
+
+			if (emailModal) {
+				emailModal.classList.add('is-open');
+			}
+		});
+	});
+
+	// Inventory logs reason filter
+	const invReasonFilter = document.getElementById('omnify-inv-log-reason-filter');
+	if (invReasonFilter) {
+		invReasonFilter.addEventListener('change', function() {
+			const selectedReason = (this.value || '').toLowerCase().trim();
+			const rows = document.querySelectorAll('.omnify-inv-log-row');
+			rows.forEach(row => {
+				const rowReason = (row.getAttribute('data-reason') || '').toLowerCase();
+				if (!selectedReason || rowReason.indexOf(selectedReason) !== -1 || selectedReason.indexOf(rowReason) !== -1) {
+					row.style.display = '';
+				} else {
+					row.style.display = 'none';
+				}
+			});
+		});
+	}
+
+});
 

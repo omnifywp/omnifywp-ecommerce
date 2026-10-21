@@ -230,23 +230,23 @@ ksort($omnify_all_currencies);
 
 					<div class="omnify-form-row">
 						<div class="omnify-form-group">
-							<label for="currency"><?php esc_html_e('Store Currency', 'omnifywp-ecommerce'); ?></label>
-							<select id="currency" name="currency" class="omnify-searchable-select">
-								<?php foreach ($omnify_all_currencies as $omnify_code => $omnify_label) : ?>
-									<option value="<?php echo esc_attr($omnify_code); ?>" <?php selected($omnify_currency, $omnify_code); ?>>
-										<?php echo esc_html($omnify_label); ?>
-									</option>
-								<?php endforeach; ?>
-							</select>
-						</div>
-
-						<div class="omnify-form-group">
 							<label for="country"><?php esc_html_e('Store Country', 'omnifywp-ecommerce'); ?></label>
 							<select id="country" name="country" class="omnify-searchable-select">
 								<option value=""><?php esc_html_e('Select country...', 'omnifywp-ecommerce'); ?></option>
 								<?php foreach ($omnify_countries as $omnify_code => $omnify_name) : ?>
 									<option value="<?php echo esc_attr($omnify_code); ?>" <?php selected($omnify_country, $omnify_code); ?>>
 										<?php echo esc_html($omnify_name); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+
+						<div class="omnify-form-group">
+							<label for="currency"><?php esc_html_e('Store Currency', 'omnifywp-ecommerce'); ?></label>
+							<select id="currency" name="currency" class="omnify-searchable-select">
+								<?php foreach ($omnify_all_currencies as $omnify_code => $omnify_label) : ?>
+									<option value="<?php echo esc_attr($omnify_code); ?>" <?php selected($omnify_currency, $omnify_code); ?>>
+										<?php echo esc_html($omnify_label); ?>
 									</option>
 								<?php endforeach; ?>
 							</select>

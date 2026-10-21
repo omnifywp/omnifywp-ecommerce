@@ -12,27 +12,41 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 
 // Helper functions (defined locally or globally)
 if (! function_exists('omnify_build_category_tree')) {
-	function omnify_build_category_tree(array $omnify_categories, string $omnify_parent_slug = ''): array {
-		$omnify_branch = [];
+	/**
+	 * Pre-index categories by parent slug so tree assembly is O(N) instead of O(N^2).
+	 */
+	function omnify_build_category_index(array $omnify_categories): array {
+		$omnify_index = [];
 		foreach ($omnify_categories as $omnify_cat) {
-			$omnify_cat_parent = $omnify_cat['parent'] ?? '';
-			if ($omnify_cat_parent === $omnify_parent_slug) {
-				$omnify_children = omnify_build_category_tree($omnify_categories, $omnify_cat['slug']);
-				if (! empty($omnify_children)) {
-					$omnify_cat['children'] = $omnify_children;
-				}
-				$omnify_branch[] = $omnify_cat;
+			$omnify_index[(string) ($omnify_cat['parent'] ?? '')][] = $omnify_cat;
+		}
+		return $omnify_index;
+	}
+
+	function omnify_build_category_branch(array $omnify_index, string $omnify_parent_slug): array {
+		if (empty($omnify_index[$omnify_parent_slug])) {
+			return [];
+		}
+		$omnify_branch = [];
+		foreach ($omnify_index[$omnify_parent_slug] as $omnify_cat) {
+			$omnify_children = omnify_build_category_branch($omnify_index, (string) ($omnify_cat['slug'] ?? ''));
+			if (! empty($omnify_children)) {
+				$omnify_cat['children'] = $omnify_children;
 			}
+			$omnify_branch[] = $omnify_cat;
 		}
 		return $omnify_branch;
+	}
+
+	function omnify_build_category_tree(array $omnify_categories, string $omnify_parent_slug = ''): array {
+		return omnify_build_category_branch(omnify_build_category_index($omnify_categories), $omnify_parent_slug);
 	}
 }
 
 if (! function_exists('omnify_get_category_tree')) {
 	function omnify_get_category_tree(array $omnify_categories): array {
 		$omnify_slugs = array_column($omnify_categories, 'slug');
-		foreach ($omnify_categories as $omnify_idx => &$omnify_cat) {
-			$omnify_cat['global_idx'] = $omnify_idx;
+		foreach ($omnify_categories as &$omnify_cat) {
 			if (! empty($omnify_cat['parent']) && ! in_array($omnify_cat['parent'], $omnify_slugs, true)) {
 				$omnify_cat['parent'] = '';
 			}
@@ -45,7 +59,6 @@ if (! function_exists('omnify_get_category_tree')) {
 if (! function_exists('omnify_render_category_table_rows')) {
 	function omnify_render_category_table_rows(array $omnify_tree, int $omnify_depth = 0) {
 		foreach ($omnify_tree as $omnify_node) {
-			$omnify_global_idx = $omnify_node['global_idx'];
 			?>
 			<tr>
 				<td>
@@ -68,7 +81,7 @@ if (! function_exists('omnify_render_category_table_rows')) {
 				</td>
 				<td style="text-align: right;">
 					<div class="omnify-table-actions" style="justify-content: flex-end;">
-						<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_category&index=' . $omnify_global_idx), 'omnify_delete_global_category_' . $omnify_global_idx)); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete category "%s"? Any subcategories will be unparented.', 'omnifywp-ecommerce'), $omnify_node['name'])); ?>" title="<?php esc_attr_e('Delete Category', 'omnifywp-ecommerce'); ?>">
+						<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_category&slug=' . rawurlencode((string) $omnify_node['slug'])), 'omnify_delete_global_category_' . $omnify_node['slug'])); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete category "%s"? Any subcategories will be unparented.', 'omnifywp-ecommerce'), $omnify_node['name'])); ?>" title="<?php esc_attr_e('Delete Category', 'omnifywp-ecommerce'); ?>">
 							<span class="dashicons dashicons-trash"></span>
 						</a>
 					</div>

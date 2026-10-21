@@ -109,7 +109,7 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ($omnify_global_brands as $omnify_idx => $omnify_b) :
+							<?php foreach ($omnify_global_brands as $omnify_b) :
 								$omnify_initial = strtoupper(substr((string) $omnify_b['name'], 0, 1));
 							?>
 								<tr>
@@ -126,7 +126,7 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 									</td>
 									<td style="text-align: right;">
 										<div class="omnify-table-actions" style="justify-content: flex-end;">
-											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_brand&index=' . $omnify_idx), 'omnify_delete_global_brand_' . $omnify_idx)); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete brand "%s"?', 'omnifywp-ecommerce'), $omnify_b['name'])); ?>" title="<?php esc_attr_e('Delete Brand', 'omnifywp-ecommerce'); ?>">
+											<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_global_brand&slug=' . rawurlencode((string) $omnify_b['slug'])), 'omnify_delete_global_brand_' . $omnify_b['slug'])); ?>" class="omnify-btn-icon omnify-btn-icon--danger js-confirm-delete" data-message="<?php echo esc_attr(sprintf(__('Are you sure you want to delete brand "%s"?', 'omnifywp-ecommerce'), $omnify_b['name'])); ?>" title="<?php esc_attr_e('Delete Brand', 'omnifywp-ecommerce'); ?>">
 												<span class="dashicons dashicons-trash"></span>
 											</a>
 										</div>

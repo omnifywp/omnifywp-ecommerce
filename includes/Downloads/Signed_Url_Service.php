@@ -30,6 +30,10 @@ class Omnify_Signed_Url_Service {
 	}
 
 	public function verify(int $omnify_file_id, int $omnify_expires, string $omnify_signature, ?int $omnify_customer_id = null): bool {
+		if ($omnify_file_id <= 0) {
+			return false;
+		}
+
 		if ($omnify_expires < time()) {
 			return false;
 		}

@@ -962,8 +962,7 @@ body.omnify-preload *::after {
 }
 
 .omnify-product-editor-form .omnify-wizard-header {
-	margin: 0 !important;
-	padding: 0 2px !important;
+	display: none !important;
 }
 
 .omnify-product-editor-form .omnify-wizard-header strong {
@@ -2404,6 +2403,7 @@ input[type="checkbox"].omnify-checkbox:focus-visible,
 }
 .omnify-trend.positive { background: var(--omnify-success-light); color: #065f46; }
 .omnify-trend.negative { background: var(--omnify-danger-light); color: #991b1b; }
+.omnify-trend.neutral { background: #f1f5f9; color: #64748b; }
 
 .omnify-dashboard-summary-grid {
 	display: grid;
@@ -3938,13 +3938,13 @@ td:has(.omnify-custom-select-wrapper.open),
 .omnify-settings-page .omnify-zone-section-divider {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	margin: 6px 0;
-	color: #94a3b8;
+	gap: 14px;
+	margin: 8px 0;
+	color: #64748b;
 	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.07em;
 }
 .omnify-settings-page .omnify-zone-section-divider::before,
 .omnify-settings-page .omnify-zone-section-divider::after {
@@ -3952,6 +3952,24 @@ td:has(.omnify-custom-select-wrapper.open),
 	flex: 1;
 	height: 1px;
 	background: #e2e8f0;
+}
+
+.omnify-settings-page .omnify-zone-field-grid .omnify-modern-form-group {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+.omnify-settings-page .omnify-zone-field-grid .omnify-modern-form-group input:not([type="checkbox"]):not([type="radio"]),
+.omnify-settings-page .omnify-zone-field-grid .omnify-modern-form-group select {
+	width: 100% !important;
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
+	box-sizing: border-box !important;
+}
+.omnify-settings-page .omnify-zone-field-grid .omnify-input-wrapper {
+	width: 100% !important;
+	max-width: 100% !important;
 }
 
 /* Inputs & Prefixes for Delivery Zones and Modern Forms */
@@ -3968,9 +3986,9 @@ td:has(.omnify-custom-select-wrapper.open),
 	overflow: hidden !important;
 	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 	box-sizing: border-box !important;
-	height: 42px !important;
-	min-height: 42px !important;
-	max-height: 42px !important;
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
 	padding: 0 !important;
 	margin: 0 !important;
 }
@@ -4004,6 +4022,8 @@ td:has(.omnify-custom-select-wrapper.open),
 .omnify-settings-page .omnify-input-suffix {
 	display: inline-flex !important;
 	position: static !important;
+	top: auto !important;
+	right: auto !important;
 	align-items: center !important;
 	justify-content: center !important;
 	padding: 0 14px !important;
@@ -4341,6 +4361,8 @@ td:has(.omnify-custom-select-wrapper.open),
 
 .omnify-settings-page .omnify-tax-table .omnify-input-suffix {
 	position: static !important;
+	top: auto !important;
+	right: auto !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8277,11 +8299,11 @@ body[class*="omnify"] #wpcontent {
 }
 
 .omnify-product-editor-form .omnify-product-wizard {
-	padding: 8px !important;
-	border: 1px solid var(--omnify-suite-border) !important;
-	border-radius: var(--omnify-suite-radius) !important;
-	background: rgba(255, 255, 255, 0.72) !important;
-	box-shadow: var(--omnify-suite-shadow-soft) !important;
+	padding: 0 !important;
+	border: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
 }
 
 .omnify-product-editor-form .omnify-wizard-step {
@@ -8366,6 +8388,8 @@ body[class*="omnify"] #wpcontent {
 
 	.omnify-settings-page .omnify-settings-nav {
 		position: static !important;
+	top: auto !important;
+	right: auto !important;
 		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
 	}
 }
@@ -9364,35 +9388,28 @@ body[class*="omnify"] #wpcontent {
 			margin-bottom: 24px !important;
 			box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 		}
-		#omnify-product-wizard-form .omnify-wizard-stepper-container .omnify-wizard-steps {
+		#omnify-product-wizard-form .omnify-wizard-stepper-container .omnify-wizard-steps,
+		#omnify-product-wizard-form .omnify-wizard-steps {
 			display: flex !important;
 			gap: 8px !important;
 			margin: 0 !important;
 			padding: 6px !important;
-			background: transparent !important;
+			background: #f8fafc !important;
 			border: none !important;
 			border-radius: 0 !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-stepper-container .omnify-wizard-progress {
-			height: 4px !important;
+			height: 3px !important;
 			margin: 0 !important;
 			background: #e2e8f0 !important;
 			width: 100% !important;
 			border-radius: 0 !important;
+			overflow: hidden !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-stepper-container .omnify-wizard-progress-bar {
 			height: 100% !important;
-			background: linear-gradient(90deg, var(--omnify-primary, #0f766e), #10b981) !important;
+			background: #10b981 !important;
 			transition: width 0.3s ease !important;
-		}
-		#omnify-product-wizard-form .omnify-wizard-steps {
-			display: flex !important;
-			gap: 12px !important;
-			margin-bottom: 24px !important;
-			padding: 6px !important;
-			background: #f8fafc !important;
-			border: 1px solid #e2e8f0 !important;
-			border-radius: 12px !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-step {
 			flex: 1 !important;
@@ -9400,7 +9417,7 @@ body[class*="omnify"] #wpcontent {
 			align-items: center !important;
 			justify-content: center !important;
 			gap: 8px !important;
-			padding: 10px 16px !important;
+			padding: 9px 16px !important;
 			background: transparent !important;
 			border: none !important;
 			border-radius: 8px !important;
@@ -9417,8 +9434,8 @@ body[class*="omnify"] #wpcontent {
 		}
 		#omnify-product-wizard-form .omnify-wizard-step.active {
 			background: #ffffff !important;
-			color: var(--omnify-primary, #0f766e) !important;
-			box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+			color: #0f766e !important;
+			box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-step.completed {
 			color: #10b981 !important;
@@ -9427,22 +9444,22 @@ body[class*="omnify"] #wpcontent {
 			display: inline-flex !important;
 			align-items: center !important;
 			justify-content: center !important;
-			width: 20px !important;
-			height: 20px !important;
+			width: 22px !important;
+			height: 22px !important;
 			border-radius: 50% !important;
 			font-size: 11px !important;
-			font-weight: 500 !important;
+			font-weight: 700 !important;
 			background: #e2e8f0 !important;
 			color: #64748b !important;
 			transition: all 0.2s ease !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-step.active .step-num {
-			background: var(--omnify-primary, #0f766e) !important;
+			background: #0f766e !important;
 			color: #ffffff !important;
 		}
 		#omnify-product-wizard-form .omnify-wizard-step.completed .step-num {
 			background: #d1fae5 !important;
-			color: #10b981 !important;
+			color: #059669 !important;
 		}
 
 		/* Choice Cards (Product Kind & Sales Type) */
@@ -10106,7 +10123,10 @@ body[class*="omnify"] #wpcontent {
 
 .omnify-product-editor-form .omnify-product-wizard {
 	max-width: 100% !important;
-	padding: 10px !important;
+	padding: 0 !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
 }
 
 .omnify-product-form-alert {
@@ -10127,7 +10147,7 @@ body[class*="omnify"] #wpcontent {
 }
 
 .omnify-product-editor-form .omnify-wizard-header {
-	padding: 6px 4px 2px !important;
+	display: none !important;
 }
 
 .omnify-product-editor-form .omnify-wizard-panels {
@@ -10557,6 +10577,8 @@ body[class*="omnify"] #wpcontent {
 
 	.omnify-settings-nav {
 		position: static !important;
+	top: auto !important;
+	right: auto !important;
 		display: grid !important;
 		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 		gap: 10px !important;
@@ -10854,6 +10876,8 @@ body[class*="omnify"] #wpcontent {
 .omnify-settings-page .omnify-button-group,
 .omnify-settings-page .omnify-form-actions {
 	position: static !important;
+	top: auto !important;
+	right: auto !important;
 	display: flex !important;
 	justify-content: flex-end !important;
 	gap: 10px !important;
@@ -10910,6 +10934,8 @@ body[class*="omnify"] #wpcontent {
 
 	.omnify-settings-page .omnify-settings-nav {
 		position: static !important;
+	top: auto !important;
+	right: auto !important;
 		display: grid !important;
 		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 		gap: 10px !important;
@@ -11150,6 +11176,8 @@ body[class*="omnify"] #wpcontent {
 .omnify-settings-page .omnify-form-actions {
 	grid-column: 1 / -1 !important;
 	position: static !important;
+	top: auto !important;
+	right: auto !important;
 	display: flex !important;
 	justify-content: flex-end !important;
 	margin: 8px 0 0 !important;
@@ -11207,6 +11235,8 @@ body[class*="omnify"] #wpcontent {
 
 	.omnify-settings-page .omnify-settings-nav {
 		position: static !important;
+	top: auto !important;
+	right: auto !important;
 		display: grid !important;
 		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 		gap: 8px !important;
@@ -11620,6 +11650,51 @@ body[class*="omnify"] #wpcontent {
 	align-items: start !important;
 	width: 100% !important;
 	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form .omnify-pricing-row .omnify-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: flex-start !important;
+}
+
+.omnify-product-editor-form .omnify-pricing-row .omnify-field-header {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	min-height: 28px !important;
+	margin-bottom: 8px !important;
+}
+
+.omnify-product-editor-form .omnify-pricing-row .omnify-field-header label,
+.omnify-product-editor-form .omnify-pricing-row > .omnify-form-group > label {
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	color: #1e293b !important;
+	margin: 0 !important;
+	line-height: 28px !important;
+}
+
+.omnify-product-editor-form .omnify-pricing-row .js-omnify-generate-sku {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 4px !important;
+	height: 28px !important;
+	padding: 0 10px !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	border-radius: 6px !important;
+	background: #f8fafc !important;
+	border: 1px solid #cbd5e1 !important;
+	color: #334155 !important;
+	transition: all 0.15s ease !important;
+	cursor: pointer !important;
+}
+
+.omnify-product-editor-form .omnify-pricing-row .js-omnify-generate-sku:hover {
+	background: #ffffff !important;
+	border-color: #0f766e !important;
+	color: #0f766e !important;
 }
 
 .omnify-product-editor-form .omnify-upload-files-row {
@@ -12402,6 +12477,11 @@ body.omnify-admin-page-active #wpfooter {
 
 .omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-preorder .omnify-var-preorder-field:last-child {
 	grid-column: 1 / -1 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-delivery {
+	grid-template-columns: 1fr !important;
+	gap: 0 !important;
 }
 
 .omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-media {
@@ -13884,6 +13964,11 @@ body.omnify-admin-page-active #wpfooter {
 	grid-column: 1 / -1 !important;
 }
 
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-delivery {
+	grid-template-columns: 1fr !important;
+	gap: 0 !important;
+}
+
 .omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-media {
 	display: grid !important;
 	grid-template-columns: 132px minmax(300px, 1fr) !important;
@@ -14375,6 +14460,11 @@ body.omnify-admin-page-active #wpfooter {
 	grid-column: 1 / -1 !important;
 }
 
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-delivery {
+	grid-template-columns: 1fr !important;
+	gap: 0 !important;
+}
+
 .omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-grid-media {
 	grid-template-columns: 132px minmax(300px, 1fr) !important;
 	gap: 18px !important;
@@ -14517,6 +14607,217 @@ body.omnify-admin-page-active #wpfooter {
 	gap: 24px !important;
 	position: sticky !important;
 	top: 32px !important;
+}
+
+/* Settings live search */
+.omnify-settings-page .omnify-modern-settings-search {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #ffffff;
+	border: 1px solid var(--omnify-gray-200, #e2e8f0);
+	border-radius: 12px;
+	padding: 0 12px;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+	transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.omnify-settings-page .omnify-modern-settings-search:focus-within {
+	border-color: var(--omnify-primary, #0f766e);
+	box-shadow: 0 0 0 3px var(--omnify-primary-glow, rgba(15, 118, 110, 0.16));
+}
+
+.omnify-settings-page .omnify-settings-search__icon {
+	color: #94a3b8;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 1;
+	flex: 0 0 auto;
+}
+
+.omnify-settings-page .omnify-settings-search__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	border: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+	margin: 0 !important;
+	padding: 11px 0 !important;
+	font-size: 13.5px;
+	line-height: 1.3;
+	color: var(--omnify-dark, #0f172a);
+}
+
+.omnify-settings-page .omnify-settings-search__input::placeholder {
+	color: #94a3b8;
+}
+
+.omnify-settings-page .omnify-settings-search__input::-webkit-search-cancel-button {
+	display: none;
+}
+
+.omnify-settings-page .omnify-settings-search__clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: #f1f5f9;
+	color: #64748b;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	padding: 0;
+	cursor: pointer;
+	flex: 0 0 auto;
+	transition: background 0.15s ease, color 0.15s ease;
+}
+
+.omnify-settings-page .omnify-settings-search__clear:hover {
+	background: #e2e8f0;
+	color: #0f172a;
+}
+
+.omnify-settings-page .omnify-settings-search__clear .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	line-height: 14px;
+}
+
+.omnify-settings-page .omnify-settings-search__count {
+	font-size: 11.5px;
+	font-weight: 600;
+	color: #64748b;
+	white-space: nowrap;
+	flex: 0 0 auto;
+}
+
+.omnify-settings-page .omnify-settings-search__count:empty {
+	display: none;
+}
+
+.omnify-settings-page .omnify-modern-content-card .omnify-search-hidden {
+	display: none !important;
+}
+
+.omnify-settings-page .omnify-settings-search-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	text-align: center;
+	padding: 64px 24px;
+	color: #64748b;
+}
+
+.omnify-settings-page .omnify-settings-search-empty[hidden] {
+	display: none !important;
+}
+
+.omnify-settings-page .omnify-settings-search-empty .dashicons {
+	font-size: 32px;
+	width: 32px;
+	height: 32px;
+	line-height: 1;
+	color: #cbd5e1;
+}
+
+.omnify-settings-page .omnify-settings-search-empty p {
+	margin: 4px 0 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.omnify-settings-page .omnify-settings-search-empty__hint {
+	font-size: 13px;
+	font-weight: 500;
+	color: #94a3b8;
+	max-width: 380px;
+	line-height: 1.5;
+}
+
+/* Global search suggestions */
+.omnify-settings-page .omnify-settings-search__results {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	right: 0;
+	z-index: 1000;
+	background: #ffffff;
+	border: 1px solid var(--omnify-gray-200, #e2e8f0);
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+	padding: 6px;
+	max-height: 340px;
+	overflow-y: auto;
+}
+
+.omnify-settings-page .omnify-settings-search__results[hidden] {
+	display: none !important;
+}
+
+.omnify-settings-page .omnify-settings-search__result {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+	text-align: left;
+	border: 0;
+	background: transparent;
+	border-radius: 8px;
+	padding: 9px 10px;
+	cursor: pointer;
+	font-size: 13px;
+	color: #0f172a;
+}
+
+.omnify-settings-page .omnify-settings-search__result:hover,
+.omnify-settings-page .omnify-settings-search__result.is-active {
+	background: #ecfdf5;
+}
+
+.omnify-settings-page .omnify-settings-search__result-label {
+	font-weight: 600;
+	color: #0f172a;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.omnify-settings-page .omnify-settings-search__result-group {
+	flex: 0 0 auto;
+	font-size: 10.5px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #64748b;
+	background: #f1f5f9;
+	border-radius: 999px;
+	padding: 2px 8px;
+	white-space: nowrap;
+}
+
+.omnify-settings-page .omnify-settings-search__no-results {
+	padding: 12px 10px;
+	font-size: 13px;
+	color: #94a3b8;
+	text-align: center;
+}
+
+.omnify-settings-page .omnify-search-focus {
+	animation: omnify-search-flash 2.4s ease;
+	border-radius: 10px;
+}
+
+@keyframes omnify-search-flash {
+	0% { box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.4); background-color: #ecfdf5; }
+	70% { box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.25); background-color: #ecfdf5; }
+	100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0); background-color: transparent; }
 }
 
 .omnify-settings-page .omnify-modern-sub-nav {
@@ -14671,8 +14972,23 @@ body.omnify-admin-page-active #wpfooter {
 	line-height: 1 !important;
 }
 
-.omnify-settings-page .omnify-modern-form-group input:not([type="radio"]):not([type="checkbox"]),
-.omnify-settings-page .omnify-modern-form-group select,
+.omnify-settings-page .omnify-modern-form-group > input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
+.omnify-settings-page .omnify-modern-form-group select {
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
+	border-radius: 10px !important;
+	border: 1px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	padding: 0 16px !important;
+	font-size: 14px !important;
+	color: #0f172a !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	line-height: 42px !important;
+}
+
 .omnify-settings-page .omnify-modern-form-group textarea {
 	border-radius: 10px !important;
 	border: 1px solid #cbd5e1 !important;
@@ -14680,12 +14996,14 @@ body.omnify-admin-page-active #wpfooter {
 	padding: 12px 16px !important;
 	font-size: 14px !important;
 	color: #0f172a !important;
-	transition: all 0.2s ease !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 	width: 100% !important;
 	box-sizing: border-box !important;
+	min-height: 84px !important;
+	line-height: 1.5 !important;
 }
 
-.omnify-settings-page .omnify-modern-form-group input:focus,
+.omnify-settings-page .omnify-modern-form-group > input:focus,
 .omnify-settings-page .omnify-modern-form-group select:focus,
 .omnify-settings-page .omnify-modern-form-group textarea:focus {
 	border-color: #10b981 !important;
@@ -14698,6 +15016,38 @@ body.omnify-admin-page-active #wpfooter {
 	color: #64748b !important;
 	line-height: 1.5 !important;
 	margin-top: 4px !important;
+}
+
+/* Tax Defaults Symmetrical Grid */
+.omnify-tax-defaults-inputs-grid {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 24px !important;
+	align-items: start !important;
+}
+
+.omnify-tax-defaults-toggles-grid {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 20px !important;
+	margin-top: 22px !important;
+}
+
+.omnify-tax-defaults-toggles-grid .omnify-setting-toggle-card {
+	min-height: 88px !important;
+	height: 100% !important;
+	box-sizing: border-box !important;
+}
+
+@media (max-width: 1080px) {
+	.omnify-tax-defaults-inputs-grid {
+		grid-template-columns: 1fr !important;
+		gap: 18px !important;
+	}
+	.omnify-tax-defaults-toggles-grid {
+		grid-template-columns: 1fr !important;
+		gap: 14px !important;
+	}
 }
 
 /* Yes / No pill toggle buttons */
@@ -15999,6 +16349,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-orders-list-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-abandoned-carts-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-customers-list-card,
+.omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-reviews-list-card,
 .omnify-admin-wrapper:not(.omnify-settings-page):not(.omnify-analytics-page) .omnify-product-hero-card {
 	padding: 0 !important;
 	overflow: hidden !important;
@@ -17377,14 +17728,19 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 }
 
 .omnify-pm-card.is-active-gateway {
-	border-color: #cbd5e1;
-	border-left: 3.5px solid #059669;
+	border-color: #a7f3d0;
+	box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
 	background: #ffffff;
 }
 
 .omnify-pm-card.is-expanded {
 	border-color: #cbd5e1;
 	box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07);
+}
+
+.omnify-pm-card.is-active-gateway.is-expanded {
+	border-color: #6ee7b7;
+	box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
 .omnify-pm-header {
@@ -17598,7 +17954,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 
 .omnify-pm-body {
 	display: none;
-	padding: 24px 24px 20px 24px;
+	padding: 24px 24px 22px 24px;
 	border-top: 1px solid #f1f5f9;
 	background: #f8fafc;
 	animation: omnifyPmDrawerFade 0.2s ease-in-out;
@@ -17610,7 +17966,62 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 }
 
 .omnify-pm-card.is-expanded .omnify-pm-body {
-	display: block;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 22px !important;
+}
+
+.omnify-pm-body .omnify-modern-form-row {
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	gap: 28px !important;
+	margin-bottom: 0 !important;
+	margin-top: 0 !important;
+}
+
+.omnify-pm-body .omnify-modern-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 9px !important;
+	width: 100% !important;
+}
+
+.omnify-pm-body .omnify-modern-form-group label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #334155 !important;
+	line-height: 1.4 !important;
+	margin: 0 !important;
+}
+
+.omnify-pm-body .omnify-modern-form-group input:not([type="checkbox"]):not([type="radio"]),
+.omnify-pm-body .omnify-modern-form-group select,
+.omnify-pm-body .omnify-modern-form-group textarea {
+	height: 44px !important;
+	padding: 0 16px !important;
+	border-radius: 10px !important;
+	border: 1px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	font-size: 13.5px !important;
+	color: #0f172a !important;
+	box-sizing: border-box !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.omnify-pm-body .omnify-modern-form-group textarea {
+	height: auto !important;
+	min-height: 84px !important;
+	padding: 12px 16px !important;
+	line-height: 1.5 !important;
+}
+
+.omnify-pm-body .omnify-modern-form-group input:focus,
+.omnify-pm-body .omnify-modern-form-group select:focus,
+.omnify-pm-body .omnify-modern-form-group textarea:focus {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+	outline: none !important;
 }
 
 /* Password Toggle & Copy URL Wrappers */
@@ -17625,62 +18036,224 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	padding-right: 42px !important;
 }
 
-.omnify-pw-toggle-btn {
+.omnify-pw-toggle-btn,
+.omnify-toggle-pw-btn {
 	position: absolute;
 	right: 8px;
-	background: transparent;
-	border: none;
-	color: #94a3b8;
-	cursor: pointer;
-	padding: 6px;
-	border-radius: 6px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	transition: color 0.15s ease;
+	top: 50%;
+	transform: translateY(-50%);
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	color: #94a3b8 !important;
+	cursor: pointer !important;
+	padding: 6px !important;
+	border-radius: 6px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: color 0.15s ease, background 0.15s ease !important;
+	width: auto !important;
+	min-width: 0 !important;
+	height: auto !important;
+	min-height: 0 !important;
+	line-height: 1 !important;
+	outline: none !important;
 }
 
-.omnify-pw-toggle-btn:hover {
-	color: #0f172a;
+.omnify-pw-toggle-btn:hover,
+.omnify-toggle-pw-btn:hover,
+.omnify-pw-toggle-btn:focus,
+.omnify-toggle-pw-btn:focus {
+	color: #0f172a !important;
+	background: #f1f5f9 !important;
 }
 
 .omnify-copy-url-group {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-	width: 100%;
+	display: flex !important;
+	gap: 8px !important;
+	align-items: center !important;
+	width: 100% !important;
 }
 
 .omnify-copy-url-group input {
-	flex: 1;
+	flex: 1 !important;
+	height: 44px !important;
 	background: #ffffff !important;
 	color: #475569 !important;
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 	font-size: 12.5px !important;
+	padding: 0 14px !important;
 }
 
 .omnify-copy-btn {
-	padding: 10px 16px !important;
+	height: 44px !important;
+	padding: 0 18px !important;
 	background: #0f172a !important;
 	color: #ffffff !important;
 	border: none !important;
-	border-radius: 8px !important;
-	font-size: 12.5px !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
 	font-weight: 600 !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
 	display: inline-flex !important;
 	align-items: center !important;
-	gap: 6px !important;
-	transition: background 0.15s ease !important;
+	justify-content: center !important;
+	gap: 7px !important;
+	transition: background 0.15s ease, transform 0.1s ease !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+	box-sizing: border-box !important;
 }
 
 .omnify-copy-btn:hover {
 	background: #1e293b !important;
 }
 
+.omnify-copy-btn:active {
+	transform: scale(0.97) !important;
+}
+
 .omnify-copy-btn.is-copied {
 	background: #10b981 !important;
+}
+
+/* Express Payment Options Grid & Checkbox Chips */
+.omnify-express-options-grid {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 10px !important;
+	align-items: center !important;
+	min-height: 44px !important;
+}
+
+.omnify-checkbox-chip {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	height: 44px !important;
+	padding: 0 15px !important;
+	background: #ffffff !important;
+	border: 1.5px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #334155 !important;
+	cursor: pointer !important;
+	user-select: none !important;
+	box-sizing: border-box !important;
+	transition: all 0.18s ease !important;
+}
+
+.omnify-checkbox-chip:hover {
+	border-color: #cbd5e1 !important;
+	background: #f8fafc !important;
+	color: #0f172a !important;
+}
+
+.omnify-checkbox-chip input[type="checkbox"] {
+	margin: 0 !important;
+	border-radius: 4px !important;
+	border-color: #cbd5e1 !important;
+	cursor: pointer !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.omnify-checkbox-chip.is-checked {
+	background: #f0fdf4 !important;
+	border-color: #86efac !important;
+	color: #166534 !important;
+	font-weight: 600 !important;
+}
+
+.omnify-checkbox-chip.is-checked input[type="checkbox"] {
+	border-color: #16a34a !important;
+	background-color: #16a34a !important;
+}
+
+/* Gateway Dedicated Footer Toolbar */
+.omnify-pm-card-footer {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	margin-top: 6px !important;
+	padding-top: 18px !important;
+	border-top: 1px solid #e2e8f0 !important;
+	gap: 16px !important;
+	flex-wrap: wrap !important;
+}
+
+.omnify-pm-footer-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.omnify-pm-footer-meta {
+	display: flex;
+	align-items: center;
+}
+
+.omnify-pm-footer-tip {
+	font-size: 12px;
+	color: #64748b;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.omnify-pm-footer-tip svg {
+	color: #94a3b8;
+	flex-shrink: 0;
+}
+
+.omnify-pm-test-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	background: #0f172a;
+	color: #ffffff;
+	border: none;
+	border-radius: 8px;
+	padding: 8px 16px;
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	line-height: 1.4;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.omnify-pm-test-btn:hover {
+	background: #1e293b;
+	color: #ffffff;
+}
+
+.omnify-pm-test-btn:active {
+	transform: scale(0.98);
+}
+
+.omnify-pm-test-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none !important;
+}
+
+.omnify-pm-test-btn:disabled .omnify-pm-test-icon {
+	animation: omnifyPmSpin 1s linear infinite;
+}
+
+@keyframes omnifyPmSpin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.omnify-pm-test-result {
+	font-size: 12.5px;
+	font-weight: 500;
+	line-height: 1.4;
 }
 
 .omnify-pm-drawer-footer {
@@ -18890,12 +19463,14 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	line-height: 1 !important;
 }
 
-.omnify-admin-wrapper .omnify-stat-icon--captured {
+.omnify-admin-wrapper .omnify-stat-icon--captured,
+.omnify-admin-wrapper .omnify-stat-icon--all {
 	background: #eff6ff !important;
 	color: #2563eb !important;
 }
 
-.omnify-admin-wrapper .omnify-stat-icon--active {
+.omnify-admin-wrapper .omnify-stat-icon--active,
+.omnify-admin-wrapper .omnify-stat-icon--pending {
 	background: #fffbeb !important;
 	color: #d97706 !important;
 }
@@ -18905,9 +19480,15 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	color: #7c3aed !important;
 }
 
-.omnify-admin-wrapper .omnify-stat-icon--recovered {
+.omnify-admin-wrapper .omnify-stat-icon--recovered,
+.omnify-admin-wrapper .omnify-stat-icon--approved {
 	background: #ecfdf5 !important;
 	color: #059669 !important;
+}
+
+.omnify-admin-wrapper .omnify-stat-icon--rejected {
+	background: #fef2f2 !important;
+	color: #dc2626 !important;
 }
 
 .omnify-admin-wrapper .omnify-stat-icon--revenue {
@@ -19107,25 +19688,37 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 .omnify-admin-wrapper .omnify-reviews-list {
 	display: flex !important;
 	flex-direction: column !important;
-	gap: 12px !important;
+	gap: 0 !important;
 }
 
 .omnify-admin-wrapper .omnify-review-card {
 	display: grid !important;
-	grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.8fr) minmax(150px, 0.7fr) minmax(130px, auto) !important;
-	gap: 20px !important;
+	grid-template-columns: 24px minmax(220px, 1fr) minmax(260px, 1.8fr) minmax(130px, 0.7fr) minmax(140px, auto) !important;
+	gap: 16px !important;
 	align-items: center !important;
 	background: #ffffff !important;
-	border: 1px solid #e2e8f0 !important;
-	border-radius: 14px !important;
-	padding: 18px 22px !important;
-	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
+	border: 0 !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	border-radius: 0 !important;
+	padding: 16px 20px !important;
+	box-shadow: none !important;
+	transition: background-color 0.15s ease !important;
+}
+
+.omnify-admin-wrapper .omnify-review-card:last-child {
+	border-bottom: 0 !important;
 }
 
 .omnify-admin-wrapper .omnify-review-card:hover {
-	border-color: #cbd5e1 !important;
-	box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+	background-color: #f8fafc !important;
+	border-color: #f1f5f9 !important;
+	box-shadow: none !important;
+}
+
+.omnify-admin-wrapper .omnify-review-checkbox {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 }
 
 .omnify-admin-wrapper .omnify-review-left-col {
@@ -20557,13 +21150,13 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	width: 100% !important;
 	background: #ffffff !important;
 	border: 1px solid #cbd5e1 !important;
-	border-radius: 8px !important;
+	border-radius: 10px !important;
 	overflow: hidden !important;
 	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 	box-sizing: border-box !important;
-	height: 40px !important;
-	min-height: 40px !important;
-	max-height: 40px !important;
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
 	padding: 0 !important;
 	margin: 0 !important;
 }
@@ -20572,8 +21165,8 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 .omnify-admin-wrapper .omnify-input-with-suffix:focus-within,
 .omnify-settings-page .omnify-input-with-prefix:focus-within,
 .omnify-settings-page .omnify-input-with-suffix:focus-within {
-	border-color: #059669 !important;
-	box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+	border-color: #10b981 !important;
+	box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
 }
 
 .omnify-admin-wrapper .omnify-input-with-prefix .omnify-input-prefix,
@@ -20581,7 +21174,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	padding: 0 12px !important;
+	padding: 0 14px !important;
 	background: #f8fafc !important;
 	border: none !important;
 	border-right: 1px solid #cbd5e1 !important;
@@ -20602,14 +21195,14 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	padding: 0 12px !important;
+	padding: 0 14px !important;
 	background: #f8fafc !important;
 	border: none !important;
 	border-left: 1px solid #cbd5e1 !important;
 	border-radius: 0 !important;
 	color: #64748b !important;
 	font-size: 13.5px !important;
-	font-weight: 700 !important;
+	font-weight: 600 !important;
 	flex-shrink: 0 !important;
 	user-select: none !important;
 	line-height: 1 !important;
@@ -20621,27 +21214,34 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 .omnify-admin-wrapper .omnify-input-with-prefix input,
 .omnify-admin-wrapper .omnify-input-with-prefix input[type="number"],
 .omnify-admin-wrapper .omnify-input-with-prefix input[type="text"],
+.omnify-admin-wrapper .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
 .omnify-admin-wrapper .omnify-input-with-suffix input,
 .omnify-admin-wrapper .omnify-input-with-suffix input[type="number"],
 .omnify-admin-wrapper .omnify-input-with-suffix input[type="text"],
+.omnify-admin-wrapper .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
 .omnify-settings-page .omnify-input-with-prefix input,
 .omnify-settings-page .omnify-input-with-prefix input[type="number"],
 .omnify-settings-page .omnify-input-with-prefix input[type="text"],
+.omnify-settings-page .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
 .omnify-settings-page .omnify-input-with-suffix input,
 .omnify-settings-page .omnify-input-with-suffix input[type="number"],
 .omnify-settings-page .omnify-input-with-suffix input[type="text"],
+.omnify-settings-page .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input,
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input[type="number"],
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]),
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input,
-.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input[type="number"] {
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input[type="number"],
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]) {
 	border: 0 !important;
 	border-width: 0 !important;
 	border-style: none !important;
+	border-color: transparent !important;
 	border-radius: 0 !important;
 	background: transparent !important;
 	box-shadow: none !important;
 	outline: none !important;
-	padding: 0 12px !important;
+	padding: 0 14px !important;
 	font-size: 14px !important;
 	color: #0f172a !important;
 	flex: 1 1 auto !important;
@@ -20650,6 +21250,7 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 	height: 100% !important;
 	min-height: 0 !important;
 	max-height: none !important;
+	line-height: 42px !important;
 	box-sizing: border-box !important;
 	margin: 0 !important;
 }
@@ -20657,21 +21258,28 @@ body.toplevel_page_omnify .omnify-admin-wrapper * {
 .omnify-admin-wrapper .omnify-input-with-prefix input:focus,
 .omnify-admin-wrapper .omnify-input-with-prefix input[type="number"]:focus,
 .omnify-admin-wrapper .omnify-input-with-prefix input[type="text"]:focus,
+.omnify-admin-wrapper .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus,
 .omnify-admin-wrapper .omnify-input-with-suffix input:focus,
 .omnify-admin-wrapper .omnify-input-with-suffix input[type="number"]:focus,
 .omnify-admin-wrapper .omnify-input-with-suffix input[type="text"]:focus,
+.omnify-admin-wrapper .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus,
 .omnify-settings-page .omnify-input-with-prefix input:focus,
 .omnify-settings-page .omnify-input-with-prefix input[type="number"]:focus,
 .omnify-settings-page .omnify-input-with-prefix input[type="text"]:focus,
+.omnify-settings-page .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus,
 .omnify-settings-page .omnify-input-with-suffix input:focus,
 .omnify-settings-page .omnify-input-with-suffix input[type="number"]:focus,
 .omnify-settings-page .omnify-input-with-suffix input[type="text"]:focus,
+.omnify-settings-page .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus,
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input:focus,
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input[type="number"]:focus,
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-prefix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus,
 .omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input:focus,
-.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input[type="number"]:focus {
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input[type="number"]:focus,
+.omnify-settings-page .omnify-modern-form-group .omnify-input-with-suffix input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]):focus {
 	border: 0 !important;
 	border-width: 0 !important;
+	border-color: transparent !important;
 	box-shadow: none !important;
 	outline: none !important;
 }
@@ -22064,3 +22672,861 @@ body.omnify-modal-open {
 	margin: 0 !important;
 }
 
+
+/* =====================================================
+   Redesigned Product Variation Card (OmnifyWP Design System)
+   ===================================================== */
+
+/* Outer Variation Row Card */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-row,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row,
+.omnify-product-editor-form .omnify-variation-row {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 0 !important;
+	padding: 0 !important;
+	margin: 0 0 20px 0 !important;
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 14px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+	overflow: hidden !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Variation Header: Attribute Badges + Clean Trash Action Button */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-header,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row .omnify-variation-header,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-row > div:first-of-type {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	background: #f8fafc !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+	border-top: 0 !important;
+	border-left: 0 !important;
+	border-right: 0 !important;
+	border-radius: 13px 13px 0 0 !important;
+	padding: 10px 18px !important;
+	margin: 0 !important;
+	gap: 12px !important;
+	min-height: 48px !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+}
+
+/* Attribute Chips Container */
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-attributes {
+	display: flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+	flex-wrap: wrap !important;
+	min-width: 0 !important;
+}
+
+/* Individual Attribute Pill / Badge Control */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-attribute-control,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-attribute-control,
+.omnify-variation-attribute-control {
+	display: inline-flex !important;
+	align-items: center !important;
+	height: 32px !important;
+	min-height: 32px !important;
+	max-height: 32px !important;
+	background: #ffffff !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	overflow: hidden !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-attribute-control:focus-within {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-attr-badge-label,
+.omnify-product-editor-form #omnify-variations-container .omnify-attr-badge-label,
+.omnify-attr-badge-label {
+	display: inline-flex !important;
+	align-items: center !important;
+	height: 100% !important;
+	min-height: 30px !important;
+	line-height: 30px !important;
+	padding: 0 10px !important;
+	background: #f1f5f9 !important;
+	border-right: 1px solid #cbd5e1 !important;
+	border-top: 0 !important;
+	border-bottom: 0 !important;
+	border-left: 0 !important;
+	border-radius: 0 !important;
+	color: #475569 !important;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.5px !important;
+	user-select: none !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-attr-select,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-attr-select,
+.omnify-product-editor-form #omnify-variations-container select.omnify-variation-attr-select,
+.omnify-product-editor-form .omnify-variation-row .omnify-variation-attr-select {
+	display: inline-flex !important;
+	align-items: center !important;
+	height: 100% !important;
+	min-height: 0 !important;
+	max-height: 30px !important;
+	line-height: 30px !important;
+	border: 0 !important;
+	border-width: 0 !important;
+	border-style: none !important;
+	border-color: transparent !important;
+	border-radius: 0 !important;
+	background-color: transparent !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #0f172a !important;
+	padding: 0 28px 0 10px !important;
+	margin: 0 !important;
+	outline: none !important;
+	cursor: pointer !important;
+	box-shadow: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	appearance: none !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+	background-position: right 6px center !important;
+	background-repeat: no-repeat !important;
+	background-size: 14px !important;
+	box-sizing: border-box !important;
+	width: auto !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-attr-select:focus,
+.omnify-product-editor-form #omnify-variations-container select.omnify-variation-attr-select:focus {
+	border: 0 !important;
+	border-width: 0 !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* Modern Delete Variation Icon Button */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-remove-variation,
+.omnify-product-editor-form #omnify-variations-container .omnify-remove-variation {
+	width: 32px !important;
+	height: 32px !important;
+	min-width: 32px !important;
+	min-height: 32px !important;
+	max-width: 32px !important;
+	max-height: 32px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 8px !important;
+	border: 1px solid #fee2e2 !important;
+	background: #fff5f5 !important;
+	color: #ef4444 !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	margin: 0 !important;
+	box-shadow: 0 1px 2px rgba(239, 68, 68, 0.05) !important;
+	position: static !important;
+	top: auto !important;
+	right: auto !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-remove-variation:hover {
+	background: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+	transform: scale(1.04) !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-remove-variation .dashicons {
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+	line-height: 16px !important;
+	margin: 0 !important;
+}
+
+/* Variation Card Body */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-body,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-body {
+	padding: 18px 18px 20px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 16px !important;
+	background: #ffffff !important;
+	border-radius: 0 0 14px 14px !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+}
+
+/* Pricing Grid: SKU, Regular Price, Sale Price */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-pricing,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-pricing {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 16px !important;
+	align-items: start !important;
+	width: 100% !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-pricing .omnify-form-group,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock .omnify-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 6px !important;
+	margin: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-pricing .omnify-form-group label,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock .omnify-form-group label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+	margin: 0 !important;
+	line-height: 1.4 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-sku-input,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-sku-input {
+	height: 42px !important;
+	min-height: 42px !important;
+	max-height: 42px !important;
+	line-height: 40px !important;
+	padding: 0 12px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+	color: #0f172a !important;
+	background: #ffffff !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	box-shadow: none !important;
+	margin: 0 !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-sku-input:focus {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+	outline: none !important;
+}
+
+/* Currency and Icon Prefixed Inputs - Unified Outer Container */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-wrapper.omnify-input-with-prefix,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-wrapper.omnify-input-with-prefix,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: stretch !important;
+	height: 42px !important;
+	min-height: 42px !important;
+	max-height: 42px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	background: #ffffff !important;
+	overflow: hidden !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	margin: 0 !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix:focus-within {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix .omnify-input-prefix,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix .omnify-input-prefix {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	height: 100% !important;
+	padding: 0 12px !important;
+	background: #f8fafc !important;
+	border-right: 1px solid #cbd5e1 !important;
+	border-top: 0 !important;
+	border-bottom: 0 !important;
+	border-left: 0 !important;
+	border-radius: 0 !important;
+	color: #64748b !important;
+	font-weight: 600 !important;
+	font-size: 13.5px !important;
+	user-select: none !important;
+	box-sizing: border-box !important;
+	flex-shrink: 0 !important;
+	margin: 0 !important;
+}
+
+/* Inner inputs inside prefixed containers - completely strip inner borders and radius */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input,
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="text"],
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="number"],
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="text"],
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="number"] {
+	border: 0 !important;
+	border-width: 0 !important;
+	border-style: none !important;
+	border-color: transparent !important;
+	border-radius: 0 !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+	height: 100% !important;
+	min-height: 0 !important;
+	max-height: 100% !important;
+	line-height: normal !important;
+	padding: 0 12px !important;
+	margin: 0 !important;
+	font-size: 13.5px !important;
+	color: #0f172a !important;
+	flex: 1 1 auto !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input:focus,
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="text"]:focus,
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="number"]:focus,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input:focus,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="text"]:focus,
+.omnify-product-editor-form #omnify-variations-container .omnify-input-with-prefix input[type="number"]:focus {
+	border: 0 !important;
+	border-width: 0 !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* Stock Grid: Inventory Tracking (Aligned Toggle Box) | Stock Qty | Stock Status */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 16px !important;
+	align-items: start !important;
+	width: 100% !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-toggle-box,
+.omnify-product-editor-form #omnify-variations-container .omnify-toggle-box {
+	display: flex !important;
+	align-items: center !important;
+	height: 42px !important;
+	min-height: 42px !important;
+	max-height: 42px !important;
+	background: #f8fafc !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 8px !important;
+	padding: 0 12px !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-toggle-box .omnify-toggle {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	margin: 0 !important;
+	cursor: pointer !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-toggle-box .omnify-toggle__label {
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #334155 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock input[type="number"],
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock input[type="number"],
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock select,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock select {
+	height: 42px !important;
+	min-height: 42px !important;
+	max-height: 42px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	padding: 0 12px !important;
+	font-size: 13px !important;
+	color: #0f172a !important;
+	background: #ffffff !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	box-shadow: none !important;
+	margin: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock input[type="number"]:focus,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-stock select:focus {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+	outline: none !important;
+}
+
+/* Availability & Preorder Strip Panel */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-availability-panel,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-availability-panel {
+	background: #f8fafc !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	padding: 12px 16px !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-availability-toggles {
+	display: flex !important;
+	align-items: center !important;
+	gap: 24px !important;
+	flex-wrap: wrap !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-toggle-item {
+	display: inline-flex !important;
+	align-items: center !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-toggle-item .omnify-toggle {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	margin: 0 !important;
+	cursor: pointer !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-toggle-item .omnify-toggle__label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-preorder-fields-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 14px !important;
+	margin-top: 12px !important;
+	padding-top: 12px !important;
+	border-top: 1px dashed #cbd5e1 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-preorder-fields-grid .omnify-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 6px !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-preorder-fields-grid .omnify-form-group label {
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	color: #334155 !important;
+	margin: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-preorder-fields-grid input {
+	height: 38px !important;
+	min-height: 38px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	padding: 0 10px !important;
+	font-size: 13px !important;
+	background: #ffffff !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	box-shadow: none !important;
+	margin: 0 !important;
+}
+
+/* Estimated Delivery Row */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-delivery,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-delivery {
+	display: grid !important;
+	grid-template-columns: 1fr !important;
+	gap: 0 !important;
+	width: 100% !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-delivery .omnify-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 6px !important;
+	margin: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-delivery label {
+	display: block !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+	margin: 0 0 6px 0 !important;
+	line-height: 1.4 !important;
+}
+
+/* Media & Note Grid */
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-media,
+.omnify-product-editor-form #omnify-variations-container .omnify-variation-grid-media {
+	display: grid !important;
+	grid-template-columns: 110px minmax(0, 1fr) !important;
+	gap: 20px !important;
+	align-items: start !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+	padding-top: 14px !important;
+	border-top: 1px solid #eef2f6 !important;
+}
+
+/* Image Column */
+.omnify-product-editor-form #omnify-variations-container .omnify-var-image-col {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 8px !important;
+	width: 110px !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-image-col label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+	margin: 0 !important;
+	line-height: 1.4 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-thumbnail-preview {
+	width: 100px !important;
+	height: 100px !important;
+	border: 1.5px dashed #cbd5e1 !important;
+	border-radius: 10px !important;
+	background: #f8fafc !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	overflow: hidden !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+	transition: border-color 0.15s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-thumbnail-preview:hover {
+	border-color: #0f766e !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-thumbnail-preview img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
+	border-radius: 8px !important;
+	border: none !important;
+	display: block !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-no-image {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 4px !important;
+	color: #94a3b8 !important;
+	font-size: 11px !important;
+	font-weight: 500 !important;
+	text-align: center !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-no-image .dashicons {
+	font-size: 26px !important;
+	width: 26px !important;
+	height: 26px !important;
+	color: #cbd5e1 !important;
+	margin: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-image-actions,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-image-actions {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 8px !important;
+	width: 100px !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-action-btn,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-action-btn {
+	width: 32px !important;
+	height: 32px !important;
+	min-width: 32px !important;
+	min-height: 32px !important;
+	max-width: 32px !important;
+	max-height: 32px !important;
+	padding: 0 !important;
+	border-radius: 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	box-sizing: border-box !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	transition: all 0.15s ease !important;
+	position: relative !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-action-btn .dashicons,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-action-btn .dashicons {
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+	line-height: 16px !important;
+	margin: 0 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-pick-image-btn,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-pick-image-btn {
+	background: #ffffff !important;
+	border: 1px solid #cbd5e1 !important;
+	color: #334155 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-pick-image-btn:hover,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-pick-image-btn:hover {
+	background: #f8fafc !important;
+	border-color: #0f766e !important;
+	color: #0f766e !important;
+	transform: translateY(-1px) !important;
+	box-shadow: 0 2px 4px rgba(15, 118, 110, 0.1) !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-remove-image-btn,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-remove-image-btn {
+	background: #fff5f5 !important;
+	border: 1px solid #fee2e2 !important;
+	color: #ef4444 !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form #omnify-variations-container .omnify-var-remove-image-btn:hover,
+.omnify-product-editor-form #omnify-variations-container .omnify-var-remove-image-btn:hover {
+	background: #fee2e2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+	transform: translateY(-1px) !important;
+	box-shadow: 0 2px 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Note Column */
+.omnify-product-editor-form #omnify-variations-container .omnify-var-note-col {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 8px !important;
+	min-width: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-field-header {
+	display: flex !important;
+	align-items: baseline !important;
+	gap: 8px !important;
+	margin: 0 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-field-header label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+	margin: 0 !important;
+	line-height: 1.4 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-field-subtext {
+	font-size: 12px !important;
+	color: #64748b !important;
+	font-weight: 400 !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-description-textarea {
+	width: 100% !important;
+	min-height: 80px !important;
+	max-height: 180px !important;
+	height: 80px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	padding: 10px 12px !important;
+	font-size: 13px !important;
+	line-height: 1.5 !important;
+	color: #0f172a !important;
+	background: #ffffff !important;
+	box-sizing: border-box !important;
+	resize: vertical !important;
+	font-family: inherit !important;
+	box-shadow: none !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.omnify-product-editor-form #omnify-variations-container .omnify-var-description-textarea:focus {
+	border-color: #0f766e !important;
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+	outline: none !important;
+}
+
+/* Storefront delivery badge JS update support */
+
+/* =====================================================
+   Price Configuration - Laser-Aligned 3-Column Inputs
+   ===================================================== */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 20px !important;
+	align-items: start !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .omnify-form-group {
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: flex-start !important;
+	width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* Force identical 32px height on all three field headers */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .omnify-field-header {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	height: 32px !important;
+	min-height: 32px !important;
+	max-height: 32px !important;
+	margin: 0 0 8px 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* Labels centered in 32px header bar with identical line height */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .omnify-field-header label,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row > .omnify-form-group > label {
+	display: inline-flex !important;
+	align-items: center !important;
+	height: 32px !important;
+	line-height: 32px !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	color: #1e293b !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	white-space: nowrap !important;
+}
+
+/* Generate SKU Button strictly 28px centered in 32px header */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .js-omnify-generate-sku,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row button.js-omnify-generate-sku,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row button.button.js-omnify-generate-sku {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 4px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	line-height: 26px !important;
+	padding: 0 10px !important;
+	margin: 0 !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	border-radius: 6px !important;
+	background: #ffffff !important;
+	border: 1px solid #cbd5e1 !important;
+	color: #334155 !important;
+	box-sizing: border-box !important;
+	cursor: pointer !important;
+	vertical-align: middle !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: all 0.15s ease !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .js-omnify-generate-sku:hover,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row button.js-omnify-generate-sku:hover,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row button.button.js-omnify-generate-sku:hover {
+	background: #f8fafc !important;
+	border-color: #0f766e !important;
+	color: #0f766e !important;
+	box-shadow: 0 2px 4px rgba(15, 118, 110, 0.1) !important;
+}
+
+/* SKU Input - exact 44px height, exact 10px radius, exact border as price inputs */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row input#sku,
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row input[name="sku"],
+.omnify-product-editor-form .omnify-pricing-row input#sku {
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
+	line-height: 42px !important;
+	padding: 0 14px !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 10px !important;
+	background-color: #ffffff !important;
+	font-size: 13.5px !important;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+	color: #0f172a !important;
+	box-sizing: border-box !important;
+	box-shadow: none !important;
+	margin: 0 !important;
+	width: 100% !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row input#sku:focus,
+.omnify-product-editor-form .omnify-pricing-row input#sku:focus {
+	border-color: #10b981 !important;
+	box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
+	outline: none !important;
+}
+
+/* Price inputs wrapper - exact 44px height */
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .omnify-input-wrapper.omnify-input-with-prefix {
+	height: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.omnify-admin-wrapper .omnify-product-editor-form .omnify-pricing-row .help-text {
+	margin-top: 6px !important;
+	font-size: 12px !important;
+	color: #64748b !important;
+	line-height: 1.4 !important;
+}

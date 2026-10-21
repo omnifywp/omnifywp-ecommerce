@@ -1,7 +1,7 @@
 # OmnifyWP eCommerce — Complete User Manual & Store Owner Guide
 
 > **Official User Documentation for OmnifyWP eCommerce**  
-> **Plugin Version:** 1.4.2 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
+> **Plugin Version:** 1.4.3 | **WordPress Requirements:** 6.5+ | **PHP Requirements:** 8.2+ | **Database:** MySQL 5.7+ / MariaDB 10.3+  
 > **Official Website:** [https://omnifywp.com](https://omnifywp.com) | **wp.org:** [https://wordpress.org/plugins/omnifywp-ecommerce/](https://wordpress.org/plugins/omnifywp-ecommerce/)  
 > **Developer Docs:** [`DEVELOPER_DOCS.md`](./DEVELOPER_DOCS.md) | **HTML Guide:** [`user-guide.html`](./user-guide.html)
 
@@ -79,7 +79,23 @@
     - [Frictionless Multi-Step & Slide-Over Checkout](#frictionless-multi-step-checkout)
     - [Customer Account Portal 2.0 & Order Tracking](#customer-account-portal--order-tracking)
     - [Cryptographic Digital Downloads Delivery](#cryptographic-digital-downloads-delivery)
-16. [Frequently Asked Questions & Troubleshooting](#16-frequently-asked-questions--troubleshooting)
+16. [Variable Products, Preorders & Availability](#16-variable-products-preorders--availability)
+17. [Shipping Zones, Taxes & Multi-Currency](#17-shipping-zones-taxes--multi-currency)
+18. [Email Notifications, SMTP & Logs](#18-email-notifications-smtp--logs)
+19. [Roles, Staff Permissions & Fraud](#19-roles-staff-permissions--fraud)
+20. [Conversion Tracking (GA4 & Meta Pixel)](#20-conversion-tracking-ga4--meta-pixel)
+21. [Privacy, GDPR & Data Maintenance](#21-privacy-gdpr--data-maintenance)
+22. [Import, Export & Data Management](#22-import-export--data-management)
+23. [Frequently Asked Questions & Troubleshooting](#23-frequently-asked-questions--troubleshooting)
+
+---
+
+> **How to use this manual**
+> - **Just installed?** Begin with Chapter 2 (Installation & Onboarding).
+> - **Running the store day to day?** Chapters 3–14 cover catalog, orders, customers, and marketing.
+> - **Configuring payments, tax, or shipping?** Chapter 11 (Settings) plus Chapters 17 and 18.
+> - **Delegating to staff?** See Chapter 19 (Roles & Permissions).
+> - **Stuck?** Jump to Chapter 23 (FAQ & Troubleshooting).
 
 ---
 
@@ -91,7 +107,7 @@
 Traditional WordPress eCommerce plugins rely heavily on the WordPress core `wp_posts` and `wp_postmeta` tables. As your store grows to thousands of orders and products, querying EAV (Entity-Attribute-Value) postmeta creates massive database overhead, slow page loads, and checkout bottlenecks.
 
 OmnifyWP solves this with:
-* **Custom Normalized SQL Tables**: 18 dedicated tables specifically indexed for products, variations, orders, customers, downloads, reviews, and logs.
+* **Custom Normalized SQL Tables**: 27 dedicated tables specifically indexed for products, variations, orders, customers, downloads, reviews, webhooks, inventory, and logs.
 * **Instantaneous Page Loads**: Sub-millisecond database queries regardless of store size.
 * **All-in-One Product Support**: Sell physical goods, variable multi-attribute items, software, audio/video courses, digital downloads, and product bundles simultaneously.
 * **Enterprise Digital Locker**: Built-in HMAC-SHA256 cryptographically signed download tokens, 8KB chunked memory-safe file delivery, and automated access revocation upon refunds.
@@ -127,9 +143,12 @@ During installation, OmnifyWP creates and configures the following dedicated sto
 | :--- | :--- | :--- | :--- |
 | **Storefront** | `/storefront/` | `[omnify_storefront]` | Main shop catalog grid featuring responsive filtering and search. |
 | **Cart** | `/cart/` | `[omnify_cart]` | Interactive shopping cart with quantity selectors and coupon box. |
+| **Mini-Cart** | Anywhere | `[omnify_mini_cart]` | Slide-out AJAX mini-cart drawer or dropdown widget with live count pill. |
 | **Checkout** | `/checkout/` | `[omnify_checkout]` | Frictionless conversion-optimized checkout and payment form. |
 | **Customer Portal** | `/customer-portal/` | `[omnify_customer_portal]` | Customer self-service dashboard for orders, addresses, and downloads. |
+| **Digital Locker** | `/downloads/` | `[omnify_customer_downloads]` | Dedicated digital file locker for instant customer downloads. |
 | **Order Tracking** | `/order-tracking/` | `[omnify_order_tracking]` | Instant public tracking lookup via Order Number and Billing Email. |
+| **Currency Switcher**| Anywhere | `[omnify_currency_switcher]` | Customer-facing multi-currency selector with real-time conversion. |
 | **Secure Download** | `/secure-download/` | `[omnify_download_page]` | Cryptographic streaming handler for authorized digital files. |
 
 ---
@@ -199,6 +218,15 @@ To create a new product, click **+ Add New Product** or edit an existing product
 4. **Step 4: Attributes, Variations & SEO**:
    * **Variation Matrix**: Configure color, size, and custom attribute axes with independent variation pricing and stock.
    * **SEO Meta**: Meta title, description, and OpenGraph social preview tags.
+
+#### Redesigned Product Variations Builder (v1.4.3):
+The variable-product editor has been rebuilt into a cleaner, faster variation authoring surface:
+* **Unified Attribute Badge Controls**: Each attribute axis renders as a clean uppercase badge chip (e.g. `SIZE`, `COLOR`) paired with an integrated borderless dropdown and a custom SVG chevron indicator, replacing the legacy boxed selects.
+* **Laser-Aligned Pricing & Stock Grid**: SKU, Regular Price, and Sale Price inputs share a normalized 42px height and 8px radius with currency-prefix indicators; the explicit **Inventory Tracking** toggle container sits perfectly aligned with **Stock Qty** and **Stock Status**.
+* **Availability & Preorders Panel**: A structured fulfillment card with **Allow backorders** and **Preorder** toggles, plus a subgrid for **Release Date**, **Preorder Limit**, and a **Notice Message** shown to shoppers.
+* **Estimated Delivery Field**: A single full-width input with a transport icon prefix and dedicated label spacing to communicate per-variation dispatch expectations.
+* **Compact Icon Actions**: Variation image selection and removal use space-efficient 32×32px icon buttons (`dashicons-upload`, `dashicons-trash`) with accessible tooltips instead of text links.
+* **Lightweight Variation Notes**: Fast, responsive native textareas replace the heavy TinyMCE WYSIWYG toolbars, removing editor bloat and improving render performance.
 
 #### Live Product Preview Modal:
 Clicking the **Preview Product** button in the editor header opens a live, interactive modal displaying exactly how the product will look in the frontend storefront—including 3-column gallery, swatches, and tab panels—without having to save drafts or expose unpublished changes to public store visitors.
@@ -733,6 +761,10 @@ Webhooks are essential for instant order confirmation, handling 3D Secure bank r
 | **Mollie** | Test Mode toggle | `test_...` API Key | Select payment status (`Paid`, `Cancelled`, `Expired`) on test gateway screen |
 | **Khalti** | Test Mode toggle | Test Secret Key | Test mobile: `9800000000`, MPIN: `1111`, OTP: `987654` |
 | **eSewa** | Sandbox toggle | Merchant Code: `EPAYTEST`, Secret: `8gBm/:&EnhH.1/q` | Test credentials provided in eSewa Developer Portal |
+| **Tap Payments** | Test Mode toggle | Public & Secret Key from tap.company dashboard | Sandbox cards/mada/KNET simulations provided in the Tap sandbox |
+| **Paddle** | Sandbox toggle | `test_...` API Key & Client-Side Token | Use Paddle sandbox checkout with test card `4242 4242 4242 4242` |
+| **Alipay** | Sandbox toggle | App ID, Merchant Private Key, Alipay Public Key | Sandbox via `openapi-sandbox.dl.alipaydev.com` |
+| **WeChat Pay** | Sandbox toggle | App ID, Mch ID, API v3 Key, cert serial + private key | Use WeChat sandbox merchant credentials (v3) |
 
 ---
 
@@ -767,25 +799,26 @@ Under **Settings → Email**, manage customer notifications and administrative a
 ![Settings - Emails](./screenshots/19-settings-emails.png)
 *Figure 11.5: Automated email management panel for customer receipts, order updates, and admin alerts.*
 
-#### 16 Automated Store Email Triggers:
-OmnifyWP features 16 granular email triggers that keep shoppers and administrators informed throughout the entire transaction lifecycle:
+#### 17 Automated Store Email Triggers:
+OmnifyWP features 17 granular email triggers that keep shoppers and administrators informed throughout the entire transaction lifecycle:
 
-1. **Order Confirmation (Customer)**: Instant order receipt with line items, tax breakdown, and shipping details.
+1. **Order Receipt / Confirmation (Customer)**: Instant order receipt with line items, tax breakdown, and shipping details.
 2. **Admin New Order Notice**: Real-time sales alert dispatched to store managers with gross value and customer profile.
-3. **Payment Success**: Instant payment capture confirmation with gateway transaction ID.
-4. **Payment Failed**: Graceful notification prompting the customer to update card details or select an alternative gateway.
+3. **Payment Pending**: Reminder sent to shoppers whose order is awaiting offline or delayed payment.
+4. **Payment Failed (Admin)**: Alert to store managers when a card is declined or a gateway returns an error.
 5. **Order Status Changed**: Automatic update whenever an order transitions between lifecycle statuses.
-6. **Order Refund Issued**: Confirmation of partial or full refunds with credit method notes.
-7. **Order Cancelled**: Formal cancellation notification with automated inventory restock notice.
-8. **Digital Asset Download Key Ready**: Delivers cryptographic HMAC-SHA256 download links upon digital purchase.
-9. **Admin Low Stock Alert**: Threshold alert warning store managers when inventory drops below safety levels.
-10. **Admin Out of Stock Emergency**: Urgent alert when catalog SKU inventory hits zero.
-11. **Customer Account Welcome**: Onboarding email welcoming newly registered customer accounts.
-12. **Customer Password Reset**: Secure tokenized password recovery link.
-13. **Order Processing In-Warehouse**: Notification when the warehouse team begins packing physical items.
-14. **Tracking Code & Shipment Dispatched**: Delivery update featuring shipping carrier, tracking URL, and estimated delivery date.
-15. **Abandoned Cart Recovery (1 Hour)**: High-converting reminder email with 1-click checkout restoration link.
-16. **Post-Delivery Review Request**: Automated invitation inviting verified buyers to submit star ratings and testimonials.
+6. **Refund Request Under Review**: Acknowledgement sent when a refund request is submitted with its reason.
+7. **Refund Processed**: Confirmation of partial or full refunds with the credited amount.
+8. **Order Cancelled**: Formal cancellation notification with automated inventory restock notice.
+9. **Shipment Dispatched**: Delivery update featuring shipping carrier, tracking URL, and estimated delivery date.
+10. **Ready for Pickup**: Notification when a local-pickup order is packed and ready for collection.
+11. **Customer Order Note**: Support-team note added to an order, delivered to the buyer.
+12. **Customer Account Welcome**: Onboarding email welcoming newly registered customer accounts.
+13. **Admin Low Stock Alert**: Threshold alert warning store managers when inventory drops below safety levels.
+14. **Admin Out of Stock Emergency**: Urgent alert when a catalog SKU inventory hits zero.
+15. **Back-In-Stock Alert**: Automated notification to waitlisted shoppers when an out-of-stock product or variation is replenished.
+16. **Admin High-Risk Order Alert**: Fraud alert dispatched when an order exceeds security risk thresholds.
+17. **Abandoned Cart Recovery**: High-converting reminder email with a 1-click checkout restoration link.
 
 Each email template features customizable subject lines, editable HTML bodies, preview rendering modals, and support for dynamic template merge tags (e.g. `{customer_name}`, `{order_id}`, `{order_total}`, `{tracking_number}`).
 
@@ -1081,13 +1114,13 @@ The shopping cart (`[omnify_cart]`) and slide-out cart drawer provide an intuiti
 
 ---
 
-### Conversion-Optimized Checkout with Express Pay & 10+ Gateways
+### Conversion-Optimized Checkout with Express Pay & 12 Gateways
 The Omnify checkout experience (`[omnify_checkout]`) is built to eliminate checkout friction:
 
 * **Express 1-Click Checkout**:
   * Native Apple Pay and Google Pay express buttons allowing mobile shoppers to complete purchases in seconds without typing billing addresses.
-* **10+ Branded Payment Gateways**:
-  * Interactive gateway selection cards featuring authentic gateway brand logos: Stripe, PayPal, Razorpay, Mollie, Square, Authorize.Net, Paystack, Flutterwave, SSLCommerz, Cash on Delivery, and Direct Bank Transfer.
+* **12 Built-In Payment Gateways (+ Offline Methods)**:
+  * Interactive gateway selection cards featuring authentic gateway brand logos: Stripe, PayPal, Paddle, Paystack, Tap Payments, Mollie, Razorpay, Khalti, eSewa, Alipay, WeChat Pay, and SSLCommerz — plus offline Direct Bank Transfer (BACS), Cheque, Cash on Delivery (COD), and unlimited custom offline methods.
 * **VIP Priority Order Bump**:
   * One-click checkbox for VIP Priority Processing (+$4.99) that lets customers prioritize their order in warehouse fulfillment queues.
 * **Security & Trust Signals**:
@@ -1119,7 +1152,171 @@ OmnifyWP features an enterprise digital locker for software, media, and download
 
 ---
 
-## 16. Frequently Asked Questions & Troubleshooting
+## 16. Variable Products, Preorders & Availability
+
+Variable products let you sell the same item in multiple configurations (size, color, format, license tier) with independent SKUs, pricing, and stock. OmnifyWP also models **availability** as a first-class concept: backorders, preorders, estimated delivery, and a customer back-in-stock waitlist.
+
+### Creating a Variable Product
+1. Go to **Omnify → Products → + Add New Product** and set the Product Type to *Variable*.
+2. Open the **Attributes** panel and add the axes you sell on (e.g. `SIZE`, `COLOR`).
+3. Generate the variation matrix — each row inherits the parent pricing until overridden.
+
+### Configuring Each Variation (v1.4.3 Builder)
+* **Unified Attribute Badges**: each axis uses a clean badge chip with an integrated dropdown and custom chevron.
+* **Pricing & Stock Grid**: SKU, Regular Price, and Sale Price share a normalized 42px / 8px-radius layout with currency prefixes and an aligned Inventory Tracking toggle.
+* **Media Actions**: 32×32px icon buttons (`upload` / `trash`) with tooltips select and remove variation images.
+* **Variation Notes**: lightweight native textareas replace heavy WYSIWYG toolbars.
+
+### Availability, Backorders & Preorders
+Open the **Availability & Preorders** panel on the variation:
+* **Allow Backorders**: permit purchases once stock reaches zero.
+* **Preorder**: enable preorders with a **Release Date**, a **Preorder Limit**, and a shopper-facing **Notice Message**.
+* **Estimated Delivery**: a full-width input with a transport icon prefix communicates per-variation dispatch expectations.
+
+### Back-In-Stock Waitlist
+Out-of-stock products and variations display a customer opt-in. When stock is replenished, the automated *Back-In-Stock Alert* email fires to every waitlisted shopper.
+
+> **Tip:** Preorder and backorder flags are stored per product and per variation, so a single storefront can sell in-stock, backorderable, and preorder items side by side.
+
+---
+
+## 17. Shipping Zones, Taxes & Multi-Currency
+
+Under **Omnify → Settings**, the Delivery, Tax, and Currency panels control what shoppers pay and where you sell.
+
+### Delivery Zones & Rates
+![Settings - Delivery](./screenshots/17-settings-delivery.png)
+*Figure 17.1: Delivery settings for configuring shipping zones, flat rates, and free shipping thresholds.*
+
+* **Flat Rate**: charge a standard fee per order or per item.
+* **Free Shipping Threshold**: automatically unlock free delivery above a cart subtotal.
+* **Local Pickup**: let customers collect in-store with zero shipping fee.
+
+### Tax Rules
+![Settings - Taxes](./screenshots/18-settings-taxes.png)
+*Figure 17.2: Tax settings for inclusive/exclusive pricing, rounding, and regional tax tables.*
+
+* **Prices Entered With Tax**: toggle inclusive vs exclusive catalog pricing.
+* **Calculate Tax Based On**: shipping address, billing address, or store base.
+* **Rounding & Shipping Tax**: round per line or per total, and optionally tax shipping.
+* **Reporting Codes**: attach tax reporting codes for accounting exports.
+
+### Multi-Currency Switcher
+Place `[omnify_currency_switcher]` (or the `omnify/currency-switcher` block) in a header or sidebar. Prices recalculate in real time, the shopper's choice is stored in a 1-year cookie, and gateways that don't support the selected currency are filtered out of checkout.
+
+---
+
+## 18. Email Notifications, SMTP & Logs
+
+Under **Omnify → Settings → Email**, manage every customer and admin notification plus the delivery transport.
+
+![Settings - Emails](./screenshots/19-settings-emails.png)
+*Figure 18.1: Automated email management panel with 17 triggers, SMTP relay, and delivery logs.*
+
+### 17 Automated Triggers
+Omnify ships 17 transactional triggers covering the full order lifecycle: order receipt, payment pending/failed, refund requested/processed, order status changes, shipment dispatched, ready-for-pickup, order cancelled, customer order notes, account welcome, low-stock and out-of-stock admin alerts, back-in-stock alerts, high-risk order alerts, and abandoned-cart recovery.
+
+### Custom SMTP Relay
+* **Host & Port**: point Omnify at your SMTP server (e.g. `smtp.postmarkapp.com:587`).
+* **Encryption & Auth**: choose TLS/SSL and supply credentials.
+* **From / Reply-To / BCC**: set the sender identity and optional admin BCC.
+
+### Delivery Logs & Retries
+Every send is recorded in the email log with its trigger, recipient, status, and error message. Failed sends are automatically retried on an hourly schedule, and any log entry can be re-sent from the admin with one click.
+
+---
+
+## 19. Roles, Staff Permissions & Fraud
+
+OmnifyWP lets you delegate store operations safely without handing over full WordPress administrator access.
+
+### Built-In Roles
+* **Shop Manager**: full operational store management (catalog, orders, customers, settings) without `manage_options`.
+* **Shop Clerk**: fulfillment, order processing, and customer support focused access.
+
+### Per-Feature Permissions
+Under **Settings → Roles**, map roles to individual feature areas: Dashboard, Orders, Products, Customers, Coupons, Abandoned Carts, Reviews, and Analytics. A clerk can be allowed to manage Orders while Products and Settings remain locked.
+
+### Automated Fraud Scoring
+Each order receives a fraud risk level (*Safe*, *Suspicious*, *High Risk*) derived from IP geolocation, proxy indicators, billing/shipping mismatches, and transaction velocity. High-risk orders can raise an admin alert email and appear flagged in the order detail screen.
+
+> **Least-Privilege Tip:** Grant *shop_clerk* access to Orders, Customers, and Reviews only. Keep Coupons, Settings, and Tools restricted to managers and administrators.
+
+---
+
+## 20. Conversion Tracking (GA4 & Meta Pixel)
+
+Under **Omnify → Settings → Marketing**, enable built-in conversion tracking without a separate tagging plugin.
+
+### Google Analytics 4 (GA4)
+* Enable GA4 and paste your Measurement ID (e.g. `G-XXXXXXX`).
+* Tracked events: `view_item_list`, `view_item`, `add_to_cart`, `begin_checkout`, and `purchase` with transaction revenue, currency, and item parameters.
+* Enable debug mode to validate events in the GA4 DebugView.
+
+### Meta Pixel (Facebook Pixel)
+* Enable Meta Pixel and paste your numeric Pixel ID.
+* Tracked events: `PageView`, `ViewContent`, `AddToCart`, `InitiateCheckout`, and `Purchase`.
+
+> **Attribution:** Purchase events include the real order number and value, so revenue reconciles directly with your **Analytics** dashboard totals.
+
+---
+
+## 21. Privacy, GDPR & Data Maintenance
+
+OmnifyWP integrates with the WordPress privacy framework so you can service data-subject requests without custom code.
+
+### Personal Data Export & Erasure
+* **Exporter**: under **Tools → Export Personal Data**, an "Omnify" exporter returns the customer profile, orders, order items, downloads, wishlist, and abandoned carts.
+* **Eraser**: under **Tools → Erase Personal Data**, the matching eraser anonymizes or removes the same records.
+
+### Data Retention & Maintenance
+* **Soft Deletes**: trashed records are excluded from storefront and public queries but retained for audit.
+* **Automated Daily Cleanup**: the `omnify_daily_database_cleanup` cron prunes expired abandoned carts and stale sessions and optimizes tables.
+* **Download Audit Trail**: every delivery logs IP, user agent, and status for compliance evidence.
+
+> **Compliance:** Combine these tools with your WordPress privacy policy page and a published data-retention window documented from **Settings → Advanced**.
+
+---
+
+## 22. Import, Export & Data Management
+
+OmnifyWP ships a complete data lifecycle toolkit: realistic demo seeding for new stores, schema-validated import/export for migrations and bulk edits, and granular cleanup utilities that never touch live customer transactions.
+
+### Demo Data Seeding
+Under **Omnify → Tools**, one click seeds a realistic sample store: products across simple/variable/digital types, customer profiles, historical orders with varied statuses, reviews, coupons, and category hierarchies — with an animated progress bar.
+
+### Exporting Records
+Under **Omnify → Import / Export**, download records as standardized UTF-8 CSV (or XML for products):
+* **Products** — full catalog with pricing, stock, preorder, shipping, and taxonomy columns.
+* **Customers** — CRM profiles with status and tax-exemption flags.
+* **Orders** — order headers with totals, payment method, and coupon data.
+* **Coupons, Tax Rules & Delivery Zones** — marketing and configuration tables.
+
+### Importing Records
+Drag a CSV or XML file into the import dropzone. Required fields are validated per entity; column order does not matter and unknown columns are safely ignored. A starter template for each entity can be downloaded from the schema reference card.
+
+### CSV Schema Reference
+
+| Entity | Required Fields |
+| :--- | :--- |
+| **Products** | `name` |
+| **Customers** | `email` |
+| **Orders** | `order_number`, `customer_email` |
+| **Coupons** | `code`, `discount_type`, `discount_value` |
+| **Tax Rules** | `label`, `country`, `state`, `rate` |
+| **Delivery Zones** | `name`, `countries`, `states`, `method_name` |
+
+### Granular Maintenance & Cleanup
+* **Clean by Type**: remove products, orders, customers, reviews, coupons, or activity logs individually.
+* **Optimize Tables / Clear Transients**: reclaim space and refresh cached queries.
+* **Purge Abandoned Carts**: prune stale sessions past the retention window.
+* **Danger Zone**: wipe all store data behind explicit confirmation safeguards.
+
+> **Back up first:** Always take a database snapshot before running imports or any Danger Zone cleanup operation.
+
+---
+
+## 23. Frequently Asked Questions & Troubleshooting
 
 ### Q: Why is OmnifyWP faster than standard WooCommerce?
 > **A:** OmnifyWP stores products, orders, and customer data in dedicated, normalized SQL tables (`wp_omnify_*`) rather than cramming metadata into WordPress's shared `wp_posts` and `wp_postmeta` tables. This enables single-query lookups with proper database indexing, eliminating costly postmeta joins.

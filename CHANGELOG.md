@@ -3,6 +3,23 @@
 All notable changes to OmnifyWP eCommerce are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2026-10-21
+
+### Added
+- **Unified Attribute Controls**: Rebuilt variation attribute selectors into modern badge chips combining clean uppercase labels with streamlined native select dropdowns and custom chevrons.
+- **Availability & Preorder Configuration**: Integrated structured fulfillment panels with "Allow backorders" and "Preorder" toggles, plus subgrid controls for release date, limit, and preorder notice messages.
+- **Compact Action Tooltips**: Converted variation image action buttons into clean 32×32px icon buttons (`dashicons-upload`, `dashicons-trash`) with accessible tooltips for streamlined selection and removal.
+
+### Changed
+- **Pricing & Stock Grid Alignment**: Unified all field heights (42px) and border radii (8px) across SKU, Regular Price, Sale Price, Inventory Tracking, Stock Qty, and Stock Status.
+- **Currency & Icon Prefixes**: Modernized variation regular price, sale price, and estimated delivery fields with prefix containers matching the main product editor.
+- **Variation Note UX**: Replaced TinyMCE WYSIWYG editor toolbars with lightweight, responsive native textareas to improve performance and remove clutter.
+
+### Fixed
+- **Eliminated Nested "Box-inside-a-Box" Borders**: Removed double borders and inner rounded corners inherited from global input/select styling within prefixed containers and attribute pills.
+- **Header & Card Gap**: Eliminated unwanted padding and vertical gaps between variation card headers and body content.
+- **Estimated Delivery Label Spacing**: Fixed label collisions and ensured proper spacing above the input container.
+
 ## [1.4.2] - 2026-10-18
 
 ### Added

@@ -110,6 +110,28 @@ if (! empty($omnify_payment_methods)) {
 
 $omnify_webhook_base = home_url('/wp-json/omnify/v1/webhook/');
 
+if (! function_exists('omnify_render_pm_footer')) {
+	function omnify_render_pm_footer(string $gateway_id): void {
+		?>
+		<div class="omnify-pm-card-footer">
+			<div class="omnify-pm-footer-actions">
+				<button type="button" class="omnify-pm-test-btn" data-gateway="<?php echo esc_attr($gateway_id); ?>">
+					<svg class="omnify-pm-test-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+					<span class="omnify-pm-test-label"><?php esc_html_e('Test Connection', 'omnifywp-ecommerce'); ?></span>
+				</button>
+				<span class="omnify-pm-test-result" data-gateway="<?php echo esc_attr($gateway_id); ?>"></span>
+			</div>
+			<div class="omnify-pm-footer-meta">
+				<span class="omnify-pm-footer-tip">
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+					<?php esc_html_e('Save settings before testing live credentials.', 'omnifywp-ecommerce'); ?>
+				</span>
+			</div>
+		</div>
+		<?php
+	}
+}
+
 if (! function_exists('omnify_render_pm_header')) {
 	function omnify_render_pm_header(array $args): void {
 		$title       = $args['title'] ?? '';
@@ -156,16 +178,6 @@ if (! function_exists('omnify_render_pm_header')) {
 				</button>
 			</div>
 		</div>
-		<?php if (! $is_offline) : ?>
-			<?php $gateway_id = str_replace('_checkout_enabled', '', (string) $toggle_name); ?>
-			<div class="omnify-pm-test-row" style="display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid #eef2f7; background: #fbfcfe;">
-				<button type="button" class="omnify-pm-test-btn" data-gateway="<?php echo esc_attr($gateway_id); ?>" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #0f766e; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; cursor: pointer;">
-					<span class="dashicons dashicons-update" style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;"></span>
-					<span class="omnify-pm-test-label"><?php esc_html_e('Test Connection', 'omnifywp-ecommerce'); ?></span>
-				</button>
-				<span class="omnify-pm-test-result" data-gateway="<?php echo esc_attr($gateway_id); ?>" style="font-size: 12px; color: #64748b;"></span>
-			</div>
-		<?php endif; ?>
 		<?php
 	}
 }
@@ -257,18 +269,18 @@ if (! function_exists('omnify_render_pm_header')) {
 					</div>
 					<div class="omnify-modern-form-group">
 						<label><?php esc_html_e('Express Payment Options', 'omnifywp-ecommerce'); ?></label>
-						<div style="display: flex; gap: 20px; align-items: center; margin-top: 6px;">
-							<label style="display: inline-flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer;">
+						<div class="omnify-express-options-grid">
+							<label class="omnify-checkbox-chip <?php echo ! empty($omnify_settings['stripe_apple_pay_enabled']) ? 'is-checked' : ''; ?>">
 								<input type="checkbox" name="stripe_apple_pay_enabled" value="1" <?php checked(! empty($omnify_settings['stripe_apple_pay_enabled'])); ?> />
-								<span><?php esc_html_e('Apple Pay', 'omnifywp-ecommerce'); ?></span>
+								<span class="omnify-chip-title"><?php esc_html_e('Apple Pay', 'omnifywp-ecommerce'); ?></span>
 							</label>
-							<label style="display: inline-flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer;">
+							<label class="omnify-checkbox-chip <?php echo ! empty($omnify_settings['stripe_google_pay_enabled']) ? 'is-checked' : ''; ?>">
 								<input type="checkbox" name="stripe_google_pay_enabled" value="1" <?php checked(! empty($omnify_settings['stripe_google_pay_enabled'])); ?> />
-								<span><?php esc_html_e('Google Pay', 'omnifywp-ecommerce'); ?></span>
+								<span class="omnify-chip-title"><?php esc_html_e('Google Pay', 'omnifywp-ecommerce'); ?></span>
 							</label>
-							<label style="display: inline-flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer;">
+							<label class="omnify-checkbox-chip <?php echo ! empty($omnify_settings['stripe_payment_intents_enabled']) ? 'is-checked' : ''; ?>">
 								<input type="checkbox" name="stripe_payment_intents_enabled" value="1" <?php checked(! empty($omnify_settings['stripe_payment_intents_enabled'])); ?> />
-								<span><?php esc_html_e('Payment Intents API', 'omnifywp-ecommerce'); ?></span>
+								<span class="omnify-chip-title"><?php esc_html_e('Payment Intents API', 'omnifywp-ecommerce'); ?></span>
 							</label>
 						</div>
 					</div>
@@ -283,7 +295,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="stripe_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="stripe_test_secret_key" name="stripe_test_secret_key" placeholder="sk_test_..." value="<?php echo esc_attr($omnify_settings['stripe_test_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -297,7 +309,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="stripe_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="stripe_live_secret_key" name="stripe_live_secret_key" placeholder="sk_live_..." value="<?php echo esc_attr($omnify_settings['stripe_live_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -307,17 +319,19 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="stripe_webhook_secret"><?php esc_html_e('Stripe Webhook Signing Secret', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="stripe_webhook_secret" name="stripe_webhook_secret" placeholder="whsec_..." value="<?php echo esc_attr($omnify_settings['stripe_webhook_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 					<div class="omnify-modern-form-group">
 						<label><?php esc_html_e('Webhook Endpoint URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'stripe'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'stripe'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'stripe'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+
+				<?php omnify_render_pm_footer('stripe'); ?>
 			</div>
 		</div>
 
@@ -340,16 +354,12 @@ if (! function_exists('omnify_render_pm_header')) {
 			?>
 			<div class="omnify-pm-body">
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
 						<label for="paypal_mode"><?php esc_html_e('PayPal Environment', 'omnifywp-ecommerce'); ?></label>
 						<select id="paypal_mode" name="paypal_mode">
 							<option value="sandbox" <?php selected($omnify_settings['paypal_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox Testing', 'omnifywp-ecommerce'); ?></option>
 							<option value="live" <?php selected($omnify_settings['paypal_mode'] ?? 'sandbox', 'live'); ?>><?php esc_html_e('Live Production', 'omnifywp-ecommerce'); ?></option>
 						</select>
-					</div>
-					<div class="omnify-modern-form-group">
-						<label for="paypal_webhook_id"><?php esc_html_e('Webhook ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="paypal_webhook_id" name="paypal_webhook_id" value="<?php echo esc_attr($omnify_settings['paypal_webhook_id'] ?? ''); ?>" />
 					</div>
 				</div>
 
@@ -362,7 +372,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paypal_sandbox_secret"><?php esc_html_e('Sandbox Secret', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paypal_sandbox_secret" name="paypal_sandbox_secret" value="<?php echo esc_attr($omnify_settings['paypal_sandbox_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -376,20 +386,26 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paypal_live_secret"><?php esc_html_e('Live Secret', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paypal_live_secret" name="paypal_live_secret" value="<?php echo esc_attr($omnify_settings['paypal_live_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
 
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group" style="grid-column: span 2;">
+					<div class="omnify-modern-form-group">
+						<label for="paypal_webhook_id"><?php esc_html_e('Webhook ID', 'omnifywp-ecommerce'); ?></label>
+						<input type="text" id="paypal_webhook_id" name="paypal_webhook_id" placeholder="<?php esc_attr_e('e.g. 9AB12345CD67890EF', 'omnifywp-ecommerce'); ?>" value="<?php echo esc_attr($omnify_settings['paypal_webhook_id'] ?? ''); ?>" />
+					</div>
+					<div class="omnify-modern-form-group">
 						<label><?php esc_html_e('PayPal IPN / Webhook Notification URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'paypal'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paypal'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paypal'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+
+				<?php omnify_render_pm_footer('paypal'); ?>
 			</div>
 		</div>
 
@@ -412,32 +428,25 @@ if (! function_exists('omnify_render_pm_header')) {
 			?>
 			<div class="omnify-pm-body">
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
 						<label for="razorpay_mode"><?php esc_html_e('Environment', 'omnifywp-ecommerce'); ?></label>
 						<select id="razorpay_mode" name="razorpay_mode">
 							<option value="test" <?php selected($omnify_settings['razorpay_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Test Sandbox', 'omnifywp-ecommerce'); ?></option>
 							<option value="live" <?php selected($omnify_settings['razorpay_mode'] ?? 'test', 'live'); ?>><?php esc_html_e('Live Production', 'omnifywp-ecommerce'); ?></option>
 						</select>
 					</div>
-					<div class="omnify-modern-form-group">
-						<label for="razorpay_webhook_secret"><?php esc_html_e('Webhook Secret', 'omnifywp-ecommerce'); ?></label>
-						<div class="omnify-password-field-wrap">
-							<input type="password" id="razorpay_webhook_secret" name="razorpay_webhook_secret" value="<?php echo esc_attr($omnify_settings['razorpay_webhook_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
-						</div>
-					</div>
 				</div>
 
 				<div class="omnify-modern-form-row" data-cond-field="razorpay_mode" data-cond-val="test">
 					<div class="omnify-modern-form-group">
 						<label for="razorpay_test_key_id"><?php esc_html_e('Test Key ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="razorpay_test_key_id" name="razorpay_test_key_id" value="<?php echo esc_attr($omnify_settings['razorpay_test_key_id'] ?? ''); ?>" />
+						<input type="text" id="razorpay_test_key_id" name="razorpay_test_key_id" placeholder="rzp_test_..." value="<?php echo esc_attr($omnify_settings['razorpay_test_key_id'] ?? ''); ?>" />
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="razorpay_test_key_secret"><?php esc_html_e('Test Key Secret', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="razorpay_test_key_secret" name="razorpay_test_key_secret" value="<?php echo esc_attr($omnify_settings['razorpay_test_key_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -445,26 +454,35 @@ if (! function_exists('omnify_render_pm_header')) {
 				<div class="omnify-modern-form-row" data-cond-field="razorpay_mode" data-cond-val="live">
 					<div class="omnify-modern-form-group">
 						<label for="razorpay_live_key_id"><?php esc_html_e('Live Key ID', 'omnifywp-ecommerce'); ?></label>
-						<input type="text" id="razorpay_live_key_id" name="razorpay_live_key_id" value="<?php echo esc_attr($omnify_settings['razorpay_live_key_id'] ?? ''); ?>" />
+						<input type="text" id="razorpay_live_key_id" name="razorpay_live_key_id" placeholder="rzp_live_..." value="<?php echo esc_attr($omnify_settings['razorpay_live_key_id'] ?? ''); ?>" />
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="razorpay_live_key_secret"><?php esc_html_e('Live Key Secret', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="razorpay_live_key_secret" name="razorpay_live_key_secret" value="<?php echo esc_attr($omnify_settings['razorpay_live_key_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
 
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group" style="grid-column: span 2;">
+					<div class="omnify-modern-form-group">
+						<label for="razorpay_webhook_secret"><?php esc_html_e('Webhook Secret', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-password-field-wrap">
+							<input type="password" id="razorpay_webhook_secret" name="razorpay_webhook_secret" value="<?php echo esc_attr($omnify_settings['razorpay_webhook_secret'] ?? ''); ?>" />
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+						</div>
+					</div>
+					<div class="omnify-modern-form-group">
 						<label><?php esc_html_e('Webhook Endpoint URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'razorpay'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'razorpay'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'razorpay'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+
+				<?php omnify_render_pm_footer('razorpay'); ?>
 			</div>
 		</div>
 
@@ -504,7 +522,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="mollie_test_api_key"><?php esc_html_e('Test API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="mollie_test_api_key" name="mollie_test_api_key" placeholder="test_..." value="<?php echo esc_attr($omnify_settings['mollie_test_api_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -513,7 +531,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="mollie_live_api_key"><?php esc_html_e('Live API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="mollie_live_api_key" name="mollie_live_api_key" placeholder="live_..." value="<?php echo esc_attr($omnify_settings['mollie_live_api_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -522,10 +540,11 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label><?php esc_html_e('Webhook Endpoint URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'mollie'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'mollie'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'mollie'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('mollie'); ?>
 			</div>
 		</div>
 
@@ -559,7 +578,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paddle_webhook_secret"><?php esc_html_e('Webhook Secret / Alert Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paddle_webhook_secret" name="paddle_webhook_secret" value="<?php echo esc_attr($omnify_settings['paddle_webhook_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -568,14 +587,14 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paddle_sandbox_api_key"><?php esc_html_e('Sandbox API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paddle_sandbox_api_key" name="paddle_sandbox_api_key" placeholder="test_..." value="<?php echo esc_attr($omnify_settings['paddle_sandbox_api_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="paddle_sandbox_client_token"><?php esc_html_e('Sandbox Client-Side Token', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paddle_sandbox_client_token" name="paddle_sandbox_client_token" placeholder="test_..." value="<?php echo esc_attr($omnify_settings['paddle_sandbox_client_token'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -584,14 +603,14 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paddle_live_api_key"><?php esc_html_e('Live API Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paddle_live_api_key" name="paddle_live_api_key" placeholder="live_..." value="<?php echo esc_attr($omnify_settings['paddle_live_api_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 					<div class="omnify-modern-form-group">
 						<label for="paddle_live_client_token"><?php esc_html_e('Live Client-Side Token', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paddle_live_client_token" name="paddle_live_client_token" placeholder="live_..." value="<?php echo esc_attr($omnify_settings['paddle_live_client_token'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -600,10 +619,11 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label><?php esc_html_e('Paddle Webhook Destination URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'paddle'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paddle'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paddle'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('paddle'); ?>
 			</div>
 		</div>
 
@@ -637,7 +657,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paystack_webhook_secret"><?php esc_html_e('Webhook Secret Hash', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paystack_webhook_secret" name="paystack_webhook_secret" value="<?php echo esc_attr($omnify_settings['paystack_webhook_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -650,7 +670,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paystack_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paystack_test_secret_key" name="paystack_test_secret_key" placeholder="sk_test_..." value="<?php echo esc_attr($omnify_settings['paystack_test_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -663,7 +683,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="paystack_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="paystack_live_secret_key" name="paystack_live_secret_key" placeholder="sk_live_..." value="<?php echo esc_attr($omnify_settings['paystack_live_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -672,10 +692,11 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label><?php esc_html_e('Paystack Webhook URL', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-copy-url-group">
 							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'paystack'); ?>" />
-							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paystack'); ?>"><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></button>
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'paystack'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
 						</div>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('paystack'); ?>
 			</div>
 		</div>
 
@@ -709,7 +730,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="tap_webhook_secret"><?php esc_html_e('Webhook Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="tap_webhook_secret" name="tap_webhook_secret" value="<?php echo esc_attr($omnify_settings['tap_webhook_secret'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -722,7 +743,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="tap_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="tap_test_secret_key" name="tap_test_secret_key" placeholder="sk_test_..." value="<?php echo esc_attr($omnify_settings['tap_test_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -735,10 +756,20 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="tap_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="tap_live_secret_key" name="tap_live_secret_key" placeholder="sk_live_..." value="<?php echo esc_attr($omnify_settings['tap_live_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
+				<div class="omnify-modern-form-row">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
+						<label><?php esc_html_e('Tap Webhook Destination URL', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-copy-url-group">
+							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'tap'); ?>" />
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'tap'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
+						</div>
+					</div>
+				</div>
+				<?php omnify_render_pm_footer('tap'); ?>
 			</div>
 		</div>
 
@@ -761,7 +792,7 @@ if (! function_exists('omnify_render_pm_header')) {
 			?>
 			<div class="omnify-pm-body">
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
 						<label for="sslcommerz_mode"><?php esc_html_e('Environment', 'omnifywp-ecommerce'); ?></label>
 						<select id="sslcommerz_mode" name="sslcommerz_mode">
 							<option value="sandbox" <?php selected($omnify_settings['sslcommerz_mode'] ?? 'sandbox', 'sandbox'); ?>><?php esc_html_e('Sandbox / Test', 'omnifywp-ecommerce'); ?></option>
@@ -778,7 +809,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="sslcommerz_test_store_passwd"><?php esc_html_e('Test Store Password', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="sslcommerz_test_store_passwd" name="sslcommerz_test_store_passwd" value="<?php echo esc_attr($omnify_settings['sslcommerz_test_store_passwd'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -791,10 +822,20 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="sslcommerz_store_passwd"><?php esc_html_e('Live Store Password', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="sslcommerz_store_passwd" name="sslcommerz_store_passwd" value="<?php echo esc_attr($omnify_settings['sslcommerz_store_passwd'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
+				<div class="omnify-modern-form-row">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
+						<label><?php esc_html_e('SSLCommerz IPN / Webhook Notification URL', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-copy-url-group">
+							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'sslcommerz'); ?>" />
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'sslcommerz'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
+						</div>
+					</div>
+				</div>
+				<?php omnify_render_pm_footer('sslcommerz'); ?>
 			</div>
 		</div>
 
@@ -839,6 +880,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<textarea id="alipay_alipay_public_key" name="alipay_alipay_public_key" rows="3"><?php echo esc_textarea($omnify_settings['alipay_alipay_public_key'] ?? ''); ?></textarea>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('alipay'); ?>
 			</div>
 		</div>
 
@@ -882,7 +924,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="wechat_api_key"><?php esc_html_e('API Key (v2 / v3 Key)', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="wechat_api_key" name="wechat_api_key" value="<?php echo esc_attr($omnify_settings['wechat_api_key'] ?? ($omnify_settings['wechat_key'] ?? '')); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -906,6 +948,16 @@ if (! function_exists('omnify_render_pm_header')) {
 						<textarea id="wechat_client_key" name="wechat_client_key" rows="3" placeholder="-----BEGIN PRIVATE KEY-----"><?php echo esc_textarea($omnify_settings['wechat_client_key'] ?? ''); ?></textarea>
 					</div>
 				</div>
+				<div class="omnify-modern-form-row">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
+						<label><?php esc_html_e('WeChat Webhook / Pay Notification URL', 'omnifywp-ecommerce'); ?></label>
+						<div class="omnify-copy-url-group">
+							<input type="text" readonly value="<?php echo esc_url($omnify_webhook_base . 'wechat'); ?>" />
+							<button type="button" class="omnify-copy-btn" data-copy="<?php echo esc_url($omnify_webhook_base . 'wechat'); ?>"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span><?php esc_html_e('Copy', 'omnifywp-ecommerce'); ?></span></button>
+						</div>
+					</div>
+				</div>
+				<?php omnify_render_pm_footer('wechat'); ?>
 			</div>
 		</div>
 
@@ -928,7 +980,7 @@ if (! function_exists('omnify_render_pm_header')) {
 			?>
 			<div class="omnify-pm-body">
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
 						<label for="khalti_mode"><?php esc_html_e('Environment', 'omnifywp-ecommerce'); ?></label>
 						<select id="khalti_mode" name="khalti_mode">
 							<option value="test" <?php selected($omnify_settings['khalti_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Test Sandbox', 'omnifywp-ecommerce'); ?></option>
@@ -945,7 +997,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="khalti_test_secret_key"><?php esc_html_e('Test Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="khalti_test_secret_key" name="khalti_test_secret_key" value="<?php echo esc_attr($omnify_settings['khalti_test_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -958,10 +1010,11 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="khalti_live_secret_key"><?php esc_html_e('Live Secret Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="khalti_live_secret_key" name="khalti_live_secret_key" value="<?php echo esc_attr($omnify_settings['khalti_live_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('khalti'); ?>
 			</div>
 		</div>
 
@@ -984,7 +1037,7 @@ if (! function_exists('omnify_render_pm_header')) {
 			?>
 			<div class="omnify-pm-body">
 				<div class="omnify-modern-form-row">
-					<div class="omnify-modern-form-group">
+					<div class="omnify-modern-form-group" style="grid-column: span 2;">
 						<label for="esewa_mode"><?php esc_html_e('Environment', 'omnifywp-ecommerce'); ?></label>
 						<select id="esewa_mode" name="esewa_mode">
 							<option value="test" <?php selected($omnify_settings['esewa_mode'] ?? 'test', 'test'); ?>><?php esc_html_e('Test / UAT Sandbox', 'omnifywp-ecommerce'); ?></option>
@@ -1001,7 +1054,7 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="esewa_test_secret_key"><?php esc_html_e('Test Secret Key / Hash Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="esewa_test_secret_key" name="esewa_test_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_test_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
@@ -1014,10 +1067,11 @@ if (! function_exists('omnify_render_pm_header')) {
 						<label for="esewa_live_secret_key"><?php esc_html_e('Live Secret Key / Hash Key', 'omnifywp-ecommerce'); ?></label>
 						<div class="omnify-password-field-wrap">
 							<input type="password" id="esewa_live_secret_key" name="esewa_live_secret_key" value="<?php echo esc_attr($omnify_settings['esewa_live_secret_key'] ?? ''); ?>" />
-							<button type="button" class="omnify-toggle-pw-btn"><span class="dashicons dashicons-visibility"></span></button>
+							<button type="button" class="omnify-pw-toggle-btn omnify-toggle-pw-btn" aria-label="<?php esc_attr_e('Show secret', 'omnifywp-ecommerce'); ?>"><svg class="omnify-eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
 						</div>
 					</div>
 				</div>
+				<?php omnify_render_pm_footer('esewa'); ?>
 			</div>
 		</div>
 

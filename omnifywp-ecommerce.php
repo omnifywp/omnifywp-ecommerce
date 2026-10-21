@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OmnifyWP eCommerce
  * Description: Complete eCommerce engine for simple, variable, bundled, physical, and digital products on WordPress.
- * Version: 1.4.2
+ * Version: 1.4.3
  * Requires at least: 6.5
  * Requires PHP: 8.2
  * Author: OmnifyWP
@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-define('OMNIFY_VERSION', '1.4.2');
+define('OMNIFY_VERSION', '1.4.3');
 define('OMNIFY_FILE', __FILE__);
 define('OMNIFY_PATH', plugin_dir_path(__FILE__));
 define('OMNIFY_URL', plugin_dir_url(__FILE__));
@@ -62,6 +62,17 @@ function omnify_locate_template(string $omnify_template_name): string {
  */
 function omnify_plugin() {
 	return \Omnify\eCommerce\Omnify_Plugin::instance();
+}
+
+if ( ! function_exists( 'omnify_get_container' ) ) {
+	/**
+	 * Plugin service container accessor.
+	 *
+	 * @return \Omnify\eCommerce\Support\Omnify_Container
+	 */
+	function omnify_get_container() {
+		return omnify_plugin()->container();
+	}
 }
 
 /**

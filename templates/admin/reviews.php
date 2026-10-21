@@ -114,7 +114,8 @@ $omnify_status_labels = [
 
 	<?php include __DIR__ . '/partials/nav.php'; ?>
 	<?php include __DIR__ . '/partials/product-subtabs.php'; ?>
-	<div class="omnify-reviews-stats">
+
+	<div class="omnify-dashboard-stats omnify-reviews-stats-grid">
 		<?php 
 		$omnify_stat_icons = [
 			'all'      => 'dashicons-format-chat',
@@ -126,154 +127,235 @@ $omnify_status_labels = [
 			$omnify_s_tone = $omnify_stat['tone'];
 			$omnify_s_icon = $omnify_stat_icons[$omnify_s_tone] ?? 'dashicons-star-filled';
 		?>
-			<div class="omnify-reviews-stat-card omnify-reviews-stat-card--<?php echo esc_attr($omnify_s_tone); ?>">
-				<div class="omnify-rev-stat-top">
-					<div class="omnify-reviews-stat-label"><?php echo esc_html($omnify_stat['label']); ?></div>
-					<span class="omnify-rev-stat-icon omnify-rev-stat-icon--<?php echo esc_attr($omnify_s_tone); ?>">
+			<div class="omnify-dashboard-stat-card">
+				<div class="omnify-stat-header">
+					<span class="omnify-dashboard-stat-card__label"><?php echo esc_html($omnify_stat['label']); ?></span>
+					<span class="omnify-stat-icon omnify-stat-icon--<?php echo esc_attr($omnify_s_tone); ?>">
 						<span class="dashicons <?php echo esc_attr($omnify_s_icon); ?>"></span>
 					</span>
 				</div>
-				<div class="omnify-reviews-stat-value"><?php echo esc_html(number_format_i18n((int) $omnify_stat['value'])); ?></div>
+				<p class="omnify-dashboard-stat-card__value"><?php echo esc_html(number_format_i18n((int) $omnify_stat['value'])); ?></p>
 			</div>
 		<?php endforeach; ?>
 	</div>
 
-	<div class="omnify-reviews-toolbar">
-		<div class="omnify-reviews-tabs">
-			<?php foreach ($omnify_tabs as $omnify_key => $omnify_tab) :
-				$omnify_tab_url = add_query_arg(
-					[
-						'status'     => $omnify_key ? $omnify_key : '',
-						'product_id' => $omnify_current_product ?: '',
-					],
-					$omnify_base_url
-				);
-				$omnify_is_active = ($omnify_current_status === $omnify_key);
-			?>
-				<a href="<?php echo esc_url($omnify_tab_url); ?>" class="omnify-reviews-tab <?php echo esc_attr( $omnify_is_active ? 'active' : '' ); ?>">
-					<?php echo esc_html($omnify_tab['label']); ?>
-					<span class="omnify-tab-badge"><?php echo esc_html(number_format_i18n((int) ($omnify_tab['count'] ?? 0))); ?></span>
+	<!-- Reviews Filter Bar -->
+	<form method="get" action="<?php echo esc_url($omnify_base_url); ?>" class="omnify-filter-card">
+		<input type="hidden" name="page" value="omnify-reviews" />
+
+		<div class="omnify-filter-row">
+			<div class="omnify-filter-group omnify-filter-group--search">
+				<label for="omnify-review-search"><?php esc_html_e('Search', 'omnifywp-ecommerce'); ?></label>
+				<input type="text" id="omnify-review-search" name="s" value="<?php echo esc_attr($omnify_search); ?>" placeholder="<?php esc_attr_e('Search reviews...', 'omnifywp-ecommerce'); ?>" />
+			</div>
+
+			<div class="omnify-filter-group">
+				<label for="omnify-review-status"><?php esc_html_e('Status', 'omnifywp-ecommerce'); ?></label>
+				<select id="omnify-review-status" name="status">
+					<option value=""><?php esc_html_e('All Statuses', 'omnifywp-ecommerce'); ?></option>
+					<?php foreach ($omnify_tabs as $omnify_k => $omnify_t) : ?>
+						<?php if ('' !== $omnify_k) : ?>
+							<option value="<?php echo esc_attr($omnify_k); ?>" <?php selected($omnify_current_status, $omnify_k); ?>>
+								<?php echo esc_html($omnify_t['label']); ?> (<?php echo esc_html(number_format_i18n((int) ($omnify_t['count'] ?? 0))); ?>)
+							</option>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</select>
+			</div>
+
+			<div class="omnify-filter-group">
+				<label for="omnify-review-product-filter"><?php esc_html_e('Product', 'omnifywp-ecommerce'); ?></label>
+				<select id="omnify-review-product-filter" name="product_id">
+					<option value=""><?php esc_html_e('All products', 'omnifywp-ecommerce'); ?></option>
+					<?php foreach ($omnify_products as $omnify_p) : ?>
+						<option value="<?php echo esc_attr($omnify_p['id']); ?>" <?php selected($omnify_current_product, $omnify_p['id']); ?>>
+							<?php echo esc_html($omnify_p['name']); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+
+			<div class="omnify-filter-group">
+				<label for="omnify-review-rating-filter"><?php esc_html_e('Rating', 'omnifywp-ecommerce'); ?></label>
+				<select id="omnify-review-rating-filter" name="rating">
+					<option value=""><?php esc_html_e('All ratings', 'omnifywp-ecommerce'); ?></option>
+					<?php for ($omnify_r = 5; $omnify_r >= 1; $omnify_r--) : ?>
+						<option value="<?php echo esc_attr((string) $omnify_r); ?>" <?php selected($omnify_current_rating, $omnify_r); ?>>
+							<?php /* translators: %d: rating score */ printf(esc_html__('%d Stars', 'omnifywp-ecommerce'), $omnify_r); ?>
+						</option>
+					<?php endfor; ?>
+				</select>
+			</div>
+
+			<div class="omnify-filter-actions">
+				<button type="submit" class="omnify-btn-apply-filters" title="<?php esc_attr_e('Apply Filters', 'omnifywp-ecommerce'); ?>">
+					<span class="dashicons dashicons-search"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Filter', 'omnifywp-ecommerce'); ?></span>
+				</button>
+				<a href="<?php echo esc_url($omnify_base_url); ?>" class="omnify-btn-clear-filters" title="<?php esc_attr_e('Clear Filters', 'omnifywp-ecommerce'); ?>">
+					<span class="dashicons dashicons-no-alt"></span>
+					<span class="omnify-btn-label"><?php esc_html_e('Reset', 'omnifywp-ecommerce'); ?></span>
 				</a>
-			<?php endforeach; ?>
+			</div>
 		</div>
+	</form>
 
-		<form method="get" class="omnify-reviews-filter-form" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-			<input type="hidden" name="page" value="omnify-reviews" />
-			<input type="hidden" name="status" value="<?php echo esc_attr($omnify_current_status); ?>" />
-			<label for="omnify-review-product-filter" class="screen-reader-text"><?php esc_html_e('Product', 'omnifywp-ecommerce'); ?></label>
-			<select id="omnify-review-product-filter" name="product_id" onchange="this.form.submit()">
-				<option value=""><?php esc_html_e('All products', 'omnifywp-ecommerce'); ?></option>
-				<?php foreach ($omnify_products as $omnify_p) : ?>
-					<option value="<?php echo esc_attr($omnify_p['id']); ?>" <?php selected($omnify_current_product, $omnify_p['id']); ?>>
-						<?php echo esc_html($omnify_p['name']); ?>
-					</option>
-				<?php endforeach; ?>
-			</select>
-			<label for="omnify-review-rating-filter" class="screen-reader-text"><?php esc_html_e('Rating', 'omnifywp-ecommerce'); ?></label>
-			<select id="omnify-review-rating-filter" name="rating" onchange="this.form.submit()">
-				<option value=""><?php esc_html_e('All ratings', 'omnifywp-ecommerce'); ?></option>
-				<?php for ($omnify_r = 5; $omnify_r >= 1; $omnify_r--) : ?>
-					<option value="<?php echo esc_attr((string) $omnify_r); ?>" <?php selected($omnify_current_rating, $omnify_r); ?>>
-						<?php /* translators: %d: rating score */ printf(esc_html__('%d Stars', 'omnifywp-ecommerce'), $omnify_r); ?>
-					</option>
-				<?php endfor; ?>
-			</select>
-			<div style="display: flex; gap: 4px;">
-				<input type="search" name="s" value="<?php echo esc_attr($omnify_search); ?>" placeholder="<?php esc_attr_e('Search reviews...', 'omnifywp-ecommerce'); ?>" style="padding: 4px 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px;" />
-				<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Search', 'omnifywp-ecommerce'); ?></button>
-			</div>
-		</form>
+	<!-- Active filter chips -->
+	<?php
+	$omnify_review_chips = [];
+	if ('' !== $omnify_search) {
+		$omnify_review_chips['s'] = [
+			'label' => __('Search', 'omnifywp-ecommerce') . ': ' . $omnify_search,
+			'url'   => remove_query_arg('s'),
+		];
+	}
+	if ('' !== $omnify_current_status) {
+		$omnify_review_chips['status'] = [
+			'label' => __('Status', 'omnifywp-ecommerce') . ': ' . ($omnify_tabs[$omnify_current_status]['label'] ?? ucfirst($omnify_current_status)),
+			'url'   => remove_query_arg('status'),
+		];
+	}
+	if ($omnify_current_product > 0 && isset($omnify_product_map[$omnify_current_product])) {
+		$omnify_review_chips['product_id'] = [
+			'label' => __('Product', 'omnifywp-ecommerce') . ': ' . $omnify_product_map[$omnify_current_product],
+			'url'   => remove_query_arg('product_id'),
+		];
+	}
+	if ($omnify_current_rating > 0) {
+		$omnify_review_chips['rating'] = [
+			'label' => sprintf(__('%d Stars', 'omnifywp-ecommerce'), $omnify_current_rating),
+			'url'   => remove_query_arg('rating'),
+		];
+	}
+	?>
+	<?php if (! empty($omnify_review_chips)) : ?>
+	<div class="omnify-active-filters" style="margin: 4px 0 16px;">
+		<span style="font-size:11px; color:var(--omnify-gray-500); margin-right:4px; font-weight:600; text-transform: uppercase; letter-spacing: 0.05em;"><?php esc_html_e('Active Filters:', 'omnifywp-ecommerce'); ?></span>
+		<?php foreach ($omnify_review_chips as $omnify_chip) : ?>
+		<span class="omnify-filter-chip" style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 999px; padding: 4px 10px; font-size: 12px; color: #334155; margin-right: 6px; font-weight: 500;">
+			<?php echo esc_html($omnify_chip['label']); ?>
+			<a href="<?php echo esc_url($omnify_chip['url']); ?>" class="remove" style="color: #94a3b8; text-decoration: none; font-weight: 500; line-height: 1; font-size: 14px;">×</a>
+		</span>
+		<?php endforeach; ?>
 	</div>
+	<?php endif; ?>
 
+	<div class="omnify-card omnify-reviews-list-card">
 	<?php if (empty($omnify_reviews)) : ?>
-		<div class="omnify-reviews-empty">
-			<div>
-				<div class="omnify-empty-state__icon" style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-					<span class="dashicons dashicons-star-filled" style="font-size: 26px; width: 26px; height: 26px; color: #94a3b8;"></span>
-				</div>
-				<h2><?php esc_html_e('No reviews found', 'omnifywp-ecommerce'); ?></h2>
-				<p><?php esc_html_e('Try another status or product filter.', 'omnifywp-ecommerce'); ?></p>
+		<div class="omnify-reviews-empty" style="text-align: center; padding: 56px 24px;">
+			<div class="omnify-empty-state__icon" style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+				<span class="dashicons dashicons-star-filled" style="font-size: 26px; width: 26px; height: 26px; color: #94a3b8;"></span>
 			</div>
+			<h2 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 6px;"><?php esc_html_e('No reviews found', 'omnifywp-ecommerce'); ?></h2>
+			<p style="color: #64748b; font-size: 13.5px; margin: 0;"><?php esc_html_e('Try adjusting your search or filters to find what you are looking for.', 'omnifywp-ecommerce'); ?></p>
 		</div>
 	<?php else : ?>
-		<div class="omnify-reviews-list">
-			<?php foreach ($omnify_reviews as $omnify_review) :
-				$omnify_product_name = $omnify_product_map[(int) $omnify_review['product_id']] ?? __('Unknown product', 'omnifywp-ecommerce');
-				$omnify_status       = sanitize_key($omnify_review['status'] ?? 'pending');
-				$omnify_rating       = min(5, max(0, (int) ($omnify_review['rating'] ?? 0)));
-				$omnify_content      = wp_strip_all_tags((string) ($omnify_review['content'] ?? ''));
-				$omnify_excerpt      = wp_trim_words($omnify_content, 32, '...');
-				$omnify_date         = date_i18n(get_option('date_format'), strtotime($omnify_review['created_at'] ?? 'now'));
-				$omnify_reviewer     = (string) ($omnify_review['reviewer_name'] ?: __('Anonymous', 'omnifywp-ecommerce'));
-				$omnify_initial      = strtoupper(substr($omnify_reviewer, 0, 1));
-				$omnify_title        = trim((string) ($omnify_review['title'] ?? ''));
-			?>
-				<div class="omnify-review-card">
-					<div class="omnify-review-left-col">
-						<div class="omnify-reviewer">
-							<div class="omnify-reviewer-avatar"><?php echo esc_html($omnify_initial); ?></div>
-							<div class="omnify-reviewer-info">
-								<div class="omnify-reviewer-name"><?php echo esc_html($omnify_reviewer); ?></div>
-								<div class="omnify-reviewer-email"><?php echo esc_html($omnify_review['reviewer_email'] ?? ''); ?></div>
-							</div>
-						</div>
-						<div class="omnify-review-product-wrap">
-							<span class="omnify-review-product"><span class="dashicons dashicons-tag" style="font-size:11px; width:11px; height:11px; margin-right:3px; vertical-align:middle;"></span><?php echo esc_html($omnify_product_name); ?></span>
-						</div>
-					</div>
+		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="omnify-bulk-reviews-form">
+			<?php wp_nonce_field('omnify_bulk_reviews', 'omnify_bulk_nonce'); ?>
+			<input type="hidden" name="action" value="omnify_bulk_reviews" />
 
-					<div class="omnify-review-copy">
-						<?php if ('' !== $omnify_title) : ?>
-							<h3 class="omnify-review-title"><?php echo esc_html($omnify_title); ?></h3>
-						<?php endif; ?>
-						<p class="omnify-review-excerpt"><?php echo esc_html($omnify_excerpt); ?></p>
-					</div>
-
-					<div class="omnify-review-rating">
-						<div class="omnify-reviews-stars" aria-label="<?php
-						/* translators: %d: Rating */
-						echo esc_attr(sprintf(__('%d out of 5 stars', 'omnifywp-ecommerce'), $omnify_rating)); ?>">
-							<?php for ($omnify_i = 1; $omnify_i <= 5; $omnify_i++) : ?><span class="dashicons <?php echo $omnify_i <= $omnify_rating ? "dashicons-star-filled" : "dashicons-star-empty"; ?>" style="font-size:15px; width:15px; height:15px; color:#f59e0b;"></span><?php endfor; ?>
-						</div>
-						<div class="omnify-review-rating-value">
-							<?php
-							/* translators: %d: Rating */
-							echo esc_html(sprintf(__('%d/5 rating', 'omnifywp-ecommerce'), $omnify_rating)); ?>
-						</div>
-						<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_status === 'approved' ? 'completed' : ($omnify_status === 'pending' ? 'draft' : 'failed')); ?>">
-							<?php echo esc_html($omnify_status_labels[$omnify_status] ?? ucfirst($omnify_status)); ?>
-						</span>
-					</div>
-
-					<div class="omnify-review-meta-actions">
-						<div class="omnify-review-date"><?php echo esc_html($omnify_date); ?></div>
-						<div class="omnify-reviews-actions">
-							<?php if ('approved' !== $omnify_status) : ?>
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_approve_review&id=' . $omnify_review['id']), 'omnify_approve_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--approve" title="<?php esc_attr_e('Approve Review', 'omnifywp-ecommerce'); ?>">
-									<span class="dashicons dashicons-yes" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
-								</a>
-							<?php endif; ?>
-							<?php if ('rejected' !== $omnify_status) : ?>
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_reject_review&id=' . $omnify_review['id']), 'omnify_reject_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--reject" title="<?php esc_attr_e('Reject Review', 'omnifywp-ecommerce'); ?>">
-									<span class="dashicons dashicons-no-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
-								</a>
-							<?php endif; ?>
-							<?php $omnify_is_trashed = !empty($omnify_review['deleted_at']); ?>
-							<?php if ($omnify_is_trashed): ?>
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_restore_review&id=' . $omnify_review['id']), 'omnify_restore_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Restore', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-undo" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span></a>
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_review&id=' . $omnify_review['id']), 'omnify_delete_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Delete permanently', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Permanently delete review?', 'omnifywp-ecommerce'); ?>');">
-									<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
-								</a>
-							<?php else: ?>
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_trash_review&id=' . $omnify_review['id']), 'omnify_trash_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Move to trash', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Trash review?', 'omnifywp-ecommerce'); ?>');">
-									<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
-								</a>
-							<?php endif; ?>
-						</div>
+			<div class="omnify-table-toolbar">
+				<div class="left" style="display: flex; align-items: center;">
+					<input type="checkbox" class="omnify-checkbox omnify-bulk-select-all" style="margin-right: 8px;" id="omnify-reviews-select-all" />
+					<label for="omnify-reviews-select-all" class="selected-count" style="font-size: 13px; font-weight: 500; color: #475569; margin-right: 12px;"><?php esc_html_e('0 selected', 'omnifywp-ecommerce'); ?></label>
+					<div class="omnify-bulk-actions-wrapper" style="display: none; align-items: center; gap: 8px;">
+						<select name="bulk_action">
+							<option value=""><?php esc_html_e('Bulk actions', 'omnifywp-ecommerce'); ?></option>
+							<option value="approve"><?php esc_html_e('Approve All', 'omnifywp-ecommerce'); ?></option>
+							<option value="reject"><?php esc_html_e('Reject', 'omnifywp-ecommerce'); ?></option>
+							<option value="trash"><?php esc_html_e('Move to Trash', 'omnifywp-ecommerce'); ?></option>
+							<option value="restore"><?php esc_html_e('Restore', 'omnifywp-ecommerce'); ?></option>
+							<option value="delete"><?php esc_html_e('Delete Permanently', 'omnifywp-ecommerce'); ?></option>
+						</select>
+						<button type="submit" class="omnify-button omnify-button--secondary omnify-button--sm"><?php esc_html_e('Apply', 'omnifywp-ecommerce'); ?></button>
 					</div>
 				</div>
-			<?php endforeach; ?>
-		</div>
+			</div>
+
+			<div class="omnify-reviews-list">
+				<?php foreach ($omnify_reviews as $omnify_review) :
+					$omnify_product_name = $omnify_product_map[(int) $omnify_review['product_id']] ?? __('Unknown product', 'omnifywp-ecommerce');
+					$omnify_status       = sanitize_key($omnify_review['status'] ?? 'pending');
+					$omnify_rating       = min(5, max(0, (int) ($omnify_review['rating'] ?? 0)));
+					$omnify_content      = wp_strip_all_tags((string) ($omnify_review['content'] ?? ''));
+					$omnify_excerpt      = wp_trim_words($omnify_content, 32, '...');
+					$omnify_date         = date_i18n(get_option('date_format'), strtotime($omnify_review['created_at'] ?? 'now'));
+					$omnify_reviewer     = (string) ($omnify_review['reviewer_name'] ?: __('Anonymous', 'omnifywp-ecommerce'));
+					$omnify_initial      = strtoupper(substr($omnify_reviewer, 0, 1));
+					$omnify_title        = trim((string) ($omnify_review['title'] ?? ''));
+					$omnify_is_trashed   = ! empty($omnify_review['deleted_at']);
+				?>
+					<div class="omnify-review-card">
+						<div class="omnify-review-checkbox">
+							<input class="omnify-checkbox omnify-bulk-item" type="checkbox" name="review_ids[]" value="<?php echo esc_attr($omnify_review['id']); ?>" />
+						</div>
+						<div class="omnify-review-left-col">
+							<div class="omnify-reviewer">
+								<div class="omnify-reviewer-avatar"><?php echo esc_html($omnify_initial); ?></div>
+								<div class="omnify-reviewer-info">
+									<div class="omnify-reviewer-name"><?php echo esc_html($omnify_reviewer); ?></div>
+									<div class="omnify-reviewer-email"><?php echo esc_html($omnify_review['reviewer_email'] ?? ''); ?></div>
+								</div>
+							</div>
+							<div class="omnify-review-product-wrap">
+								<span class="omnify-review-product"><span class="dashicons dashicons-tag" style="font-size:11px; width:11px; height:11px; margin-right:3px; vertical-align:middle;"></span><?php echo esc_html($omnify_product_name); ?></span>
+							</div>
+						</div>
+
+						<div class="omnify-review-copy">
+							<?php if ('' !== $omnify_title) : ?>
+								<h3 class="omnify-review-title"><?php echo esc_html($omnify_title); ?></h3>
+							<?php endif; ?>
+							<p class="omnify-review-excerpt"><?php echo esc_html($omnify_excerpt); ?></p>
+						</div>
+
+						<div class="omnify-review-rating">
+							<div class="omnify-reviews-stars" aria-label="<?php
+							/* translators: %d: Rating */
+							echo esc_attr(sprintf(__('%d out of 5 stars', 'omnifywp-ecommerce'), $omnify_rating)); ?>">
+								<?php for ($omnify_i = 1; $omnify_i <= 5; $omnify_i++) : ?><span class="dashicons <?php echo $omnify_i <= $omnify_rating ? "dashicons-star-filled" : "dashicons-star-empty"; ?>" style="font-size:15px; width:15px; height:15px; color:#f59e0b;"></span><?php endfor; ?>
+							</div>
+							<div class="omnify-review-rating-value">
+								<?php
+								/* translators: %d: Rating */
+								echo esc_html(sprintf(__('%d/5 rating', 'omnifywp-ecommerce'), $omnify_rating)); ?>
+							</div>
+							<span class="omnify-status omnify-status--<?php echo esc_attr($omnify_status === 'approved' ? 'completed' : ($omnify_status === 'pending' ? 'draft' : 'failed')); ?>">
+								<?php echo esc_html($omnify_status_labels[$omnify_status] ?? ucfirst($omnify_status)); ?>
+							</span>
+						</div>
+
+						<div class="omnify-review-meta-actions">
+							<div class="omnify-review-date"><?php echo esc_html($omnify_date); ?></div>
+							<div class="omnify-reviews-actions">
+								<?php if ('approved' !== $omnify_status && ! $omnify_is_trashed) : ?>
+									<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_approve_review&id=' . $omnify_review['id']), 'omnify_approve_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--approve" title="<?php esc_attr_e('Approve Review', 'omnifywp-ecommerce'); ?>">
+										<span class="dashicons dashicons-yes" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+									</a>
+								<?php endif; ?>
+								<?php if ('rejected' !== $omnify_status && ! $omnify_is_trashed) : ?>
+									<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_reject_review&id=' . $omnify_review['id']), 'omnify_reject_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--reject" title="<?php esc_attr_e('Reject Review', 'omnifywp-ecommerce'); ?>">
+										<span class="dashicons dashicons-no-alt" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+									</a>
+								<?php endif; ?>
+								<?php if ($omnify_is_trashed): ?>
+									<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_restore_review&id=' . $omnify_review['id']), 'omnify_restore_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn" title="<?php esc_attr_e('Restore', 'omnifywp-ecommerce'); ?>"><span class="dashicons dashicons-undo" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span></a>
+									<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_delete_review&id=' . $omnify_review['id']), 'omnify_delete_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Delete permanently', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Permanently delete review?', 'omnifywp-ecommerce'); ?>');">
+										<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+									</a>
+								<?php else: ?>
+									<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=omnify_trash_review&id=' . $omnify_review['id']), 'omnify_trash_review_' . $omnify_review['id'])); ?>" class="omnify-icon-btn omnify-icon-btn--danger" title="<?php esc_attr_e('Move to trash', 'omnifywp-ecommerce'); ?>" onclick="return confirm('<?php esc_attr_e('Trash review?', 'omnifywp-ecommerce'); ?>');">
+										<span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 1;"></span>
+									</a>
+								<?php endif; ?>
+							</div>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		</form>
+	<?php endif; ?>
+	</div>
 		<?php if ($omnify_total_pages > 1) : ?>
 			<div class="tablenav" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--omnify-gray-200, #e2e8f0); margin-top: 16px; background: #fff; border-radius: 8px;">
 				<div class="tablenav-pages" style="display: flex; align-items: center; gap: 8px;">
@@ -302,5 +384,4 @@ $omnify_status_labels = [
 				</div>
 			</div>
 		<?php endif; ?>
-	<?php endif; ?>
 </div>

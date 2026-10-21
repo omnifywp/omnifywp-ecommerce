@@ -72,22 +72,110 @@ $omnify_guest_lookup  = ! empty($omnify_template_vars['omnify_guest_lookup']);
 			<p style="font-size: 0.825rem; color: #64748B; margin: 0;"><?php esc_html_e('Files from your digital purchases will appear here.', 'omnifywp-ecommerce'); ?></p>
 		</div>
 	<?php else : ?>
+		<?php
+		global $wpdb;
+		$omnify_downloads_table = $wpdb->prefix . 'omnify_downloads';
+		$omnify_customer_id_for_downloads = absint($omnify_customer['id'] ?? 0);
+		$omnify_file_ids = array_filter(array_map(static fn($f) => absint($f['id'] ?? 0), $omnify_files));
+		$omnify_download_counts = [];
+		if (! empty($omnify_file_ids) && $omnify_customer_id_for_downloads > 0) {
+			$omnify_fids_placeholders = implode(',', array_fill(0, count($omnify_file_ids), '%d'));
+			$omnify_count_rows = $wpdb->get_results($wpdb->prepare(
+				"SELECT file_id, COUNT(*) as cnt FROM {$omnify_downloads_table} WHERE customer_id = %d AND file_id IN ({$omnify_fids_placeholders}) AND status = 'delivered' GROUP BY file_id",
+				$omnify_customer_id_for_downloads,
+				...$omnify_file_ids
+			), ARRAY_A);
+			if (is_array($omnify_count_rows)) {
+				foreach ($omnify_count_rows as $omnify_cr) {
+					$omnify_download_counts[(int) $omnify_cr['file_id']] = (int) $omnify_cr['cnt'];
+				}
+			}
+		}
+		?>
 		<div class="omnify-downloads-grid" style="display: grid; gap: 12px;">
-			<?php foreach ($omnify_files as $omnify_file) : ?>
+			<?php foreach ($omnify_files as $omnify_file) : 
+				$omnify_access = $omnify_file['access'] ?? [];
+				$omnify_expires_at = $omnify_access['expires_at'] ?? null;
+				$omnify_cid = absint($omnify_customer['id'] ?? ($omnify_access['customer_id'] ?? 0));
+				$omnify_settings = get_option('omnify_settings', []);
+				$omnify_limit = isset($omnify_file['product']['download_limit']) && absint($omnify_file['product']['download_limit']) > 0
+					? absint($omnify_file['product']['download_limit'])
+					: (isset($omnify_settings['download_limit']) ? absint($omnify_settings['download_limit']) : 0);
+
+				$omnify_remaining = null;
+				$omnify_is_capped = ($omnify_limit > 0 && $omnify_cid > 0);
+				if ($omnify_is_capped) {
+					$omnify_cnt = $omnify_download_counts[absint($omnify_file['id'])] ?? 0;
+					$omnify_remaining = max(0, $omnify_limit - $omnify_cnt);
+				}
+
+				$omnify_is_expired = false;
+				$omnify_expiry_badge = '';
+				if (! empty($omnify_expires_at)) {
+					$omnify_exp_ts = strtotime((string) $omnify_expires_at . ' UTC');
+					if ($omnify_exp_ts < time()) {
+						$omnify_is_expired = true;
+						$omnify_expiry_badge = __('Expired', 'omnifywp-ecommerce');
+					} else {
+						$omnify_days_left = (int) ceil(($omnify_exp_ts - time()) / 86400);
+						$omnify_expiry_badge = sprintf(_n('Expires in %d day', 'Expires in %d days', $omnify_days_left, 'omnifywp-ecommerce'), $omnify_days_left);
+					}
+				}
+
+				$omnify_can_download = ! $omnify_is_expired && (! $omnify_is_capped || ($omnify_remaining ?? 1) > 0);
+			?>
 				<div class="omnify-download-row-card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; transition: border-color 0.15s ease;">
 					<div style="display: flex; align-items: center; gap: 14px; min-width: 0;">
-						<div style="width: 42px; height: 42px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+						<div style="width: 42px; height: 42px; border-radius: 10px; background: <?php echo $omnify_can_download ? '#ECFDF5' : '#F1F5F9'; ?>; color: <?php echo $omnify_can_download ? '#059669' : '#94A3B8'; ?>; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
 						</div>
 						<div style="min-width: 0;">
 							<strong style="display: block; font-size: 0.9rem; font-weight: 700; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html((string) $omnify_file['file_name']); ?></strong>
-							<span style="font-size: 0.78rem; color: #64748B;"><?php echo esc_html((string) ($omnify_file['product']['name'] ?? 'Product asset')); ?></span>
+							<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px;">
+								<span style="font-size: 0.78rem; color: #64748B;"><?php echo esc_html((string) ($omnify_file['product']['name'] ?? 'Product asset')); ?></span>
+								<?php if ($omnify_is_capped) : ?>
+									<?php if ($omnify_remaining > 0) : ?>
+										<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #F1F5F9; color: #475569;">
+											<?php printf(esc_html(_n('%d download remaining', '%d downloads remaining', $omnify_remaining, 'omnifywp-ecommerce')), $omnify_remaining); ?>
+										</span>
+									<?php else : ?>
+										<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #FEF2F2; color: #B91C1C;">
+											<?php esc_html_e('Download limit reached', 'omnifywp-ecommerce'); ?>
+										</span>
+									<?php endif; ?>
+								<?php else : ?>
+									<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #ECFDF5; color: #047857;">
+										<?php esc_html_e('Unlimited downloads', 'omnifywp-ecommerce'); ?>
+									</span>
+								<?php endif; ?>
+
+								<?php if ($omnify_is_expired) : ?>
+									<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #FEF2F2; color: #B91C1C;">
+										<?php echo esc_html($omnify_expiry_badge); ?>
+									</span>
+								<?php elseif (! empty($omnify_expiry_badge)) : ?>
+									<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #FEF3C7; color: #92400E;">
+										<?php echo esc_html($omnify_expiry_badge); ?>
+									</span>
+								<?php else : ?>
+									<span class="omnify-badge" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: #F1F5F9; color: #64748B;">
+										<?php esc_html_e('No expiration', 'omnifywp-ecommerce'); ?>
+									</span>
+								<?php endif; ?>
+							</div>
 						</div>
 					</div>
-					<a href="<?php echo esc_url((string) $omnify_file['download_url']); ?>" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 9999px; background: #18794E; color: #FFFFFF; font-size: 0.8rem; font-weight: 600; text-decoration: none; flex-shrink: 0; box-shadow: 0 2px 6px rgba(24,121,78,0.2);">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-						<span><?php esc_html_e('Download', 'omnifywp-ecommerce'); ?></span>
-					</a>
+					<?php if ($omnify_can_download) : ?>
+						<a href="<?php echo esc_url((string) $omnify_file['download_url']); ?>" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 9999px; background: #18794E; color: #FFFFFF; font-size: 0.8rem; font-weight: 600; text-decoration: none; flex-shrink: 0; box-shadow: 0 2px 6px rgba(24,121,78,0.2);">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+							<span><?php esc_html_e('Download', 'omnifywp-ecommerce'); ?></span>
+						</a>
+					<?php else : ?>
+						<button disabled style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 9999px; background: #E2E8F0; color: #94A3B8; font-size: 0.8rem; font-weight: 600; border: none; cursor: not-allowed; flex-shrink: 0;">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+							<span><?php esc_html_e('Unavailable', 'omnifywp-ecommerce'); ?></span>
+						</button>
+					<?php endif; ?>
 				</div>
 			<?php endforeach; ?>
 		</div>

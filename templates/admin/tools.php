@@ -12,24 +12,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 global $wpdb;
 
 // Safely gather live database metrics
-$omnify_total_products = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'omnify_product' AND post_status != 'trash'");
+$omnify_total_products = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status != %s", 'omnify_product', 'trash'));
 
 $omnify_total_orders = 0;
 $omnify_orders_table = $wpdb->prefix . 'omnify_orders';
 if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_orders_table)) === $omnify_orders_table) {
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	$omnify_total_orders = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$omnify_orders_table}");
 }
 
 $omnify_total_customers = 0;
 $omnify_customers_table = $wpdb->prefix . 'omnify_customers';
 if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $omnify_customers_table)) === $omnify_customers_table) {
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	$omnify_total_customers = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$omnify_customers_table}");
 }
 
-$omnify_total_reviews = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_type = 'omnify_review' AND comment_approved != 'trash'");
+$omnify_total_reviews = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_type = %s AND comment_approved != %s", 'omnify_review', 'trash'));
 
-$omnify_wc_products_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status != 'trash'");
-$omnify_wc_orders_count   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_status != 'trash'");
+$omnify_wc_products_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status != %s", 'product', 'trash'));
+
+// WooCommerce HPOS stores orders in {$wpdb->prefix}wc_orders when the feature is enabled.
+$omnify_wc_orders_count = 0;
+$omnify_wc_hpos_enabled = class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')
+	&& \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+if ($omnify_wc_hpos_enabled) {
+	$omnify_wc_orders_table = $wpdb->prefix . 'wc_orders';
+	if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $omnify_wc_orders_table)) === $omnify_wc_orders_table) {
+		$omnify_wc_orders_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$omnify_wc_orders_table} WHERE type = %s AND status != %s", 'shop_order', 'trash'));
+	}
+} else {
+	$omnify_wc_orders_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status != %s", 'shop_order', 'trash'));
+}
 ?>
 <div class="omnify-admin-wrapper omnify-tools-page">
 	<?php $omnify_active_tab = 'tools'; ?>

@@ -201,6 +201,26 @@ class Omnify_Abandoned_Cart_Repository {
 		return array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
 	}
 
+	public function update_coupon_code(int $omnify_id, string $omnify_code): bool {
+		global $wpdb;
+
+		if ($omnify_id <= 0) {
+			return false;
+		}
+
+		$omnify_result = \Omnify\eCommerce\Support\Omnify_DB::update(
+			$wpdb,
+			$this->table(),
+			[
+				'coupon_code' => sanitize_text_field($omnify_code),
+				'updated_at'  => $this->now(),
+			],
+			['id' => $omnify_id]
+		);
+
+		return false !== $omnify_result;
+	}
+
 	public function mark_sent(int $omnify_id): bool {
 		global $wpdb;
 

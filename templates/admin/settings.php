@@ -12,7 +12,7 @@ $omnify_settings = $omnify_template_vars['omnify_settings'] ?? [];
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $omnify_active_section = isset($_GET['section']) ? sanitize_key(wp_unslash($_GET['section'])) : 'general';
 
-$omnify_allowed_sections = ['general', 'pages', 'roles', 'payments', 'tax', 'delivery', 'checkout', 'fraud', 'marketing', 'design', 'email'];
+$omnify_allowed_sections = ['general', 'pages', 'roles', 'payments', 'tax', 'delivery', 'checkout', 'fraud', 'marketing', 'design', 'email', 'tools'];
 if (! in_array($omnify_active_section, $omnify_allowed_sections, true)) {
 	$omnify_active_section = 'general';
 }
@@ -207,6 +207,30 @@ function omnify_render_form_footer() {
 	<div class="omnify-modern-settings-layout">
 		<!-- Left Sidebar Category Navigation -->
 		<aside class="omnify-modern-sub-sidebar">
+			<!-- Live Settings Search -->
+			<div class="omnify-modern-settings-search" role="search">
+				<span class="dashicons dashicons-search omnify-settings-search__icon" aria-hidden="true"></span>
+				<input
+					type="search"
+					id="omnify-settings-search"
+					class="omnify-settings-search__input"
+					placeholder="<?php esc_attr_e('Search settings…', 'omnifywp-ecommerce'); ?>"
+					aria-label="<?php esc_attr_e('Search settings on this page', 'omnifywp-ecommerce'); ?>"
+					autocomplete="off"
+					spellcheck="false"
+				/>
+				<span class="omnify-settings-search__count" aria-live="polite"></span>
+				<button type="button" class="omnify-settings-search__clear" aria-label="<?php esc_attr_e('Clear search', 'omnifywp-ecommerce'); ?>" hidden>
+					<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
+				</button>
+				<div
+					class="omnify-settings-search__results"
+					id="omnify-settings-search-results"
+					role="listbox"
+					aria-label="<?php esc_attr_e('Matching settings', 'omnifywp-ecommerce'); ?>"
+					hidden
+				></div>
+			</div>
 			<nav class="omnify-modern-sub-nav">
 				<?php foreach ($omnify_sub_sections as $sub_sec) : 
 					$omnify_sec_active = in_array($omnify_active_section, $sub_sec['actives'], true);
@@ -234,6 +258,11 @@ function omnify_render_form_footer() {
 
 		<!-- Main Settings Form content -->
 		<div class="omnify-modern-content-card">
+			<div class="omnify-settings-search-empty" id="omnify-settings-search-empty" hidden>
+				<span class="dashicons dashicons-search" aria-hidden="true"></span>
+				<p><?php esc_html_e('No matching settings', 'omnifywp-ecommerce'); ?></p>
+				<span class="omnify-settings-search-empty__hint"><?php esc_html_e('No settings on this page match. Pick a suggestion above to jump to another section.', 'omnifywp-ecommerce'); ?></span>
+			</div>
 
 			<?php if (in_array($omnify_active_section, ['general', 'pages', 'roles'], true)) : ?>
 				<!-- GENERAL SETTINGS HUB -->
@@ -547,11 +576,11 @@ function omnify_render_form_footer() {
 								<div class="omnify-settings-section-block">
 									<?php omnify_render_section_divider(__('Tax Calculation Options', 'omnifywp-ecommerce'), __('Global tax settings applied to product catalog prices and delivery rates.', 'omnifywp-ecommerce'), 'dashicons-calculator'); ?>
 
-									<div class="omnify-modern-form-row">
+									<div class="omnify-modern-form-row omnify-tax-defaults-inputs-grid">
 										<div class="omnify-modern-form-group">
 											<label for="gen_tax_rate"><?php esc_html_e('Default Store Tax Rate (%)', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix">
-												<input type="number" step="0.0001" min="0" max="100" id="gen_tax_rate" name="tax_rate" value="<?php echo esc_attr((string) ($omnify_settings['tax_rate'] ?? 0)); ?>" placeholder="0.00" style="width: 100%;" />
+												<input type="number" step="0.0001" min="0" max="100" id="gen_tax_rate" name="tax_rate" value="<?php echo esc_attr((string) ($omnify_settings['tax_rate'] ?? 0)); ?>" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important; width: 100%;" />
 												<span class="omnify-input-suffix">%</span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Fallback tax rate applied when no destination-specific regional tax rule matches.', 'omnifywp-ecommerce'); ?></span>
@@ -561,9 +590,17 @@ function omnify_render_form_footer() {
 											<input type="text" id="gen_tax_label" name="tax_label" value="<?php echo esc_attr((string) ($omnify_settings['tax_label'] ?? 'Tax')); ?>" placeholder="<?php esc_attr_e('e.g. Sales Tax, VAT, GST', 'omnifywp-ecommerce'); ?>" style="width: 100%;" />
 											<span class="help-text"><?php esc_html_e('The display name shown on cart, checkout, receipts, and invoices.', 'omnifywp-ecommerce'); ?></span>
 										</div>
+										<div class="omnify-modern-form-group">
+											<label for="tax_rounding"><?php esc_html_e('Tax Rounding Precision', 'omnifywp-ecommerce'); ?> <span class="dashicons dashicons-info" title="<?php esc_attr_e('Choose how rounding is calculated.', 'omnifywp-ecommerce'); ?>"></span></label>
+											<select id="tax_rounding" name="tax_rounding" style="width: 100%;">
+												<option value="line" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'line'); ?>><?php esc_html_e('Round tax at line item level', 'omnifywp-ecommerce'); ?></option>
+												<option value="subtotal" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'subtotal'); ?>><?php esc_html_e('Round tax at cart subtotal level', 'omnifywp-ecommerce'); ?></option>
+											</select>
+											<span class="help-text"><?php esc_html_e('Subtotal level rounding prevents 1-cent discrepancies when items have fractional tax rates.', 'omnifywp-ecommerce'); ?></span>
+										</div>
 									</div>
 
-									<div class="omnify-toggle-cards-grid" style="margin-top: 18px;">
+									<div class="omnify-toggle-cards-grid omnify-tax-defaults-toggles-grid">
 										<?php omnify_render_toggle_card(
 											'prices_include_tax',
 											$omnify_settings['prices_include_tax'] ?? 0,
@@ -577,21 +614,13 @@ function omnify_render_form_footer() {
 											__('Charge Tax on Delivery', 'omnifywp-ecommerce'),
 											__('When enabled, the matched delivery zone tax rate also applies to delivery shipping costs.', 'omnifywp-ecommerce')
 										); ?>
-									</div>
 
-									<div class="omnify-modern-form-row" style="margin-top: 18px;">
-										<div class="omnify-modern-form-group">
-											<label><?php esc_html_e('Tax Reporting Codes', 'omnifywp-ecommerce'); ?></label>
-											<?php omnify_render_toggle('tax_reporting_enabled', $omnify_settings['tax_reporting_enabled'] ?? 0, __('Stores reporting codes on tax rules for export and accounting workflows.', 'omnifywp-ecommerce')); ?>
-										</div>
-										<div class="omnify-modern-form-group">
-											<label for="tax_rounding"><?php esc_html_e('Tax Rounding Precision', 'omnifywp-ecommerce'); ?> <span class="dashicons dashicons-info" title="<?php esc_attr_e('Choose how rounding is calculated.', 'omnifywp-ecommerce'); ?>"></span></label>
-											<select id="tax_rounding" name="tax_rounding" style="width: 100%;">
-												<option value="line" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'line'); ?>><?php esc_html_e('Round tax at line item level', 'omnifywp-ecommerce'); ?></option>
-												<option value="subtotal" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'subtotal'); ?>><?php esc_html_e('Round tax at cart subtotal level', 'omnifywp-ecommerce'); ?></option>
-											</select>
-											<span class="help-text"><?php esc_html_e('Subtotal level rounding prevents 1-cent discrepancies when items have fractional tax rates.', 'omnifywp-ecommerce'); ?></span>
-										</div>
+										<?php omnify_render_toggle_card(
+											'tax_reporting_enabled',
+											$omnify_settings['tax_reporting_enabled'] ?? 0,
+											__('Tax Reporting Codes', 'omnifywp-ecommerce'),
+											__('Stores reporting codes on tax rules for export and accounting workflows.', 'omnifywp-ecommerce')
+										); ?>
 									</div>
 
 									<div style="margin-top: 16px; padding: 12px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
@@ -854,11 +883,11 @@ function omnify_render_form_footer() {
 						<div class="omnify-settings-section-block" style="margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid #e2e8f0;">
 							<?php omnify_render_section_divider(__('Tax Calculation & Store Defaults', 'omnifywp-ecommerce'), __('Configure baseline store tax rate, price display modes, delivery taxation, and rounding precision.', 'omnifywp-ecommerce'), 'dashicons-calculator'); ?>
 
-							<div class="omnify-modern-form-row">
+							<div class="omnify-modern-form-row omnify-tax-defaults-inputs-grid">
 								<div class="omnify-modern-form-group">
 									<label for="omnify_tax_rate"><?php esc_html_e('Default Store Tax Rate (%)', 'omnifywp-ecommerce'); ?></label>
 									<div class="omnify-input-wrapper omnify-input-with-suffix">
-										<input type="number" step="0.0001" min="0" max="100" id="omnify_tax_rate" name="tax_rate" value="<?php echo esc_attr((string) ($omnify_settings['tax_rate'] ?? 0)); ?>" placeholder="0.00" style="width: 100%;" />
+										<input type="number" step="0.0001" min="0" max="100" id="omnify_tax_rate" name="tax_rate" value="<?php echo esc_attr((string) ($omnify_settings['tax_rate'] ?? 0)); ?>" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important; width: 100%;" />
 										<span class="omnify-input-suffix">%</span>
 									</div>
 									<span class="help-text"><?php esc_html_e('Fallback tax rate applied when no destination-specific regional tax rule matches.', 'omnifywp-ecommerce'); ?></span>
@@ -868,9 +897,17 @@ function omnify_render_form_footer() {
 									<input type="text" id="omnify_tax_label" name="tax_label" value="<?php echo esc_attr((string) ($omnify_settings['tax_label'] ?? 'Tax')); ?>" placeholder="<?php esc_attr_e('e.g. Sales Tax, VAT, GST', 'omnifywp-ecommerce'); ?>" style="width: 100%;" />
 									<span class="help-text"><?php esc_html_e('The display name shown on cart, checkout, receipts, and invoices.', 'omnifywp-ecommerce'); ?></span>
 								</div>
+								<div class="omnify-modern-form-group">
+									<label for="omnify_tax_rounding"><?php esc_html_e('Tax Rounding Precision', 'omnifywp-ecommerce'); ?> <span class="dashicons dashicons-info" title="<?php esc_attr_e('Choose how rounding is calculated.', 'omnifywp-ecommerce'); ?>"></span></label>
+									<select id="omnify_tax_rounding" name="tax_rounding" style="width: 100%;">
+										<option value="line" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'line'); ?>><?php esc_html_e('Round tax at line item level', 'omnifywp-ecommerce'); ?></option>
+										<option value="subtotal" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'subtotal'); ?>><?php esc_html_e('Round tax at cart subtotal level', 'omnifywp-ecommerce'); ?></option>
+									</select>
+									<span class="help-text"><?php esc_html_e('Subtotal level rounding prevents 1-cent discrepancies when items have fractional tax rates.', 'omnifywp-ecommerce'); ?></span>
+								</div>
 							</div>
 
-							<div class="omnify-toggle-cards-grid" style="margin-top: 18px;">
+							<div class="omnify-toggle-cards-grid omnify-tax-defaults-toggles-grid">
 								<?php omnify_render_toggle_card(
 									'prices_include_tax',
 									$omnify_settings['prices_include_tax'] ?? 0,
@@ -884,21 +921,13 @@ function omnify_render_form_footer() {
 									__('Charge Tax on Delivery', 'omnifywp-ecommerce'),
 									__('When enabled, the matched delivery zone tax rate also applies to delivery shipping costs.', 'omnifywp-ecommerce')
 								); ?>
-							</div>
 
-							<div class="omnify-modern-form-row" style="margin-top: 18px;">
-								<div class="omnify-modern-form-group">
-									<label><?php esc_html_e('Tax Reporting Codes', 'omnifywp-ecommerce'); ?></label>
-									<?php omnify_render_toggle('tax_reporting_enabled', $omnify_settings['tax_reporting_enabled'] ?? 0, __('Stores reporting codes on tax rules for export and accounting workflows.', 'omnifywp-ecommerce')); ?>
-								</div>
-								<div class="omnify-modern-form-group">
-									<label for="omnify_tax_rounding"><?php esc_html_e('Tax Rounding Precision', 'omnifywp-ecommerce'); ?> <span class="dashicons dashicons-info" title="<?php esc_attr_e('Choose how rounding is calculated.', 'omnifywp-ecommerce'); ?>"></span></label>
-									<select id="omnify_tax_rounding" name="tax_rounding" style="width: 100%;">
-										<option value="line" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'line'); ?>><?php esc_html_e('Round tax at line item level', 'omnifywp-ecommerce'); ?></option>
-										<option value="subtotal" <?php selected($omnify_settings['tax_rounding'] ?? 'line', 'subtotal'); ?>><?php esc_html_e('Round tax at cart subtotal level', 'omnifywp-ecommerce'); ?></option>
-									</select>
-									<span class="help-text"><?php esc_html_e('Subtotal level rounding prevents 1-cent discrepancies when items have fractional tax rates.', 'omnifywp-ecommerce'); ?></span>
-								</div>
+								<?php omnify_render_toggle_card(
+									'tax_reporting_enabled',
+									$omnify_settings['tax_reporting_enabled'] ?? 0,
+									__('Tax Reporting Codes', 'omnifywp-ecommerce'),
+									__('Stores reporting codes on tax rules for export and accounting workflows.', 'omnifywp-ecommerce')
+								); ?>
 							</div>
 						</div>
 
@@ -1000,7 +1029,7 @@ function omnify_render_form_footer() {
 											</td>
 											<td>
 												<div class="omnify-input-wrapper omnify-input-with-suffix">
-													<input type="number" step="0.0001" min="0" max="100" name="tax_rules[<?php echo esc_attr((string) $omnify_index); ?>][rate]" value="<?php echo esc_attr((string) ($omnify_rule['rate'] ?? '')); ?>" placeholder="0.00" style="width: 100%;" required />
+													<input type="number" step="0.0001" min="0" max="100" name="tax_rules[<?php echo esc_attr((string) $omnify_index); ?>][rate]" value="<?php echo esc_attr((string) ($omnify_rule['rate'] ?? '')); ?>" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important; width: 100%;" required />
 													<span class="omnify-input-suffix">%</span>
 												</div>
 											</td>
@@ -1195,10 +1224,11 @@ function omnify_render_form_footer() {
 										</div>
 
 										<!-- Section 2: Method, Rate & Threshold -->
-										<div class="omnify-zone-field-grid omnify-grid-3">
+										<div class="omnify-zone-field-grid omnify-grid-2">
 											<div class="omnify-modern-form-group">
 												<label class="omnify-field-label"><?php esc_html_e('Method Title', 'omnifywp-ecommerce'); ?></label>
 												<input type="text" name="delivery_zones[<?php echo esc_attr((string) $omnify_index); ?>][method_name]" value="<?php echo esc_attr($omnify_method_name); ?>" placeholder="<?php esc_attr_e('e.g. Standard Shipping', 'omnifywp-ecommerce'); ?>" />
+												<span class="help-text"><?php esc_html_e('The shipping method title displayed to shoppers at checkout.', 'omnifywp-ecommerce'); ?></span>
 											</div>
 
 											<div class="omnify-modern-form-group">
@@ -1208,28 +1238,27 @@ function omnify_render_form_footer() {
 													<option value="free_shipping" <?php selected($omnify_method_type, 'free_shipping'); ?>><?php esc_html_e('Free Shipping (Always $0)', 'omnifywp-ecommerce'); ?></option>
 													<option value="local_pickup" <?php selected($omnify_method_type, 'local_pickup'); ?>><?php esc_html_e('Local Pickup / Store Collection', 'omnifywp-ecommerce'); ?></option>
 												</select>
+												<span class="help-text"><?php esc_html_e('Select charging model or collection arrangement for this rate.', 'omnifywp-ecommerce'); ?></span>
 											</div>
+										</div>
 
+										<div class="omnify-zone-field-grid omnify-grid-2" style="margin-top: 14px;">
 											<div class="omnify-modern-form-group omnify-zone-rate-group <?php echo 'free_shipping' === $omnify_method_type ? 'is-disabled-rate' : ''; ?>">
 												<label class="omnify-field-label"><?php esc_html_e('Shipping Cost', 'omnifywp-ecommerce'); ?></label>
 												<div class="omnify-input-wrapper omnify-input-with-prefix">
 													<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
 													<input type="number" step="0.01" min="0" name="delivery_zones[<?php echo esc_attr((string) $omnify_index); ?>][cost]" value="<?php echo esc_attr(number_format($omnify_rate, 2, '.', '')); ?>" placeholder="0.00" required style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												</div>
+												<span class="help-text"><?php esc_html_e('Base delivery fee charged on orders in this zone.', 'omnifywp-ecommerce'); ?></span>
 											</div>
-										</div>
 
-										<!-- Free Shipping Minimum Threshold -->
-										<div class="omnify-zone-field-grid omnify-grid-1" style="margin-top: 14px;">
 											<div class="omnify-modern-form-group">
-												<div class="omnify-field-label-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-													<label class="omnify-field-label" style="margin:0;"><?php esc_html_e('Free Shipping Order Minimum', 'omnifywp-ecommerce'); ?></label>
-													<span class="omnify-field-hint"><?php esc_html_e('Orders at or above this amount unlock free shipping. Set to 0 to disable.', 'omnifywp-ecommerce'); ?></span>
-												</div>
-												<div class="omnify-input-wrapper omnify-input-with-prefix" style="max-width: 320px;">
+												<label class="omnify-field-label"><?php esc_html_e('Free Shipping Order Minimum', 'omnifywp-ecommerce'); ?></label>
+												<div class="omnify-input-wrapper omnify-input-with-prefix">
 													<span class="omnify-input-prefix"><?php echo esc_html($omnify_symbol); ?></span>
 													<input type="number" step="0.01" min="0" name="delivery_zones[<?php echo esc_attr((string) $omnify_index); ?>][free_min]" value="<?php echo esc_attr(number_format($omnify_free_min, 2, '.', '')); ?>" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												</div>
+												<span class="help-text"><?php esc_html_e('Orders at or above this amount unlock free shipping. Set to 0 to disable.', 'omnifywp-ecommerce'); ?></span>
 											</div>
 										</div>
 									</div>
@@ -1548,7 +1577,7 @@ function omnify_render_form_footer() {
 										<div class="omnify-modern-form-group">
 											<label for="abandoned_cart_delay_minutes"><?php esc_html_e('Send Reminder After', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix">
-												<input type="number" id="abandoned_cart_delay_minutes" name="abandoned_cart_delay_minutes" min="5" value="<?php echo esc_attr($omnify_settings['abandoned_cart_delay_minutes'] ?? 60); ?>" />
+												<input type="number" id="abandoned_cart_delay_minutes" name="abandoned_cart_delay_minutes" min="5" value="<?php echo esc_attr($omnify_settings['abandoned_cart_delay_minutes'] ?? 60); ?>" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												<span class="omnify-input-suffix"><?php esc_html_e('mins', 'omnifywp-ecommerce'); ?></span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Delay before sending the recovery message.', 'omnifywp-ecommerce'); ?></span>
@@ -1556,7 +1585,7 @@ function omnify_render_form_footer() {
 										<div class="omnify-modern-form-group">
 											<label for="abandoned_cart_expire_days"><?php esc_html_e('Recovery Link Expiry', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix">
-												<input type="number" id="abandoned_cart_expire_days" name="abandoned_cart_expire_days" min="1" value="<?php echo esc_attr($omnify_settings['abandoned_cart_expire_days'] ?? 14); ?>" />
+												<input type="number" id="abandoned_cart_expire_days" name="abandoned_cart_expire_days" min="1" value="<?php echo esc_attr($omnify_settings['abandoned_cart_expire_days'] ?? 14); ?>" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												<span class="omnify-input-suffix"><?php esc_html_e('days', 'omnifywp-ecommerce'); ?></span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Cart restore session expiration window.', 'omnifywp-ecommerce'); ?></span>
@@ -1593,7 +1622,7 @@ function omnify_render_form_footer() {
 										<div class="omnify-modern-form-group">
 											<label for="download_link_expiry"><?php esc_html_e('Download Link Expiry Window', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix">
-												<input type="number" id="download_link_expiry" name="download_link_expiry" min="0" max="365" value="<?php echo esc_attr($omnify_settings['download_link_expiry'] ?? 7); ?>" />
+												<input type="number" id="download_link_expiry" name="download_link_expiry" min="0" max="365" value="<?php echo esc_attr($omnify_settings['download_link_expiry'] ?? 7); ?>" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												<span class="omnify-input-suffix"><?php esc_html_e('days', 'omnifywp-ecommerce'); ?></span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Active duration for signed file download URLs. Enter 0 for lifetime access.', 'omnifywp-ecommerce'); ?></span>
@@ -1601,7 +1630,7 @@ function omnify_render_form_footer() {
 										<div class="omnify-modern-form-group">
 											<label for="download_limit"><?php esc_html_e('Maximum Download Attempts per File', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix">
-												<input type="number" id="download_limit" name="download_limit" min="0" value="<?php echo esc_attr($omnify_settings['download_limit'] ?? 0); ?>" />
+												<input type="number" id="download_limit" name="download_limit" min="0" value="<?php echo esc_attr($omnify_settings['download_limit'] ?? 0); ?>" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												<span class="omnify-input-suffix"><?php esc_html_e('times', 'omnifywp-ecommerce'); ?></span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Maximum allowed download clicks per buyer. Enter 0 for unlimited downloads.', 'omnifywp-ecommerce'); ?></span>
@@ -1651,7 +1680,7 @@ function omnify_render_form_footer() {
 										<div class="omnify-modern-form-group" style="margin-top: 10px;">
 											<label for="refund_duration"><?php esc_html_e('Eligible Refund Window', 'omnifywp-ecommerce'); ?></label>
 											<div class="omnify-input-wrapper omnify-input-with-suffix" style="max-width: 220px;">
-												<input type="number" id="refund_duration" name="refund_duration" min="1" max="120" value="<?php echo esc_attr((string) ($omnify_settings['refund_duration'] ?? 14)); ?>" />
+												<input type="number" id="refund_duration" name="refund_duration" min="1" max="120" value="<?php echo esc_attr((string) ($omnify_settings['refund_duration'] ?? 14)); ?>" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 												<span class="omnify-input-suffix"><?php esc_html_e('days', 'omnifywp-ecommerce'); ?></span>
 											</div>
 											<span class="help-text"><?php esc_html_e('Maximum days after purchase that a customer can submit a refund request.', 'omnifywp-ecommerce'); ?></span>
@@ -1823,7 +1852,7 @@ function omnify_render_form_footer() {
 					<?php omnify_render_form_footer(); ?>
 				</form>
 
-			<?php elseif (in_array($omnify_active_section, ['design', 'email'], true)) : ?>
+			<?php elseif (in_array($omnify_active_section, ['design', 'email', 'tools'], true)) : ?>
 				<!-- STOREFRONT DESIGN HUB -->
 				<div class="omnify-modern-card-header-tabs">
 					<div class="omnify-settings-subtabs">
@@ -1834,6 +1863,10 @@ function omnify_render_form_footer() {
 						<a href="<?php echo esc_url(omnify_settings_url('email')); ?>" class="omnify-settings-subtab <?php echo $omnify_active_section === 'email' ? 'is-active' : ''; ?>">
 							<span class="dashicons dashicons-email-alt"></span>
 							<?php esc_html_e('Email Templates', 'omnifywp-ecommerce'); ?>
+						</a>
+						<a href="<?php echo esc_url(omnify_settings_url('tools')); ?>" class="omnify-settings-subtab <?php echo $omnify_active_section === 'tools' ? 'is-active' : ''; ?>">
+							<span class="dashicons dashicons-admin-tools"></span>
+							<?php esc_html_e('Tools & Maintenance', 'omnifywp-ecommerce'); ?>
 						</a>
 					</div>
 				</div>
@@ -3456,6 +3489,96 @@ function omnify_render_form_footer() {
 									<?php esc_html_e('Close', 'omnifywp-ecommerce'); ?>
 								</button>
 							</div>
+						</div>
+					</div>
+
+				<?php elseif ($omnify_active_section === 'tools') : ?>
+					<!-- ══ TOOLS & DATABASE MAINTENANCE (Item 35) ════════════════════════════════ -->
+					<div class="omnify-modern-card-body">
+						<?php omnify_render_section_title(__('System & Database Maintenance', 'omnifywp-ecommerce'), __('Optimize database tables, clean transient cache, purge expired abandoned carts, and re-sync product inventory states.', 'omnifywp-ecommerce')); ?>
+
+						<?php if (isset($_GET['message']) && 'db_maintenance_completed' === $_GET['message']) : ?>
+							<div class="notice notice-success is-dismissible" style="grid-column: span 2; margin: 0 0 16px;">
+								<p><strong><?php esc_html_e('Database maintenance routine completed successfully.', 'omnifywp-ecommerce'); ?></strong></p>
+							</div>
+						<?php endif; ?>
+
+						<div class="omnify-tools-grid" style="grid-column: span 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+							<!-- Transients & Cache Tool -->
+							<div class="omnify-tool-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px;">
+								<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+									<span style="width: 36px; height: 36px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center;">
+										<span class="dashicons dashicons-trash" style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;"></span>
+									</span>
+									<div>
+										<h4 style="margin: 0; font-size: 15px; color: #0f172a;"><?php esc_html_e('Transients & Stale Sessions', 'omnifywp-ecommerce'); ?></h4>
+										<span style="font-size: 12px; color: #64748b;"><?php esc_html_e('Clear expired cache and locks', 'omnifywp-ecommerce'); ?></span>
+									</div>
+								</div>
+								<p style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 16px; min-height: 40px;"><?php esc_html_e('Removes expired temporary checkout locks, rate limits, and transient data.', 'omnifywp-ecommerce'); ?></p>
+								<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+									<?php wp_nonce_field('omnify_run_db_maintenance_nonce'); ?>
+									<input type="hidden" name="action" value="omnify_run_db_maintenance" />
+									<input type="hidden" name="maintenance_type" value="transients" />
+									<button type="submit" class="button button-secondary"><?php esc_html_e('Clear Transients', 'omnifywp-ecommerce'); ?></button>
+								</form>
+							</div>
+
+							<!-- Abandoned Carts Tool -->
+							<div class="omnify-tool-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px;">
+								<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+									<span style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center;">
+										<span class="dashicons dashicons-cart" style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;"></span>
+									</span>
+									<div>
+										<h4 style="margin: 0; font-size: 15px; color: #0f172a;"><?php esc_html_e('Stale Abandoned Carts', 'omnifywp-ecommerce'); ?></h4>
+										<span style="font-size: 12px; color: #64748b;"><?php esc_html_e('Purge records > 60 days old', 'omnifywp-ecommerce'); ?></span>
+									</div>
+								</div>
+								<p style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 16px; min-height: 40px;"><?php esc_html_e('Deletes obsolete abandoned cart records and non-recovered guest sessions.', 'omnifywp-ecommerce'); ?></p>
+								<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+									<?php wp_nonce_field('omnify_run_db_maintenance_nonce'); ?>
+									<input type="hidden" name="action" value="omnify_run_db_maintenance" />
+									<input type="hidden" name="maintenance_type" value="carts" />
+									<button type="submit" class="button button-secondary"><?php esc_html_e('Purge Stale Carts', 'omnifywp-ecommerce'); ?></button>
+								</form>
+							</div>
+
+							<!-- Bundle Stock Synchronization Tool -->
+							<div class="omnify-tool-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px;">
+								<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+									<span style="width: 36px; height: 36px; border-radius: 8px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center;">
+										<span class="dashicons dashicons-update" style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;"></span>
+									</span>
+									<div>
+										<h4 style="margin: 0; font-size: 15px; color: #0f172a;"><?php esc_html_e('Re-sync Bundle Stocks', 'omnifywp-ecommerce'); ?></h4>
+										<span style="font-size: 12px; color: #64748b;"><?php esc_html_e('Sync bundle status with children', 'omnifywp-ecommerce'); ?></span>
+									</div>
+								</div>
+								<p style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 16px; min-height: 40px;"><?php esc_html_e('Re-evaluates inventory of all components inside product bundles and sets stock statuses.', 'omnifywp-ecommerce'); ?></p>
+								<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+									<?php wp_nonce_field('omnify_run_db_maintenance_nonce'); ?>
+									<input type="hidden" name="action" value="omnify_run_db_maintenance" />
+									<input type="hidden" name="maintenance_type" value="bundles" />
+									<button type="submit" class="button button-secondary"><?php esc_html_e('Re-sync Bundles', 'omnifywp-ecommerce'); ?></button>
+								</form>
+							</div>
+
+							<!-- Execute All Maintenance Tasks -->
+							<div class="omnify-tool-card" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+								<div>
+									<h4 style="margin: 0 0 6px; font-size: 15px; color: #0f172a;"><?php esc_html_e('Run Complete Optimization', 'omnifywp-ecommerce'); ?></h4>
+									<p style="font-size: 13px; color: #64748b; margin: 0 0 16px; line-height: 1.5;"><?php esc_html_e('Executes all maintenance routines sequentially to keep your store fast and lean.', 'omnifywp-ecommerce'); ?></p>
+								</div>
+								<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+									<?php wp_nonce_field('omnify_run_db_maintenance_nonce'); ?>
+									<input type="hidden" name="action" value="omnify_run_db_maintenance" />
+									<input type="hidden" name="maintenance_type" value="all" />
+									<button type="submit" class="button button-primary" style="background: #0f766e; border-color: #0f766e;"><?php esc_html_e('Execute Complete Routine', 'omnifywp-ecommerce'); ?></button>
+								</form>
+							</div>
+						</div>
+					</div>
 				<?php endif; ?>
 			<?php endif; ?>
 

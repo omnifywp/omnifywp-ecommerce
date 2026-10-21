@@ -53,9 +53,12 @@ class Omnify_Order_Repository {
 		}
 
 		if (! empty($omnify_args['search'])) {
+			$omnify_items_table = $this->omnify_schema->table('order_items');
 			$omnify_search = '%' . $wpdb->esc_like(sanitize_text_field($omnify_args['search'])) . '%';
-			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s)";
+			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s OR o.id IN (SELECT oi_s.order_id FROM {$omnify_items_table} oi_s WHERE oi_s.product_name LIKE %s OR oi_s.sku LIKE %s))";
 			$omnify_params = array_merge($omnify_params, [
+				$omnify_search,
+				$omnify_search,
 				$omnify_search,
 				$omnify_search,
 				$omnify_search,
@@ -213,9 +216,12 @@ class Omnify_Order_Repository {
 		}
 
 		if (! empty($omnify_args['search'])) {
+			$omnify_items_table = $this->omnify_schema->table('order_items');
 			$omnify_search = '%' . $wpdb->esc_like(sanitize_text_field($omnify_args['search'])) . '%';
-			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s)";
+			$omnify_where .= " AND (o.order_number LIKE %s OR o.transaction_id LIKE %s OR c.email LIKE %s OR c.first_name LIKE %s OR c.last_name LIKE %s OR o.shipping_first_name LIKE %s OR o.shipping_last_name LIKE %s OR o.shipping_phone LIKE %s OR o.billing_phone LIKE %s OR o.id IN (SELECT oi_s.order_id FROM {$omnify_items_table} oi_s WHERE oi_s.product_name LIKE %s OR oi_s.sku LIKE %s))";
 			$omnify_params = array_merge($omnify_params, [
+				$omnify_search,
+				$omnify_search,
 				$omnify_search,
 				$omnify_search,
 				$omnify_search,
@@ -799,6 +805,44 @@ class Omnify_Order_Repository {
 	}
 
 	/**
+	 * Get order items for a specific order.
+	 *
+	 * @param int $omnify_order_id
+	 * @return array
+	 */
+	public function get_order_items(int $omnify_order_id): array {
+		global $wpdb;
+
+		$omnify_order_items_table = $this->table('order_items');
+		$omnify_items = \Omnify\eCommerce\Support\Omnify_DB::get_results(
+			$wpdb,
+			$wpdb->prepare('SELECT * FROM %i WHERE order_id = %d ORDER BY id ASC', $omnify_order_items_table, $omnify_order_id)
+		);
+
+		return is_array($omnify_items) ? $omnify_items : [];
+	}
+
+	/**
+	 * Alias for get_order_items for backward compatibility.
+	 *
+	 * @param int $omnify_order_id
+	 * @return array
+	 */
+	public function get_items(int $omnify_order_id): array {
+		return $this->get_order_items($omnify_order_id);
+	}
+
+	/**
+	 * Alias for get_order_items for backward compatibility.
+	 *
+	 * @param int $omnify_order_id
+	 * @return array
+	 */
+	public function items(int $omnify_order_id): array {
+		return $this->get_order_items($omnify_order_id);
+	}
+
+	/**
 	 * Update transaction ID.
 	 */
 	public function update_transaction_id(int $omnify_order_id, string $omnify_transaction_id): bool {
@@ -925,11 +969,17 @@ class Omnify_Order_Repository {
 		);
 
 		if ($omnify_updated !== false) {
+			$this->invalidate_customer_stats_for_order($omnify_order_id, ! empty($omnify_order['customer_id']) ? (int) $omnify_order['customer_id'] : null);
+			if (! empty($omnify_order['order_number'])) {
+				wp_cache_delete('omnify_order_id_by_number_' . md5((string) $omnify_order['order_number']), 'omnifywp-ecommerce');
+			}
+			wp_cache_delete('omnify_order_' . $omnify_order_id, 'omnifywp-ecommerce');
+
 			if ($omnify_old_status !== $omnify_status) {
 				do_action('omnify_order_status_changed', $omnify_order_id, $omnify_status, $omnify_old_status);
 			}
 
-			do_action('omnify_order_refunded', $omnify_order_id, $omnify_amount, $omnify_new_refunded);
+			do_action('omnify_order_refunded', $omnify_order_id, $omnify_amount, $omnify_new_refunded, '', false);
 
 			// Add order note about the refund
 			$this->add_note(
@@ -1222,5 +1272,63 @@ class Omnify_Order_Repository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$omnify_count = \Omnify\eCommerce\Support\Omnify_DB::get_var($wpdb, $wpdb->prepare($omnify_sql, $omnify_email, $omnify_product_id));
 		return ((int)$omnify_count) > 0;
+	}
+
+	/**
+	 * Batch-resolve which (email, product_id) pairs have a completed/processing purchase.
+	 *
+	 * @param array<int, array{0: string, 1: int}|array<int, string|int>> $omnify_pairs
+	 * @return array<string, bool> Map keyed by "lowercased-email|product_id".
+	 */
+	public function verified_email_product_pairs(array $omnify_pairs): array {
+		global $wpdb;
+
+		$omnify_pairs = array_values(array_filter(array_map(static function ($omnify_pair): array {
+			return [sanitize_email((string) ($omnify_pair[0] ?? '')), (int) ($omnify_pair[1] ?? 0)];
+		}, $omnify_pairs), static fn(array $omnify_pair): bool => '' !== $omnify_pair[0] && $omnify_pair[1] > 0));
+
+		if (empty($omnify_pairs)) {
+			return [];
+		}
+
+		$omnify_conditions = [];
+		$omnify_params     = [];
+		$omnify_seen       = [];
+		foreach ($omnify_pairs as $omnify_pair) {
+			$omnify_key = $omnify_pair[0] . '|' . $omnify_pair[1];
+			if (isset($omnify_seen[$omnify_key])) {
+				continue;
+			}
+			$omnify_seen[$omnify_key]  = true;
+			$omnify_conditions[]       = '(c.email = %s AND oi.product_id = %d)';
+			$omnify_params[]           = $omnify_pair[0];
+			$omnify_params[]           = $omnify_pair[1];
+		}
+
+		$omnify_orders_table      = $this->table('orders');
+		$omnify_customers_table   = $this->table('customers');
+		$omnify_order_items_table = $this->table('order_items');
+		$omnify_where             = implode(' OR ', $omnify_conditions);
+
+		$omnify_sql = "
+			SELECT DISTINCT c.email, oi.product_id
+			FROM {$omnify_orders_table} o
+			JOIN {$omnify_customers_table} c ON o.customer_id = c.id
+			JOIN {$omnify_order_items_table} oi ON oi.order_id = o.id
+			WHERE o.status IN ('completed', 'processing')
+			  AND ({$omnify_where})
+		";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params), ARRAY_A);
+
+		$omnify_verified = [];
+		if (is_array($omnify_rows)) {
+			foreach ($omnify_rows as $omnify_row) {
+				$omnify_verified[strtolower((string) $omnify_row['email']) . '|' . (int) $omnify_row['product_id']] = true;
+			}
+		}
+
+		return $omnify_verified;
 	}
 }

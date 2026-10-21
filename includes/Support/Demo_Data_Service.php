@@ -500,10 +500,12 @@ class Omnify_Demo_Data_Service {
 	}
 
 	/**
-	 * Safely truncate a table with fallback to DELETE if TRUNCATE permission is denied.
+	 * Safely truncate a table with fallback to DELETE if TRUNCATE permission is denied,
+	 * ensuring foreign key checks are temporarily disabled to prevent relational crashes.
 	 */
 	private function safe_truncate(string $table_name): void {
 		global $wpdb;
+		$wpdb->query('SET FOREIGN_KEY_CHECKS = 0');
 		$suppress = $wpdb->suppress_errors(true);
 		$result   = $wpdb->query($wpdb->prepare('TRUNCATE TABLE %i', $table_name));
 		$wpdb->suppress_errors($suppress);
@@ -511,5 +513,6 @@ class Omnify_Demo_Data_Service {
 		if (false === $result) {
 			$wpdb->query($wpdb->prepare('DELETE FROM %i', $table_name));
 		}
+		$wpdb->query('SET FOREIGN_KEY_CHECKS = 1');
 	}
 }

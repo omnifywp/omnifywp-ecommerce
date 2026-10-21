@@ -31,12 +31,13 @@ class Omnify_Review_Repository {
 		$omnify_where  = ['deleted_at IS NULL'];
 		$omnify_params = [];
 
-		if (! empty($omnify_args['status']) && 'all' !== $omnify_args['status']) {
-			if ($omnify_args['status'] === 'trash') {
+		$omnify_status = ! empty($omnify_args['status']) ? sanitize_key((string) $omnify_args['status']) : '';
+		if ('' !== $omnify_status && 'all' !== $omnify_status) {
+			if ('trash' === $omnify_status) {
 				$omnify_where  = ['deleted_at IS NOT NULL'];
 			} else {
 				$omnify_where[]  = 'status = %s';
-				$omnify_params[] = $omnify_args['status'];
+				$omnify_params[] = $omnify_status;
 			}
 		}
 		if (! empty($omnify_args['product_id'])) {
@@ -74,7 +75,7 @@ class Omnify_Review_Repository {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$omnify_rows = \Omnify\eCommerce\Support\Omnify_DB::get_results($wpdb, $wpdb->prepare($omnify_sql, ...$omnify_params), ARRAY_A);
-		$omnify_reviews = array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
+		$omnify_reviews = $this->hydrate_many(is_array($omnify_rows) ? $omnify_rows : []);
 		return apply_filters('omnify_get_reviews_results', $omnify_reviews, $omnify_args);
 	}
 
@@ -151,7 +152,7 @@ class Omnify_Review_Repository {
 			ARRAY_A
 		);
 
-		return array_map([$this, 'hydrate'], is_array($omnify_rows) ? $omnify_rows : []);
+		return $this->hydrate_many(is_array($omnify_rows) ? $omnify_rows : []);
 	}
 
 	public function create(array $omnify_data): int {
@@ -176,6 +177,13 @@ class Omnify_Review_Repository {
 		if (!empty($omnify_data['media']) && is_array($omnify_data['media'])) {
 			$omnify_insert_data['review_content'] .= "\n[media]" . wp_json_encode($omnify_data['media']) . "[/media]";
 		}
+
+		$omnify_verified = ! empty($omnify_data['is_verified_buyer']);
+		if (! $omnify_verified && ! empty($omnify_insert_data['customer_email']) && ! empty($omnify_insert_data['product_id'])) {
+			$omnify_order_repo = new Omnify_Order_Repository($this->omnify_schema);
+			$omnify_verified   = $omnify_order_repo->has_purchased_product($omnify_insert_data['customer_email'], $omnify_insert_data['product_id']);
+		}
+		$omnify_insert_data['is_verified_buyer'] = $omnify_verified ? 1 : 0;
 
 		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb,  $this->table('reviews'), $omnify_insert_data );
 
@@ -493,6 +501,43 @@ class Omnify_Review_Repository {
 		return $omnify_success;
 	}
 
+	/**
+	 * Hydrate a batch of review rows, resolving verified-buyer status in a single query.
+	 *
+	 * @param array<int, array<string, mixed>> $omnify_rows
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function hydrate_many(array $omnify_rows): array {
+		if (empty($omnify_rows)) {
+			return [];
+		}
+
+		$omnify_pairs = [];
+		foreach ($omnify_rows as $omnify_row) {
+			// A null/absent column value would otherwise trigger a per-row lookup in hydrate().
+			if (! isset($omnify_row['is_verified_buyer']) && ! empty($omnify_row['customer_email']) && ! empty($omnify_row['product_id'])) {
+				$omnify_pairs[] = [(string) $omnify_row['customer_email'], (int) $omnify_row['product_id']];
+			}
+		}
+
+		$omnify_verified = [];
+		if (! empty($omnify_pairs)) {
+			$omnify_order_repo = new Omnify_Order_Repository($this->omnify_schema);
+			$omnify_verified   = $omnify_order_repo->verified_email_product_pairs($omnify_pairs);
+		}
+
+		$omnify_results = [];
+		foreach ($omnify_rows as $omnify_row) {
+			if (! isset($omnify_row['is_verified_buyer']) && ! empty($omnify_row['customer_email']) && ! empty($omnify_row['product_id'])) {
+				$omnify_key = strtolower((string) $omnify_row['customer_email']) . '|' . (int) $omnify_row['product_id'];
+				$omnify_row['is_verified_buyer'] = isset($omnify_verified[$omnify_key]);
+			}
+			$omnify_results[] = $this->hydrate($omnify_row);
+		}
+
+		return $omnify_results;
+	}
+
 	private function hydrate(array $omnify_row): array {
 		$omnify_row['id']             = (int) $omnify_row['id'];
 		$omnify_row['product_id']     = (int) $omnify_row['product_id'];
@@ -509,6 +554,14 @@ class Omnify_Review_Repository {
 		}
 		$omnify_row['content']        = trim($omnify_content);
 		$omnify_row['title']          = $omnify_row['review_title']   ?? '';
+		if (isset($omnify_row['is_verified_buyer'])) {
+			$omnify_row['is_verified_buyer'] = (bool) $omnify_row['is_verified_buyer'];
+		} elseif (! empty($omnify_row['customer_email']) && ! empty($omnify_row['product_id'])) {
+			$omnify_order_repo = new Omnify_Order_Repository($this->omnify_schema);
+			$omnify_row['is_verified_buyer'] = $omnify_order_repo->has_purchased_product($omnify_row['customer_email'], (int) $omnify_row['product_id']);
+		} else {
+			$omnify_row['is_verified_buyer'] = false;
+		}
 		return $omnify_row;
 	}
 

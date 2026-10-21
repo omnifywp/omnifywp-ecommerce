@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			</td>
 			<td>
 				<div class="omnify-input-wrapper omnify-input-with-suffix">
-					<input type="number" step="0.0001" min="0" max="100" name="tax_rules[${ruleIndex}][rate]" value="${escapeHtml(String(rate))}" placeholder="0.00" style="width: 100%;" required />
+					<input type="number" step="0.0001" min="0" max="100" name="tax_rules[${ruleIndex}][rate]" value="${escapeHtml(String(rate))}" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important; width: 100%;" required />
 					<span class="omnify-input-suffix">%</span>
 				</div>
 			</td>
@@ -442,10 +442,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				</div>
 
 				<!-- Section 2: Method, Rate & Threshold -->
-				<div class="omnify-zone-field-grid omnify-grid-3">
+				<div class="omnify-zone-field-grid omnify-grid-2">
 					<div class="omnify-modern-form-group">
 						<label class="omnify-field-label">Method Title</label>
 						<input type="text" name="delivery_zones[${zoneIndex}][method_name]" value="Standard Delivery" placeholder="e.g. Standard Shipping" />
+						<span class="help-text">The shipping method title displayed to shoppers at checkout.</span>
 					</div>
 
 					<div class="omnify-modern-form-group">
@@ -455,28 +456,27 @@ document.addEventListener('DOMContentLoaded', function() {
 							<option value="free_shipping">Free Shipping (Always $0)</option>
 							<option value="local_pickup">Local Pickup / Store Collection</option>
 						</select>
+						<span class="help-text">Select charging model or collection arrangement for this rate.</span>
 					</div>
+				</div>
 
+				<div class="omnify-zone-field-grid omnify-grid-2" style="margin-top: 14px;">
 					<div class="omnify-modern-form-group omnify-zone-rate-group">
 						<label class="omnify-field-label">Shipping Cost</label>
 						<div class="omnify-input-wrapper omnify-input-with-prefix">
 							<span class="omnify-input-prefix">${currencySymbol}</span>
 							<input type="number" step="0.01" min="0" name="delivery_zones[${zoneIndex}][cost]" value="5.00" placeholder="0.00" required style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 						</div>
+						<span class="help-text">Base delivery fee charged on orders in this zone.</span>
 					</div>
-				</div>
 
-				<!-- Free Shipping Minimum Threshold -->
-				<div class="omnify-zone-field-grid omnify-grid-1" style="margin-top: 14px;">
 					<div class="omnify-modern-form-group">
-						<div class="omnify-field-label-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-							<label class="omnify-field-label" style="margin:0;">Free Shipping Order Minimum</label>
-							<span class="omnify-field-hint">Orders at or above this amount unlock free shipping. Set to 0 to disable.</span>
-						</div>
-						<div class="omnify-input-wrapper omnify-input-with-prefix" style="max-width: 320px;">
+						<label class="omnify-field-label">Free Shipping Order Minimum</label>
+						<div class="omnify-input-wrapper omnify-input-with-prefix">
 							<span class="omnify-input-prefix">${currencySymbol}</span>
 							<input type="number" step="0.01" min="0" name="delivery_zones[${zoneIndex}][free_min]" value="50.00" placeholder="0.00" style="border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; outline: none !important;" />
 						</div>
+						<span class="help-text">Orders at or above this amount unlock free shipping. Set to 0 to disable.</span>
 					</div>
 				</div>
 			</div>
@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			// 7. Password Eye Show/Hide Toggle
-			const pwToggle = e.target.closest('.omnify-pw-toggle-btn');
+			const pwToggle = e.target.closest('.omnify-pw-toggle-btn, .omnify-toggle-pw-btn');
 			if (pwToggle) {
 				e.preventDefault();
 				const wrap = pwToggle.closest('.omnify-password-field-wrap');
@@ -848,11 +848,27 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 
+		// 8. Checkbox Chip Interactive Sync
+		directory.addEventListener('change', (e) => {
+			const chip = e.target.closest('.omnify-checkbox-chip');
+			if (chip && e.target.type === 'checkbox') {
+				chip.classList.toggle('is-checked', e.target.checked);
+			}
+		});
+
 		// Initial count
 		updateActiveCount();
 	}
 
 	initPaymentGatewaysDirectory();
+
+	// Setting Toggle Cards Dynamic Active State
+	document.addEventListener('change', (e) => {
+		const card = e.target.closest('.omnify-setting-toggle-card');
+		if (card && e.target.type === 'checkbox') {
+			card.classList.toggle('is-active', e.target.checked);
+		}
+	});
 
 	// ══ COLOR PICKER BIDIRECTIONAL SYNC ═══════════════════════════════
 	function initColorPickers() {
@@ -865,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				hexInput.value = colorInput.value.toUpperCase();
 			});
 
-			hexInput.addEventListener('input', () => {
+			function syncHexToSwatch() {
 				let val = hexInput.value.trim();
 				if (!val.startsWith('#')) {
 					val = '#' + val;
@@ -873,7 +889,10 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
 					colorInput.value = val;
 				}
-			});
+			}
+
+			hexInput.addEventListener('input', syncHexToSwatch);
+			hexInput.addEventListener('change', syncHexToSwatch);
 
 			hexInput.addEventListener('blur', () => {
 				let val = hexInput.value.trim();
@@ -1233,5 +1252,351 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	initEmailSettingsHub();
+
+	// ══ GLOBAL SETTINGS SEARCH ════════════════════════════════════════
+	function initSettingsSearch() {
+		const input = document.getElementById('omnify-settings-search');
+		if (!input) return;
+
+		const root = document.querySelector('.omnify-settings-page .omnify-modern-content-card');
+		if (!root) return;
+
+		const wrapper = input.closest('.omnify-modern-settings-search');
+		const clearBtn = document.querySelector('.omnify-settings-search__clear');
+		const countEl = document.querySelector('.omnify-settings-search__count');
+		const emptyEl = document.getElementById('omnify-settings-search-empty');
+		const resultsEl = document.getElementById('omnify-settings-search-results');
+		const L = window.omnifySettingsL10n || {};
+		const indexData = window.omnifySettingsSearch || {};
+		const indexItems = Array.isArray(indexData.items) ? indexData.items : [];
+		const currentSection = new URLSearchParams(window.location.search).get('section') || 'general';
+		const MAX_SUGGESTIONS = 10;
+
+		// Smallest user-facing "setting" units across every section layout.
+		const UNIT_SELECTOR = [
+			'.omnify-modern-form-group',
+			'.omnify-setting-toggle-card',
+			'.omnify-settings-section-block',
+			'.omnify-modern-card-section',
+			'.omnify-card-feature-strip',
+			'.omnify-feature-trigger-card',
+			'.omnify-integration-card',
+			'.omnify-checkout-card',
+			'.omnify-page-item-card',
+			'.omnify-delivery-zone-card',
+			'.omnify-capability-box',
+			'.omnify-email-card',
+			'.omnify-email-metric-card',
+			'.omnify-status-override-card',
+			'.omnify-tool-card',
+			'.omnify-pm-card'
+		].join(', ');
+
+		function getUnits() {
+			return Array.from(root.querySelectorAll(UNIT_SELECTOR));
+		}
+
+		function unitLabel(el) {
+			const node = el.querySelector('.omnify-setting-toggle-card__title, .omnify-card-feature-strip-title, .omnify-checkout-card-title, .omnify-page-item-card__title, .omnify-email-card-title, .omnify-pm-title, .omnify-settings-section-divider__title, .omnify-modern-card-title-block h3');
+			if (node) return node.textContent.trim();
+			const label = el.querySelector('label');
+			if (label) return label.textContent.trim();
+			const heading = el.querySelector('h4, h3, strong');
+			if (heading) return heading.textContent.trim();
+			return el.textContent.trim().slice(0, 60);
+		}
+
+		// Reveal matches hidden inside collapsed email / gateway cards.
+		function revealCollapsed(el) {
+			const emailCard = el.closest('.omnify-email-card.is-collapsed');
+			if (emailCard && !emailCard.dataset.omnifySearchOpened) {
+				emailCard.dataset.omnifySearchOpened = '1';
+				emailCard.classList.remove('is-collapsed');
+			}
+			const pmCard = el.closest('.omnify-pm-card');
+			if (pmCard && !pmCard.classList.contains('is-expanded') && !pmCard.dataset.omnifySearchOpened) {
+				pmCard.dataset.omnifySearchOpened = '1';
+				pmCard.classList.add('is-expanded');
+			}
+		}
+
+		function restoreCollapsed() {
+			root.querySelectorAll('[data-omnify-search-opened]').forEach((card) => {
+				delete card.dataset.omnifySearchOpened;
+				if (card.classList.contains('omnify-email-card')) card.classList.add('is-collapsed');
+				if (card.classList.contains('omnify-pm-card')) card.classList.remove('is-expanded');
+			});
+		}
+
+		function focusElement(el) {
+			if (!el) return;
+
+			// Open the relevant Storefront Design tab if the match lives in a hidden panel.
+			const panel = el.closest('.omnify-modern-design-panel');
+			if (panel && panel.style.display === 'none') {
+				const tabKey = (panel.id || '').replace('omnify-design-panel-', '');
+				const tabBtn = document.querySelector('.omnify-settings-section-tab[data-tab="' + tabKey + '"]');
+				if (tabBtn) tabBtn.click();
+			}
+
+			revealCollapsed(el);
+			el.classList.add('omnify-search-focus');
+			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			window.setTimeout(() => el.classList.remove('omnify-search-focus'), 2600);
+		}
+
+		function findUnitByLabel(label) {
+			const needle = String(label).toLowerCase().trim();
+			if (!needle) return null;
+			const words = needle.split(/\s+/).filter((w) => w.length > 2);
+			let best = null;
+			let bestScore = 0;
+			getUnits().forEach((el) => {
+				const text = unitLabel(el).toLowerCase();
+				let score = 0;
+				if (text === needle) score = 100;
+				else if (text.indexOf(needle) === 0) score = 80;
+				else if (text.indexOf(needle) !== -1) score = 60;
+				else if (needle.indexOf(text) !== -1 && text.length > 2) score = 40;
+				else if (words.length && words.every((w) => el.textContent.toLowerCase().indexOf(w) !== -1)) score = 30;
+				if (score > bestScore || (score === bestScore && best && el.contains(best))) {
+					bestScore = score;
+					best = el;
+				}
+			});
+			return bestScore > 0 ? best : null;
+		}
+
+		function matchScore(haystack, needle) {
+			if (!haystack) return 0;
+			if (haystack === needle) return 3;
+			if (haystack.indexOf(needle) === 0) return 2;
+			if (haystack.indexOf(needle) !== -1) return 1;
+			return 0;
+		}
+
+		function buildSuggestions(query) {
+			const q = query.toLowerCase();
+			const out = [];
+			const seen = new Set();
+
+			// Settings rendered on the current page (ground truth, jump in place).
+			getUnits().forEach((el) => {
+				const label = unitLabel(el);
+				if (!label) return;
+				const s = matchScore(label.toLowerCase(), q);
+				if (s > 0) {
+					const key = 'local::' + label.toLowerCase();
+					if (!seen.has(key)) {
+						seen.add(key);
+						out.push({ label: label, group: L.searchThisPage || 'This page', element: el, score: s + 0.5, local: true });
+					}
+				}
+			});
+
+			// Every other settings screen (from the server-side index). The current
+			// screen is already covered by the live DOM matches above.
+			indexItems.forEach((item) => {
+				const labelText = String(item.label || '');
+				if (!labelText || item.section === currentSection) return;
+				const s = Math.max(
+					matchScore(labelText.toLowerCase(), q),
+					matchScore(String(item.keywords || '').toLowerCase(), q),
+					matchScore(String(item.group || '').toLowerCase(), q)
+				);
+				if (s > 0) {
+					const key = 'global::' + item.section + '::' + labelText.toLowerCase();
+					if (!seen.has(key)) {
+						seen.add(key);
+						out.push({ label: labelText, group: item.group || item.section, section: item.section, score: s, local: false });
+					}
+				}
+			});
+
+			out.sort((a, b) => (b.score - a.score) || (a.local === b.local ? 0 : (a.local ? -1 : 1)) || a.label.localeCompare(b.label));
+			return out.slice(0, MAX_SUGGESTIONS);
+		}
+
+		let suggestions = [];
+		let activeIndex = -1;
+
+		function setActive(i) {
+			if (!resultsEl) return;
+			const buttons = Array.from(resultsEl.querySelectorAll('.omnify-settings-search__result'));
+			buttons.forEach((b, bi) => b.classList.toggle('is-active', bi === i));
+			activeIndex = i;
+			if (i >= 0 && buttons[i]) buttons[i].scrollIntoView({ block: 'nearest' });
+		}
+
+		function hideSuggestions() {
+			if (resultsEl) resultsEl.hidden = true;
+			suggestions = [];
+			activeIndex = -1;
+		}
+
+		function navigateTo(section, label) {
+			const base = L.settingsUrl || window.location.pathname;
+			const sep = base.indexOf('?') === -1 ? '?' : '&';
+			window.location.href = base + sep + 'section=' + encodeURIComponent(section) + '&omnify_focus=' + encodeURIComponent(label);
+		}
+
+		function choose(item) {
+			if (!item) return;
+			if (item.local && item.element) {
+				focusElement(item.element);
+				hideSuggestions();
+				input.focus();
+			} else {
+				navigateTo(item.section, item.label);
+			}
+		}
+
+		function renderSuggestions(list, query) {
+			if (!resultsEl) return;
+			resultsEl.innerHTML = '';
+			if (!query) {
+				hideSuggestions();
+				return;
+			}
+			if (!list.length) {
+				const none = document.createElement('div');
+				none.className = 'omnify-settings-search__no-results';
+				none.textContent = L.searchNoResults || 'No settings match your search.';
+				resultsEl.appendChild(none);
+				resultsEl.hidden = false;
+				suggestions = [];
+				activeIndex = -1;
+				return;
+			}
+			list.forEach((item, i) => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'omnify-settings-search__result';
+				btn.setAttribute('role', 'option');
+				const labelEl = document.createElement('span');
+				labelEl.className = 'omnify-settings-search__result-label';
+				labelEl.textContent = item.label;
+				const groupEl = document.createElement('span');
+				groupEl.className = 'omnify-settings-search__result-group';
+				groupEl.textContent = item.group;
+				btn.appendChild(labelEl);
+				btn.appendChild(groupEl);
+				btn.addEventListener('mousedown', (e) => {
+					e.preventDefault();
+					choose(item);
+				});
+				btn.addEventListener('mouseenter', () => setActive(i));
+				resultsEl.appendChild(btn);
+			});
+			resultsEl.hidden = false;
+			setActive(0);
+		}
+
+		function reset() {
+			getUnits().forEach((el) => el.classList.remove('omnify-search-hidden'));
+			restoreCollapsed();
+			hideSuggestions();
+			if (emptyEl) emptyEl.hidden = true;
+			if (countEl) countEl.textContent = '';
+			if (clearBtn) clearBtn.hidden = true;
+		}
+
+		function apply() {
+			const query = input.value.trim().toLowerCase();
+
+			if (!query) {
+				reset();
+				return;
+			}
+
+			if (clearBtn) clearBtn.hidden = false;
+
+			const units = getUnits();
+			const visible = [];
+
+			units.forEach((el) => {
+				const match = el.textContent.toLowerCase().indexOf(query) !== -1;
+				el.classList.toggle('omnify-search-hidden', !match);
+				if (match) {
+					visible.push(el);
+					revealCollapsed(el);
+				}
+			});
+
+			const anyVisible = visible.length > 0;
+
+			// Count only the deepest visible units so nested cards are not double-counted.
+			const leafCount = visible.filter((el) => !visible.some((other) => other !== el && el.contains(other))).length;
+
+			if (emptyEl) emptyEl.hidden = anyVisible;
+			if (countEl) {
+				countEl.textContent = anyVisible ? (leafCount + ' ' + (leafCount === 1 ? (L.searchResult || 'result') : (L.searchResults || 'results'))) : '';
+			}
+
+			suggestions = buildSuggestions(query);
+			renderSuggestions(suggestions, query);
+		}
+
+		let rafId = 0;
+		input.addEventListener('input', () => {
+			if (rafId) cancelAnimationFrame(rafId);
+			rafId = requestAnimationFrame(apply);
+		});
+		input.addEventListener('search', apply);
+		input.addEventListener('focus', () => {
+			if (input.value.trim() && suggestions.length) renderSuggestions(suggestions, input.value.trim().toLowerCase());
+		});
+		input.addEventListener('keydown', (e) => {
+			if (e.key === 'ArrowDown' && suggestions.length) {
+				e.preventDefault();
+				setActive(Math.min(activeIndex + 1, suggestions.length - 1));
+			} else if (e.key === 'ArrowUp' && suggestions.length) {
+				e.preventDefault();
+				setActive(Math.max(activeIndex - 1, 0));
+			} else if (e.key === 'Enter') {
+				if (suggestions.length) {
+					e.preventDefault();
+					choose(suggestions[activeIndex >= 0 ? activeIndex : 0]);
+				}
+			} else if (e.key === 'Escape') {
+				if (resultsEl && !resultsEl.hidden) {
+					hideSuggestions();
+				} else if (input.value !== '') {
+					e.preventDefault();
+					input.value = '';
+					apply();
+				}
+			}
+		});
+		if (clearBtn) {
+			clearBtn.addEventListener('click', () => {
+				input.value = '';
+				apply();
+				input.focus();
+			});
+		}
+		document.addEventListener('mousedown', (e) => {
+			if (wrapper && !wrapper.contains(e.target)) hideSuggestions();
+		});
+
+		// Highlight a setting when arriving from a global search suggestion.
+		function handleIncomingFocus() {
+			const params = new URLSearchParams(window.location.search);
+			const focusLabel = params.get('omnify_focus');
+			if (!focusLabel) return;
+			params.delete('omnify_focus');
+			const qs = params.toString();
+			window.history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : ''));
+			const target = findUnitByLabel(focusLabel);
+			if (target) window.setTimeout(() => focusElement(target), 160);
+		}
+
+		if (L.searchHint) input.title = L.searchHint;
+
+		reset();
+		handleIncomingFocus();
+	}
+
+	initSettingsSearch();
 });
 

@@ -44,18 +44,21 @@ class Omnify_Stock_Subscriber_Repository {
 		$table = $this->table();
 		$now = current_time('mysql');
 
-		$inserted = Omnify_DB::insert(
-			$wpdb,
-			$table,
-			[
-				'product_id'   => $product_id,
-				'variation_id' => $variation_id,
-				'email'        => $email,
-				'status'       => 'pending',
-				'created_at'   => $now,
-			],
-			['%d', '%d', '%s', '%s', '%s']
-		);
+		$record = [
+			'product_id' => $product_id,
+			'email'      => $email,
+			'status'     => 'pending',
+			'created_at' => $now,
+		];
+		$formats = ['%d', '%s', '%s', '%s'];
+
+		// Omitting variation_id lets the NULL column default apply, avoiding a %d coercion to 0.
+		if (null !== $variation_id) {
+			$record  = ['product_id' => $product_id, 'variation_id' => $variation_id] + $record;
+			$formats = ['%d', '%d', '%s', '%s', '%s'];
+		}
+
+		$inserted = Omnify_DB::insert($wpdb, $table, $record, $formats);
 
 		return $inserted ? (int) $wpdb->insert_id : false;
 	}

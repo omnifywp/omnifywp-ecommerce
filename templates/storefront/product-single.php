@@ -464,13 +464,38 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 
 		<!-- Breadcrumb -->
 		<nav class="omnify-pdp-breadcrumb" aria-label="breadcrumb">
-			<a href="<?php echo esc_url($omnify_storefront_url); ?>"><?php echo esc_html($omnify_storefront_title); ?></a>
-			<span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px; width:12px; height:12px; color:var(--omnify-gray-400);"></span>
-			<?php if (! empty($omnify_product['categories'])) : ?>
-				<a href="<?php echo esc_url(add_query_arg('category', $omnify_product['categories'][0], $omnify_storefront_url)); ?>"><?php echo esc_html($omnify_product['categories'][0]); ?></a>
-				<span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px; width:12px; height:12px; color:var(--omnify-gray-400);"></span>
-			<?php endif; ?>
-			<span class="omnify-breadcrumb-current"><?php echo esc_html($omnify_product['name']); ?></span>
+			<ol itemscope itemtype="https://schema.org/BreadcrumbList" style="display:flex; align-items:center; list-style:none; margin:0; padding:0; flex-wrap:wrap; gap:6px;">
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display:inline-flex; align-items:center;">
+					<a itemprop="item" href="<?php echo esc_url($omnify_storefront_url); ?>">
+						<span itemprop="name"><?php echo esc_html($omnify_storefront_title); ?></span>
+					</a>
+					<meta itemprop="position" content="1" />
+				</li>
+				<li aria-hidden="true" style="display:inline-flex; align-items:center;">
+					<span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px; width:12px; height:12px; color:var(--omnify-gray-400);"></span>
+				</li>
+				<?php 
+				$omnify_crumb_pos = 2;
+				if (! empty($omnify_product['categories'])) : 
+					$omnify_cat_crumb_name = is_array($omnify_product['categories']) ? $omnify_product['categories'][0] : (string) $omnify_product['categories'];
+					$omnify_cat_crumb_url = add_query_arg('category', $omnify_cat_crumb_name, $omnify_storefront_url);
+				?>
+					<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display:inline-flex; align-items:center;">
+						<a itemprop="item" href="<?php echo esc_url($omnify_cat_crumb_url); ?>">
+							<span itemprop="name"><?php echo esc_html($omnify_cat_crumb_name); ?></span>
+						</a>
+						<meta itemprop="position" content="<?php echo esc_attr((string) $omnify_crumb_pos); ?>" />
+					</li>
+					<li aria-hidden="true" style="display:inline-flex; align-items:center;">
+						<span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px; width:12px; height:12px; color:var(--omnify-gray-400);"></span>
+					</li>
+					<?php $omnify_crumb_pos++; ?>
+				<?php endif; ?>
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display:inline-flex; align-items:center;">
+					<span class="omnify-breadcrumb-current" itemprop="name"><?php echo esc_html($omnify_product['name']); ?></span>
+					<meta itemprop="position" content="<?php echo esc_attr((string) $omnify_crumb_pos); ?>" />
+				</li>
+			</ol>
 		</nav>
 
 		<!-- Product 2-Column Columns Grid (Slick Minimal Layout) -->
@@ -752,6 +777,16 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 						<div class="omnify-stock-notify-msg" style="display: none; margin-top: 8px; font-size: 13px; font-weight: 500;"></div>
 					</div>
 				<?php else : ?>
+					<?php
+					$omnify_stock_qty_simple = intval($omnify_product['stock_qty'] ?? 0);
+					$omnify_manage_stock_simple = ! empty($omnify_product['manage_stock']);
+					$omnify_low_stock_threshold = intval($omnify_settings['low_stock_threshold'] ?? 5);
+					if (! $omnify_is_variable && $omnify_manage_stock_simple && $omnify_stock_qty_simple > 0 && $omnify_stock_qty_simple <= $omnify_low_stock_threshold) : ?>
+						<div class="omnify-pdp-low-stock-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; margin-bottom: 12px; border-radius: 6px; background: #fffbeb; border: 1px solid #fde68a; color: #b45309; font-size: 13px; font-weight: 600;">
+							<span class="dashicons dashicons-clock" style="font-size: 15px; width: 15px; height: 15px; line-height: 1;"></span>
+							<span><?php echo esc_html(sprintf(__('Only %d left in stock - order soon!', 'omnifywp-ecommerce'), $omnify_stock_qty_simple)); ?></span>
+						</div>
+					<?php endif; ?>
 					<div class="omnify-pdp-cta-block">
 						<div class="omnify-pdp-cta-row">
 							<!-- Modern Rounded Qty Control -->
@@ -788,6 +823,33 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 						</div>
 					</div>
 				<?php endif; ?>
+
+				<?php
+				// Per-variation or per-product estimated delivery
+				$omnify_custom_delivery = '';
+				if ('variable' === ($omnify_product['type'] ?? '')) {
+					// For variable products, show the first variation's estimated_delivery or fallback
+					$omnify_first_var = $omnify_product['variations'][0] ?? [];
+					$omnify_custom_delivery = trim((string) ($omnify_first_var['estimated_delivery'] ?? ''));
+				} ?>
+				<?php if (! empty($omnify_is_physical) || (isset($omnify_product['type']) && 'physical' === $omnify_product['type']) || ! empty($omnify_custom_delivery)) : ?>
+					<!-- Estimated Delivery Date Badge -->
+					<div class="omnify-pdp-delivery-badge" style="display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 16px 0; font-size: 13px; color: #334155;" id="omnify-delivery-badge">
+						<span class="dashicons dashicons-car" style="font-size: 18px; width: 18px; height: 18px; line-height: 1; color: #2563eb;"></span>
+						<span>
+							<strong><?php esc_html_e('Estimated Delivery:', 'omnifywp-ecommerce'); ?></strong>
+							<?php if (! empty($omnify_custom_delivery)) : ?>
+								<span class="omnify-delivery-text" style="color: #059669; font-weight: 600;"><?php echo esc_html($omnify_custom_delivery); ?></span>
+							<?php else : ?>
+								<?php
+								$omnify_est_start = date_i18n(get_option('date_format', 'F j'), strtotime('+3 days'));
+								$omnify_est_end   = date_i18n(get_option('date_format', 'F j'), strtotime('+6 days'));
+								?>
+								<span class="omnify-delivery-text" style="color: #059669; font-weight: 600;"><?php echo esc_html($omnify_est_start . ' – ' . $omnify_est_end); ?></span>
+							<?php endif; ?>
+						</span>
+					</div>
+				<?php endif; ?>
 				<?php do_action('omnify_single_product_after_add_to_cart_form', $omnify_product); ?>
 
 				<!-- Security & Confidence Trust Strip -->
@@ -813,6 +875,31 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 							<span><?php esc_html_e('Dedicated support', 'omnifywp-ecommerce'); ?></span>
 						</div>
 					</div>
+				</div>
+
+				<!-- Social Sharing Quick Buttons (Item 16) -->
+				<div class="omnify-pdp-social-share" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<span style="font-size: 12px; font-weight: 600; color: #64748b; margin-right: 4px;"><?php esc_html_e('Share:', 'omnifywp-ecommerce'); ?></span>
+					<?php 
+						$omnify_share_url   = rawurlencode(get_permalink() ?: (home_url('?omnify_product=' . $omnify_product['slug'])));
+						$omnify_share_title = rawurlencode($omnify_product['name']);
+						$omnify_share_img   = rawurlencode(! empty($omnify_product['thumbnail_url']) ? $omnify_product['thumbnail_url'] : ($omnify_all_images[0] ?? ''));
+					?>
+					<a href="https://api.whatsapp.com/send?text=<?php echo $omnify_share_title; ?>%20<?php echo $omnify_share_url; ?>" target="_blank" rel="noopener noreferrer" class="omnify-share-btn omnify-share-wa" title="WhatsApp" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #25D366; color: #fff; text-decoration: none;">
+						<span class="dashicons dashicons-whatsapp" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					</a>
+					<a href="https://twitter.com/intent/tweet?text=<?php echo $omnify_share_title; ?>&url=<?php echo $omnify_share_url; ?>" target="_blank" rel="noopener noreferrer" class="omnify-share-btn omnify-share-x" title="X (Twitter)" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #000000; color: #fff; text-decoration: none; font-weight: 700; font-size: 13px;">
+						X
+					</a>
+					<a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $omnify_share_url; ?>" target="_blank" rel="noopener noreferrer" class="omnify-share-btn omnify-share-fb" title="Facebook" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #1877F2; color: #fff; text-decoration: none;">
+						<span class="dashicons dashicons-facebook" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					</a>
+					<a href="https://pinterest.com/pin/create/button/?url=<?php echo $omnify_share_url; ?>&media=<?php echo $omnify_share_img; ?>&description=<?php echo $omnify_share_title; ?>" target="_blank" rel="noopener noreferrer" class="omnify-share-btn omnify-share-pin" title="Pinterest" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #E60023; color: #fff; text-decoration: none;">
+						<span class="dashicons dashicons-pinterest" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					</a>
+					<button type="button" class="omnify-share-btn omnify-share-native js-omnify-native-share" data-title="<?php echo esc_attr($omnify_product['name']); ?>" data-url="<?php echo esc_attr(urldecode($omnify_share_url)); ?>" title="<?php esc_attr_e('Share via device', 'omnifywp-ecommerce'); ?>" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; cursor: pointer;">
+						<span class="dashicons dashicons-share" style="font-size: 16px; width: 16px; height: 16px; line-height: 1;"></span>
+					</button>
 				</div>
 
 				<!-- Admin Edit Link -->
@@ -989,7 +1076,7 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 								$omnify_cnt = intval($omnify_breakdown[$omnify_i] ?? 0);
 								$omnify_pct = $omnify_review_count > 0 ? ($omnify_cnt / $omnify_review_count) * 100 : 0;
 							?>
-								<div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--omnify-gray-600);">
+								<div class="omnify-review-star-filter" data-star="<?php echo esc_attr((string) $omnify_i); ?>" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--omnify-gray-600); cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.15s ease;" title="<?php esc_attr_e('Filter by this rating', 'omnifywp-ecommerce'); ?>">
 									<span style="width: 45px; text-align: right;"><?php echo esc_html(sprintf(_n('%d star', '%d stars', $omnify_i, 'omnifywp-ecommerce'), $omnify_i)); ?></span>
 									<div style="flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; position: relative;">
 										<div style="position: absolute; top: 0; left: 0; bottom: 0; background: #f59e0b; width: <?php echo esc_attr($omnify_pct); ?>%; border-radius: 3px;"></div>
@@ -1036,12 +1123,18 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 						$omnify_is_mine = $omnify_current_user_email && sanitize_email($omnify_review['customer_email']) === sanitize_email($omnify_current_user_email);
 						$omnify_initials = strtoupper(substr($omnify_review['name'] ?? 'A', 0, 1));
 					?>
-					<div class="omnify-review-card" id="review-card-<?php echo esc_attr((string) ($omnify_review['id'] ?? '')); ?>">
+					<div class="omnify-review-card" id="review-card-<?php echo esc_attr((string) ($omnify_review['id'] ?? '')); ?>" data-rating="<?php echo esc_attr((string) $omnify_star); ?>">
 						<div class="omnify-review-avatar"><?php echo esc_html($omnify_initials); ?></div>
 						<div class="omnify-review-main">
 							<div class="omnify-review-header">
 								<div class="omnify-review-meta">
 									<strong class="omnify-review-author"><?php echo esc_html($omnify_review['name']); ?></strong>
+									<?php if (! empty($omnify_review['is_verified_buyer'])) : ?>
+										<span class="omnify-verified-buyer-badge" style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9999px; padding: 1px 7px; margin-left: 6px;">
+											<span class="dashicons dashicons-yes-alt" style="font-size: 12px; width: 12px; height: 12px; line-height: 1; vertical-align: middle;"></span>
+											<?php esc_html_e('Verified Buyer', 'omnifywp-ecommerce'); ?>
+										</span>
+									<?php endif; ?>
 									<span class="omnify-review-date"><?php echo esc_html(date_i18n(get_option('date_format'), strtotime((string) ($omnify_review['created_at'] ?? 'now')))); ?></span>
 								</div>
 								<div class="omnify-review-stars-row">
@@ -1367,6 +1460,9 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 	<?php
 	$omnify_upsells = $omnify_prod_repo->get_upsells($omnify_product);
 	$omnify_cross_sells = $omnify_prod_repo->get_cross_sells($omnify_product);
+	if (empty($omnify_related_products)) {
+		$omnify_related_products = $omnify_prod_repo->get_related_products((int) $omnify_product['id'], 4);
+	}
 	$omnify_recently_viewed_products = [];
 	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	$omnify_recent_cookie = isset($_COOKIE['omnify_recently_viewed']) ? sanitize_text_field(wp_unslash($_COOKIE['omnify_recently_viewed'])) : '';
@@ -1467,6 +1563,27 @@ $omnify_active_tab = $omnify_open_reviews_tab ? 'reviews' : ($omnify_has_descrip
 		</div><!-- /.omnify-pdp-after-sections -->
 	<?php endif; // $omnify_has_after_sections ?>
 </div><!-- /.omnify-storefront-wrapper -->
+
+<!-- Mobile Sticky Add-to-Cart Bar (Item 13) -->
+<div class="omnify-mobile-sticky-cart-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); padding: 10px 16px; z-index: 9999; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+	<div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+		<?php if (! empty($omnify_product['thumbnail_url']) || ! empty($omnify_all_images[0])) : ?>
+			<img src="<?php echo esc_url(! empty($omnify_product['thumbnail_url']) ? $omnify_product['thumbnail_url'] : $omnify_all_images[0]); ?>" alt="" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" />
+		<?php endif; ?>
+		<div style="min-width: 0;">
+			<div style="font-size: 13px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;"><?php echo esc_html($omnify_product['name']); ?></div>
+			<div style="font-size: 13px; font-weight: 700; color: #008060;"><?php echo esc_html($omnify_formatted_display); ?></div>
+		</div>
+	</div>
+	<button type="button" class="omnify-button omnify-button--primary omnify-mobile-sticky-add-btn" style="flex-shrink: 0; padding: 10px 18px; font-weight: 600; border-radius: 6px; background: #008060; color: #fff; border: none; cursor: pointer;" onclick="const btn = document.getElementById('pdp-add-cart-btn') || document.querySelector('.omnify-pdp-btn-cart'); if (btn) { btn.click(); }">
+		<?php echo esc_html($omnify_cart_button_label); ?>
+	</button>
+</div>
+<style>
+@media (min-width: 769px) {
+	.omnify-mobile-sticky-cart-bar { display: none !important; }
+}
+</style>
 
 <?php
 $omnify_currency_code = strtoupper((string) ($omnify_product['currency'] ?? ($omnify_settings['currency'] ?? 'USD')));

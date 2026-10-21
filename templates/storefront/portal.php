@@ -140,7 +140,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 ?>
 
 <div class="omnify-storefront-wrapper omnify-portal-page-wrapper">
-<div class="omnify-portal-wrapper">
+<div class="omnify-portal-wrapper"<?php echo ( isset( $omnify_default_tab ) && '' !== $omnify_default_tab ) ? ' data-default-tab="' . esc_attr( $omnify_default_tab ) . '"' : ''; ?>>
 <?php if (! is_user_logged_in()) : ?>
 	<div class="omnify-auth-shell">
 		<div class="omnify-auth-intro">
@@ -235,6 +235,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 	};
 	?>
 
+	<?php if (! isset($omnify_show_greeting) || $omnify_show_greeting) : ?>
 	<div class="omnify-portal-header">
 		<div class="omnify-portal-profile">
 			<div class="omnify-portal-profile__avatar"><span><?php echo esc_html($omnify_portal_initial); ?></span></div>
@@ -246,12 +247,16 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 				<span class="omnify-portal-profile__meta"><?php echo esc_html($omnify_portal_email); ?></span>
 			</div>
 		</div>
+		<?php if (! isset($omnify_show_logout) || $omnify_show_logout) : ?>
 		<a class="omnify-btn omnify-btn--secondary omnify-btn--sm omnify-portal-logout-btn" href="<?php echo esc_url(wp_logout_url(get_permalink())); ?>" title="<?php esc_attr_e('Sign out of your account', 'omnifywp-ecommerce'); ?>">
 			<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
 			<span><?php esc_html_e('Sign out', 'omnifywp-ecommerce'); ?></span>
 		</a>
+		<?php endif; ?>
 	</div>
+	<?php endif; ?>
 
+	<?php if (! isset($omnify_show_stats) || $omnify_show_stats) : ?>
 	<div class="omnify-portal-stats">
 		<div class="omnify-portal-stat" data-omnify-open-tab="orders" role="button" tabindex="0" title="<?php esc_attr_e('View Order History', 'omnifywp-ecommerce'); ?>">
 			<div class="omnify-portal-stat__top">
@@ -296,6 +301,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 			<span class="omnify-portal-stat__sub"><?php esc_html_e('Lifetime purchase value', 'omnifywp-ecommerce'); ?></span>
 		</div>
 	</div>
+	<?php endif; ?>
 
 	<?php if ($omnify_profile_saved) : ?>
 		<div class="omnify-portal-notice omnify-portal-notice--success"><?php esc_html_e('Profile settings updated successfully.', 'omnifywp-ecommerce'); ?></div>
@@ -345,6 +351,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 					<span class="omnify-tab-count"><?php echo esc_html((string) count($omnify_orders)); ?></span>
 				<?php endif; ?>
 			</button>
+			<?php if (! isset($omnify_show_invoices) || $omnify_show_invoices) : ?>
 			<button class="omnify-tab-btn" type="button" data-tab="invoices">
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
 				<span><?php esc_html_e('Invoices', 'omnifywp-ecommerce'); ?></span>
@@ -352,6 +359,8 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 					<span class="omnify-tab-count"><?php echo esc_html((string) count($omnify_orders)); ?></span>
 				<?php endif; ?>
 			</button>
+			<?php endif; ?>
+			<?php if (! isset($omnify_show_wishlist) || $omnify_show_wishlist) : ?>
 			<button class="omnify-tab-btn" type="button" data-tab="wishlist">
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
 				<span><?php esc_html_e('Wishlist', 'omnifywp-ecommerce'); ?></span>
@@ -359,6 +368,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 					<span class="omnify-tab-count"><?php echo esc_html((string) count($omnify_wishlist_products)); ?></span>
 				<?php endif; ?>
 			</button>
+			<?php endif; ?>
 			<button class="omnify-tab-btn" type="button" data-tab="history">
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
 				<span><?php esc_html_e('Download Log', 'omnifywp-ecommerce'); ?></span>
@@ -440,7 +450,23 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 								<?php if ($omnify_has_files) : ?>
 									<div class="omnify-portal-card-files-drawer" id="drawer-<?php echo esc_attr((string) $omnify_portal_product_id); ?>" style="display: none;">
 										<?php foreach (array_slice($omnify_portal_product_files, 0, 5) as $omnify_portal_product_file) : ?>
-											<?php $omnify_portal_file_ext = strtoupper(pathinfo((string) ($omnify_portal_product_file['file_name'] ?? 'FILE'), PATHINFO_EXTENSION) ?: 'FILE'); ?>
+											<?php
+											$omnify_portal_file_ext   = strtoupper(pathinfo((string) ($omnify_portal_product_file['file_name'] ?? 'FILE'), PATHINFO_EXTENSION) ?: 'FILE');
+											$omnify_drawer_expires_at = $omnify_portal_product_file['access']['expires_at'] ?? ($omnify_portal_product_file['expires_at'] ?? null);
+											$omnify_drawer_is_expired = false;
+											$omnify_drawer_badge      = '';
+											if (! empty($omnify_drawer_expires_at)) {
+												$omnify_drawer_ts   = strtotime((string) $omnify_drawer_expires_at . ' UTC');
+												$omnify_drawer_diff = $omnify_drawer_ts - time();
+												if ($omnify_drawer_diff <= 0) {
+													$omnify_drawer_is_expired = true;
+													$omnify_drawer_badge      = '<span class="omnify-status-pill omnify-status-pill--failed" style="margin-left:6px;font-size:10px;padding:2px 6px;border-radius:4px;background:#fee2e2;color:#991b1b;">' . esc_html__('Expired', 'omnifywp-ecommerce') . '</span>';
+												} elseif ($omnify_drawer_diff <= 48 * HOUR_IN_SECONDS) {
+													$omnify_hours_left   = max(1, (int) round($omnify_drawer_diff / HOUR_IN_SECONDS));
+													$omnify_drawer_badge = '<span class="omnify-status-pill omnify-status-pill--warning" style="margin-left:6px;font-size:10px;padding:2px 6px;border-radius:4px;background:#fef3c7;color:#92400e;">' . sprintf(esc_html__('Expires in %d hours', 'omnifywp-ecommerce'), $omnify_hours_left) . '</span>';
+												}
+											}
+											?>
 											<div class="omnify-portal-file-row">
 												<span class="omnify-portal-file-row__icon"><?php echo esc_html($omnify_portal_file_ext); ?></span>
 												<div class="omnify-portal-file-row__info">
@@ -448,10 +474,22 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 													<?php if (! empty($omnify_portal_product_file['version'])) : ?>
 														<span><?php echo esc_html((string) $omnify_portal_product_file['version']); ?></span>
 													<?php endif; ?>
+													<?php if (! empty($omnify_portal_product_file['file_size'])) : ?>
+														<span style="font-size: 11px; color: var(--omnify-gray-500);"><?php echo esc_html(size_format((int) $omnify_portal_product_file['file_size'])); ?></span>
+													<?php endif; ?>
+													<?php if (! empty($omnify_drawer_badge)) : ?>
+														<?php echo $omnify_drawer_badge; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+													<?php endif; ?>
 												</div>
-												<a class="omnify-btn omnify-btn--primary omnify-btn--sm" href="<?php echo esc_url((string) ($omnify_portal_product_file['download_url'] ?? '#')); ?>" download>
-													<?php esc_html_e('Download', 'omnifywp-ecommerce'); ?>
-												</a>
+												<?php if (! $omnify_drawer_is_expired) : ?>
+													<a class="omnify-btn omnify-btn--primary omnify-btn--sm" href="<?php echo esc_url((string) ($omnify_portal_product_file['download_url'] ?? '#')); ?>" download>
+														<?php esc_html_e('Download', 'omnifywp-ecommerce'); ?>
+													</a>
+												<?php else : ?>
+													<button class="omnify-btn omnify-btn--secondary omnify-btn--sm" type="button" disabled>
+														<?php esc_html_e('Expired', 'omnifywp-ecommerce'); ?>
+													</button>
+												<?php endif; ?>
 											</div>
 										<?php endforeach; ?>
 									</div>
@@ -472,15 +510,48 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 				<?php else : ?>
 					<div class="omnify-portal-downloads-grid">
 						<?php foreach ($omnify_files as $omnify_portal_file) : ?>
-							<?php $omnify_portal_file_ext = strtoupper(pathinfo((string) ($omnify_portal_file['file_name'] ?? 'FILE'), PATHINFO_EXTENSION) ?: 'FILE'); ?>
+							<?php
+							$omnify_portal_file_ext   = strtoupper(pathinfo((string) ($omnify_portal_file['file_name'] ?? 'FILE'), PATHINFO_EXTENSION) ?: 'FILE');
+							$omnify_expires_at        = $omnify_portal_file['access']['expires_at'] ?? ($omnify_portal_file['expires_at'] ?? null);
+							$omnify_is_expired        = false;
+							$omnify_expiry_badge      = '';
+							if (! empty($omnify_expires_at)) {
+								$omnify_exp_ts    = strtotime((string) $omnify_expires_at . ' UTC');
+								$omnify_diff_secs = $omnify_exp_ts - time();
+								if ($omnify_diff_secs <= 0) {
+									$omnify_is_expired   = true;
+									$omnify_expiry_badge = '<span class="omnify-status-pill omnify-status-pill--failed" style="margin-left:6px;font-size:11px;padding:2px 8px;border-radius:4px;background:#fee2e2;color:#991b1b;">' . esc_html__('Expired', 'omnifywp-ecommerce') . '</span>';
+								} elseif ($omnify_diff_secs <= 48 * HOUR_IN_SECONDS) {
+									$omnify_hours_left   = max(1, (int) round($omnify_diff_secs / HOUR_IN_SECONDS));
+									$omnify_expiry_badge = '<span class="omnify-status-pill omnify-status-pill--warning" style="margin-left:6px;font-size:11px;padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;">' . sprintf(esc_html__('Expires in %d hours', 'omnifywp-ecommerce'), $omnify_hours_left) . '</span>';
+								} else {
+									$omnify_days_left    = max(1, (int) round($omnify_diff_secs / DAY_IN_SECONDS));
+									$omnify_expiry_badge = '<span class="omnify-status-pill omnify-status-pill--info" style="margin-left:6px;font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f2fe;color:#0369a1;">' . sprintf(esc_html__('Expires in %d days', 'omnifywp-ecommerce'), $omnify_days_left) . '</span>';
+								}
+							}
+							?>
 							<div class="omnify-portal-download-card">
 								<div class="omnify-portal-download-card__icon"><?php echo esc_html($omnify_portal_file_ext); ?></div>
 								<div class="omnify-portal-download-card__details">
 									<span class="omnify-portal-download-card__product"><?php echo esc_html((string) ($omnify_portal_file['product_name'] ?? __('Product file', 'omnifywp-ecommerce'))); ?></span>
 									<strong class="omnify-portal-download-card__name"><?php echo esc_html((string) ($omnify_portal_file['file_name'] ?? __('Download file', 'omnifywp-ecommerce'))); ?></strong>
-									<span class="omnify-portal-download-card__meta"><?php echo esc_html((string) ($omnify_portal_file['version'] ?? '')); ?></span>
+									<span class="omnify-portal-download-card__meta">
+										<?php if (! empty($omnify_portal_file['version'])) : ?>
+											<span><?php echo esc_html((string) $omnify_portal_file['version']); ?></span>
+										<?php endif; ?>
+										<?php if (! empty($omnify_portal_file['file_size'])) : ?>
+											<span><?php echo esc_html(size_format((int) $omnify_portal_file['file_size'])); ?></span>
+										<?php endif; ?>
+										<?php if (! empty($omnify_expiry_badge)) : ?>
+											<?php echo $omnify_expiry_badge; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+										<?php endif; ?>
+									</span>
 								</div>
-								<a class="omnify-btn omnify-btn--primary omnify-btn--sm" href="<?php echo esc_url((string) ($omnify_portal_file['download_url'] ?? '#')); ?>" download><?php esc_html_e('Download', 'omnifywp-ecommerce'); ?></a>
+								<?php if (! $omnify_is_expired) : ?>
+									<a class="omnify-btn omnify-btn--primary omnify-btn--sm" href="<?php echo esc_url((string) ($omnify_portal_file['download_url'] ?? '#')); ?>" download><?php esc_html_e('Download', 'omnifywp-ecommerce'); ?></a>
+								<?php else : ?>
+									<button class="omnify-btn omnify-btn--secondary omnify-btn--sm" type="button" disabled><?php esc_html_e('Expired', 'omnifywp-ecommerce'); ?></button>
+								<?php endif; ?>
 							</div>
 						<?php endforeach; ?>
 					</div>
@@ -495,8 +566,17 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 						<p><?php esc_html_e('Your completed and pending orders will appear here.', 'omnifywp-ecommerce'); ?></p>
 					</div>
 				<?php else : ?>
+					<?php
+					$omnify_orders_per_page    = 10;
+					$omnify_total_orders       = count($omnify_orders);
+					$omnify_total_order_pages  = max(1, (int) ceil($omnify_total_orders / $omnify_orders_per_page));
+					// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					$omnify_current_order_page = max(1, min($omnify_total_order_pages, isset($_GET['order_paged']) ? absint($_GET['order_paged']) : 1));
+					$omnify_order_offset       = ($omnify_current_order_page - 1) * $omnify_orders_per_page;
+					$omnify_paged_orders       = array_slice($omnify_orders, $omnify_order_offset, $omnify_orders_per_page);
+					?>
 					<div class="omnify-portal-orders-list">
-						<?php foreach ($omnify_orders as $omnify_portal_order) : ?>
+						<?php foreach ($omnify_paged_orders as $omnify_portal_order) : ?>
 							<?php
 							$omnify_portal_order_id       = (int) ($omnify_portal_order['id'] ?? 0);
 							$omnify_portal_order_status   = (string) ($omnify_portal_order['status'] ?? 'pending');
@@ -525,7 +605,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 
 							$omnify_portal_customer_notes = array_filter(
 								(array) ($omnify_portal_order['notes'] ?? []),
-								static fn($n) => ! empty($n['customer_visible']) || 'customer' === ($n['note_type'] ?? '')
+								static fn($n) => ! empty($n['customer_visible']) || ! empty($n['customer_notified']) || 'customer' === ($n['note_type'] ?? '')
 							);
 							?>
 							<div class="omnify-portal-order-card">
@@ -601,10 +681,14 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 									</div>
 								<?php endif; ?>
 								<?php if ($omnify_portal_refund_allowed) : ?>
+									<?php $omnify_portal_refund_window = max(1, absint($omnify_settings['refund_duration'] ?? 14)); ?>
 									<details class="omnify-refund-details" style="margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
 										<summary style="font-size: 12px; font-weight: 500; color: #64748B; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px;">
 											<span><span class="dashicons dashicons-undo" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:4px;"></span><?php esc_html_e('Request a refund for this order', 'omnifywp-ecommerce'); ?></span>
 										</summary>
+										<div class="omnify-refund-policy-notice" style="margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid #0284c7; border-radius: 4px; font-size: 12px; color: #475569;">
+											<strong><?php esc_html_e('Refund Policy Notice:', 'omnifywp-ecommerce'); ?></strong> <?php printf(esc_html__('Refund requests must be submitted within %d days of purchase. Requests are subject to store review and terms.', 'omnifywp-ecommerce'), $omnify_portal_refund_window); ?>
+										</div>
 										<form class="omnify-refund-request-form" method="post" style="margin-top: 10px; padding-top: 0; border-top: none;">
 											<?php wp_nonce_field('omnify_request_refund_' . $omnify_portal_order_id, 'omnify_refund_nonce'); ?>
 											<input type="hidden" name="omnify_action" value="omnify_request_refund" />
@@ -617,6 +701,23 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 							</div>
 						<?php endforeach; ?>
 					</div>
+					<?php if ($omnify_total_order_pages > 1) : ?>
+						<div class="omnify-portal-pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; margin-top:24px; padding-top:16px; border-top:1px solid #e2e8f0;">
+							<?php if ($omnify_current_order_page > 1) : ?>
+								<a class="omnify-btn omnify-btn--secondary omnify-btn--sm" href="<?php echo esc_url(add_query_arg(['omnify_tab' => 'orders', 'order_paged' => $omnify_current_order_page - 1])); ?>">
+									&laquo; <?php esc_html_e('Previous', 'omnifywp-ecommerce'); ?>
+								</a>
+							<?php endif; ?>
+							<span style="font-size:13px; font-weight:500; color:#64748b; padding:0 8px;">
+								<?php printf(esc_html__('Page %1$d of %2$d', 'omnifywp-ecommerce'), $omnify_current_order_page, $omnify_total_order_pages); ?>
+							</span>
+							<?php if ($omnify_current_order_page < $omnify_total_order_pages) : ?>
+								<a class="omnify-btn omnify-btn--secondary omnify-btn--sm" href="<?php echo esc_url(add_query_arg(['omnify_tab' => 'orders', 'order_paged' => $omnify_current_order_page + 1])); ?>">
+									<?php esc_html_e('Next', 'omnifywp-ecommerce'); ?> &raquo;
+								</a>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 
@@ -669,6 +770,12 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 						<p><?php esc_html_e('Saved products will appear here for quick access later.', 'omnifywp-ecommerce'); ?></p>
 					</div>
 				<?php else : ?>
+					<div class="omnify-wishlist-toolbar" style="display:flex; justify-content:flex-end; margin-bottom:1rem; gap:10px;">
+						<button type="button" class="omnify-btn omnify-btn--primary omnify-btn--sm" id="omnify-wishlist-move-all">
+							<span class="dashicons dashicons-cart" style="font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span>
+							<?php esc_html_e('Move All to Cart', 'omnifywp-ecommerce'); ?>
+						</button>
+					</div>
 					<div class="omnify-portal-products-grid omnify-wishlist-grid">
 						<?php foreach ($omnify_wishlist_products as $omnify_portal_wish_product) : ?>
 							<?php
@@ -678,7 +785,12 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 							$omnify_portal_wish_thumb = $omnify_get_product_thumbnail($omnify_portal_wish_product);
 							$omnify_portal_wish_type  = strtolower((string) ($omnify_portal_wish_product['type'] ?? 'product'));
 							?>
-							<div class="omnify-product-card omnify-portal-product-card" data-product-card-id="<?php echo esc_attr((string) $omnify_portal_wish_id); ?>">
+							<div class="omnify-product-card omnify-portal-product-card" 
+								data-product-card-id="<?php echo esc_attr((string) $omnify_portal_wish_id); ?>"
+								data-product-name="<?php echo esc_attr($omnify_portal_wish_name); ?>"
+								data-product-price="<?php echo esc_attr((string) ((float) ($omnify_portal_wish_product['sale_price'] ?? $omnify_portal_wish_product['price'] ?? 0))); ?>"
+								data-product-image="<?php echo esc_url($omnify_portal_wish_thumb); ?>"
+								data-product-type="<?php echo esc_attr($omnify_portal_wish_type); ?>">
 								<div class="omnify-portal-card-thumb">
 									<a href="<?php echo esc_url($omnify_portal_wish_url); ?>" tabindex="-1" aria-hidden="true">
 										<img src="<?php echo esc_url($omnify_portal_wish_thumb); ?>" alt="<?php echo esc_attr($omnify_portal_wish_name); ?>" loading="lazy" />
@@ -754,6 +866,20 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 					<div class="omnify-account-hero__meta">
 						<span><?php esc_html_e('Signed in as', 'omnifywp-ecommerce'); ?></span>
 						<strong><?php echo esc_html($omnify_portal_email); ?></strong>
+						<?php
+						$omnify_is_email_verified = ! empty(get_user_meta(get_current_user_id(), '_omnify_email_verified', true));
+						?>
+						<div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+							<?php if ($omnify_is_email_verified) : ?>
+								<span class="omnify-status-pill" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; padding:2px 8px;">
+									<span class="dashicons dashicons-yes" style="font-size:12px; width:12px; height:12px; vertical-align:middle; line-height:12px;"></span> <?php esc_html_e('Verified Email', 'omnifywp-ecommerce'); ?>
+								</span>
+							<?php else : ?>
+								<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['omnify_action' => 'omnify_send_verification_email'], get_permalink()), 'omnify_verify_email_request')); ?>" class="omnify-btn omnify-btn--ghost omnify-btn--sm" style="font-size:11px; padding:2px 8px; border:1px dashed #f59e0b; color:#b45309;">
+									<?php esc_html_e('Verify Email', 'omnifywp-ecommerce'); ?>
+								</a>
+							<?php endif; ?>
+						</div>
 					</div>
 				</div>
 
@@ -900,14 +1026,51 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 								</div>
 								<p><?php esc_html_e('Use a strong password to protect downloads and invoices.', 'omnifywp-ecommerce'); ?></p>
 							</div>
-							<form method="post">
+							<form method="post" id="omnify-change-password-form">
 								<?php wp_nonce_field('omnify_change_password', 'omnify_cpw_nonce'); ?>
 								<input type="hidden" name="omnify_action" value="omnify_change_password" />
 								<div class="omnify-portal-form-group"><label><?php esc_html_e('Current password', 'omnifywp-ecommerce'); ?></label><input type="password" name="current_password" required /></div>
-								<div class="omnify-portal-form-group"><label><?php esc_html_e('New password', 'omnifywp-ecommerce'); ?></label><input type="password" name="new_password" required minlength="8" /></div>
-								<div class="omnify-portal-form-group"><label><?php esc_html_e('Confirm password', 'omnifywp-ecommerce'); ?></label><input type="password" name="confirm_password" required minlength="8" /></div>
-								<div class="omnify-portal-form-actions"><button class="omnify-btn omnify-btn--primary" type="submit"><?php esc_html_e('Change password', 'omnifywp-ecommerce'); ?></button></div>
+								<div class="omnify-portal-form-group"><label><?php esc_html_e('New password', 'omnifywp-ecommerce'); ?></label><input type="password" id="omnify-new-password" name="new_password" required minlength="8" /></div>
+								<div class="omnify-portal-form-group">
+									<label><?php esc_html_e('Confirm password', 'omnifywp-ecommerce'); ?></label>
+									<input type="password" id="omnify-confirm-password" name="confirm_password" required minlength="8" />
+									<div id="omnify-password-match-msg" style="font-size:12px; margin-top:4px; display:none;"></div>
+								</div>
+								<div class="omnify-portal-form-actions"><button class="omnify-btn omnify-btn--primary" id="omnify-change-pw-submit" type="submit"><?php esc_html_e('Change password', 'omnifywp-ecommerce'); ?></button></div>
 							</form>
+							<script>
+							document.addEventListener('DOMContentLoaded', function() {
+								var np = document.getElementById('omnify-new-password');
+								var cp = document.getElementById('omnify-confirm-password');
+								var msg = document.getElementById('omnify-password-match-msg');
+								var pf = document.getElementById('omnify-change-password-form');
+								function checkPw() {
+									if (!np || !cp || !msg) return;
+									if (!cp.value) { msg.style.display = 'none'; return; }
+									if (np.value !== cp.value) {
+										msg.style.display = 'block';
+										msg.style.color = '#dc2626';
+										msg.textContent = '<?php echo esc_js(__('Passwords do not match.', 'omnifywp-ecommerce')); ?>';
+									} else {
+										msg.style.display = 'block';
+										msg.style.color = '#16a34a';
+										msg.textContent = '<?php echo esc_js(__('Passwords match.', 'omnifywp-ecommerce')); ?>';
+									}
+								}
+								if (np && cp) {
+									np.addEventListener('input', checkPw);
+									cp.addEventListener('input', checkPw);
+								}
+								if (pf) {
+									pf.addEventListener('submit', function(e) {
+										if (np && cp && np.value !== cp.value) {
+											e.preventDefault();
+											alert('<?php echo esc_js(__('Passwords do not match. Please verify your new password.', 'omnifywp-ecommerce')); ?>');
+										}
+									});
+								}
+							});
+							</script>
 						</div>
 
 						<div class="omnify-portal-section-card omnify-account-card--addresses">
@@ -956,7 +1119,7 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 										<?php if (empty($omnify_portal_address['is_default'])) : ?>
 											<a class="omnify-btn omnify-btn--ghost omnify-btn--sm" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['omnify_action' => 'omnify_default_address', 'address_id' => $omnify_portal_address_id], get_permalink()), 'omnify_default_address_' . $omnify_portal_address_id)); ?>"><?php esc_html_e('Set default', 'omnifywp-ecommerce'); ?></a>
 										<?php endif; ?>
-										<a class="omnify-btn omnify-btn--ghost omnify-btn--sm" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['omnify_action' => 'omnify_delete_address', 'address_id' => $omnify_portal_address_id], get_permalink()), 'omnify_delete_address_' . $omnify_portal_address_id)); ?>"><?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?></a>
+										<a class="omnify-btn omnify-btn--ghost omnify-btn--sm" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['omnify_action' => 'omnify_delete_address', 'address_id' => $omnify_portal_address_id], get_permalink()), 'omnify_delete_address_' . $omnify_portal_address_id)); ?>" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this saved address?', 'omnifywp-ecommerce')); ?>');"><?php esc_html_e('Delete', 'omnifywp-ecommerce'); ?></a>
 									</div>
 								</div>
 							<?php endforeach; ?>
@@ -1031,6 +1194,87 @@ $omnify_countries = \Omnify\eCommerce\Support\Omnify_Locations::allowed_countrie
 							</div>
 						</form>
 					</div>
+				</div>
+
+				<!-- Tax Exemption Certificate Card (Item 34) -->
+				<?php
+				$omnify_tax_status = get_user_meta(get_current_user_id(), '_omnify_tax_exempt_status', true);
+				$omnify_tax_id     = get_user_meta(get_current_user_id(), '_omnify_tax_exempt_id', true);
+				$omnify_tax_org    = get_user_meta(get_current_user_id(), '_omnify_tax_exempt_org', true);
+				?>
+				<div class="omnify-portal-section-card omnify-account-card--tax-exempt" style="margin-top:20px;">
+					<div class="omnify-account-card__header">
+						<div>
+							<span><?php esc_html_e('B2B & Tax', 'omnifywp-ecommerce'); ?></span>
+							<h3><?php esc_html_e('Tax Exemption', 'omnifywp-ecommerce'); ?></h3>
+						</div>
+						<p><?php esc_html_e('Upload valid tax exemption certificates for B2B or non-profit orders.', 'omnifywp-ecommerce'); ?></p>
+					</div>
+					<?php if ($omnify_tax_status === 'approved') : ?>
+						<div class="omnify-portal-notice omnify-portal-notice--success" style="background:#ecfdf5; color:#065f46; border:1px solid #10b981; padding:12px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+							<span class="dashicons dashicons-yes" style="color:#059669; margin-right:4px;"></span>
+							<strong><?php esc_html_e('Tax Exemption Approved', 'omnifywp-ecommerce'); ?></strong>
+							<p style="margin:4px 0 0; font-size:12px;"><?php printf(esc_html__('Exemption ID: %s (%s). Taxes are automatically zero-rated at checkout.', 'omnifywp-ecommerce'), esc_html((string) $omnify_tax_id), esc_html((string) $omnify_tax_org)); ?></p>
+						</div>
+					<?php elseif ($omnify_tax_status === 'pending') : ?>
+						<div class="omnify-portal-notice omnify-portal-notice--warning" style="background:#fffbeb; color:#92400e; border:1px solid #f59e0b; padding:12px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+							<span class="dashicons dashicons-clock" style="color:#d97706; margin-right:4px;"></span>
+							<strong><?php esc_html_e('Certificate Under Review', 'omnifywp-ecommerce'); ?></strong>
+							<p style="margin:4px 0 0; font-size:12px;"><?php esc_html_e('Your tax exemption documents are currently being verified by store administrators.', 'omnifywp-ecommerce'); ?></p>
+						</div>
+					<?php endif; ?>
+
+					<form method="post" enctype="multipart/form-data">
+						<?php wp_nonce_field('omnify_tax_certificate', 'omnify_tax_cert_nonce'); ?>
+						<input type="hidden" name="omnify_action" value="omnify_upload_tax_certificate" />
+						<div class="omnify-portal-form-group">
+							<label><?php esc_html_e('Tax Exemption ID / Number', 'omnifywp-ecommerce'); ?></label>
+							<input type="text" name="tax_exempt_id" value="<?php echo esc_attr((string) $omnify_tax_id); ?>" placeholder="e.g. TAX-EXEMPT-12345" required />
+						</div>
+						<div class="omnify-portal-form-group">
+							<label><?php esc_html_e('Organization / Company Name', 'omnifywp-ecommerce'); ?></label>
+							<input type="text" name="tax_exempt_org" value="<?php echo esc_attr((string) $omnify_tax_org); ?>" placeholder="e.g. Acme Non-Profit Corp" required />
+						</div>
+						<div class="omnify-portal-form-group">
+							<label><?php esc_html_e('Certificate Document (PDF or Image)', 'omnifywp-ecommerce'); ?></label>
+							<input type="file" name="tax_certificate_file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:13px;" />
+						</div>
+						<div class="omnify-portal-form-actions">
+							<button class="omnify-btn omnify-btn--secondary omnify-btn--sm" type="submit"><?php esc_html_e('Submit Certificate', 'omnifywp-ecommerce'); ?></button>
+						</div>
+					</form>
+				</div>
+
+				<!-- GDPR Privacy & Data Erasure Card (Item 22) -->
+				<div class="omnify-portal-section-card omnify-account-card--gdpr" style="margin-top:20px; border-color:#fee2e2;">
+					<div class="omnify-account-card__header">
+						<div>
+							<span style="color:#ef4444;"><?php esc_html_e('Privacy & GDPR', 'omnifywp-ecommerce'); ?></span>
+							<h3 style="color:#991b1b;"><?php esc_html_e('Erase My Personal Data', 'omnifywp-ecommerce'); ?></h3>
+						</div>
+						<p><?php esc_html_e('In accordance with GDPR, you may request permanent erasure of your personal data and account details.', 'omnifywp-ecommerce'); ?></p>
+					</div>
+					<?php
+					$omnify_erasure_requested = get_user_meta(get_current_user_id(), '_omnify_gdpr_erasure_requested', true);
+					if ($omnify_erasure_requested) :
+						$omnify_erasure_ts = is_numeric($omnify_erasure_requested) ? (int) $omnify_erasure_requested : strtotime((string) $omnify_erasure_requested);
+						$omnify_erasure_label = $omnify_erasure_ts ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), $omnify_erasure_ts) : (string) $omnify_erasure_requested;
+						?>
+						<div class="omnify-portal-notice" style="background:#fef2f2; color:#991b1b; border:1px solid #f87171; padding:12px; border-radius:8px; font-size:13px;">
+							<span class="dashicons dashicons-info" style="color:#ef4444; margin-right:4px;"></span>
+							<strong><?php esc_html_e('Data Erasure Requested', 'omnifywp-ecommerce'); ?></strong>
+							<p style="margin:4px 0 0; font-size:12px;"><?php printf(esc_html__('Submitted on %s. An administrator is processing your erasure request.', 'omnifywp-ecommerce'), esc_html($omnify_erasure_label)); ?></p>
+						</div>
+					<?php else : ?>
+						<form method="post" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to request permanent erasure of your personal data? This cannot be undone.', 'omnifywp-ecommerce')); ?>');">
+							<?php wp_nonce_field('omnify_request_data_erasure', 'omnify_erasure_nonce'); ?>
+							<input type="hidden" name="omnify_action" value="omnify_request_data_erasure" />
+							<button class="omnify-btn omnify-btn--danger omnify-btn--sm" type="submit" style="background:#dc2626; color:#fff; border-color:#dc2626;">
+								<span class="dashicons dashicons-trash" style="font-size:14px; width:14px; height:14px; vertical-align:middle; line-height:14px; margin-right:4px;"></span>
+								<?php esc_html_e('Request Personal Data Erasure', 'omnifywp-ecommerce'); ?>
+							</button>
+						</form>
+					<?php endif; ?>
 				</div>
 			</div>
 		</div>
