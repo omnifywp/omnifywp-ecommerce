@@ -307,3 +307,229 @@
 	transform: translateY(-3px);
 	box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
 }
+
+/* ── Modern Block Features & Micro-Interactions ────────────────────── */
+
+/* Infinite Marquee Ticker Mode */
+.omnify-trust-badge-ticker {
+	display: flex;
+	overflow: hidden;
+	user-select: none;
+	gap: 32px;
+	white-space: nowrap;
+	padding: 12px 0;
+}
+.omnify-trust-badge-ticker__inner {
+	display: flex;
+	gap: 32px;
+	animation: omnifyTicker var(--ticker-speed, 25s) linear infinite;
+	flex-shrink: 0;
+	min-width: 100%;
+	align-items: center;
+	justify-content: space-around;
+}
+@keyframes omnifyTicker {
+	0%   { transform: translateX(0); }
+	100% { transform: translateX(-100%); }
+}
+
+/* Order Bump Pulsing Attention Glow */
+.omnify-order-bump-block.has-pulse {
+	animation: omnifyBumpPulse 2.4s infinite ease-in-out;
+}
+@keyframes omnifyBumpPulse {
+	0%, 100% {
+		box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.35);
+	}
+	50% {
+		box-shadow: 0 0 0 8px rgba(15, 118, 110, 0);
+	}
+}
+
+/* Gamified Rewards Meter Tiers */
+.omnify-reward-tiers {
+	position: relative;
+	margin: 16px 0;
+}
+.omnify-reward-tiers__track {
+	height: 8px;
+	background: #e2e8f0;
+	border-radius: 999px;
+	position: relative;
+	overflow: visible;
+}
+.omnify-reward-tiers__fill {
+	height: 100%;
+	background: linear-gradient(90deg, #0f766e, #10b981);
+	border-radius: 999px;
+	transition: width 0.4s ease;
+}
+.omnify-reward-tiers__milestones {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 8px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #64748b;
+}
+
+/* Accordion 3-Step Checkout */
+.omnify-checkout-accordion {
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	overflow: hidden;
+}
+.omnify-checkout-accordion__step {
+	border-bottom: 1px solid #e2e8f0;
+}
+.omnify-checkout-accordion__step:last-child {
+	border-bottom: none;
+}
+.omnify-checkout-accordion__header {
+	padding: 16px 20px;
+	background: #f8fafc;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: 700;
+	cursor: pointer;
+}
+.omnify-checkout-accordion__body {
+	padding: 20px;
+	background: #ffffff;
+}
+
+/* Sticky Add to Cart Bar Polish */
+.omnify-sticky-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: #ffffff;
+	border-top: 1px solid #e2e8f0;
+	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+	z-index: 9999;
+	padding: 12px 24px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	backdrop-filter: blur(10px);
+}
+
+/* Masonry & Responsive Product Grid Controls */
+.omnify-product-grid--masonry {
+	column-count: 3;
+	column-gap: 24px;
+}
+.omnify-product-grid--masonry .omnify-product-card {
+	break-inside: avoid;
+	margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+	.omnify-product-grid--masonry {
+		column-count: 2;
+	}
+}
+@media (max-width: 600px) {
+	.omnify-product-grid--masonry {
+		column-count: 1;
+	}
+}
+
+/* Mobile 2-column layout toggle */
+@media (max-width: 640px) {
+	.omnify-product-grid--mobile-2col {
+		display: grid !important;
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 12px !important;
+	}
+	.omnify-product-grid--mobile-2col .omnify-product-card {
+		padding: 10px !important;
+	}
+	.omnify-product-grid--mobile-2col .omnify-product-card__title {
+		font-size: 13px !important;
+		line-height: 1.3 !important;
+	}
+}
+
+/* Pulsating Glow for Order Bump */
+.omnify-order-bump--glow {
+	border: 2px solid #0f766e !important;
+	box-shadow: 0 0 15px rgba(15, 118, 110, 0.25) !important;
+	animation: omnify-glow-pulse 2.5s infinite ease-in-out;
+}
+@keyframes omnify-glow-pulse {
+	0%, 100% {
+		box-shadow: 0 0 12px rgba(15, 118, 110, 0.2);
+	}
+	50% {
+		box-shadow: 0 0 24px rgba(15, 118, 110, 0.45);
+	}
+}
+
+/* Currency Switcher Vector Flags & Pills */
+.omnify-currency-switcher-pills {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px;
+	background: #f1f5f9;
+	border-radius: 999px;
+}
+.omnify-currency-switcher-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #475569;
+	text-decoration: none;
+	transition: all 0.2s ease;
+}
+.omnify-currency-switcher-pill.is-active {
+	background: #ffffff;
+	color: #0f172a;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.omnify-currency-flag {
+	width: 18px;
+	height: 12px;
+	border-radius: 2px;
+	object-fit: cover;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+/* State Simulator Toolbar Badge */
+.omnify-state-simulator-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 6px 12px;
+	margin-bottom: 12px;
+	font-size: 12px;
+	color: #64748b;
+}
+.omnify-state-simulator-bar strong {
+	color: #0f766e;
+}
+
+/* Template Cloud In-Editor Modal */
+.omnify-template-library-modal .components-modal__content {
+	max-width: 1080px;
+	width: 90vw;
+	max-height: 85vh;
+}
+.omnify-template-card {
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.omnify-template-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+

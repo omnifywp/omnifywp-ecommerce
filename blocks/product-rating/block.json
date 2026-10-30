@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/product-rating",
+  "version": "1.4.3",
+  "title": "Product Rating",
+  "category": "omnify",
+  "icon": "star-filled",
+  "description": "Product review star rating and review count breakdown.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

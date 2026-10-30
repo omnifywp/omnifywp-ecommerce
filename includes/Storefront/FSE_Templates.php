@@ -27,6 +27,26 @@ final class Omnify_FSE_Templates {
 	public static function register(): void {
 		add_filter('pre_get_block_file_template', [self::class, 'resolve_block_template'], 10, 3);
 		add_filter('get_block_templates', [self::class, 'inject_block_templates'], 10, 3);
+		add_filter('default_template_types', [self::class, 'register_template_types'], 10, 1);
+	}
+
+	/**
+	 * Register default template types so WordPress recognizes Omnify templates.
+	 *
+	 * @param array<string, array{title: string, description: string}> $template_types
+	 * @return array<string, array{title: string, description: string}>
+	 */
+	public static function register_template_types(array $template_types): array {
+		$registry = self::get_templates_registry();
+		foreach ($registry as $slug => $def) {
+			if ($def['type'] === 'wp_template' && ! isset($template_types[$slug])) {
+				$template_types[$slug] = [
+					'title'       => $def['title'],
+					'description' => $def['description'],
+				];
+			}
+		}
+		return $template_types;
 	}
 
 	/**
@@ -164,9 +184,23 @@ final class Omnify_FSE_Templates {
 			}
 		}
 
+		$has_slug_filter      = ! empty($query['slug__in']) && is_array($query['slug__in']);
+		$has_post_type_filter = ! empty($query['post_type']);
+		$matches_post_type    = $has_post_type_filter && in_array('omnify_product', (array) $query['post_type'], true);
+
 		$theme = get_stylesheet();
 		foreach ($registry as $slug => $def) {
 			if ($def['type'] !== $template_type || in_array($slug, $existing_slugs, true)) {
+				continue;
+			}
+
+			// If query specifies slug__in, only include templates that are explicitly requested
+			if ($has_slug_filter && ! in_array($slug, $query['slug__in'], true)) {
+				continue;
+			}
+
+			// If query specifies post_type, only include if omnify_product is targeted
+			if ($has_post_type_filter && ! $matches_post_type) {
 				continue;
 			}
 

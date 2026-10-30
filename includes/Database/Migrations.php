@@ -70,6 +70,7 @@ class Omnify_Migrations {
 		$this->migrate_webhook_events_diagnostic_columns();
 		$this->migrate_add_downloads_indexes();
 		$this->migrate_add_variation_estimated_delivery();
+		$this->migrate_add_reviews_is_verified_buyer();
 
 		$this->record(self::VERSION);
 		update_option('omnify_schema_version', self::VERSION);
@@ -1400,6 +1401,19 @@ class Omnify_Migrations {
 
 		if (! $this->column_exists($omnify_table, 'estimated_delivery')) {
 			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN estimated_delivery VARCHAR(100) NULL AFTER thumbnail_id', $omnify_table));
+		}
+	}
+
+	private function migrate_add_reviews_is_verified_buyer(): void {
+		global $wpdb;
+
+		$omnify_table = $this->omnify_schema->table('reviews');
+		if (! $this->table_exists($omnify_table)) {
+			return;
+		}
+
+		if (! $this->column_exists($omnify_table, 'is_verified_buyer')) {
+			\Omnify\eCommerce\Support\Omnify_DB::query($wpdb, $wpdb->prepare('ALTER TABLE %i ADD COLUMN is_verified_buyer TINYINT NOT NULL DEFAULT 0 AFTER status', $omnify_table));
 		}
 	}
 

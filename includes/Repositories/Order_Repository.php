@@ -594,8 +594,8 @@ class Omnify_Order_Repository {
 					'fraud_score'          => $omnify_fraud_score,
 					'fraud_flags'          => ! empty($omnify_fraud_flags) ? wp_json_encode($omnify_fraud_flags) : null,
 					'ip_address'           => ! empty($omnify_ip_address) ? $omnify_ip_address : null,
-					'created_at'           => $omnify_now,
-					'updated_at'           => $omnify_now,
+					'created_at'           => ! empty($omnify_data['created_at']) ? sanitize_text_field((string) $omnify_data['created_at']) : $omnify_now,
+					'updated_at'           => ! empty($omnify_data['updated_at']) ? sanitize_text_field((string) $omnify_data['updated_at']) : $omnify_now,
 				]
 			);
 
@@ -638,7 +638,7 @@ class Omnify_Order_Repository {
 							'tax'          => (float) ($omnify_item['tax'] ?? 0),
 							'quantity'     => max(1, intval($omnify_item['quantity'] ?? 1)),
 							'item_meta'    => ! empty($omnify_item['item_meta']) ? (is_string($omnify_item['item_meta']) ? $omnify_item['item_meta'] : wp_json_encode($omnify_item['item_meta'])) : null,
-							'created_at'   => $omnify_now,
+							'created_at'   => ! empty($omnify_item['created_at']) ? sanitize_text_field((string) $omnify_item['created_at']) : $omnify_now,
 						]
 					);
 					if (false === $omnify_item_inserted) {

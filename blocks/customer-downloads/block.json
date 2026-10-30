@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/customer-downloads",
+  "version": "1.4.3",
+  "title": "Digital Downloads Locker",
+  "category": "omnify",
+  "icon": "download",
+  "description": "Dedicated customer digital file locker with HMAC signed URLs, expiration notices, and limits.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

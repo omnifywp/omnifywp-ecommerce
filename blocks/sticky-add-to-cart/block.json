@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/sticky-add-to-cart",
+  "version": "1.4.3",
+  "title": "Sticky Add to Cart",
+  "category": "omnify",
+  "icon": "arrow-down-alt2",
+  "description": "High-conversion floating bottom/top bar with product thumbnail, price, and instant checkout.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

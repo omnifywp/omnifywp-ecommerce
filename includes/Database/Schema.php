@@ -446,6 +446,7 @@ class Omnify_Schema {
 				review_title VARCHAR(190) NOT NULL,
 				review_content TEXT NOT NULL,
 				status VARCHAR(32) NOT NULL DEFAULT 'pending',
+				is_verified_buyer TINYINT NOT NULL DEFAULT 0,
 				deleted_at DATETIME NULL,
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY (id),

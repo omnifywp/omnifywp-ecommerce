@@ -493,7 +493,12 @@
 			showStockBadge:   { type: 'string',  default: '' },
 			showFeaturePill:  { type: 'string',  default: '' },
 			showRecentlyViewed:{ type: 'string', default: '' },
-			featuredOnly:     { type: 'boolean', default: false }
+			featuredOnly:     { type: 'boolean', default: false },
+			columnsMobile:    { type: 'string',  default: '1' },
+			columnsTablet:    { type: 'string',  default: '2' },
+			columnsDesktop:   { type: 'string',  default: '4' },
+			hoverEffect:      { type: 'string',  default: 'lift' },
+			quickViewEnabled: { type: 'boolean', default: true }
 		} ),
 
 		edit: makeEdit( 'omnify/product-grid', function ( props ) {
@@ -501,7 +506,7 @@
 
 				/* ── Layout & Columns ── */
 				panel( __( 'Layout & Columns', 'omnifywp-ecommerce' ), [
-					buttonGroupField( __( 'Grid columns', 'omnifywp-ecommerce' ), 'columns', [
+					buttonGroupField( __( 'Grid columns (Desktop)', 'omnifywp-ecommerce' ), 'columns', [
 						opt( '',  __( 'Auto',      'omnifywp-ecommerce' ) ),
 						opt( '2', __( '2 col',     'omnifywp-ecommerce' ) ),
 						opt( '3', __( '3 col',     'omnifywp-ecommerce' ) ),
@@ -509,10 +514,25 @@
 						opt( '5', __( '5 col',     'omnifywp-ecommerce' ) )
 					], props ),
 
+					buttonGroupField( __( 'Mobile columns', 'omnifywp-ecommerce' ), 'columnsMobile', [
+						opt( '1', __( '1 Column', 'omnifywp-ecommerce' ) ),
+						opt( '2', __( '2 Columns (Compact)', 'omnifywp-ecommerce' ) )
+					], props ),
+
+					buttonGroupField( __( 'Card hover effect', 'omnifywp-ecommerce' ), 'hoverEffect', [
+						opt( 'lift',  __( 'Lift', 'omnifywp-ecommerce' ) ),
+						opt( 'zoom',  __( 'Zoom Image', 'omnifywp-ecommerce' ) ),
+						opt( 'glow',  __( 'Glow', 'omnifywp-ecommerce' ) ),
+						opt( 'none',  __( 'None', 'omnifywp-ecommerce' ) )
+					], props ),
+
+					toggleField( __( 'Enable Quick View modal', 'omnifywp-ecommerce' ), 'quickViewEnabled', props ),
+
 					buttonGroupField( __( 'View style', 'omnifywp-ecommerce' ), 'layout', [
 						opt( '',       __( 'Default', 'omnifywp-ecommerce' ) ),
 						opt( '2',      __( '2-wide',  'omnifywp-ecommerce' ) ),
 						opt( '4',      __( '4-dense', 'omnifywp-ecommerce' ) ),
+						opt( 'masonry',__( 'Masonry', 'omnifywp-ecommerce' ) ),
 						opt( 'list',   __( 'List',    'omnifywp-ecommerce' ) ),
 						opt( 'compact',__( 'Compact', 'omnifywp-ecommerce' ) )
 					], props ),
@@ -624,7 +644,12 @@
 			shippingThreshold: { type: 'number',  default: 0 },
 			showTrustBadges:   { type: 'boolean', default: true },
 			showEmptyButton:   { type: 'boolean', default: true },
-			showCrossSells:    { type: 'boolean', default: true }
+			showCrossSells:    { type: 'boolean', default: true },
+			rewardTier1:       { type: 'number',  default: 50 },
+			rewardTier2:       { type: 'number',  default: 100 },
+			rewardTier3:       { type: 'number',  default: 150 },
+			enableSaveForLater:{ type: 'boolean', default: true },
+			showEstimatedDelivery:{ type: 'boolean', default: true }
 		} ),
 
 		edit: makeEdit( 'omnify/cart', function ( props ) {
@@ -635,10 +660,17 @@
 					toggleField( __( 'Order note textarea', 'omnifywp-ecommerce' ),              'showNote',          props ),
 					toggleField( __( 'Free shipping progress meter', 'omnifywp-ecommerce' ),     'showShippingMeter', props ),
 					rangeField(  __( 'Free shipping threshold ($)', 'omnifywp-ecommerce' ),      'shippingThreshold', props, 0, 500, 1, __( '0 = use store setting.', 'omnifywp-ecommerce' ) ),
+					toggleField( __( 'Allow "Save for Later"', 'omnifywp-ecommerce' ),          'enableSaveForLater', props ),
+					toggleField( __( 'Estimated delivery date calculation', 'omnifywp-ecommerce' ), 'showEstimatedDelivery', props ),
 					toggleField( __( 'Trust & payment icons strip', 'omnifywp-ecommerce' ),      'showTrustBadges',   props ),
 					toggleField( __( 'Continue shopping back link', 'omnifywp-ecommerce' ),      'showEmptyButton',   props ),
 					toggleField( __( 'Cross-sell recommendations', 'omnifywp-ecommerce' ),       'showCrossSells',    props )
 				], true ),
+				panel( __( 'Gamified Rewards Tiers', 'omnifywp-ecommerce' ), [
+					rangeField( __( 'Reward Tier 1 ($)', 'omnifywp-ecommerce' ), 'rewardTier1', props, 0, 500, 5, __( 'Tier 1 unlocks Free Standard Delivery.', 'omnifywp-ecommerce' ) ),
+					rangeField( __( 'Reward Tier 2 ($)', 'omnifywp-ecommerce' ), 'rewardTier2', props, 0, 500, 5, __( 'Tier 2 unlocks Free Mystery Gift.', 'omnifywp-ecommerce' ) ),
+					rangeField( __( 'Reward Tier 3 ($)', 'omnifywp-ecommerce' ), 'rewardTier3', props, 0, 500, 5, __( 'Tier 3 unlocks 15% VIP Discount.', 'omnifywp-ecommerce' ) )
+				], false ),
 				stylePanel( props )
 			);
 		} )
@@ -665,7 +697,10 @@
 			showCoupon:         { type: 'boolean', default: true },
 			showViewCartButton: { type: 'boolean', default: true },
 			showCheckoutButton: { type: 'boolean', default: true },
-			showEmptyState:     { type: 'boolean', default: true }
+			showEmptyState:     { type: 'boolean', default: true },
+			drawerAnimation:    { type: 'string',  default: 'slide-right' },
+			showUpsellCarousel: { type: 'boolean', default: true },
+			showExpressWallets: { type: 'boolean', default: true }
 		} ),
 
 		edit: makeEdit( 'omnify/mini-cart', function ( props ) {
@@ -678,10 +713,18 @@
 						opt( 'left',  __( '→ Slide from left',  'omnifywp-ecommerce' ) )
 					], props ),
 
+					selectField( __( 'Drawer animation', 'omnifywp-ecommerce' ), 'drawerAnimation', [
+						opt( 'slide-right', __( 'Slide from Right', 'omnifywp-ecommerce' ) ),
+						opt( 'slide-left',  __( 'Slide from Left',  'omnifywp-ecommerce' ) ),
+						opt( 'fade-in',     __( 'Fade & Scale In',  'omnifywp-ecommerce' ) )
+					], props ),
+
 					toggleField( __( 'Item count badge', 'omnifywp-ecommerce' ),          'showCount',          props ),
 					toggleField( __( 'Subtotal on trigger', 'omnifywp-ecommerce' ),        'showSubtotal',       props ),
 					toggleField( __( 'Shipping progress meter', 'omnifywp-ecommerce' ),    'showShippingMeter',  props ),
 					rangeField(  __( 'Free shipping target ($)', 'omnifywp-ecommerce' ),   'shippingThreshold',  props, 0, 500, 1 ),
+					toggleField( __( 'Show upsell carousel in drawer', 'omnifywp-ecommerce' ), 'showUpsellCarousel', props ),
+					toggleField( __( 'Show Express Wallet buttons (Apple/Google Pay)', 'omnifywp-ecommerce' ), 'showExpressWallets', props ),
 					toggleField( __( 'Coupon accordion in drawer', 'omnifywp-ecommerce' ), 'showCoupon',         props ),
 					toggleField( __( 'View Cart button', 'omnifywp-ecommerce' ),           'showViewCartButton', props ),
 					toggleField( __( 'Checkout CTA button', 'omnifywp-ecommerce' ),        'showCheckoutButton', props ),
@@ -705,6 +748,9 @@
 
 		attributes: withStyle( {
 			layout:               { type: 'string',  default: '' },
+			checkoutMode:         { type: 'string',  default: 'single-page' },
+			enableAddressAutocomplete: { type: 'boolean', default: true },
+			showSocialProofToast: { type: 'boolean', default: true },
 			showTrustBadges:      { type: 'string',  default: '' },
 			showOrderBump:        { type: 'string',  default: '' },
 			orderBumpTitle:       { type: 'string',  default: '' },
@@ -725,6 +771,12 @@
 						opt( '2col', __( '2-col',   'omnifywp-ecommerce' ) ),
 						opt( '1col', __( '1-col',   'omnifywp-ecommerce' ) )
 					], props ),
+					buttonGroupField( __( 'Checkout Flow', 'omnifywp-ecommerce' ), 'checkoutMode', [
+						opt( 'single-page',     __( '1-Page Express',   'omnifywp-ecommerce' ) ),
+						opt( 'accordion-steps', __( '3-Step Accordion', 'omnifywp-ecommerce' ) )
+					], props ),
+					toggleField( __( 'Address autocomplete lookup', 'omnifywp-ecommerce' ), 'enableAddressAutocomplete', props ),
+					toggleField( __( 'Real-time social proof toast', 'omnifywp-ecommerce' ), 'showSocialProofToast', props ),
 					selectField( __( 'Coupon field',          'omnifywp-ecommerce' ), 'showCoupon',    triOptions(), props ),
 					selectField( __( 'Require T&C checkbox',  'omnifywp-ecommerce' ), 'requireTerms',  triOptions(), props ),
 					toggleField( __( 'Order notes field',     'omnifywp-ecommerce' ), 'showOrderNotes', props ),
@@ -1022,7 +1074,9 @@
 			showFlag:     { type: 'boolean', default: false },
 			displayStyle: { type: 'string',  default: 'dropdown' },
 			currencies:   { type: 'string',  default: '' },
-			align:        { type: 'string',  default: '' }
+			align:        { type: 'string',  default: '' },
+			compactMode:  { type: 'boolean', default: false },
+			flagStyle:    { type: 'string',  default: 'round' }
 		} ),
 
 		edit: makeEdit( 'omnify/currency-switcher', function ( props ) {
@@ -1031,6 +1085,13 @@
 					textField( __( 'Prefix label', 'omnifywp-ecommerce' ), 'label', props ),
 					toggleField( __( 'Show label',       'omnifywp-ecommerce' ), 'showLabel',  props ),
 					toggleField( __( 'Show symbol',      'omnifywp-ecommerce' ), 'showSymbol', props ),
+					toggleField( __( 'Show country flags', 'omnifywp-ecommerce' ), 'showFlag', props ),
+					toggleField( __( 'Compact mode',     'omnifywp-ecommerce' ), 'compactMode', props ),
+
+					buttonGroupField( __( 'Flag badge shape', 'omnifywp-ecommerce' ), 'flagStyle', [
+						opt( 'round',  __( 'Round', 'omnifywp-ecommerce' ) ),
+						opt( 'square', __( 'Square', 'omnifywp-ecommerce' ) )
+					], props ),
 
 					buttonGroupField( __( 'Display style', 'omnifywp-ecommerce' ), 'displayStyle', [
 						opt( 'dropdown', __( 'Dropdown', 'omnifywp-ecommerce' ) ),
@@ -1063,13 +1124,16 @@
 		example: { attributes: { title: 'Yes! Add This Exclusive Offer to My Order', badgeText: 'ONE-TIME OFFER', discountVal: 20 } },
 
 		attributes: withStyle( {
-			productId:      { type: 'integer', default: 0 },
-			title:          { type: 'string',  default: 'Yes! Add This Exclusive Offer to My Order' },
-			badgeText:      { type: 'string',  default: 'ONE-TIME OFFER' },
-			description:    { type: 'string',  default: 'Add priority support and extended warranty with one single click.' },
-			discountType:   { type: 'string',  default: 'percentage' },
-			discountVal:    { type: 'number',  default: 20 },
-			highlightColor: { type: 'string',  default: '#0f766e' }
+			productId:          { type: 'integer', default: 0 },
+			title:              { type: 'string',  default: 'Yes! Add This Exclusive Offer to My Order' },
+			badgeText:          { type: 'string',  default: 'ONE-TIME OFFER' },
+			description:        { type: 'string',  default: 'Add priority support and extended warranty with one single click.' },
+			discountType:       { type: 'string',  default: 'percentage' },
+			discountVal:        { type: 'number',  default: 20 },
+			highlightColor:     { type: 'string',  default: '#0f766e' },
+			pulseAnimation:     { type: 'boolean', default: true },
+			allowVariantSelect: { type: 'boolean', default: true },
+			urgencyTimerMinutes:{ type: 'integer', default: 10 }
 		} ),
 
 		edit: makeEdit( 'omnify/order-bump', function ( props ) {
@@ -1079,12 +1143,15 @@
 					textField( __( 'Headline title', 'omnifywp-ecommerce' ), 'title', props ),
 					textField( __( 'Badge pill text', 'omnifywp-ecommerce' ), 'badgeText', props ),
 					textareaField( __( 'Pitch description', 'omnifywp-ecommerce' ), 'description', props ),
+					toggleField( __( 'Pulsing border glow animation', 'omnifywp-ecommerce' ), 'pulseAnimation', props ),
+					toggleField( __( 'Allow variant options picker in bump', 'omnifywp-ecommerce' ), 'allowVariantSelect', props ),
+					rangeField( __( 'Urgency timer (mins - 0 to disable)', 'omnifywp-ecommerce' ), 'urgencyTimerMinutes', props, 0, 60, 1 ),
 					buttonGroupField( __( 'Discount type', 'omnifywp-ecommerce' ), 'discountType', [
 						opt( 'percentage', __( 'Percentage (%)', 'omnifywp-ecommerce' ) ),
 						opt( 'fixed',      __( 'Fixed Amount', 'omnifywp-ecommerce' ) ),
 						opt( 'none',       __( 'None (Regular Price)', 'omnifywp-ecommerce' ) )
 					], props ),
-					rangeField( __( 'Discount value', 'omnifywp-ecommerce' ), 'discountVal', 0, 100, 1, props ),
+					rangeField( __( 'Discount value', 'omnifywp-ecommerce' ), 'discountVal', props, 0, 100, 1 ),
 					colorPicker( __( 'Highlight border color', 'omnifywp-ecommerce' ), 'highlightColor', props )
 				], true ),
 				stylePanel( props )
@@ -1104,14 +1171,16 @@
 		example: { attributes: { position: 'bottom', deviceVisibility: 'all', buttonLabel: 'Add to Cart' } },
 
 		attributes: withStyle( {
-			productId:        { type: 'integer', default: 0 },
-			position:         { type: 'string',  default: 'bottom' },
-			deviceVisibility: { type: 'string',  default: 'all' },
-			showThumbnail:    { type: 'boolean', default: true },
-			showPrice:        { type: 'boolean', default: true },
-			showQuantity:     { type: 'boolean', default: true },
-			buttonAction:     { type: 'string',  default: 'cart' },
-			buttonLabel:      { type: 'string',  default: 'Add to Cart' }
+			productId:           { type: 'integer', default: 0 },
+			position:            { type: 'string',  default: 'bottom' },
+			deviceVisibility:    { type: 'string',  default: 'all' },
+			showThumbnail:       { type: 'boolean', default: true },
+			showPrice:           { type: 'boolean', default: true },
+			showQuantity:        { type: 'boolean', default: true },
+			buttonAction:        { type: 'string',  default: 'cart' },
+			buttonLabel:         { type: 'string',  default: 'Add to Cart' },
+			scrollTrigger:       { type: 'string',  default: 'after-cta' },
+			showVariantDropdown: { type: 'boolean', default: true }
 		} ),
 
 		edit: makeEdit( 'omnify/sticky-add-to-cart', function ( props ) {
@@ -1122,6 +1191,11 @@
 						opt( 'bottom', __( 'Bottom Fixed', 'omnifywp-ecommerce' ) ),
 						opt( 'top',    __( 'Top Fixed',    'omnifywp-ecommerce' ) )
 					], props ),
+					selectField( __( 'Trigger threshold', 'omnifywp-ecommerce' ), 'scrollTrigger', [
+						opt( 'after-cta', __( 'After scrolling past main CTA', 'omnifywp-ecommerce' ) ),
+						opt( 'halfway',   __( 'After 50% page scroll',         'omnifywp-ecommerce' ) ),
+						opt( 'immediate', __( 'Immediately visible',           'omnifywp-ecommerce' ) )
+					], props ),
 					buttonGroupField( __( 'Device visibility', 'omnifywp-ecommerce' ), 'deviceVisibility', [
 						opt( 'all',     __( 'All Devices',    'omnifywp-ecommerce' ) ),
 						opt( 'mobile',  __( 'Mobile Only',    'omnifywp-ecommerce' ) ),
@@ -1130,6 +1204,7 @@
 					toggleField( __( 'Show thumbnail', 'omnifywp-ecommerce' ), 'showThumbnail', props ),
 					toggleField( __( 'Show price',     'omnifywp-ecommerce' ), 'showPrice',     props ),
 					toggleField( __( 'Show quantity',  'omnifywp-ecommerce' ), 'showQuantity',  props ),
+					toggleField( __( 'Show variant options dropdown', 'omnifywp-ecommerce' ), 'showVariantDropdown', props ),
 					buttonGroupField( __( 'Button action', 'omnifywp-ecommerce' ), 'buttonAction', [
 						opt( 'cart',     __( 'Add to Cart', 'omnifywp-ecommerce' ) ),
 						opt( 'checkout', __( 'Direct Buy Now (Checkout)', 'omnifywp-ecommerce' ) )
@@ -1153,22 +1228,26 @@
 		example: { attributes: { threshold: 50, showIcon: true, showConfetti: true, barColor: '#0f766e' } },
 
 		attributes: withStyle( {
-			threshold:    { type: 'number',  default: 50 },
-			initialMsg:   { type: 'string',  default: 'Add %s more to unlock FREE Shipping!' },
-			successMsg:   { type: 'string',  default: '🎉 Congratulations! You have unlocked FREE Shipping!' },
-			showIcon:     { type: 'boolean', default: true },
-			showConfetti: { type: 'boolean', default: true },
-			barColor:     { type: 'string',  default: '#0f766e' }
+			threshold:        { type: 'number',  default: 50 },
+			initialMsg:       { type: 'string',  default: 'Add %s more to unlock FREE Shipping!' },
+			successMsg:       { type: 'string',  default: '🎉 Congratulations! You have unlocked FREE Shipping!' },
+			showIcon:         { type: 'boolean', default: true },
+			showConfetti:     { type: 'boolean', default: true },
+			barColor:         { type: 'string',  default: '#0f766e' },
+			celebrationSound: { type: 'boolean', default: false },
+			stickyBarMode:    { type: 'boolean', default: false }
 		} ),
 
 		edit: makeEdit( 'omnify/free-shipping-goal', function ( props ) {
 			return inspector(
 				panel( __( 'Shipping Goal Settings', 'omnifywp-ecommerce' ), [
-					rangeField( __( 'Free shipping threshold ($)', 'omnifywp-ecommerce' ), 'threshold', 10, 500, 5, props ),
+					rangeField( __( 'Free shipping threshold ($)', 'omnifywp-ecommerce' ), 'threshold', props, 10, 500, 5 ),
 					textField( __( 'Initial message template (%s = amount)', 'omnifywp-ecommerce' ), 'initialMsg', props ),
 					textField( __( 'Success unlock message', 'omnifywp-ecommerce' ), 'successMsg', props ),
 					toggleField( __( 'Show delivery icon', 'omnifywp-ecommerce' ), 'showIcon', props ),
 					toggleField( __( 'Celebrate with confetti unlock', 'omnifywp-ecommerce' ), 'showConfetti', props ),
+					toggleField( __( 'Play subtle audio chime on unlock', 'omnifywp-ecommerce' ), 'celebrationSound', props ),
+					toggleField( __( 'Pin as sticky top announcement bar', 'omnifywp-ecommerce' ), 'stickyBarMode', props ),
 					colorPicker( __( 'Progress bar fill color', 'omnifywp-ecommerce' ), 'barColor', props )
 				], true ),
 				stylePanel( props )
@@ -1194,7 +1273,9 @@
 			showGuarantees: { type: 'boolean', default: true },
 			showPayments:   { type: 'boolean', default: true },
 			showSupport:    { type: 'boolean', default: true },
-			showReturns:    { type: 'boolean', default: true }
+			showReturns:    { type: 'boolean', default: true },
+			tickerMode:     { type: 'boolean', default: false },
+			tickerSpeed:    { type: 'integer', default: 25 }
 		} ),
 
 		edit: makeEdit( 'omnify/trust-badge-bar', function ( props ) {
@@ -1204,6 +1285,8 @@
 						opt( 'horizontal', __( 'Horizontal Strip', 'omnifywp-ecommerce' ) ),
 						opt( 'grid-2x2',   __( '2x2 Grid',         'omnifywp-ecommerce' ) )
 					], props ),
+					toggleField( __( 'Infinite marquee ticker mode', 'omnifywp-ecommerce' ), 'tickerMode', props ),
+					rangeField(  __( 'Ticker speed (seconds)', 'omnifywp-ecommerce' ), 'tickerSpeed', props, 10, 60, 5 ),
 					toggleField( __( 'Show border container', 'omnifywp-ecommerce' ), 'showBorder', props ),
 					toggleField( __( 'Show security & guarantee badges', 'omnifywp-ecommerce' ), 'showGuarantees', props ),
 					toggleField( __( 'Show payment card icons', 'omnifywp-ecommerce' ), 'showPayments', props ),
@@ -1479,6 +1562,10 @@
 			var filterCat      = filterCatState[0];
 			var setFilterCat   = filterCatState[1];
 
+			var searchState    = useState( '' );
+			var searchTerm     = searchState[0];
+			var setSearchTerm  = searchState[1];
+
 			var insertTemplate = function ( templateContent ) {
 				if ( wp.data && wp.data.dispatch && wp.blocks.parse ) {
 					var parsedBlocks = wp.blocks.parse( templateContent );
@@ -1496,24 +1583,41 @@
 			};
 
 			var filtered = templatesList.filter( function ( t ) {
-				if ( filterCat === 'all' ) return true;
-				return t.category === filterCat;
+				if ( filterCat !== 'all' && t.category !== filterCat ) return false;
+				if ( searchTerm ) {
+					var q = searchTerm.toLowerCase();
+					return ( t.title && t.title.toLowerCase().indexOf( q ) !== -1 ) ||
+					       ( t.description && t.description.toLowerCase().indexOf( q ) !== -1 ) ||
+					       ( t.badge && t.badge.toLowerCase().indexOf( q ) !== -1 );
+				}
+				return true;
 			} );
 
 			var modalContent = null;
 			if ( isOpen && Modal ) {
 				modalContent = el( Modal, {
-					title:             __( 'Omnify eCommerce Template Library', 'omnifywp-ecommerce' ),
+					title:             __( 'Omnify eCommerce Template Library & Starter Kits (16 Ready-to-Use Kits)', 'omnifywp-ecommerce' ),
 					onRequestClose:    function () { setIsOpen( false ); },
 					className:         'omnify-template-library-modal',
 					shouldCloseOnClickOutside: true
 				},
-					el( 'div', { style: { padding: '10px 0 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px' } },
-						el( Button, { isPrimary: filterCat === 'all',      isSecondary: filterCat !== 'all',      onClick: function () { setFilterCat( 'all' ); } }, __( 'All Templates', 'omnifywp-ecommerce' ) ),
-						el( Button, { isPrimary: filterCat === 'funnels',  isSecondary: filterCat !== 'funnels',  onClick: function () { setFilterCat( 'funnels' ); } }, __( 'High-Converting Funnels', 'omnifywp-ecommerce' ) ),
-						el( Button, { isPrimary: filterCat === 'stores',   isSecondary: filterCat !== 'stores',   onClick: function () { setFilterCat( 'stores' ); } }, __( 'Storefronts', 'omnifywp-ecommerce' ) ),
-						el( Button, { isPrimary: filterCat === 'checkout', isSecondary: filterCat !== 'checkout', onClick: function () { setFilterCat( 'checkout' ); } }, __( 'Checkout Pages', 'omnifywp-ecommerce' ) ),
-						el( Button, { isPrimary: filterCat === 'account',  isSecondary: filterCat !== 'account',  onClick: function () { setFilterCat( 'account' ); } }, __( 'Customer Account', 'omnifywp-ecommerce' ) )
+					el( 'div', { style: { padding: '10px 0 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' } },
+						el( 'div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+							el( Button, { isPrimary: filterCat === 'all',      isSecondary: filterCat !== 'all',      onClick: function () { setFilterCat( 'all' ); } }, __( 'All Templates', 'omnifywp-ecommerce' ) ),
+							el( Button, { isPrimary: filterCat === 'funnels',  isSecondary: filterCat !== 'funnels',  onClick: function () { setFilterCat( 'funnels' ); } }, __( 'High-Converting Funnels', 'omnifywp-ecommerce' ) ),
+							el( Button, { isPrimary: filterCat === 'stores',   isSecondary: filterCat !== 'stores',   onClick: function () { setFilterCat( 'stores' ); } }, __( 'Storefronts', 'omnifywp-ecommerce' ) ),
+							el( Button, { isPrimary: filterCat === 'checkout', isSecondary: filterCat !== 'checkout', onClick: function () { setFilterCat( 'checkout' ); } }, __( 'Checkout Pages', 'omnifywp-ecommerce' ) ),
+							el( Button, { isPrimary: filterCat === 'account',  isSecondary: filterCat !== 'account',  onClick: function () { setFilterCat( 'account' ); } }, __( 'Customer Account', 'omnifywp-ecommerce' ) )
+						),
+						TextControl
+							? el( 'div', { style: { minWidth: '220px' } },
+								el( TextControl, {
+									placeholder: __( 'Search 16+ templates...', 'omnifywp-ecommerce' ),
+									value:       searchTerm,
+									onChange:    function ( v ) { setSearchTerm( v ); }
+								} )
+							)
+							: null
 					),
 					el( 'div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', padding: '24px 0' } },
 						filtered.map( function ( tmpl ) {

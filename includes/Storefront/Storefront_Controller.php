@@ -212,6 +212,11 @@ class Omnify_Storefront_Controller {
 					'showFeaturePill'   => $omnify_tristate_attr,
 					'showRecentlyViewed'=> $omnify_tristate_attr,
 					'featuredOnly'      => ['type' => 'boolean', 'default' => false],
+					'columnsMobile'     => ['type' => 'string', 'default' => '1'],
+					'columnsTablet'     => ['type' => 'string', 'default' => '2'],
+					'columnsDesktop'    => ['type' => 'string', 'default' => '4'],
+					'hoverEffect'       => ['type' => 'string', 'default' => 'lift'],
+					'quickViewEnabled'  => ['type' => 'boolean', 'default' => true],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/product-grid', $omnify_attributes);
@@ -232,6 +237,11 @@ class Omnify_Storefront_Controller {
 					'showTrustBadges'   => ['type' => 'boolean', 'default' => true],
 					'showEmptyButton'   => ['type' => 'boolean', 'default' => true],
 					'showCrossSells'    => ['type' => 'boolean', 'default' => true],
+					'rewardTier1'       => ['type' => 'number', 'default' => 50],
+					'rewardTier2'       => ['type' => 'number', 'default' => 100],
+					'rewardTier3'       => ['type' => 'number', 'default' => 150],
+					'enableSaveForLater'=> ['type' => 'boolean', 'default' => true],
+					'showEstimatedDelivery' => ['type' => 'boolean', 'default' => true],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/cart', $omnify_attributes);
@@ -254,6 +264,9 @@ class Omnify_Storefront_Controller {
 					'showViewCartButton'=> ['type' => 'boolean', 'default' => true],
 					'showCheckoutButton'=> ['type' => 'boolean', 'default' => true],
 					'showEmptyState'    => ['type' => 'boolean', 'default' => true],
+					'drawerAnimation'   => ['type' => 'string', 'default' => 'slide-right'],
+					'showUpsellCarousel'=> ['type' => 'boolean', 'default' => true],
+					'showExpressWallets'=> ['type' => 'boolean', 'default' => true],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/mini-cart', $omnify_attributes);
@@ -267,6 +280,9 @@ class Omnify_Storefront_Controller {
 				'attributes'      => [
 					'maxWidth'              => $omnify_max_width_attr,
 					'layout'                => ['type' => 'string', 'default' => ''],
+					'checkoutMode'          => ['type' => 'string', 'default' => 'single-page'],
+					'enableAddressAutocomplete' => ['type' => 'boolean', 'default' => true],
+					'showSocialProofToast'  => ['type' => 'boolean', 'default' => true],
 					'showTrustBadges'       => $omnify_tristate_attr,
 					'showOrderBump'         => $omnify_tristate_attr,
 					'orderBumpTitle'        => ['type' => 'string', 'default' => ''],
@@ -382,6 +398,8 @@ class Omnify_Storefront_Controller {
 					'displayStyle' => ['type' => 'string', 'default' => 'dropdown'],
 					'currencies'   => ['type' => 'string', 'default' => ''],
 					'align'        => ['type' => 'string', 'default' => ''],
+					'compactMode'  => ['type' => 'boolean', 'default' => false],
+					'flagStyle'    => ['type' => 'string', 'default' => 'round'],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/currency-switcher', $omnify_attributes);
@@ -393,14 +411,17 @@ class Omnify_Storefront_Controller {
 				'icon'            => 'star-filled',
 				'keywords'        => ['order bump', 'upsell', 'checkout', 'addon', 'cross-sell'],
 				'attributes'      => [
-					'maxWidth'       => $omnify_max_width_attr,
-					'productId'      => ['type' => 'integer', 'default' => 0],
-					'title'          => ['type' => 'string', 'default' => 'Yes! Add This Exclusive Offer to My Order'],
-					'badgeText'      => ['type' => 'string', 'default' => 'ONE-TIME OFFER'],
-					'description'    => ['type' => 'string', 'default' => 'Add priority support and extended warranty with one single click.'],
-					'discountType'   => ['type' => 'string', 'default' => 'percentage'],
-					'discountVal'    => ['type' => 'number', 'default' => 20],
-					'highlightColor' => ['type' => 'string', 'default' => '#0f766e'],
+					'maxWidth'            => $omnify_max_width_attr,
+					'productId'           => ['type' => 'integer', 'default' => 0],
+					'title'               => ['type' => 'string', 'default' => 'Yes! Add This Exclusive Offer to My Order'],
+					'badgeText'           => ['type' => 'string', 'default' => 'ONE-TIME OFFER'],
+					'description'         => ['type' => 'string', 'default' => 'Add priority support and extended warranty with one single click.'],
+					'discountType'        => ['type' => 'string', 'default' => 'percentage'],
+					'discountVal'         => ['type' => 'number', 'default' => 20],
+					'highlightColor'      => ['type' => 'string', 'default' => '#0f766e'],
+					'pulseAnimation'      => ['type' => 'boolean', 'default' => true],
+					'allowVariantSelect'  => ['type' => 'boolean', 'default' => true],
+					'urgencyTimerMinutes' => ['type' => 'integer', 'default' => 10],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/order-bump', $omnify_attributes);
@@ -412,15 +433,17 @@ class Omnify_Storefront_Controller {
 				'icon'            => 'arrow-down-alt2',
 				'keywords'        => ['sticky', 'add to cart', 'floating', 'mobile', 'bar'],
 				'attributes'      => [
-					'maxWidth'         => $omnify_max_width_attr,
-					'productId'        => ['type' => 'integer', 'default' => 0],
-					'position'         => ['type' => 'string', 'default' => 'bottom'],
-					'deviceVisibility' => ['type' => 'string', 'default' => 'all'],
-					'showThumbnail'    => ['type' => 'boolean', 'default' => true],
-					'showPrice'        => ['type' => 'boolean', 'default' => true],
-					'showQuantity'     => ['type' => 'boolean', 'default' => true],
-					'buttonAction'     => ['type' => 'string', 'default' => 'cart'],
-					'buttonLabel'      => ['type' => 'string', 'default' => 'Add to Cart'],
+					'maxWidth'            => $omnify_max_width_attr,
+					'productId'           => ['type' => 'integer', 'default' => 0],
+					'position'            => ['type' => 'string', 'default' => 'bottom'],
+					'deviceVisibility'    => ['type' => 'string', 'default' => 'all'],
+					'showThumbnail'       => ['type' => 'boolean', 'default' => true],
+					'showPrice'           => ['type' => 'boolean', 'default' => true],
+					'showQuantity'        => ['type' => 'boolean', 'default' => true],
+					'buttonAction'        => ['type' => 'string', 'default' => 'cart'],
+					'buttonLabel'         => ['type' => 'string', 'default' => 'Add to Cart'],
+					'scrollTrigger'       => ['type' => 'string', 'default' => 'after-cta'],
+					'showVariantDropdown' => ['type' => 'boolean', 'default' => true],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/sticky-add-to-cart', $omnify_attributes);
@@ -432,13 +455,15 @@ class Omnify_Storefront_Controller {
 				'icon'            => 'car',
 				'keywords'        => ['shipping', 'progress', 'free shipping', 'meter', 'goal'],
 				'attributes'      => [
-					'maxWidth'      => $omnify_max_width_attr,
-					'threshold'     => ['type' => 'number', 'default' => 50],
-					'initialMsg'    => ['type' => 'string', 'default' => 'Add %s more to unlock FREE Shipping!'],
-					'successMsg'    => ['type' => 'string', 'default' => '🎉 Congratulations! You have unlocked FREE Shipping!'],
-					'showIcon'      => ['type' => 'boolean', 'default' => true],
-					'showConfetti'  => ['type' => 'boolean', 'default' => true],
-					'barColor'      => ['type' => 'string', 'default' => '#0f766e'],
+					'maxWidth'         => $omnify_max_width_attr,
+					'threshold'        => ['type' => 'number', 'default' => 50],
+					'initialMsg'       => ['type' => 'string', 'default' => 'Add %s more to unlock FREE Shipping!'],
+					'successMsg'       => ['type' => 'string', 'default' => '🎉 Congratulations! You have unlocked FREE Shipping!'],
+					'showIcon'         => ['type' => 'boolean', 'default' => true],
+					'showConfetti'     => ['type' => 'boolean', 'default' => true],
+					'barColor'         => ['type' => 'string', 'default' => '#0f766e'],
+					'celebrationSound' => ['type' => 'boolean', 'default' => false],
+					'stickyBarMode'    => ['type' => 'boolean', 'default' => false],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/free-shipping-goal', $omnify_attributes);
@@ -458,6 +483,8 @@ class Omnify_Storefront_Controller {
 					'showPayments'   => ['type' => 'boolean', 'default' => true],
 					'showSupport'    => ['type' => 'boolean', 'default' => true],
 					'showReturns'    => ['type' => 'boolean', 'default' => true],
+					'tickerMode'     => ['type' => 'boolean', 'default' => false],
+					'tickerSpeed'    => ['type' => 'integer', 'default' => 25],
 				],
 				'render_callback' => function (array $omnify_attributes = []): string {
 					return $this->render_omnify_block('omnify/trust-badge-bar', $omnify_attributes);
@@ -1017,7 +1044,9 @@ class Omnify_Storefront_Controller {
 		$omnify_options = [
 			['value' => '', 'label' => __('All Categories', 'omnifywp-ecommerce')],
 		];
-		$omnify_cats = $this->omnify_products->get_all_categories();
+		$omnify_cats = method_exists($this->omnify_products, 'get_all_categories')
+			? $this->omnify_products->get_all_categories()
+			: $this->omnify_products->get_all_category_names();
 		foreach ($omnify_cats as $omnify_cat) {
 			$omnify_options[] = [
 				'value' => sanitize_title($omnify_cat),

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/trust-badge-bar",
+  "version": "1.4.3",
+  "title": "Trust Badges & Guarantee Strip",
+  "category": "omnify",
+  "icon": "shield-alt",
+  "description": "Showcase SSL security, payment providers, fast shipping, and money-back guarantees.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

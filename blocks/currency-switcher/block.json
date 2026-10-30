@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/currency-switcher",
+  "version": "1.4.3",
+  "title": "Currency Switcher",
+  "category": "omnify",
+  "icon": "translation",
+  "description": "Interactive currency switcher dropdown supporting 22 global currencies.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

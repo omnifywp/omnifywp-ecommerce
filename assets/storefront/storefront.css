@@ -24196,4 +24196,42 @@ body .omnify-portal-wrapper .omnify-portal-tabs__nav .omnify-tab-btn.active * {
 	color: #ffffff !important;
 }
 
+/* Fluid Masonry & Responsive Catalog Layouts */
+.omnify-storefront-grid--masonry {
+	display: block !important;
+	column-count: 3 !important;
+	column-gap: 24px !important;
+}
+.omnify-storefront-grid--masonry .omnify-product-card {
+	break-inside: avoid !important;
+	margin-bottom: 24px !important;
+	display: inline-block !important;
+	width: 100% !important;
+}
+@media (max-width: 900px) {
+	.omnify-storefront-grid--masonry {
+		column-count: 2 !important;
+	}
+}
+@media (max-width: 600px) {
+	.omnify-storefront-grid--masonry {
+		column-count: 1 !important;
+	}
+}
+@media (max-width: 640px) {
+	.omnify-storefront-grid--mobile-2col {
+		display: grid !important;
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 12px !important;
+	}
+	.omnify-storefront-grid--mobile-2col .omnify-product-card {
+		padding: 10px !important;
+	}
+	.omnify-storefront-grid--mobile-2col .omnify-product-card__title {
+		font-size: 13px !important;
+		line-height: 1.3 !important;
+	}
+}
+
+
 

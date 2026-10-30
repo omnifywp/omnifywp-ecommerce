@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/product-grid",
+  "version": "1.4.3",
+  "title": "Product Grid",
+  "category": "omnify",
+  "icon": "grid-view",
+  "description": "Display an interactive, responsive product grid with instant search and filters.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

@@ -1162,6 +1162,65 @@ class Omnify_Product_Repository {
 		];
 	}
 
+	/**
+	 * Create a single product variation.
+	 *
+	 * @param array<string, mixed> $omnify_data
+	 * @return int
+	 */
+	public function create_variation(array $omnify_data): int {
+		global $wpdb;
+
+		$omnify_product_id = absint($omnify_data['product_id'] ?? 0);
+		if ($omnify_product_id <= 0) {
+			return 0;
+		}
+
+		$omnify_attrs = is_array($omnify_data['attributes'] ?? null) ? $omnify_data['attributes'] : [];
+		$omnify_now   = $this->now();
+
+		$omnify_row = [
+			'product_id'            => $omnify_product_id,
+			'sku'                   => sanitize_text_field($omnify_data['sku'] ?? ''),
+			'price'                 => (float) ($omnify_data['price'] ?? 0.0),
+			'sale_price'            => isset($omnify_data['sale_price']) && '' !== $omnify_data['sale_price'] && null !== $omnify_data['sale_price'] ? (float) $omnify_data['sale_price'] : null,
+			'attributes'            => wp_json_encode($omnify_attrs),
+			'description'           => sanitize_textarea_field($omnify_data['description'] ?? ''),
+			'manage_stock'          => ! empty($omnify_data['manage_stock']) ? 1 : 0,
+			'stock_qty'             => isset($omnify_data['stock_qty']) && '' !== $omnify_data['stock_qty'] && null !== $omnify_data['stock_qty'] ? (int) $omnify_data['stock_qty'] : null,
+			'stock_status'          => sanitize_key($omnify_data['stock_status'] ?? 'instock'),
+			'allow_backorders'      => ! empty($omnify_data['allow_backorders']) ? 1 : 0,
+			'preorder_enabled'      => ! empty($omnify_data['preorder_enabled']) ? 1 : 0,
+			'preorder_release_date' => $this->date_or_null($omnify_data['preorder_release_date'] ?? null),
+			'preorder_limit'        => isset($omnify_data['preorder_limit']) && '' !== trim((string) $omnify_data['preorder_limit']) ? absint($omnify_data['preorder_limit']) : null,
+			'preorder_message'      => sanitize_text_field($omnify_data['preorder_message'] ?? ''),
+			'thumbnail_id'          => ! empty($omnify_data['thumbnail_id']) ? absint($omnify_data['thumbnail_id']) : null,
+			'estimated_delivery'    => sanitize_text_field($omnify_data['estimated_delivery'] ?? ''),
+			'created_at'            => $omnify_now,
+			'updated_at'            => $omnify_now,
+		];
+
+		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb, $this->table('product_variations'), $omnify_row);
+		$omnify_new_id = (int) $wpdb->insert_id;
+
+		if ($omnify_new_id > 0) {
+			$this->clean_product_caches($omnify_product_id);
+			$this->clean_variation_caches($omnify_new_id);
+
+			if (! empty($omnify_row['manage_stock']) && null !== $omnify_row['stock_qty']) {
+				$this->log_stock_change(
+					$omnify_product_id,
+					$omnify_new_id,
+					(int) $omnify_row['stock_qty'],
+					(int) $omnify_row['stock_qty'],
+					__('Initial stock set on variation creation', 'omnifywp-ecommerce')
+				);
+			}
+		}
+
+		return $omnify_new_id;
+	}
+
 	public function save_variations(int $omnify_product_id, array $omnify_variations): void {
 		global $wpdb;
 
@@ -1749,6 +1808,15 @@ class Omnify_Product_Repository {
 			wp_cache_set($omnify_cache_key, $omnify_sold_recent, 'omnifywp-ecommerce', 5 * MINUTE_IN_SECONDS);
 		}
 		return (int) $omnify_sold_recent;
+	}
+
+	/**
+	 * Get all categories (alias for get_all_category_names).
+	 *
+	 * @return array<int, string>
+	 */
+	public function get_all_categories(): array {
+		return $this->get_all_category_names();
 	}
 
 	/**

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/mini-cart",
+  "version": "1.4.3",
+  "title": "Mini Cart",
+  "category": "omnify",
+  "icon": "cart",
+  "description": "A floating or embedded mini cart button with slide-out drawer.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

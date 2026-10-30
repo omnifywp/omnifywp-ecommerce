@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/product-badge",
+  "version": "1.4.3",
+  "title": "Product Badge",
+  "category": "omnify",
+  "icon": "tag",
+  "description": "Highlight tags like Sale, Out of Stock, or Verified Download.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

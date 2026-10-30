@@ -135,6 +135,197 @@
 | `[omnify_currency_switcher]` | Customer-facing currency selector dropdown with real-time price recalculation. |
 | `[omnify_download_page]` | Dedicated template handler for secure file download links. |
 
+### Blocks
+
+This plugin provides 20 blocks.
+
+<table>
+  <tbody>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🛒</div>
+      </td>
+      <td>
+        <strong>Product Grid</strong><br>
+        Display an interactive, responsive product grid with instant search and filters.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🛍️</div>
+      </td>
+      <td>
+        <strong>Shopping Cart</strong><br>
+        Display the full shopping cart with dynamic quantity controls and coupon input.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🗃️</div>
+      </td>
+      <td>
+        <strong>Mini Cart</strong><br>
+        A floating or embedded mini cart button with slide-out drawer.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">💳</div>
+      </td>
+      <td>
+        <strong>Checkout</strong><br>
+        High-converting one-page checkout experience with 14+ global payment gateways.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">👤</div>
+      </td>
+      <td>
+        <strong>Customer Portal</strong><br>
+        Self-service portal for customer order history, file downloads, and account details.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">📦</div>
+      </td>
+      <td>
+        <strong>Digital Downloads Locker</strong><br>
+        Dedicated customer digital file locker with HMAC signed URLs, expiration notices, and limits.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🚚</div>
+      </td>
+      <td>
+        <strong>Order Tracking</strong><br>
+        Real-time visual order and shipment tracking timeline.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🏷️</div>
+      </td>
+      <td>
+        <strong>Product Card</strong><br>
+        Display an individual high-converting product card with 1-click buy.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">💱</div>
+      </td>
+      <td>
+        <strong>Currency Switcher</strong><br>
+        Interactive currency switcher dropdown supporting 22 global currencies.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">⭐</div>
+      </td>
+      <td>
+        <strong>Order Bump</strong><br>
+        High-converting 1-click checkout upsell checkbox with instant AJAX cart addition.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">📌</div>
+      </td>
+      <td>
+        <strong>Sticky Add to Cart</strong><br>
+        High-conversion floating bottom/top bar with product thumbnail, price, and instant checkout.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🎁</div>
+      </td>
+      <td>
+        <strong>Free Shipping Goal</strong><br>
+        Gamified dynamic progress bar displaying remaining amount for free shipping with live celebrations.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🛡️</div>
+      </td>
+      <td>
+        <strong>Trust Badges &amp; Guarantee Strip</strong><br>
+        Showcase SSL security, payment providers, fast shipping, and money-back guarantees.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🖼️</div>
+      </td>
+      <td>
+        <strong>Product Image</strong><br>
+        Product thumbnail with custom aspect ratio, zoom, and secondary flip.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">✍️</div>
+      </td>
+      <td>
+        <strong>Product Title</strong><br>
+        Dynamic product title with customizable heading tag and link.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🏷️</div>
+      </td>
+      <td>
+        <strong>Product Price</strong><br>
+        Dynamic product price with sale comparison and discount pill.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">⭐</div>
+      </td>
+      <td>
+        <strong>Product Rating</strong><br>
+        Product review star rating and review count breakdown.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🎖️</div>
+      </td>
+      <td>
+        <strong>Product Badge</strong><br>
+        Highlight tags like Sale, Out of Stock, or Verified Download.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">🔘</div>
+      </td>
+      <td>
+        <strong>Product Button</strong><br>
+        Interactive Add to Cart or Buy Now button with quantity stepper.
+      </td>
+    </tr>
+    <tr>
+      <td width="52" align="center" valign="middle">
+        <div style="width:40px;height:40px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#f8fafc;">☁️</div>
+      </td>
+      <td>
+        <strong>Template Cloud</strong><br>
+        Browse and insert pre-built, high-converting eCommerce starter layouts with 1-click.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
 #### Native Gutenberg Blocks (20 Specialized Blocks & Full Site Editing Suite)
 
 OmnifyWP includes an agency-grade, enterprise-ready Gutenberg block suite featuring 20 specialized blocks with live debounced previews, responsive controls, WordPress `theme.json` Global Styles harmony, and 4 design style variations (*Default Emerald*, *Minimalist Luxury*, *Neo-Brutalist*, *Dark Elegance*):
@@ -297,7 +488,7 @@ OmnifyWP integrates with external third-party payment gateways and services to p
 
 ## Changelog
 
-For the latest release notes, refer to [`readme.txt`](./readme.txt). The complete historical changelog is maintained at [https://omnifywp.com/changelog/](https://omnifywp.com/changelog/).
+For the latest release notes, refer to [`readme.txt`](./readme.txt). The complete historical changelog is maintained at <a href="https://omnifywp.com/changelog/">https://omnifywp.com/changelog/</a>.
 
 ---
 

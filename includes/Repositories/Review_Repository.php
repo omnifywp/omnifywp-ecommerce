@@ -170,7 +170,7 @@ class Omnify_Review_Repository {
 			'review_title'   => sanitize_text_field(trim((string) ($omnify_data['review_title'] ?? ''))),
 			'review_content' => sanitize_textarea_field(trim((string) ($omnify_data['review_content'] ?? ''))),
 			'status'         => sanitize_key((string) ($omnify_data['status'] ?? 'pending')),
-			'created_at'     => $omnify_now,
+			'created_at'     => ! empty($omnify_data['created_at']) ? sanitize_text_field((string) $omnify_data['created_at']) : $omnify_now,
 		];
 
 		// Support media (photos/video) as JSON

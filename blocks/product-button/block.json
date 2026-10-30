@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/product-button",
+  "version": "1.4.3",
+  "title": "Product Button",
+  "category": "omnify",
+  "icon": "cart",
+  "description": "Interactive Add to Cart or Buy Now button with quantity stepper.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

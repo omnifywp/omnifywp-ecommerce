@@ -167,6 +167,70 @@ OmnifyWP features an agency-grade suite of 20 Gutenberg blocks with live debounc
 * GitHub Repository: [https://github.com/omnifywp/omnifywp-ecommerce](https://github.com/omnifywp/omnifywp-ecommerce)
 * Official Documentation: [https://omnifywp.com/doc/](https://omnifywp.com/doc/)
 
+== Blocks ==
+
+This plugin provides 20 blocks.
+
+= Product Grid =
+Display an interactive, responsive product grid with instant search and filters.
+
+= Shopping Cart =
+Display the full shopping cart with dynamic quantity controls and coupon input.
+
+= Mini Cart =
+A floating or embedded mini cart button with slide-out drawer.
+
+= Checkout =
+High-converting one-page checkout experience with 14+ global payment gateways.
+
+= Customer Portal =
+Self-service portal for customer order history, file downloads, and account details.
+
+= Digital Downloads Locker =
+Dedicated customer digital file locker with HMAC signed URLs, expiration notices, and limits.
+
+= Order Tracking =
+Real-time visual order and shipment tracking timeline.
+
+= Product Card =
+Display an individual high-converting product card with 1-click buy.
+
+= Currency Switcher =
+Interactive currency switcher dropdown supporting 22 global currencies.
+
+= Order Bump =
+High-converting 1-click checkout upsell checkbox with instant AJAX cart addition.
+
+= Sticky Add to Cart =
+High-conversion floating bottom/top bar with product thumbnail, price, and instant checkout.
+
+= Free Shipping Goal =
+Gamified dynamic progress bar displaying remaining amount for free shipping with live celebrations.
+
+= Trust Badges & Guarantee Strip =
+Showcase SSL security, payment providers, fast shipping, and money-back guarantees.
+
+= Product Image =
+Product thumbnail with custom aspect ratio, zoom, and secondary flip.
+
+= Product Title =
+Dynamic product title with customizable heading tag and link.
+
+= Product Price =
+Dynamic product price with sale comparison and discount pill.
+
+= Product Rating =
+Product review star rating and review count breakdown.
+
+= Product Badge =
+Highlight tags like Sale, Out of Stock, or Verified Download.
+
+= Product Button =
+Interactive Add to Cart or Buy Now button with quantity stepper.
+
+= Template Cloud =
+Browse and insert pre-built, high-converting eCommerce starter layouts with 1-click.
+
 == Installation ==
 
 ### Automatic Installation (Recommended)

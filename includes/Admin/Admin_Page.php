@@ -7954,14 +7954,51 @@ class Omnify_Admin_Page {
 
 		global $wpdb;
 
-		$omnify_import_products = ! empty($_POST['import_products']);
-		$omnify_import_orders   = ! empty($_POST['import_orders']);
+		$omnify_import_products  = ! empty($_POST['import_products']);
+		$omnify_import_orders    = ! empty($_POST['import_orders']);
+		$omnify_import_customers = ! empty($_POST['import_customers']);
+		$omnify_import_coupons   = ! empty($_POST['import_coupons']);
+		$omnify_import_reviews   = ! empty($_POST['import_reviews']);
 
-		$omnify_imported_products   = 0;
-		$omnify_imported_variations = 0;
-		$omnify_imported_orders     = 0;
+		$omnify_imported_products    = 0;
+		$omnify_imported_variations  = 0;
+		$omnify_imported_orders      = 0;
+		$omnify_imported_order_items = 0;
+		$omnify_imported_customers   = 0;
+		$omnify_imported_coupons     = 0;
+		$omnify_imported_reviews     = 0;
+
+		$product_id_map     = [];
+		$variation_id_map   = [];
+		$customer_id_map    = [];
+		$customer_email_map = [];
 
 		try {
+			// Pre-populate product and variation mapping for any previously imported or existing products
+			$omnify_all_existing_products = $this->omnify_products->all(['per_page' => 2000]);
+			$existing_sku_map  = [];
+			$existing_slug_map = [];
+			foreach ($omnify_all_existing_products as $omnify_ep) {
+				if (! empty($omnify_ep['sku'])) {
+					$existing_sku_map[strtolower(trim((string) $omnify_ep['sku']))] = (int) $omnify_ep['id'];
+				}
+				if (! empty($omnify_ep['slug'])) {
+					$existing_slug_map[strtolower(trim((string) $omnify_ep['slug']))] = (int) $omnify_ep['id'];
+				}
+			}
+
+			// Pre-populate customer mapping
+			$omnify_all_existing_customers = $this->omnify_customers->all(['per_page' => 2000]);
+			foreach ($omnify_all_existing_customers as $omnify_ec) {
+				if (! empty($omnify_ec['email'])) {
+					$customer_email_map[strtolower(trim((string) $omnify_ec['email']))] = (int) $omnify_ec['id'];
+				}
+				if (! empty($omnify_ec['user_id'])) {
+					$customer_id_map[(int) $omnify_ec['user_id']] = (int) $omnify_ec['id'];
+				}
+			}
+
+			// --- 1. PRODUCTS & VARIATIONS ---
 			if ($omnify_import_products) {
 				$omnify_wc_posts = $wpdb->get_results(
 					"SELECT ID, post_title, post_name, post_content, post_excerpt, post_status 
@@ -7974,19 +8011,43 @@ class Omnify_Admin_Page {
 				if (! empty($omnify_wc_posts) && is_array($omnify_wc_posts)) {
 					foreach ($omnify_wc_posts as $omnify_p) {
 						$omnify_wc_id = (int) $omnify_p['ID'];
+						$omnify_sku   = trim((string) get_post_meta($omnify_wc_id, '_sku', true));
+						$omnify_slug  = strtolower(trim((string) $omnify_p['post_name']));
 
-						// Check if product already exists in Omnify by slug
-						$omnify_existing = $this->omnify_products->find_by_slug($omnify_p['post_name']);
-						if ($omnify_existing) {
-							continue;
+						// Check if product already exists in Omnify
+						$omnify_existing_id = null;
+						if ('' !== $omnify_sku && isset($existing_sku_map[strtolower($omnify_sku)])) {
+							$omnify_existing_id = $existing_sku_map[strtolower($omnify_sku)];
+						} elseif (isset($existing_slug_map[$omnify_slug])) {
+							$omnify_existing_id = $existing_slug_map[$omnify_slug];
 						}
 
-						$omnify_sku = get_post_meta($omnify_wc_id, '_sku', true);
-						if ($omnify_sku) {
-							$omnify_existing_sku = $this->omnify_products->find_by_sku($omnify_sku);
-							if ($omnify_existing_sku) {
-								continue;
+						if ($omnify_existing_id) {
+							$product_id_map[$omnify_wc_id] = $omnify_existing_id;
+
+							// Check variations for this existing product
+							$omnify_existing_vars = $this->omnify_products->get_variations($omnify_existing_id);
+							$var_sku_map = [];
+							foreach ($omnify_existing_vars as $v_row) {
+								if (! empty($v_row['sku'])) {
+									$var_sku_map[strtolower(trim((string) $v_row['sku']))] = (int) $v_row['id'];
+								}
 							}
+
+							$omnify_wc_variations = $wpdb->get_results($wpdb->prepare(
+								"SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_parent = %d",
+								$omnify_wc_id
+							), ARRAY_A);
+							if (! empty($omnify_wc_variations)) {
+								foreach ($omnify_wc_variations as $wc_v) {
+									$wc_vid = (int) $wc_v['ID'];
+									$wc_v_sku = strtolower(trim((string) get_post_meta($wc_vid, '_sku', true)));
+									if (isset($var_sku_map[$wc_v_sku])) {
+										$variation_id_map[$wc_vid] = $var_sku_map[$wc_v_sku];
+									}
+								}
+							}
+							continue;
 						}
 
 						// Product details
@@ -8000,6 +8061,13 @@ class Omnify_Admin_Page {
 						$omnify_virtual       = 'yes' === get_post_meta($omnify_wc_id, '_virtual', true);
 						$omnify_thumbnail_id  = get_post_meta($omnify_wc_id, '_thumbnail_id', true);
 						$omnify_gallery       = get_post_meta($omnify_wc_id, '_product_image_gallery', true);
+
+						$omnify_weight        = get_post_meta($omnify_wc_id, '_weight', true);
+						$omnify_length        = get_post_meta($omnify_wc_id, '_length', true);
+						$omnify_width         = get_post_meta($omnify_wc_id, '_width', true);
+						$omnify_height        = get_post_meta($omnify_wc_id, '_height', true);
+						$omnify_dl_limit      = get_post_meta($omnify_wc_id, '_download_limit', true);
+						$omnify_dl_expiry     = get_post_meta($omnify_wc_id, '_download_expiry', true);
 
 						// Determine product type
 						$omnify_wc_terms = wp_get_post_terms($omnify_wc_id, 'product_type', ['fields' => 'names']);
@@ -8025,26 +8093,37 @@ class Omnify_Admin_Page {
 						$omnify_status = ('publish' === $omnify_p['post_status']) ? 'published' : 'draft';
 
 						$omnify_new_product_id = $this->omnify_products->create([
-							'name'              => $omnify_p['post_title'],
-							'slug'              => $omnify_p['post_name'],
-							'description'       => $omnify_p['post_content'],
-							'short_description' => $omnify_p['post_excerpt'],
-							'type'              => $omnify_type,
-							'status'            => $omnify_status,
-							'price'             => (float) ($omnify_regular_price ?: ($omnify_price ?: 0)),
-							'sale_price'        => ('' !== $omnify_sale_price && null !== $omnify_sale_price) ? (float) $omnify_sale_price : null,
-							'sku'               => (string) $omnify_sku,
-							'manage_stock'      => $omnify_manage_stock ? 1 : 0,
-							'stock_qty'         => ('' !== $omnify_stock_qty && null !== $omnify_stock_qty) ? (int) $omnify_stock_qty : null,
-							'stock_status'      => ('outofstock' === $omnify_stock_status) ? 'outofstock' : 'instock',
-							'thumbnail_id'      => $omnify_thumbnail_id ? absint($omnify_thumbnail_id) : null,
-							'gallery_ids'       => $omnify_gallery_ids,
-							'categories'        => is_array($omnify_cat_names) ? $omnify_cat_names : [],
-							'tags'              => is_array($omnify_tag_names) ? $omnify_tag_names : [],
+							'name'                 => $omnify_p['post_title'],
+							'slug'                 => $omnify_p['post_name'],
+							'description'          => $omnify_p['post_content'],
+							'short_description'    => $omnify_p['post_excerpt'],
+							'type'                 => $omnify_type,
+							'status'               => $omnify_status,
+							'price'                => (float) ($omnify_regular_price ?: ($omnify_price ?: 0)),
+							'sale_price'           => ('' !== $omnify_sale_price && null !== $omnify_sale_price) ? (float) $omnify_sale_price : null,
+							'sku'                  => (string) $omnify_sku,
+							'manage_stock'         => $omnify_manage_stock ? 1 : 0,
+							'stock_qty'            => ('' !== $omnify_stock_qty && null !== $omnify_stock_qty) ? (int) $omnify_stock_qty : null,
+							'stock_status'         => ('outofstock' === $omnify_stock_status) ? 'outofstock' : 'instock',
+							'thumbnail_id'         => $omnify_thumbnail_id ? absint($omnify_thumbnail_id) : null,
+							'gallery_ids'          => $omnify_gallery_ids,
+							'weight'               => ('' !== $omnify_weight && null !== $omnify_weight) ? (float) $omnify_weight : null,
+							'length'               => ('' !== $omnify_length && null !== $omnify_length) ? (float) $omnify_length : null,
+							'width'                => ('' !== $omnify_width && null !== $omnify_width) ? (float) $omnify_width : null,
+							'height'               => ('' !== $omnify_height && null !== $omnify_height) ? (float) $omnify_height : null,
+							'max_purchase_qty'     => ($omnify_dl_limit > 0) ? absint($omnify_dl_limit) : null,
+							'download_expiry_days' => ($omnify_dl_expiry > 0) ? absint($omnify_dl_expiry) : 0,
+							'categories'           => is_array($omnify_cat_names) ? $omnify_cat_names : [],
+							'tags'                 => is_array($omnify_tag_names) ? $omnify_tag_names : [],
 						]);
 
 						if ($omnify_new_product_id > 0) {
 							$omnify_imported_products++;
+							$product_id_map[$omnify_wc_id] = $omnify_new_product_id;
+							if ('' !== $omnify_sku) {
+								$existing_sku_map[strtolower($omnify_sku)] = $omnify_new_product_id;
+							}
+							$existing_slug_map[$omnify_slug] = $omnify_new_product_id;
 
 							// If variable, import variations
 							if ($omnify_is_variable) {
@@ -8058,13 +8137,14 @@ class Omnify_Admin_Page {
 
 								if (! empty($omnify_wc_variations) && is_array($omnify_wc_variations)) {
 									foreach ($omnify_wc_variations as $omnify_v) {
-										$omnify_v_id = (int) $omnify_v['ID'];
-										$omnify_v_reg_price  = get_post_meta($omnify_v_id, '_regular_price', true);
-										$omnify_v_sale_price = get_post_meta($omnify_v_id, '_sale_price', true);
-										$omnify_v_price      = get_post_meta($omnify_v_id, '_price', true);
-										$omnify_v_sku        = get_post_meta($omnify_v_id, '_sku', true);
-										$omnify_v_stock      = get_post_meta($omnify_v_id, '_stock', true);
+										$omnify_v_id           = (int) $omnify_v['ID'];
+										$omnify_v_reg_price    = get_post_meta($omnify_v_id, '_regular_price', true);
+										$omnify_v_sale_price   = get_post_meta($omnify_v_id, '_sale_price', true);
+										$omnify_v_price        = get_post_meta($omnify_v_id, '_price', true);
+										$omnify_v_sku          = get_post_meta($omnify_v_id, '_sku', true);
+										$omnify_v_stock        = get_post_meta($omnify_v_id, '_stock', true);
 										$omnify_v_manage_stock = 'yes' === get_post_meta($omnify_v_id, '_manage_stock', true);
+										$omnify_v_thumb        = get_post_meta($omnify_v_id, '_thumbnail_id', true);
 
 										$omnify_meta_rows = $wpdb->get_results($wpdb->prepare(
 											"SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key LIKE 'attribute_%'",
@@ -8080,16 +8160,21 @@ class Omnify_Admin_Page {
 											}
 										}
 
-										$this->omnify_products->create_variation([
+										$new_v_id = $this->omnify_products->create_variation([
 											'product_id'   => $omnify_new_product_id,
 											'sku'          => (string) $omnify_v_sku,
 											'price'        => (float) ($omnify_v_reg_price ?: ($omnify_v_price ?: 0)),
 											'sale_price'   => ('' !== $omnify_v_sale_price && null !== $omnify_v_sale_price) ? (float) $omnify_v_sale_price : null,
 											'manage_stock' => $omnify_v_manage_stock ? 1 : 0,
 											'stock_qty'    => ('' !== $omnify_v_stock && null !== $omnify_v_stock) ? (int) $omnify_v_stock : null,
+											'thumbnail_id' => $omnify_v_thumb ? absint($omnify_v_thumb) : null,
 											'attributes'   => $omnify_v_attrs,
 										]);
-										$omnify_imported_variations++;
+
+										if ($new_v_id > 0) {
+											$variation_id_map[$omnify_v_id] = $new_v_id;
+											$omnify_imported_variations++;
+										}
 									}
 								}
 							}
@@ -8101,9 +8186,9 @@ class Omnify_Admin_Page {
 									if (! empty($omnify_f['file'])) {
 										$this->omnify_product_files->create([
 											'product_id' => $omnify_new_product_id,
-											'name'       => $omnify_f['name'] ?: basename((string) $omnify_f['file']),
+											'file_name'  => $omnify_f['name'] ?: basename((string) $omnify_f['file']),
 											'file_path'  => (string) $omnify_f['file'],
-											'is_active'  => 1,
+											'file_url'   => (string) $omnify_f['file'],
 										]);
 									}
 								}
@@ -8113,91 +8198,478 @@ class Omnify_Admin_Page {
 				}
 			}
 
-			// Import orders if selected
+			// --- 2. CUSTOMERS ---
+			if ($omnify_import_customers) {
+				$candidate_user_ids = [];
+
+				// WC Customer users
+				$wc_users = get_users(['role__in' => ['customer', 'subscriber'], 'fields' => 'ID', 'number' => 2000]);
+				if (! empty($wc_users)) {
+					$candidate_user_ids = array_merge($candidate_user_ids, $wc_users);
+				}
+
+				// Users with billing meta
+				$meta_user_ids = $wpdb->get_col("SELECT DISTINCT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'billing_email' AND meta_value != ''");
+				if (! empty($meta_user_ids)) {
+					$candidate_user_ids = array_merge($candidate_user_ids, array_map('intval', $meta_user_ids));
+				}
+
+				$candidate_user_ids = array_unique(array_filter($candidate_user_ids));
+
+				foreach ($candidate_user_ids as $uid) {
+					$u = get_userdata($uid);
+					$email = trim((string) ($u ? $u->user_email : get_user_meta($uid, 'billing_email', true)));
+					if (empty($email)) {
+						continue;
+					}
+
+					$email_clean = strtolower($email);
+					if (isset($customer_email_map[$email_clean])) {
+						$customer_id_map[$uid] = $customer_email_map[$email_clean];
+						continue;
+					}
+
+					$new_cid = $this->omnify_customers->create([
+						'user_id'             => $uid,
+						'email'               => $email,
+						'first_name'          => get_user_meta($uid, 'billing_first_name', true) ?: ($u ? $u->first_name : ''),
+						'last_name'           => get_user_meta($uid, 'billing_last_name', true) ?: ($u ? $u->last_name : ''),
+						'phone'               => get_user_meta($uid, 'billing_phone', true) ?: '',
+						'company'             => get_user_meta($uid, 'billing_company', true) ?: '',
+						'country'             => get_user_meta($uid, 'billing_country', true) ?: '',
+						'billing_first_name'  => get_user_meta($uid, 'billing_first_name', true) ?: '',
+						'billing_last_name'   => get_user_meta($uid, 'billing_last_name', true) ?: '',
+						'billing_phone'       => get_user_meta($uid, 'billing_phone', true) ?: '',
+						'billing_company'     => get_user_meta($uid, 'billing_company', true) ?: '',
+						'billing_address_1'   => get_user_meta($uid, 'billing_address_1', true) ?: '',
+						'billing_address_2'   => get_user_meta($uid, 'billing_address_2', true) ?: '',
+						'billing_city'        => get_user_meta($uid, 'billing_city', true) ?: '',
+						'billing_state'       => get_user_meta($uid, 'billing_state', true) ?: '',
+						'billing_postcode'    => get_user_meta($uid, 'billing_postcode', true) ?: '',
+						'billing_country'     => get_user_meta($uid, 'billing_country', true) ?: '',
+						'shipping_first_name' => get_user_meta($uid, 'shipping_first_name', true) ?: '',
+						'shipping_last_name'  => get_user_meta($uid, 'shipping_last_name', true) ?: '',
+						'shipping_phone'      => get_user_meta($uid, 'shipping_phone', true) ?: '',
+						'shipping_company'    => get_user_meta($uid, 'shipping_company', true) ?: '',
+						'shipping_address_1'  => get_user_meta($uid, 'shipping_address_1', true) ?: '',
+						'shipping_address_2'  => get_user_meta($uid, 'shipping_address_2', true) ?: '',
+						'shipping_city'       => get_user_meta($uid, 'shipping_city', true) ?: '',
+						'shipping_state'      => get_user_meta($uid, 'shipping_state', true) ?: '',
+						'shipping_postcode'   => get_user_meta($uid, 'shipping_postcode', true) ?: '',
+						'shipping_country'    => get_user_meta($uid, 'shipping_country', true) ?: '',
+						'status'              => 'active',
+					]);
+
+					if ($new_cid > 0) {
+						$customer_id_map[$uid] = $new_cid;
+						$customer_email_map[$email_clean] = $new_cid;
+						$omnify_imported_customers++;
+					}
+				}
+			}
+
+			// --- 3. ORDERS & LINE ITEMS ---
 			if ($omnify_import_orders) {
-				$omnify_wc_orders = $wpdb->get_results(
-					"SELECT ID, post_date, post_status 
+				$wc_order_ids = [];
+
+				// Check HPOS first
+				$hpos_table = $wpdb->prefix . 'wc_orders';
+				if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $hpos_table)) === $hpos_table) {
+					$hpos_ids = $wpdb->get_col("SELECT id FROM {$hpos_table} WHERE type = 'shop_order' AND status != 'trash' ORDER BY id ASC");
+					if (! empty($hpos_ids)) {
+						$wc_order_ids = array_map('intval', $hpos_ids);
+					}
+				}
+
+				// If no HPOS orders, check wp_posts
+				if (empty($wc_order_ids)) {
+					$post_ids = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_status NOT IN ('trash', 'auto-draft') ORDER BY ID ASC");
+					if (! empty($post_ids)) {
+						$wc_order_ids = array_map('intval', $post_ids);
+					}
+				}
+
+				$status_map = [
+					'wc-completed'  => 'completed',
+					'completed'     => 'completed',
+					'wc-processing' => 'processing',
+					'processing'    => 'processing',
+					'wc-pending'    => 'pending',
+					'pending'       => 'pending',
+					'wc-on-hold'    => 'pending',
+					'on-hold'       => 'pending',
+					'wc-cancelled'  => 'cancelled',
+					'cancelled'     => 'cancelled',
+					'wc-refunded'   => 'refunded',
+					'refunded'      => 'refunded',
+					'wc-failed'     => 'cancelled',
+					'failed'        => 'cancelled',
+				];
+
+				foreach ($wc_order_ids as $wc_oid) {
+					$omnify_order_number = 'WC-' . $wc_oid;
+
+					// Deduplication check
+					$existing_order_id = (int) $wpdb->get_var($wpdb->prepare(
+						"SELECT id FROM {$wpdb->prefix}omnify_orders WHERE order_number = %s",
+						$omnify_order_number
+					));
+					if ($existing_order_id > 0) {
+						continue;
+					}
+
+					$order_data  = [];
+					$order_items = [];
+
+					if (function_exists('wc_get_order') && ($wc_order = wc_get_order($wc_oid))) {
+						$raw_status = $wc_order->get_status();
+						$status = $status_map[$raw_status] ?? ($status_map['wc-' . $raw_status] ?? 'pending');
+
+						$date_created = $wc_order->get_date_created() ? $wc_order->get_date_created()->date('Y-m-d H:i:s') : current_time('mysql');
+						$date_updated = $wc_order->get_date_modified() ? $wc_order->get_date_modified()->date('Y-m-d H:i:s') : $date_created;
+
+						$wc_cid = (int) $wc_order->get_customer_id();
+						$billing_email = strtolower(trim((string) $wc_order->get_billing_email()));
+
+						$omnify_cid = null;
+						if ($wc_cid > 0 && isset($customer_id_map[$wc_cid])) {
+							$omnify_cid = $customer_id_map[$wc_cid];
+						} elseif ('' !== $billing_email && isset($customer_email_map[$billing_email])) {
+							$omnify_cid = $customer_email_map[$billing_email];
+						} elseif ('' !== $billing_email) {
+							// Create customer for guest/unlinked user
+							$omnify_cid = $this->omnify_customers->create([
+								'email'               => $billing_email,
+								'first_name'          => $wc_order->get_billing_first_name(),
+								'last_name'           => $wc_order->get_billing_last_name(),
+								'phone'               => $wc_order->get_billing_phone(),
+								'company'             => $wc_order->get_billing_company(),
+								'country'             => $wc_order->get_billing_country(),
+								'billing_first_name'  => $wc_order->get_billing_first_name(),
+								'billing_last_name'   => $wc_order->get_billing_last_name(),
+								'billing_phone'       => $wc_order->get_billing_phone(),
+								'billing_company'     => $wc_order->get_billing_company(),
+								'billing_address_1'   => $wc_order->get_billing_address_1(),
+								'billing_address_2'   => $wc_order->get_billing_address_2(),
+								'billing_city'        => $wc_order->get_billing_city(),
+								'billing_state'       => $wc_order->get_billing_state(),
+								'billing_postcode'    => $wc_order->get_billing_postcode(),
+								'billing_country'     => $wc_order->get_billing_country(),
+								'shipping_first_name' => $wc_order->get_shipping_first_name(),
+								'shipping_last_name'  => $wc_order->get_shipping_last_name(),
+								'shipping_phone'      => $wc_order->get_shipping_phone(),
+								'shipping_address_1'  => $wc_order->get_shipping_address_1(),
+								'shipping_address_2'  => $wc_order->get_shipping_address_2(),
+								'shipping_city'       => $wc_order->get_shipping_city(),
+								'shipping_state'      => $wc_order->get_shipping_state(),
+								'shipping_postcode'   => $wc_order->get_shipping_postcode(),
+								'shipping_country'    => $wc_order->get_shipping_country(),
+								'status'              => 'active',
+							]);
+							if ($omnify_cid > 0) {
+								$customer_email_map[$billing_email] = $omnify_cid;
+								$omnify_imported_customers++;
+							}
+						}
+
+						// Process Line Items
+						foreach ($wc_order->get_items() as $wc_item) {
+							$wc_pid = (int) $wc_item->get_product_id();
+							$wc_vid = (int) $wc_item->get_variation_id();
+
+							// Map product
+							$omnify_pid = $product_id_map[$wc_pid] ?? 0;
+							if (! $omnify_pid) {
+								$wc_prod = $wc_item->get_product();
+								$item_sku = $wc_prod ? strtolower(trim((string) $wc_prod->get_sku())) : '';
+								if ($item_sku && isset($existing_sku_map[$item_sku])) {
+									$omnify_pid = $existing_sku_map[$item_sku];
+								}
+							}
+
+							// Map variation
+							$omnify_vid = null;
+							if ($wc_vid > 0) {
+								$omnify_vid = $variation_id_map[$wc_vid] ?? null;
+							}
+
+							$qty = max(1, (int) $wc_item->get_quantity());
+							$line_total = (float) $wc_item->get_total();
+							$line_tax   = (float) $wc_item->get_total_tax();
+
+							$order_items[] = [
+								'product_id'   => $omnify_pid,
+								'variation_id' => $omnify_vid,
+								'product_name' => $wc_item->get_name(),
+								'price'        => $line_total / $qty,
+								'tax'          => $line_tax / $qty,
+								'quantity'     => $qty,
+								'created_at'   => $date_created,
+							];
+						}
+
+						$order_data = [
+							'customer_id'         => $omnify_cid,
+							'status'              => $status,
+							'currency'            => $wc_order->get_currency() ?: 'USD',
+							'subtotal'            => (float) $wc_order->get_subtotal(),
+							'tax'                 => (float) $wc_order->get_total_tax(),
+							'shipping_total'      => (float) $wc_order->get_shipping_total(),
+							'discount_amount'     => (float) $wc_order->get_discount_total(),
+							'total'               => (float) $wc_order->get_total(),
+							'payment_method'      => $wc_order->get_payment_method() ?: 'manual',
+							'transaction_id'      => $wc_order->get_transaction_id() ?: null,
+							'order_number'        => $omnify_order_number,
+							'coupon_code'         => implode(', ', $wc_order->get_coupon_codes()) ?: null,
+							'shipping_first_name' => $wc_order->get_shipping_first_name() ?: null,
+							'shipping_last_name'  => $wc_order->get_shipping_last_name() ?: null,
+							'shipping_address_1'  => $wc_order->get_shipping_address_1() ?: null,
+							'shipping_address_2'  => $wc_order->get_shipping_address_2() ?: null,
+							'shipping_city'       => $wc_order->get_shipping_city() ?: null,
+							'shipping_state'      => $wc_order->get_shipping_state() ?: null,
+							'shipping_postcode'   => $wc_order->get_shipping_postcode() ?: null,
+							'shipping_country'    => $wc_order->get_shipping_country() ?: null,
+							'shipping_phone'      => $wc_order->get_shipping_phone() ?: null,
+							'billing_first_name'  => $wc_order->get_billing_first_name() ?: null,
+							'billing_last_name'   => $wc_order->get_billing_last_name() ?: null,
+							'billing_company'     => $wc_order->get_billing_company() ?: null,
+							'billing_phone'       => $wc_order->get_billing_phone() ?: null,
+							'billing_address_1'   => $wc_order->get_billing_address_1() ?: null,
+							'billing_address_2'   => $wc_order->get_billing_address_2() ?: null,
+							'billing_city'        => $wc_order->get_billing_city() ?: null,
+							'billing_state'       => $wc_order->get_billing_state() ?: null,
+							'billing_postcode'    => $wc_order->get_billing_postcode() ?: null,
+							'billing_country'     => $wc_order->get_billing_country() ?: null,
+							'created_at'          => $date_created,
+							'updated_at'          => $date_updated,
+							'items'               => $order_items,
+						];
+					} else {
+						// Fallback: direct SQL extraction
+						$raw_status = get_post_meta($wc_oid, '_post_status', true) ?: ($wpdb->get_var($wpdb->prepare("SELECT post_status FROM {$wpdb->posts} WHERE ID = %d", $wc_oid)) ?: 'wc-pending');
+						$status = $status_map[$raw_status] ?? 'pending';
+						$date_created = $wpdb->get_var($wpdb->prepare("SELECT post_date FROM {$wpdb->posts} WHERE ID = %d", $wc_oid)) ?: current_time('mysql');
+
+						// Query items from woocommerce_order_items
+						$raw_items = $wpdb->get_results($wpdb->prepare(
+							"SELECT order_item_id, order_item_name FROM {$wpdb->prefix}woocommerce_order_items WHERE order_id = %d AND order_item_type = 'line_item'",
+							$wc_oid
+						), ARRAY_A);
+
+						if (! empty($raw_items)) {
+							foreach ($raw_items as $ri) {
+								$item_id = (int) $ri['order_item_id'];
+								$wc_pid  = (int) get_metadata('order_item', $item_id, '_product_id', true);
+								$wc_vid  = (int) get_metadata('order_item', $item_id, '_variation_id', true);
+								$qty     = max(1, (int) get_metadata('order_item', $item_id, '_qty', true));
+								$total   = (float) get_metadata('order_item', $item_id, '_line_total', true);
+								$tax     = (float) get_metadata('order_item', $item_id, '_line_tax', true);
+
+								$omnify_pid = $product_id_map[$wc_pid] ?? 0;
+								$omnify_vid = $wc_vid > 0 ? ($variation_id_map[$wc_vid] ?? null) : null;
+
+								$order_items[] = [
+									'product_id'   => $omnify_pid,
+									'variation_id' => $omnify_vid,
+									'product_name' => $ri['order_item_name'],
+									'price'        => $total / $qty,
+									'tax'          => $tax / $qty,
+									'quantity'     => $qty,
+									'created_at'   => $date_created,
+								];
+							}
+						}
+
+						$order_data = [
+							'status'              => $status,
+							'currency'            => get_post_meta($wc_oid, '_order_currency', true) ?: 'USD',
+							'subtotal'            => (float) get_post_meta($wc_oid, '_order_subtotal', true),
+							'tax'                 => (float) get_post_meta($wc_oid, '_order_tax', true),
+							'shipping_total'      => (float) get_post_meta($wc_oid, '_order_shipping', true),
+							'discount_amount'     => (float) get_post_meta($wc_oid, '_cart_discount', true),
+							'total'               => (float) get_post_meta($wc_oid, '_order_total', true),
+							'payment_method'      => get_post_meta($wc_oid, '_payment_method', true) ?: 'manual',
+							'transaction_id'      => get_post_meta($wc_oid, '_transaction_id', true) ?: null,
+							'order_number'        => $omnify_order_number,
+							'shipping_first_name' => get_post_meta($wc_oid, '_shipping_first_name', true) ?: null,
+							'shipping_last_name'  => get_post_meta($wc_oid, '_shipping_last_name', true) ?: null,
+							'shipping_address_1'  => get_post_meta($wc_oid, '_shipping_address_1', true) ?: null,
+							'shipping_city'       => get_post_meta($wc_oid, '_shipping_city', true) ?: null,
+							'shipping_country'    => get_post_meta($wc_oid, '_shipping_country', true) ?: null,
+							'billing_first_name'  => get_post_meta($wc_oid, '_billing_first_name', true) ?: null,
+							'billing_last_name'   => get_post_meta($wc_oid, '_billing_last_name', true) ?: null,
+							'billing_phone'       => get_post_meta($wc_oid, '_billing_phone', true) ?: null,
+							'billing_country'     => get_post_meta($wc_oid, '_billing_country', true) ?: null,
+							'created_at'          => $date_created,
+							'items'               => $order_items,
+						];
+					}
+
+					$new_oid = $this->omnify_orders->create($order_data);
+					if ($new_oid > 0) {
+						$omnify_imported_orders++;
+						$omnify_imported_order_items += count($order_items);
+					}
+				}
+			}
+
+			// --- 4. COUPONS ---
+			if ($omnify_import_coupons) {
+				$wc_coupons = $wpdb->get_results(
+					"SELECT ID, post_title, post_excerpt, post_status 
 					 FROM {$wpdb->posts} 
-					 WHERE post_type = 'shop_order' AND post_status NOT IN ('trash', 'auto-draft')
+					 WHERE post_type = 'shop_coupon' AND post_status = 'publish' 
 					 ORDER BY ID ASC",
 					ARRAY_A
 				);
 
-				if (! empty($omnify_wc_orders) && is_array($omnify_wc_orders)) {
-					foreach ($omnify_wc_orders as $omnify_o) {
-						$omnify_wc_oid = (int) $omnify_o['ID'];
-						$omnify_total = (float) get_post_meta($omnify_wc_oid, '_order_total', true);
-						$omnify_subtotal = (float) get_post_meta($omnify_wc_oid, '_order_subtotal', true) ?: $omnify_total;
-						$omnify_tax = (float) get_post_meta($omnify_wc_oid, '_order_tax', true);
-						$omnify_shipping = (float) get_post_meta($omnify_wc_oid, '_order_shipping', true);
-						$omnify_discount = (float) get_post_meta($omnify_wc_oid, '_cart_discount', true);
-						$omnify_currency = get_post_meta($omnify_wc_oid, '_order_currency', true) ?: 'USD';
-						$omnify_pay_method = get_post_meta($omnify_wc_oid, '_payment_method', true) ?: 'manual';
-						$omnify_cus_id = (int) get_post_meta($omnify_wc_oid, '_customer_user', true) ?: null;
+				if (! empty($wc_coupons)) {
+					foreach ($wc_coupons as $c) {
+						$code = trim((string) $c['post_title']);
+						if ('' === $code) {
+							continue;
+						}
 
-						$omnify_status_map = [
-							'wc-completed'  => 'completed',
-							'wc-processing' => 'processing',
-							'wc-pending'    => 'pending',
-							'wc-on-hold'    => 'pending',
-							'wc-cancelled'  => 'cancelled',
-							'wc-refunded'   => 'refunded',
-							'wc-failed'     => 'cancelled',
-						];
-						$omnify_order_status = $omnify_status_map[$omnify_o['post_status']] ?? 'pending';
+						// Deduplication
+						$existing_coupon = $this->omnify_coupons->find_by_code($code);
+						if ($existing_coupon) {
+							continue;
+						}
 
-						$omnify_new_order_id = $this->omnify_orders->create([
-							'customer_id'         => $omnify_cus_id,
-							'status'              => $omnify_order_status,
-							'currency'            => $omnify_currency,
-							'subtotal'            => $omnify_subtotal,
-							'tax'                 => $omnify_tax,
-							'shipping_total'      => $omnify_shipping,
-							'discount_amount'     => $omnify_discount,
-							'total'               => $omnify_total,
-							'payment_method'      => $omnify_pay_method,
-							'shipping_first_name' => get_post_meta($omnify_wc_oid, '_shipping_first_name', true) ?: null,
-							'shipping_last_name'  => get_post_meta($omnify_wc_oid, '_shipping_last_name', true) ?: null,
-							'shipping_address_1'  => get_post_meta($omnify_wc_oid, '_shipping_address_1', true) ?: null,
-							'shipping_city'       => get_post_meta($omnify_wc_oid, '_shipping_city', true) ?: null,
-							'shipping_country'    => get_post_meta($omnify_wc_oid, '_shipping_country', true) ?: null,
-							'billing_first_name'  => get_post_meta($omnify_wc_oid, '_billing_first_name', true) ?: null,
-							'billing_last_name'   => get_post_meta($omnify_wc_oid, '_billing_last_name', true) ?: null,
-							'billing_phone'       => get_post_meta($omnify_wc_oid, '_billing_phone', true) ?: null,
-							'billing_country'     => get_post_meta($omnify_wc_oid, '_billing_country', true) ?: null,
+						$c_id = (int) $c['ID'];
+						$wc_type = get_post_meta($c_id, 'discount_type', true);
+						$type = ('percent' === $wc_type || 'percentage' === $wc_type) ? 'percentage' : 'fixed';
+
+						$amount      = (float) get_post_meta($c_id, 'coupon_amount', true);
+						$min_amount  = get_post_meta($c_id, 'minimum_amount', true);
+						$max_amount  = get_post_meta($c_id, 'maximum_amount', true);
+						$usage_limit = get_post_meta($c_id, 'usage_limit', true);
+						$usage_count = (int) get_post_meta($c_id, 'usage_count', true);
+						$free_ship   = 'yes' === get_post_meta($c_id, 'free_shipping', true) ? 1 : 0;
+						$date_exp    = get_post_meta($c_id, 'date_expires', true);
+
+						$expires_at = null;
+						if ($date_exp) {
+							$expires_at = is_numeric($date_exp) ? gmdate('Y-m-d H:i:s', (int) $date_exp) : gmdate('Y-m-d H:i:s', strtotime($date_exp));
+						}
+
+						$new_cid = $this->omnify_coupons->create([
+							'code'                => $code,
+							'is_active'           => 1,
+							'discount_type'       => $type,
+							'discount_value'      => $amount,
+							'min_order_amount'    => ('' !== $min_amount && null !== $min_amount) ? (float) $min_amount : null,
+							'max_discount_amount' => ('' !== $max_amount && null !== $max_amount) ? (float) $max_amount : null,
+							'usage_limit'         => ('' !== $usage_limit && null !== $usage_limit) ? (int) $usage_limit : null,
+							'usage_count'         => $usage_count,
+							'free_shipping'       => $free_ship,
+							'expires_at'          => $expires_at,
 						]);
 
-						if ($omnify_new_order_id > 0) {
-							$omnify_imported_orders++;
+						if ($new_cid > 0) {
+							$omnify_imported_coupons++;
+						}
+					}
+				}
+			}
+
+			// --- 5. REVIEWS ---
+			if ($omnify_import_reviews) {
+				$wc_reviews = $wpdb->get_results(
+					"SELECT comment_ID, comment_post_ID, comment_author, comment_author_email, comment_content, comment_date 
+					 FROM {$wpdb->comments} 
+					 WHERE comment_type = 'review' AND comment_approved = '1' 
+					 ORDER BY comment_ID ASC",
+					ARRAY_A
+				);
+
+				if (! empty($wc_reviews)) {
+					foreach ($wc_reviews as $r) {
+						$wc_pid = (int) $r['comment_post_ID'];
+						$omnify_pid = $product_id_map[$wc_pid] ?? 0;
+
+						if (! $omnify_pid) {
+							$wc_slug = $wpdb->get_var($wpdb->prepare("SELECT post_name FROM {$wpdb->posts} WHERE ID = %d", $wc_pid));
+							if ($wc_slug && isset($existing_slug_map[strtolower($wc_slug)])) {
+								$omnify_pid = $existing_slug_map[strtolower($wc_slug)];
+							}
+						}
+
+						if (! $omnify_pid) {
+							continue;
+						}
+
+						$author_email = sanitize_email((string) $r['comment_author_email']);
+						if ('' === $author_email) {
+							continue;
+						}
+
+						// Deduplication
+						$existing_rev = $this->omnify_reviews_repo->find_for_product_by_email($omnify_pid, $author_email);
+						if ($existing_rev) {
+							continue;
+						}
+
+						$rating = (int) get_comment_meta((int) $r['comment_ID'], 'rating', true) ?: 5;
+						$content = trim((string) $r['comment_content']);
+						$title   = wp_trim_words($content, 6, '...');
+
+						$new_rid = $this->omnify_reviews_repo->create([
+							'product_id'        => $omnify_pid,
+							'customer_name'     => $r['comment_author'] ?: __('Customer', 'omnifywp-ecommerce'),
+							'customer_email'    => $author_email,
+							'rating'            => $rating,
+							'review_title'      => $title ?: __('Verified Review', 'omnifywp-ecommerce'),
+							'review_content'    => $content,
+							'status'            => 'approved',
+							'is_verified_buyer' => 1,
+							'created_at'        => $r['comment_date'],
+						]);
+
+						if ($new_rid > 0) {
+							$omnify_imported_reviews++;
 						}
 					}
 				}
 			}
 
 			// Record admin activity
-			$this->record_activity(
-				'migrated',
+			$this->omnify_activities->log(
+				get_current_user_id(),
+				'migrated_woocommerce',
 				'woocommerce',
-				0,
+				null,
 				sprintf(
-					__('Migrated from WooCommerce: %1$d products, %2$d variations, %3$d orders.', 'omnifywp-ecommerce'),
+					__('Migrated from WooCommerce: %1$d products (%2$d variations), %3$d orders (%4$d items), %5$d customers, %6$d coupons, %7$d reviews.', 'omnifywp-ecommerce'),
 					$omnify_imported_products,
 					$omnify_imported_variations,
-					$omnify_imported_orders
+					$omnify_imported_orders,
+					$omnify_imported_order_items,
+					$omnify_imported_customers,
+					$omnify_imported_coupons,
+					$omnify_imported_reviews
 				)
 			);
 
 			wp_send_json_success([
 				'message' => sprintf(
-					__('Migration completed! %1$d products, %2$d variations, and %3$d orders imported.', 'omnifywp-ecommerce'),
+					__('Migration completed! %1$d products, %2$d variations, %3$d orders (%4$d items), %5$d customers, %6$d coupons, and %7$d reviews imported.', 'omnifywp-ecommerce'),
 					$omnify_imported_products,
 					$omnify_imported_variations,
-					$omnify_imported_orders
+					$omnify_imported_orders,
+					$omnify_imported_order_items,
+					$omnify_imported_customers,
+					$omnify_imported_coupons,
+					$omnify_imported_reviews
 				),
 				'stats' => [
-					'products'   => $omnify_imported_products,
-					'variations' => $omnify_imported_variations,
-					'orders'     => $omnify_imported_orders,
+					'products'    => $omnify_imported_products,
+					'variations'  => $omnify_imported_variations,
+					'orders'      => $omnify_imported_orders,
+					'order_items' => $omnify_imported_order_items,
+					'customers'   => $omnify_imported_customers,
+					'coupons'     => $omnify_imported_coupons,
+					'reviews'     => $omnify_imported_reviews,
 				]
 			]);
 		} catch (\Throwable $e) {

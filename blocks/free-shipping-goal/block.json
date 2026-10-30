@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/free-shipping-goal",
+  "version": "1.4.3",
+  "title": "Free Shipping Goal",
+  "category": "omnify",
+  "icon": "car",
+  "description": "Gamified dynamic progress bar displaying remaining amount for free shipping with live celebrations.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

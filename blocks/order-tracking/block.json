@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/order-tracking",
+  "version": "1.4.3",
+  "title": "Order Tracking",
+  "category": "omnify",
+  "icon": "location-alt",
+  "description": "Real-time visual order and shipment tracking timeline.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

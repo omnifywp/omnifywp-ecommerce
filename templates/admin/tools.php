@@ -34,16 +34,24 @@ $omnify_wc_products_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*)
 
 // WooCommerce HPOS stores orders in {$wpdb->prefix}wc_orders when the feature is enabled.
 $omnify_wc_orders_count = 0;
-$omnify_wc_hpos_enabled = class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')
-	&& \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
-if ($omnify_wc_hpos_enabled) {
-	$omnify_wc_orders_table = $wpdb->prefix . 'wc_orders';
-	if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $omnify_wc_orders_table)) === $omnify_wc_orders_table) {
-		$omnify_wc_orders_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$omnify_wc_orders_table} WHERE type = %s AND status != %s", 'shop_order', 'trash'));
-	}
-} else {
+$omnify_wc_orders_table = $wpdb->prefix . 'wc_orders';
+if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $omnify_wc_orders_table)) === $omnify_wc_orders_table) {
+	$omnify_wc_orders_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$omnify_wc_orders_table} WHERE type = %s AND status != %s", 'shop_order', 'trash'));
+}
+if ($omnify_wc_orders_count === 0) {
 	$omnify_wc_orders_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status != %s", 'shop_order', 'trash'));
 }
+
+$omnify_wc_customers_count = (int) $wpdb->get_var("SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta} WHERE meta_key = 'billing_email' AND meta_value != ''");
+if ($omnify_wc_customers_count === 0) {
+	$omnify_wc_customers_count = count(get_users(['role' => 'customer', 'fields' => 'ID']));
+}
+
+$omnify_wc_coupons_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status = %s", 'shop_coupon', 'publish'));
+
+$omnify_wc_reviews_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_type = %s AND comment_approved = %s", 'review', '1'));
+
+$omnify_total_wc_records = $omnify_wc_products_count + $omnify_wc_orders_count + $omnify_wc_customers_count + $omnify_wc_coupons_count + $omnify_wc_reviews_count;
 ?>
 <div class="omnify-admin-wrapper omnify-tools-page">
 	<?php $omnify_active_tab = 'tools'; ?>
@@ -303,9 +311,9 @@ if ($omnify_wc_hpos_enabled) {
 					<span style="font-size: 12.5px; color: #64748b;"><?php esc_html_e('Seamlessly import your catalog, variations, categories, tags, images, and orders.', 'omnifywp-ecommerce'); ?></span>
 				</div>
 			</div>
-			<?php if ($omnify_wc_products_count > 0 || $omnify_wc_orders_count > 0) : ?>
+			<?php if ($omnify_total_wc_records > 0) : ?>
 				<span class="omnify-badge omnify-badge--info" style="background: #faf5ff; color: #7e22ce; border-color: #f3e8ff;">
-					<?php printf(esc_html__('%d WC Products Detected', 'omnifywp-ecommerce'), $omnify_wc_products_count); ?>
+					<?php printf(esc_html__('%d WC Records Detected', 'omnifywp-ecommerce'), $omnify_total_wc_records); ?>
 				</span>
 			<?php else : ?>
 				<span class="omnify-badge"><?php esc_html_e('No WC Data Found', 'omnifywp-ecommerce'); ?></span>
@@ -313,17 +321,29 @@ if ($omnify_wc_hpos_enabled) {
 		</div>
 
 		<p style="color: #475569; font-size: 13.5px; line-height: 1.55; margin: 0 0 18px;">
-			<?php esc_html_e('Migrate your entire store from WooCommerce into OmnifyWP with a single click. Products, variations, download files, categories, tags, gallery photos, stock quantities, and historical orders are cleanly imported without overwriting existing Omnify records.', 'omnifywp-ecommerce'); ?>
+			<?php esc_html_e('Migrate your entire store from WooCommerce into OmnifyWP with a single click. Products, variations, download files, categories, tags, gallery photos, stock quantities, historical orders with itemized products, customers, coupons, and verified product reviews are cleanly imported without overwriting existing Omnify records.', 'omnifywp-ecommerce'); ?>
 		</p>
 
-		<div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+		<div style="display: flex; gap: 16px 24px; margin-bottom: 20px; flex-wrap: wrap;">
 			<label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer;">
 				<input type="checkbox" id="omnify-mig-products" checked style="border-radius: 4px;" />
 				<span><strong><?php esc_html_e('Products & Variations', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_products_count)); ?>)</span>
 			</label>
 			<label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer;">
 				<input type="checkbox" id="omnify-mig-orders" checked style="border-radius: 4px;" />
-				<span><strong><?php esc_html_e('Historical Orders', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_orders_count)); ?>)</span>
+				<span><strong><?php esc_html_e('Historical Orders & Line Items', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_orders_count)); ?>)</span>
+			</label>
+			<label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer;">
+				<input type="checkbox" id="omnify-mig-customers" checked style="border-radius: 4px;" />
+				<span><strong><?php esc_html_e('Customer Accounts & Addresses', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_customers_count)); ?>)</span>
+			</label>
+			<label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer;">
+				<input type="checkbox" id="omnify-mig-coupons" checked style="border-radius: 4px;" />
+				<span><strong><?php esc_html_e('Coupons & Discounts', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_coupons_count)); ?>)</span>
+			</label>
+			<label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; cursor: pointer;">
+				<input type="checkbox" id="omnify-mig-reviews" checked style="border-radius: 4px;" />
+				<span><strong><?php esc_html_e('Product Reviews & Ratings', 'omnifywp-ecommerce'); ?></strong> (<?php echo esc_html(number_format_i18n($omnify_wc_reviews_count)); ?>)</span>
 			</label>
 		</div>
 

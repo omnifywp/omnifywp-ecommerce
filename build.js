@@ -12,12 +12,14 @@ const zipFile = path.join(buildDir, `${pluginSlug}.zip`);
 // Files and folders to copy to the shareable build
 const includeItems = [
     'assets',
+    'blocks',
     'includes',
     'templates',
     'languages',
     'index.php',
     'omnifywp-ecommerce.php',
     'readme.txt',
+    'README.md',
     'blueprint.json'
 ];
 

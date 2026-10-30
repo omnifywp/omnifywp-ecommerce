@@ -2044,10 +2044,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		const progressContainer = document.getElementById('omnify-mig-progress-container');
 
 		wcMigrateBtn.addEventListener('click', () => {
-			const importProducts = document.getElementById('omnify-mig-products')?.checked ? 1 : 0;
-			const importOrders = document.getElementById('omnify-mig-orders')?.checked ? 1 : 0;
+			const importProducts  = document.getElementById('omnify-mig-products')?.checked ? 1 : 0;
+			const importOrders    = document.getElementById('omnify-mig-orders')?.checked ? 1 : 0;
+			const importCustomers = document.getElementById('omnify-mig-customers')?.checked ? 1 : 0;
+			const importCoupons   = document.getElementById('omnify-mig-coupons')?.checked ? 1 : 0;
+			const importReviews   = document.getElementById('omnify-mig-reviews')?.checked ? 1 : 0;
 
-			if (!importProducts && !importOrders) {
+			if (!importProducts && !importOrders && !importCustomers && !importCoupons && !importReviews) {
 				window.omnifyShowToast('Please select at least one item type to migrate.', 'error');
 				return;
 			}
@@ -2055,11 +2058,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			wcMigrateBtn.disabled = true;
 			progressContainer.style.display = 'block';
 			progressBar.style.width = '20%';
-			progressStatus.textContent = 'Reading WooCommerce catalog & variations...';
+			progressStatus.textContent = 'Reading WooCommerce catalog & records...';
 
 			setTimeout(() => {
 				progressBar.style.width = '55%';
-				progressStatus.textContent = 'Importing products, media, and taxonomies into OmnifyWP...';
+				progressStatus.textContent = 'Migrating products, variations, orders, customers, coupons, and reviews...';
 
 				jQuery.ajax({
 					url: omnifyAdmin.ajaxUrl,
@@ -2068,7 +2071,10 @@ document.addEventListener('DOMContentLoaded', function() {
 						action: 'omnify_migrate_woocommerce',
 						nonce: omnifyAdmin.adminNonce,
 						import_products: importProducts,
-						import_orders: importOrders
+						import_orders: importOrders,
+						import_customers: importCustomers,
+						import_coupons: importCoupons,
+						import_reviews: importReviews
 					},
 					success: function(response) {
 						if (response.success) {
@@ -2076,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							progressStatus.textContent = response.data.message || 'Migration complete!';
 							window.omnifyShowToast(response.data.message || 'Migration complete!', 'success');
 							wcMigrateBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px; line-height: 1; vertical-align: middle;"></span> Migration Finished';
-							setTimeout(() => window.location.reload(), 1800);
+							setTimeout(() => window.location.reload(), 2200);
 						} else {
 							progressBar.style.width = '0%';
 							progressContainer.style.display = 'none';

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "omnify/template-cloud",
+  "version": "1.4.3",
+  "title": "Template Cloud",
+  "category": "omnify",
+  "icon": "layout",
+  "description": "Browse and insert pre-built, high-converting eCommerce starter layouts with 1-click.",
+  "textdomain": "omnifywp-ecommerce",
+  "editorScript": "file:../../assets/blocks/editor.js",
+  "editorStyle": "file:../../assets/blocks/editor.css"
+}

@@ -134,6 +134,45 @@ class Omnify_Product_File_Repository {
 		return apply_filters('omnify_get_product_file', $omnify_result, $omnify_id);
 	}
 
+	public function create(array $omnify_data): int {
+		global $wpdb;
+
+		$omnify_product_id = absint($omnify_data['product_id'] ?? 0);
+		if ($omnify_product_id <= 0) {
+			return 0;
+		}
+
+		$omnify_file_path = (string) ($omnify_data['file_path'] ?? ($omnify_data['file'] ?? ''));
+		$omnify_file_name = sanitize_file_name((string) ($omnify_data['file_name'] ?? ($omnify_data['name'] ?? basename($omnify_file_path))));
+		$omnify_ext       = strtolower(pathinfo($omnify_file_name, PATHINFO_EXTENSION));
+		$omnify_disallowed = ['php', 'phtml', 'php3', 'php4', 'php5', 'phps', 'cgi', 'exe', 'pl', 'py', 'sh', 'bat', 'cmd', 'js', 'jar', 'phar'];
+		if (in_array($omnify_ext, $omnify_disallowed, true)) {
+			return 0;
+		}
+
+		$omnify_now = $this->now();
+		$omnify_file_size = isset($omnify_data['file_size']) ? (int) $omnify_data['file_size'] : (is_readable($omnify_file_path) ? (int) filesize($omnify_file_path) : 0);
+
+		\Omnify\eCommerce\Support\Omnify_DB::insert($wpdb,
+			$this->table(),
+			[
+				'product_id'    => $omnify_product_id,
+				'attachment_id' => ! empty($omnify_data['attachment_id']) ? absint($omnify_data['attachment_id']) : null,
+				'version'       => sanitize_text_field((string) ($omnify_data['version'] ?? '1.0.0')),
+				'file_name'     => $omnify_file_name ?: 'download',
+				'file_path'     => sanitize_text_field(realpath($omnify_file_path) ?: $omnify_file_path),
+				'file_url'      => esc_url_raw((string) ($omnify_data['file_url'] ?? ($omnify_data['url'] ?? ''))),
+				'file_size'     => $omnify_file_size,
+				'file_type'     => sanitize_text_field((string) ($omnify_data['file_type'] ?? 'application/octet-stream')),
+				'expires_at'    => $this->date_or_null($omnify_data['expires_at'] ?? null),
+				'created_at'    => $omnify_now,
+				'updated_at'    => $omnify_now,
+			]
+		);
+
+		return (int) $wpdb->insert_id;
+	}
+
 	public function create_from_upload(int $omnify_product_id, array $omnify_upload, string $omnify_version, ?string $omnify_expires_at = null): int {
 		global $wpdb;
 
